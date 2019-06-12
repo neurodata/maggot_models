@@ -9,7 +9,7 @@ ex = Experiment("config_demo")
 
 # slack_obs = SlackObserver.from_config("slack.json")
 # ex.observers.append(slack_obs)
-ex.observers.append(FileStorageObserver.create("my_runs"))
+ex.observers.append(FileStorageObserver.create("./simulations/hello_world"))
 
 
 @ex.config
