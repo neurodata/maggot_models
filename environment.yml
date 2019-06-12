@@ -114,6 +114,12 @@ dependencies:
   - zeromq=4.3.1=h0a44026_3
   - zlib=1.2.11=h1de35cc_3
   - pip:
+    - docopt==0.6.2
     - graspy==0.0.3
+    - jsonpickle==0.9.6
+    - munch==2.3.2
     - networkx==2.3
+    - py-cpuinfo==5.0.0
+    - sacred==0.7.4
+prefix: /miniconda3/envs/maggot_models
 
