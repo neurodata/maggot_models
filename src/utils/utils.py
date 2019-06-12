@@ -1,7 +1,7 @@
 import numpy as np
 from graspy.cluster import GaussianCluster
 from graspy.embed import AdjacencySpectralEmbed
-from graspy.models import RDPGEstimator, SBEstimator
+from graspy.models import RDPGEstimator, SBMEstimator
 from graspy.simulations import p_from_latent, sample_edges, sbm
 
 
@@ -33,7 +33,7 @@ def estimate_sbm(graph, n_communities, n_components=None, directed=False):
     vertex_assignments, n_params = estimate_assignments(
         graph, n_communities, n_components
     )
-    estimator = SBEstimator(directed=directed, loops=False)
+    estimator = SBMEstimator(directed=directed, loops=False)
     estimator.fit(graph, y=vertex_assignments)
     return estimator, n_params
 
