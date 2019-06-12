@@ -1,4 +1,3 @@
-#%%
 from sacred import Experiment
 from sacred.observers import SlackObserver, FileStorageObserver
 from src.utils import estimate_sbm, compute_rss, compute_log_lik, gen_B, gen_sbm
