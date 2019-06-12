@@ -7,15 +7,15 @@ SETTINGS
 
 ex = Experiment("config_demo")
 
-slack_obs = SlackObserver.from_config("slack.json")
-ex.observers.append(slack_obs)
+# slack_obs = SlackObserver.from_config("slack.json")
+# ex.observers.append(slack_obs)
 ex.observers.append(FileStorageObserver.create("./simulations/runs/hello_world"))
 
 
 @ex.config
 def my_config1():
-    a = 10  # noqa: F841
-    b = "test"  # noqa: F841
+    a = 10
+    b = "test"
 
 
 @ex.capture

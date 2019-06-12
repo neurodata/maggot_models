@@ -5,11 +5,11 @@ from sacred import SETTINGS
 
 SETTINGS
 
-ex = Experiment("config_demo")
+ex = Experiment("SBM model selection")
 
-slack_obs = SlackObserver.from_config("slack.json")
-ex.observers.append(slack_obs)
-ex.observers.append(FileStorageObserver.create("./simulations/runs/hello_world"))
+# slack_obs = SlackObserver.from_config("slack.json")
+# ex.observers.append(slack_obs)
+ex.observers.append(FileStorageObserver.create(f"./simulations/runs/{__file__}"))
 
 
 @ex.config
