@@ -63,20 +63,12 @@ def run_sim(
 
 
 @ex.automain
-def main(
-    n_sims,
-    n_jobs,
-    n_blocks_range,
-    n_verts_range,
-    n_block_try_range,
-    B_mat,
-    n_components,
-):
+def main(n_sims, n_blocks_range, n_verts_range, n_block_try_range, B_mat, n_components):
     seeds = np.random.randint(1e8, size=n_sims)
 
     def run(seed):
         # n_jobs -2 uses all but one cores
         return run_sim(seed)
 
-    outs = Parallel(n_jobs=-2, verbose=40)(delayed(run)(seed) for seed in seeds)
-
+    outs = Parallel(n_jobs=2, verbose=40)(delayed(run)(seed) for seed in seeds)
+    return outs
