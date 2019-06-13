@@ -166,6 +166,7 @@ def select_sbm(graph, n_components_try_range, n_block_try_range, directed=False)
         "n_params_gmm",
         "n_params_sbm",
         "rss",
+        "mse",
         "score",
         "n_components_try",
         "n_block_try",
@@ -180,6 +181,7 @@ def select_sbm(graph, n_components_try_range, n_block_try_range, directed=False)
                 graph, n_block_try, n_components=n_components_try, directed=False
             )
             rss = compute_rss(estimator, graph)
+            mse = compute_mse(estimator, graph)
             score = compute_log_lik(estimator, graph)
             n_params_sbm = estimator._n_parameters()
 
@@ -187,6 +189,7 @@ def select_sbm(graph, n_components_try_range, n_block_try_range, directed=False)
             out_df.loc[ind, "n_params_gmm"] = n_params_gmm
             out_df.loc[ind, "n_params_sbm"] = n_params_sbm
             out_df.loc[ind, "rss"] = rss
+            out_df.loc[ind, "mse"] = mse
             out_df.loc[ind, "score"] = score
             out_df.loc[ind, "n_components_try"] = n_components_try
             out_df.loc[ind, "n_block_try"] = n_block_try
