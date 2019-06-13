@@ -114,4 +114,20 @@ def main(
 
     # n_jobs=-2 uses all but one cores
     outs = Parallel(n_jobs=2, verbose=40)(delayed(run)(seed) for seed in seeds)
-    return outs
+
+    columns = [
+        "n_params_gmm",
+        "n_params_sbm",
+        "rss",
+        "score",
+        "n_components_try",
+        "n_block_try",
+        "n_blocks",
+        "n_verts",
+        "sim_ind",
+    ]
+    master_out_df = pd.DataFrame(columns=columns)
+    for i, out in enumerate(outs):
+        out["sim_ind"] = i
+        master_out_df = master_out_df.append(out)
+    return master_out_df
