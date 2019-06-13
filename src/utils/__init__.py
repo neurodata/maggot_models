@@ -7,5 +7,6 @@ from .utils import (
     hardy_weinberg,
     estimate_assignments,
     estimate_rdpg,
+    select_sbm,
 )
 

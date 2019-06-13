@@ -1,6 +1,0 @@
-INFO - config_demo - Running command 'my_main'
-INFO - config_demo - Started run with ID "1"
-10
-test
-INFO - config_demo - Result: 1
-INFO - config_demo - Completed after 0:00:00

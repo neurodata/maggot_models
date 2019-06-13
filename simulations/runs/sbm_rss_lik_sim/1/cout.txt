@@ -1,0 +1,21 @@
+INFO - SBM model selection - Running command 'main'
+INFO - SBM model selection - Started run with ID "1"
+[Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.0s remaining:    0.0s
+[Parallel(n_jobs=1)]: Done   2 out of   2 | elapsed:    0.0s remaining:    0.0s
+[Parallel(n_jobs=1)]: Done   2 out of   2 | elapsed:    0.0s finished
+INFO - SBM model selection - Result: [(<joblib.externals.loky.cloudpickle_wrapper.CallableObjectWrapper object at 0x1a23d1ab00>, (27216264, [1, 2, 3, 4, 5, 6, 7, 8], [100, 200, 300, 500, 1000], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], array([[0.6, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+       [0.1, 0.6, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+       [0.1, 0.1, 0.6, 0.1, 0.1, 0.1, 0.1, 0.1],
+       [0.1, 0.1, 0.1, 0.6, 0.1, 0.1, 0.1, 0.1],
+       [0.1, 0.1, 0.1, 0.1, 0.6, 0.1, 0.1, 0.1],
+       [0.1, 0.1, 0.1, 0.1, 0.1, 0.6, 0.1, 0.1],
+       [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.6, 0.1],
+       [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.6]]), None), {}), (<joblib.externals.loky.cloudpickle_wrapper.CallableObjectWrapper object at 0x1a23d1ab00>, (83213326, [1, 2, 3, 4, 5, 6, 7, 8], [100, 200, 300, 500, 1000], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], array([[0.6, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+       [0.1, 0.6, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+       [0.1, 0.1, 0.6, 0.1, 0.1, 0.1, 0.1, 0.1],
+       [0.1, 0.1, 0.1, 0.6, 0.1, 0.1, 0.1, 0.1],
+       [0.1, 0.1, 0.1, 0.1, 0.6, 0.1, 0.1, 0.1],
+       [0.1, 0.1, 0.1, 0.1, 0.1, 0.6, 0.1, 0.1],
+       [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.6, 0.1],
+       [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.6]]), None), {})]

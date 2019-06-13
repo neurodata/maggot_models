@@ -1,25 +1,41 @@
-from sacred import Experiment
-from sacred.observers import SlackObserver, FileStorageObserver
-from src.utils import estimate_sbm, compute_rss, compute_log_lik, gen_B, gen_sbm
+from os.path import basename
 
 import numpy as np
+import pandas as pd
+from joblib import Parallel, delayed, wrap_non_picklable_objects
+from sacred import Experiment
+from sacred.observers import FileStorageObserver, SlackObserver
 
-from joblib import Parallel, delayed
+from src.utils import (
+    compute_log_lik,
+    compute_rss,
+    estimate_sbm,
+    gen_B,
+    gen_sbm,
+    select_sbm,
+)
 
 ex = Experiment("SBM model selection")
 
 slack_obs = SlackObserver.from_config("slack.json")
+f = basename(__file__)[:-3]
+file_obs = FileStorageObserver.create(
+    f"/Users/bpedigo/JHU_code/maggot_models/maggot_models/simulations/runs/{f}"
+)
 ex.observers.append(slack_obs)
-ex.observers.append(FileStorageObserver.create(f"./simulations/runs/{__file__}"))
+ex.observers.append(file_obs)
 
 
 @ex.config
 def my_config1():
+    """Variables defined in config get automatically passed to main"""
+
     n_sims = 2  # noqa: F841
     n_blocks_range = [1, 2, 3, 4, 5, 6, 7, 8]
     n_verts_range = [100, 200, 300, 500, 1000]  # noqa: F841
     # n_jobs = 50  # noqa: F841
     n_block_try_range = list(range(1, 12))  # noqa: F841
+    n_components_try_range = list(range(1, 14))  # noqa: F841
 
     # keep these the same
     a = 0.1
@@ -31,44 +47,71 @@ def my_config1():
     # let Zhu/Ghodsie choose embedding dimension
     n_components = None  # noqa: F841
 
+    directed = False  # noqa: F841
 
-@ex.capture
+
+@delayed
+@wrap_non_picklable_objects  # this seems to make things way faster
 def run_sim(
-    seed, n_blocks_range, n_verts_range, n_block_try_range, B_mat, n_components
+    seed,
+    n_blocks_range,
+    n_verts_range,
+    n_components_try_range,
+    n_block_try_range,
+    B_mat,
+    directed,
 ):
     np.random.seed(seed)
-    sbm_score = np.zeros(
-        (len(n_blocks_range), len(n_verts_range), len(n_block_try_range))
-    )
-    sbm_n_params = np.zeros_like(sbm_score)
-    sbm_rss = np.zeros_like(sbm_score)
+    columns = [
+        "n_params_gmm",
+        "n_params_sbm",
+        "rss",
+        "score",
+        "n_components_try",
+        "n_block_try",
+        "n_blocks",
+        "n_verts",
+    ]
+    master_sbm_df = pd.DataFrame(columns=columns)
 
-    for j, n_blocks in enumerate(n_blocks_range):
+    for i, n_blocks in enumerate(n_blocks_range):
         B_mat_trunc = B_mat[:n_blocks, :n_blocks]
-        for k, n_verts in enumerate((n_verts_range)):
+        for j, n_verts in enumerate((n_verts_range)):
             graph, labels = gen_sbm(n_verts, n_blocks, B_mat_trunc)
-            for l, n_block_try in enumerate(n_block_try_range):
-                estimator, n_params = estimate_sbm(
-                    graph, n_block_try, n_components=n_components, directed=False
-                )
+            sbm_df = select_sbm(
+                graph, n_components_try_range, n_block_try_range, directed=directed
+            )
+            sbm_df["n_verts"] = n_verts
+            sbm_df["n_blocks"] = n_blocks
+            master_sbm_df = master_sbm_df.append(sbm_df, ignore_index=True)
 
-                rss = compute_rss(estimator, graph)
-                score = compute_log_lik(estimator, graph)
-                sbm_rss[j, k, l] = rss
-                sbm_score[j, k, l] = score
-                sbm_n_params[j, k, l] = n_params
-
-    out = {"sbm": {"rss": sbm_rss, "score": sbm_score, "n_params": sbm_n_params}}
-    return out
+    return master_sbm_df
 
 
 @ex.automain
-def main(n_sims, n_blocks_range, n_verts_range, n_block_try_range, B_mat, n_components):
+def main(
+    n_sims,
+    n_blocks_range,
+    n_verts_range,
+    n_components_try_range,
+    n_block_try_range,
+    B_mat,
+    directed,
+):
     seeds = np.random.randint(1e8, size=n_sims)
 
     def run(seed):
-        # n_jobs -2 uses all but one cores
-        return run_sim(seed)
+        """ Like a lambda func """
+        return run_sim(
+            seed,
+            n_blocks_range,
+            n_verts_range,
+            n_components_try_range,
+            n_block_try_range,
+            B_mat,
+            directed,
+        )
 
+    # n_jobs=-2 uses all but one cores
     outs = Parallel(n_jobs=2, verbose=40)(delayed(run)(seed) for seed in seeds)
     return outs

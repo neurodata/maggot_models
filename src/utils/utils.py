@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from graspy.cluster import GaussianCluster
 from graspy.embed import AdjacencySpectralEmbed
 from graspy.models import RDPGEstimator, SBMEstimator
@@ -9,6 +10,12 @@ def estimate_assignments(graph, n_communities, n_components=None):
     """Given a graph and n_comunities, sweeps over covariance structures
     Not deterministic
     Not using graph bic or mse to calculate best
+
+    1. Does an embedding on the raw graph
+    2. GaussianCluster on the embedding. This will sweep covariance structure for the 
+       given n_communities
+    3. Returns n_parameters based on the number used in GaussianCluster
+
     """
     embed_graph = graph.copy()
     latent = AdjacencySpectralEmbed(n_components=n_components).fit_transform(
@@ -86,10 +93,15 @@ def compute_mse(estimator, graph):
     Matters whether the estimator is directed
     """
     rss = compute_rss(estimator, graph)
-    return rss / graph.size
+    if not estimator.directed:  # TODO double check that this is right
+        size = graph.shape[0] * (graph.shape[0] - 1) / 2
+    else:
+        size = graph.size - graph.shape[0]
+    return rss / size
 
 
 def compute_log_lik(estimator, graph, c=0):
+    """This is probably wrong right now"""
     p_mat = estimator.p_mat_.copy()
     graph = graph.copy()
     inds = np.triu_indices(graph.shape[0])
@@ -125,3 +137,58 @@ def gen_sbm(n_verts, n_blocks, B_mat):
     graph = sbm(n_vec, B_mat, directed=False, loops=False)
     labels = _n_to_labels(n_vec)
     return graph, labels
+
+
+def select_sbm(graph, n_components_try_range, n_block_try_range, directed=False):
+    """sweeps over n_components, n_blocks, fits an sbm for each 
+    Using GaussianCluster, so will internally sweep covariance structure and pick best
+
+    Returns n_params for the gaussian
+    N_params for the sbm kinda
+    rss
+    score
+
+    Maybe at some point this will sweep rank of B
+
+    Parameters
+    ----------
+    graph : [type]
+        [description]
+    n_block_try_range : [type]
+        [description]
+    n_components_try_range : [type]
+        [description]
+    directed : bool, optional
+        [description], by default False
+    """
+    n_exps = len(n_components_try_range) * len(n_block_try_range)
+    columns = [
+        "n_params_gmm",
+        "n_params_sbm",
+        "rss",
+        "score",
+        "n_components_try",
+        "n_block_try",
+    ]
+    out_df = pd.DataFrame(np.nan, index=range(n_exps), columns=columns)
+
+    for i, n_components_try in enumerate(n_components_try_range):
+        for j, n_block_try in enumerate(n_block_try_range):
+            # TODO figure out low rank B?
+            # TODO try tommy clust instead here
+            estimator, n_params_gmm = estimate_sbm(
+                graph, n_block_try, n_components=n_components_try, directed=False
+            )
+            rss = compute_rss(estimator, graph)
+            score = compute_log_lik(estimator, graph)
+            n_params_sbm = estimator._n_parameters()
+
+            ind = i * len(n_components_try_range) + j
+            out_df.loc[ind, "n_params_gmm"] = n_params_gmm
+            out_df.loc[ind, "n_params_sbm"] = n_params_sbm
+            out_df.loc[ind, "rss"] = rss
+            out_df.loc[ind, "score"] = score
+            out_df.loc[ind, "n_components_try"] = n_components_try
+            out_df.loc[ind, "n_block_try"] = n_block_try
+
+    return out_df
