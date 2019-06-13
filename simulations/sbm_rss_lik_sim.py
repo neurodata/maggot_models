@@ -2,18 +2,11 @@ from os.path import basename
 
 import numpy as np
 import pandas as pd
-from joblib import Parallel, delayed, wrap_non_picklable_objects
+from joblib import Parallel, delayed
 from sacred import Experiment
 from sacred.observers import FileStorageObserver, SlackObserver
 
-from src.utils import (
-    compute_log_lik,
-    compute_rss,
-    estimate_sbm,
-    gen_B,
-    gen_sbm,
-    select_sbm,
-)
+from src.utils import gen_B, gen_sbm, select_sbm
 
 ex = Experiment("SBM model selection")
 
@@ -30,12 +23,13 @@ ex.observers.append(file_obs)
 def my_config1():
     """Variables defined in config get automatically passed to main"""
 
-    n_sims = 2  # noqa: F841
-    n_blocks_range = [1, 2, 3, 4, 5, 6, 7, 8]
-    n_verts_range = [100, 200, 300, 500, 1000]  # noqa: F841
+    n_sims = 8  # noqa: F841
+    n_jobs = 8  # noqa: F841
+    n_blocks_range = [1, 2, 3]
+    n_verts_range = [100, 200]  # noqa: F841
     # n_jobs = 50  # noqa: F841
-    n_block_try_range = list(range(1, 12))  # noqa: F841
-    n_components_try_range = list(range(1, 14))  # noqa: F841
+    n_block_try_range = list(range(1, 4))  # noqa: F841
+    n_components_try_range = list(range(1, 5))  # noqa: F841
 
     # keep these the same
     a = 0.1
@@ -50,8 +44,6 @@ def my_config1():
     directed = False  # noqa: F841
 
 
-@delayed
-@wrap_non_picklable_objects  # this seems to make things way faster
 def run_sim(
     seed,
     n_blocks_range,
@@ -84,7 +76,7 @@ def run_sim(
             )
             sbm_df["n_verts"] = n_verts
             sbm_df["n_blocks"] = n_blocks
-            master_sbm_df = master_sbm_df.append(sbm_df, ignore_index=True)
+            master_sbm_df = master_sbm_df.append(sbm_df, ignore_index=True, sort=True)
 
     return master_sbm_df
 
@@ -92,6 +84,7 @@ def run_sim(
 @ex.automain
 def main(
     n_sims,
+    n_jobs,
     n_blocks_range,
     n_verts_range,
     n_components_try_range,
@@ -114,7 +107,7 @@ def main(
         )
 
     # n_jobs=-2 uses all but one cores
-    outs = Parallel(n_jobs=2, verbose=40)(delayed(run)(seed) for seed in seeds)
+    outs = Parallel(n_jobs=n_jobs, verbose=40)(delayed(run)(seed) for seed in seeds)
 
     columns = [
         "n_params_gmm",
@@ -129,7 +122,9 @@ def main(
         "sim_ind",
     ]
     master_out_df = pd.DataFrame(columns=columns)
+    print(outs)
     for i, out in enumerate(outs):
+        print(out)
         out["sim_ind"] = i
-        master_out_df = master_out_df.append(out)
+        master_out_df = master_out_df.append(out, ignore_index=True, sort=True)
     return master_out_df

@@ -185,7 +185,7 @@ def select_sbm(graph, n_components_try_range, n_block_try_range, directed=False)
             score = compute_log_lik(estimator, graph)
             n_params_sbm = estimator._n_parameters()
 
-            ind = i * len(n_components_try_range) + j
+            ind = i * len(n_block_try_range) + j
             out_df.loc[ind, "n_params_gmm"] = n_params_gmm
             out_df.loc[ind, "n_params_sbm"] = n_params_sbm
             out_df.loc[ind, "rss"] = rss
