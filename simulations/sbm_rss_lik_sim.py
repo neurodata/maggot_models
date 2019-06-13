@@ -129,8 +129,5 @@ def main(
     for i, out in enumerate(outs):
         out["sim_ind"] = i
         master_out_df = master_out_df.append(out, ignore_index=True, sort=True)
-    print(ex.info)
-    print(ex.get_experiment_info)
-    print(ex.ingredients)
-    # with open()
-    # return master_out_df
+
+    return master_out_df
