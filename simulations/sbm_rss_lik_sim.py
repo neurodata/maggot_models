@@ -24,26 +24,24 @@ ex.observers.append(file_obs)
 
 
 @ex.config
-def my_config1():
+def config():
     """Variables defined in config get automatically passed to main"""
 
-    n_sims = 8  # noqa: F841
-    n_jobs = 8  # noqa: F841
-    n_blocks_range = [1, 2, 3]
-    n_verts_range = [100, 200]  # noqa: F841
-    # n_jobs = 50  # noqa: F841
-    n_block_try_range = list(range(1, 4))  # noqa: F841
-    n_components_try_range = list(range(1, 5))  # noqa: F841
+    n_sims = 50  # noqa: F841
+    n_jobs = -2  # noqa: F841
+    n_blocks_range = list(range(1, 9))
+    n_verts_range = [100, 200, 300, 500, 800, 1000]  # noqa: F841
+    n_block_try_range = list(range(1, 11))  # noqa: F841
+    n_components_try_range = list(range(1, 13))  # noqa: F841
 
     # keep these the same
     a = 0.1
     b = 0.1
-    assortivity = 6  # how strong to make the block diagonal
+
+    # how strong to make the block diagonal
+    assortivity = 6
 
     B_mat = gen_B(n_blocks_range[-1], a=a, b=b, assortivity=assortivity)  # noqa: F841
-
-    # let Zhu/Ghodsie choose embedding dimension
-    n_components = None  # noqa: F841
 
     directed = False  # noqa: F841
 
@@ -110,7 +108,6 @@ def main(
             directed,
         )
 
-    # n_jobs=-2 uses all but one cores
     outs = Parallel(n_jobs=n_jobs, verbose=40)(delayed(run)(seed) for seed in seeds)
 
     columns = [
