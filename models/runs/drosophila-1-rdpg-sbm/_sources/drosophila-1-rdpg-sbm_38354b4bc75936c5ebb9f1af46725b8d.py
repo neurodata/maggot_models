@@ -31,7 +31,7 @@ def config():
     n_block_try_range = list(range(1, 11))  # noqa: F841
     n_components_try_range = list(range(1, 13))  # noqa: F841
     n_components_try_rdpg = list(range(1, 13))  # noqa: F841
-    directed = True  # noqa: F841
+    directed = False  # noqa: F841
 
 
 def run_fit(
