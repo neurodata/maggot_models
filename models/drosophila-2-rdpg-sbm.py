@@ -79,9 +79,20 @@ def run_fit(
 
 
 @ex.automain
-def main(n_components_try_range, n_components_try_rdpg, n_block_try_range, directed):
+def main(
+    n_components_try_range,
+    n_components_try_rdpg,
+    n_block_try_range,
+    directed,
+    n_sims_sbm,
+):
     seed = 8888
     sbm_df, rdpg_df = run_fit(
-        seed, n_components_try_range, n_components_try_rdpg, n_block_try_range, directed
+        seed,
+        n_components_try_range,
+        n_components_try_rdpg,
+        n_block_try_range,
+        directed,
+        n_sims_sbm,
     )
     return (sbm_df, rdpg_df)
