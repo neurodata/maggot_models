@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import pandas as pd
 from graspy.cluster import GaussianCluster
@@ -195,3 +197,11 @@ def select_sbm(graph, n_components_try_range, n_block_try_range, directed=False)
             out_df.loc[ind, "n_block_try"] = n_block_try
 
     return out_df
+
+
+def run_to_df(file_path):
+    f = open(str(file_path), mode="r")
+    out = json.load(f)
+    f.close()
+    data_dict = out["result"]["values"]
+    return pd.DataFrame.from_dict(data_dict)

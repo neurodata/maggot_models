@@ -1,5 +1,5 @@
 from os.path import basename
-
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
@@ -10,11 +10,15 @@ from src.utils import gen_B, gen_sbm, select_sbm
 
 ex = Experiment("SBM model selection")
 
+current_file = basename(__file__)[:-3]
+
+pickle_path = Path("./maggot_models/simulations/outs/")
+sacred_file_path = Path(f"./maggot_models/simulations/runs/{current_file}")
+
 slack_obs = SlackObserver.from_config("slack.json")
-f = basename(__file__)[:-3]
-file_obs = FileStorageObserver.create(
-    f"/Users/bpedigo/JHU_code/maggot_models/maggot_models/simulations/runs/{f}"
-)
+
+file_obs = FileStorageObserver.create(sacred_file_path)
+
 ex.observers.append(slack_obs)
 ex.observers.append(file_obs)
 
@@ -122,9 +126,11 @@ def main(
         "sim_ind",
     ]
     master_out_df = pd.DataFrame(columns=columns)
-    print(outs)
     for i, out in enumerate(outs):
-        print(out)
         out["sim_ind"] = i
         master_out_df = master_out_df.append(out, ignore_index=True, sort=True)
-    return master_out_df
+    print(ex.info)
+    print(ex.get_experiment_info)
+    print(ex.ingredients)
+    # with open()
+    # return master_out_df
