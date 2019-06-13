@@ -53,7 +53,8 @@ def estimate_rdpg(graph, n_components=None):
     estimator.fit(graph)
     if n_components is None:
         n_components = estimator.latent_.shape[0]
-    n_params = graph.shape[0] * n_components
+    # n_params = graph.shape[0] * n_components
+    n_params = estimator._n_parameters()
     return estimator, n_params
 
 
@@ -230,5 +231,12 @@ def run_to_df(file_path):
     f = open(str(file_path), mode="r")
     out = json.load(f)
     f.close()
-    data_dict = out["result"]["values"]
-    return pd.DataFrame.from_dict(data_dict)
+    result = out["result"]
+    if "py/tuple" in result:
+        dfs = []
+        for elem in result["py/tuple"]:
+            df = pd.DataFrame.from_dict(elem["values"])
+            dfs.append(df)
+        return dfs
+    else:
+        return pd.DataFrame.from_dict(result["values"])
