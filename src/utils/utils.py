@@ -228,9 +228,7 @@ def select_rdpg(graph, n_components_try_range, directed):
 
 
 def run_to_df(file_path):
-    f = open(str(file_path), mode="r")
-    out = json.load(f)
-    f.close()
+    out = get_json(file_path)
     result = out["result"]
     if "py/tuple" in result:
         dfs = []
@@ -240,3 +238,10 @@ def run_to_df(file_path):
         return dfs
     else:
         return pd.DataFrame.from_dict(result["values"])
+
+
+def get_json(file_path):
+    f = open(str(file_path), mode="r")
+    out = json.load(f)
+    f.close()
+    return out

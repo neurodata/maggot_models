@@ -27,8 +27,7 @@ ex.observers.append(file_obs)
 
 @ex.config
 def config():
-    # Variables defined in config get automatically passed to main
-
+    """Variables defined in config get automatically passed to main"""
     n_block_try_range = list(range(1, 11))  # noqa: F841
     n_components_try_range = list(range(1, 13))  # noqa: F841
     n_components_try_rdpg = list(range(1, 13))  # noqa: F841
