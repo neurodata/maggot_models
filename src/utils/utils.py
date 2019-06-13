@@ -6,6 +6,7 @@ from graspy.cluster import GaussianCluster
 from graspy.embed import AdjacencySpectralEmbed
 from graspy.models import RDPGEstimator, SBMEstimator
 from graspy.simulations import p_from_latent, sample_edges, sbm
+from graspy.utils import is_symmetric
 
 
 def estimate_assignments(graph, n_communities, n_components=None):
@@ -195,6 +196,32 @@ def select_sbm(graph, n_components_try_range, n_block_try_range, directed=False)
             out_df.loc[ind, "score"] = score
             out_df.loc[ind, "n_components_try"] = n_components_try
             out_df.loc[ind, "n_block_try"] = n_block_try
+
+    return out_df
+
+
+def select_rdpg(graph, n_components_try_range, directed):
+    if is_symmetric(graph) and directed:
+        msg = (
+            "select_RDPG was given an undirected graph but you wanted"
+            + " a directed model"
+        )
+        raise ValueError(msg)
+    columns = ["rss", "mse", "score", "n_components_try", "n_params", "directed"]
+    out_df = pd.DataFrame(
+        np.nan, index=range(len(n_components_try_range)), columns=columns
+    )
+    for i, n_components in enumerate(n_components_try_range):
+        estimator, n_params = estimate_rdpg(graph, n_components=n_components)
+        rss = compute_rss(estimator, graph)
+        mse = compute_mse(estimator, graph)
+        score = compute_log_lik(estimator, graph)
+        out_df.loc[i, "n_params"] = n_params
+        out_df.loc[i, "rss"] = rss
+        out_df.loc[i, "mse"] = mse
+        out_df.loc[i, "score"] = score
+        out_df.loc[i, "n_components_try"] = n_components
+        out_df.loc[i, "directed"] = directed
 
     return out_df
 

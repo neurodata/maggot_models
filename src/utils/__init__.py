@@ -8,5 +8,6 @@ from .utils import (
     estimate_assignments,
     estimate_rdpg,
     select_sbm,
+    select_rdpg,
 )
 
