@@ -186,7 +186,8 @@ def select_sbm(graph, n_components_try_range, n_block_try_range, directed=False)
             )
             rss = compute_rss(estimator, graph)
             mse = compute_mse(estimator, graph)
-            score = compute_log_lik(estimator, graph)
+            # score = compute_log_lik(estimator, graph)
+            score = estimator.score(graph, clip=1 / (graph.size - graph.shape[0]))
             n_params_sbm = estimator._n_parameters()
 
             ind = i * len(n_block_try_range) + j
@@ -216,7 +217,8 @@ def select_rdpg(graph, n_components_try_range, directed):
         estimator, n_params = estimate_rdpg(graph, n_components=n_components)
         rss = compute_rss(estimator, graph)
         mse = compute_mse(estimator, graph)
-        score = compute_log_lik(estimator, graph)
+        # score = compute_log_lik(estimator, graph)
+        score = estimator.score(graph, clip=1 / (graph.size - graph.shape[0]))
         out_df.loc[i, "n_params"] = n_params
         out_df.loc[i, "rss"] = rss
         out_df.loc[i, "mse"] = mse
