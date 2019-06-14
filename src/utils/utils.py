@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from graspy.cluster import GaussianCluster
 from graspy.embed import AdjacencySpectralEmbed
-from graspy.models import RDPGEstimator, SBMEstimator
+from graspy.models import RDPGEstimator, SBMEstimator, EREstimator
 from graspy.simulations import p_from_latent, sample_edges, sbm
 from graspy.utils import is_symmetric
 
@@ -40,11 +40,16 @@ def hardy_weinberg(theta):
 
 
 def estimate_sbm(graph, n_communities, n_components=None, directed=False):
-    vertex_assignments, n_params = estimate_assignments(
-        graph, n_communities, n_components
-    )
-    estimator = SBMEstimator(directed=directed, loops=False)
-    estimator.fit(graph, y=vertex_assignments)
+    if n_communities == 1:
+        estimator = EREstimator(directed=directed, loops=False)
+        estimator.fit(graph)
+        n_params = estimator._n_parameters()
+    else:
+        vertex_assignments, n_params = estimate_assignments(
+            graph, n_communities, n_components
+        )
+        estimator = SBMEstimator(directed=directed, loops=False)
+        estimator.fit(graph, y=vertex_assignments)
     return estimator, n_params
 
 
