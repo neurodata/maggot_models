@@ -176,6 +176,7 @@ def select_sbm(graph, n_components_try_range, n_block_try_range, directed=False)
         "n_block_try",
     ]
     out_df = pd.DataFrame(np.nan, index=range(n_exps), columns=columns)
+    c = 1 / (graph.size - graph.shape[0])
 
     for i, n_components_try in enumerate(n_components_try_range):
         for j, n_block_try in enumerate(n_block_try_range):
@@ -187,7 +188,7 @@ def select_sbm(graph, n_components_try_range, n_block_try_range, directed=False)
             rss = compute_rss(estimator, graph)
             mse = compute_mse(estimator, graph)
             # score = compute_log_lik(estimator, graph)
-            score = estimator.score(graph, clip=1 / (graph.size - graph.shape[0]))
+            score = np.sum(estimator.score_samples(graph, clip=c))
             n_params_sbm = estimator._n_parameters()
 
             ind = i * len(n_block_try_range) + j
@@ -213,12 +214,14 @@ def select_rdpg(graph, n_components_try_range, directed):
     out_df = pd.DataFrame(
         np.nan, index=range(len(n_components_try_range)), columns=columns
     )
+    c = 1 / (graph.size - graph.shape[0])
     for i, n_components in enumerate(n_components_try_range):
         estimator, n_params = estimate_rdpg(graph, n_components=n_components)
         rss = compute_rss(estimator, graph)
         mse = compute_mse(estimator, graph)
         # score = compute_log_lik(estimator, graph)
-        score = estimator.score(graph, clip=1 / (graph.size - graph.shape[0]))
+
+        score = np.sum(estimator.score_samples(graph, clip=c))
         out_df.loc[i, "n_params"] = n_params
         out_df.loc[i, "rss"] = rss
         out_df.loc[i, "mse"] = mse
