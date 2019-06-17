@@ -408,7 +408,6 @@ def brute_cluster(
             + str(best_combo_bic)
             + " k="
             + str(best_k_bic)
-            + " ari=%1.3f" % best_ari_bic
             + " reg="
             + str(reg_bic)
         )  # + "iter=" + str(best_iter_bic))
