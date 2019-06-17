@@ -296,7 +296,7 @@ def brute_cluster(
     covariance_types=None,
     c_true=None,
     plot=True,
-    savefigs=None,
+    savefigs=True,
     verbose=0,
 ):
     """
