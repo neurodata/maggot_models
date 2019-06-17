@@ -337,6 +337,8 @@ def brute_cluster(
     best_ari = float("-inf")
     best_bic = float("-inf")
 
+    best_n_params = np.inf
+
     for i, k in enumerate(ks):
         for af in affinities:
             for li in linkages:
@@ -379,6 +381,7 @@ def brute_cluster(
                         best_ari_bic = ari
                         best_means_bic = means
                         reg_bic = reg
+                        best_n_params = n_params
 
     # True plot**********************************
     if plot:
@@ -498,5 +501,5 @@ def brute_cluster(
         if savefigs is not None:
             plt.savefig(savefigs + "_python_bicplot.jpg")
 
-    return best_c_hat_bic, n_params
+    return best_c_hat_bic, best_n_params
 
