@@ -295,7 +295,7 @@ def brute_cluster(
     linkages=None,
     covariance_types=None,
     c_true=None,
-    plot=False,
+    plot=True,
     savefigs=None,
     verbose=0,
 ):
@@ -342,6 +342,7 @@ def brute_cluster(
     for i, k in enumerate(ks):
         for af in affinities:
             for li in linkages:
+                # some combinations don't work, skip these
                 if li == "ward" and af != "euclidean":
                     continue
                 if (li == "none" and af != "none") or (af == "none" and li != "none"):
