@@ -393,7 +393,7 @@ def brute_cluster(
         plt.xlabel("First feature")
         plt.ylabel("Second feature")
         if savefigs is not None:
-            plt.savefig(savefigs + "_python_true.jpg")
+            plt.savefig(savefigs + "_python_true.png")
 
     # Plot with best BIC*********************************
     if plot:
@@ -415,7 +415,7 @@ def brute_cluster(
         plt.xlabel("First feature")
         plt.ylabel("Second feature")
         if savefigs is not None:
-            plt.savefig(savefigs + "_python_bestbic.jpg")
+            plt.savefig(savefigs + "_python_bestbic.png")
 
     titles = ["full", "tied", "diag", "spherical"]
 
@@ -433,7 +433,7 @@ def brute_cluster(
         plt.xlabel("First feature")
         plt.ylabel("Second feature")
         if savefigs is not None:
-            plt.savefig(savefigs + "_python_bestari.jpg")
+            plt.savefig(savefigs + "_python_bestari.png")
 
         # ARI vs BIC********************************
         plt.figure(figsize=(8, 8))
@@ -453,7 +453,7 @@ def brute_cluster(
             % (r_value ** 2)
         )
         if savefigs is not None:
-            plt.savefig(savefigs + "_python_bicari.jpg")
+            plt.savefig(savefigs + "_python_bicari.png")
 
     if plot:
         # plot of all BICS*******************************
@@ -498,7 +498,7 @@ def brute_cluster(
         ax3.set_title(titles[3])
         ax3.set(xlabel="k")
         if savefigs is not None:
-            plt.savefig(savefigs + "_python_bicplot.jpg")
+            plt.savefig(savefigs + "_python_bicplot.png")
 
     return best_c_hat_bic, best_n_params
 
