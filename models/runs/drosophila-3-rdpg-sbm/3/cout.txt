@@ -1,0 +1,2 @@
+INFO - Drosophila model selection 3 - SBM, RDPG, tSBM - Running command 'main'
+INFO - Drosophila model selection 3 - SBM, RDPG, tSBM - Started run with ID "3"

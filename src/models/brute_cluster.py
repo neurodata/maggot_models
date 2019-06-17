@@ -385,7 +385,7 @@ def brute_cluster(
                         best_n_params = n_params
 
     # True plot**********************************
-    if plot:
+    if plot and c_true is not None:
         plt.figure(figsize=(8, 8))
         ptcolors = [colors[i] for i in c_true.astype(int)]
         plt.scatter(x[:, 0], x[:, 1], c=ptcolors)
@@ -420,42 +420,41 @@ def brute_cluster(
 
     titles = ["full", "tied", "diag", "spherical"]
 
-    if c_true is not None:
+    if plot and c_true is not None:
         # Plot with best ARI************************************
-        if plot:
-            plt.figure(figsize=(8, 8))
-            ptcolors = [colors[i] for i in best_c_hat_ari]
-            plt.scatter(x[:, 0], x[:, 1], c=ptcolors)
-            plt.title(
-                "py(agg-gmm) ARI %3.3f from " % best_ari
-                + str(best_combo_ari)
-                + " k="
-                + str(best_k_ari)
-            )  # + "iter=" + str(best_iter_ari))
-            plt.xlabel("First feature")
-            plt.ylabel("Second feature")
-            if savefigs is not None:
-                plt.savefig(savefigs + "_python_bestari.jpg")
+        plt.figure(figsize=(8, 8))
+        ptcolors = [colors[i] for i in best_c_hat_ari]
+        plt.scatter(x[:, 0], x[:, 1], c=ptcolors)
+        plt.title(
+            "py(agg-gmm) ARI %3.3f from " % best_ari
+            + str(best_combo_ari)
+            + " k="
+            + str(best_k_ari)
+        )  # + "iter=" + str(best_iter_ari))
+        plt.xlabel("First feature")
+        plt.ylabel("Second feature")
+        if savefigs is not None:
+            plt.savefig(savefigs + "_python_bestari.jpg")
 
-            # ARI vs BIC********************************
-            plt.figure(figsize=(8, 8))
-            for row in np.arange(4):
-                xs = bics[row * 11 : (row + 1) * 11, :]
-                ys = aris[row * 11 : (row + 1) * 11, :]
-                idxs = (xs != -np.inf) * (ys != -np.inf)
-                plt.scatter(xs[idxs], ys[idxs], label=titles[row])
+        # ARI vs BIC********************************
+        plt.figure(figsize=(8, 8))
+        for row in np.arange(4):
+            xs = bics[row * 11 : (row + 1) * 11, :]
+            ys = aris[row * 11 : (row + 1) * 11, :]
+            idxs = (xs != -np.inf) * (ys != -np.inf)
+            plt.scatter(xs[idxs], ys[idxs], label=titles[row])
 
-            idxs = (bics != -np.inf) * (aris != -np.inf)
-            slope, _, r_value, _, p_value = stats.linregress(bics[idxs], aris[idxs])
-            plt.xlabel("BIC")
-            plt.ylabel("ARI")
-            plt.legend(loc="lower right")
-            plt.title(
-                "Pyclust's ARI vs BIC for Drosophila Data with Correlation r^2=%2.2f"
-                % (r_value ** 2)
-            )
-            if savefigs is not None:
-                plt.savefig(savefigs + "_python_bicari.jpg")
+        idxs = (bics != -np.inf) * (aris != -np.inf)
+        slope, _, r_value, _, p_value = stats.linregress(bics[idxs], aris[idxs])
+        plt.xlabel("BIC")
+        plt.ylabel("ARI")
+        plt.legend(loc="lower right")
+        plt.title(
+            "Pyclust's ARI vs BIC for Drosophila Data with Correlation r^2=%2.2f"
+            % (r_value ** 2)
+        )
+        if savefigs is not None:
+            plt.savefig(savefigs + "_python_bicari.jpg")
 
     if plot:
         # plot of all BICS*******************************
