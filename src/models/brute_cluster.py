@@ -493,6 +493,6 @@ def brute_cluster(
         plt.show()
         if savefigs is not None:
             plt.savefig(savefigs + "_python_bicplot.png")
-
+    print(best_combo_bic)
     return best_c_hat_bic, best_n_params
 
