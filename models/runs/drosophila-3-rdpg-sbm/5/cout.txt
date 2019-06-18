@@ -1,0 +1,643 @@
+INFO - Drosophila model selection 3 - SBM, RDPG, tSBM - Running command 'main'
+INFO - Drosophila model selection 3 - SBM, RDPG, tSBM - Started run with ID "5"
+HERE - TRYING NONE
+K=2, Affinity=none, Linkage=none, Covariance=full
+K=2, Affinity=none, Linkage=none, Covariance=tied
+K=2, Affinity=none, Linkage=none, Covariance=diag
+K=2, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=3, Affinity=none, Linkage=none, Covariance=full
+K=3, Affinity=none, Linkage=none, Covariance=tied
+K=3, Affinity=none, Linkage=none, Covariance=diag
+K=3, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=4, Affinity=none, Linkage=none, Covariance=full
+K=4, Affinity=none, Linkage=none, Covariance=tied
+K=4, Affinity=none, Linkage=none, Covariance=diag
+K=4, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=5, Affinity=none, Linkage=none, Covariance=full
+K=5, Affinity=none, Linkage=none, Covariance=tied
+K=5, Affinity=none, Linkage=none, Covariance=diag
+K=5, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=6, Affinity=none, Linkage=none, Covariance=full
+K=6, Affinity=none, Linkage=none, Covariance=tied
+K=6, Affinity=none, Linkage=none, Covariance=diag
+K=6, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=7, Affinity=none, Linkage=none, Covariance=full
+K=7, Affinity=none, Linkage=none, Covariance=tied
+K=7, Affinity=none, Linkage=none, Covariance=diag
+K=7, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=8, Affinity=none, Linkage=none, Covariance=full
+K=8, Affinity=none, Linkage=none, Covariance=tied
+K=8, Affinity=none, Linkage=none, Covariance=diag
+K=8, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=9, Affinity=none, Linkage=none, Covariance=full
+K=9, Affinity=none, Linkage=none, Covariance=tied
+K=9, Affinity=none, Linkage=none, Covariance=diag
+K=9, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=10, Affinity=none, Linkage=none, Covariance=full
+K=10, Affinity=none, Linkage=none, Covariance=tied
+K=10, Affinity=none, Linkage=none, Covariance=diag
+K=10, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=2, Affinity=none, Linkage=none, Covariance=full
+K=2, Affinity=none, Linkage=none, Covariance=tied
+K=2, Affinity=none, Linkage=none, Covariance=diag
+K=2, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=3, Affinity=none, Linkage=none, Covariance=full
+K=3, Affinity=none, Linkage=none, Covariance=tied
+K=3, Affinity=none, Linkage=none, Covariance=diag
+K=3, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=4, Affinity=none, Linkage=none, Covariance=full
+K=4, Affinity=none, Linkage=none, Covariance=tied
+K=4, Affinity=none, Linkage=none, Covariance=diag
+K=4, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=5, Affinity=none, Linkage=none, Covariance=full
+K=5, Affinity=none, Linkage=none, Covariance=tied
+K=5, Affinity=none, Linkage=none, Covariance=diag
+K=5, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=6, Affinity=none, Linkage=none, Covariance=full
+K=6, Affinity=none, Linkage=none, Covariance=tied
+K=6, Affinity=none, Linkage=none, Covariance=diag
+K=6, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=7, Affinity=none, Linkage=none, Covariance=full
+K=7, Affinity=none, Linkage=none, Covariance=tied
+K=7, Affinity=none, Linkage=none, Covariance=diag
+K=7, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=8, Affinity=none, Linkage=none, Covariance=full
+K=8, Affinity=none, Linkage=none, Covariance=tied
+K=8, Affinity=none, Linkage=none, Covariance=diag
+K=8, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=9, Affinity=none, Linkage=none, Covariance=full
+K=9, Affinity=none, Linkage=none, Covariance=tied
+K=9, Affinity=none, Linkage=none, Covariance=diag
+K=9, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=10, Affinity=none, Linkage=none, Covariance=full
+K=10, Affinity=none, Linkage=none, Covariance=tied
+K=10, Affinity=none, Linkage=none, Covariance=diag
+K=10, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=2, Affinity=none, Linkage=none, Covariance=full
+K=2, Affinity=none, Linkage=none, Covariance=tied
+K=2, Affinity=none, Linkage=none, Covariance=diag
+K=2, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=3, Affinity=none, Linkage=none, Covariance=full
+K=3, Affinity=none, Linkage=none, Covariance=tied
+K=3, Affinity=none, Linkage=none, Covariance=diag
+K=3, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=4, Affinity=none, Linkage=none, Covariance=full
+K=4, Affinity=none, Linkage=none, Covariance=tied
+K=4, Affinity=none, Linkage=none, Covariance=diag
+K=4, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=5, Affinity=none, Linkage=none, Covariance=full
+K=5, Affinity=none, Linkage=none, Covariance=tied
+K=5, Affinity=none, Linkage=none, Covariance=diag
+K=5, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=6, Affinity=none, Linkage=none, Covariance=full
+K=6, Affinity=none, Linkage=none, Covariance=tied
+K=6, Affinity=none, Linkage=none, Covariance=diag
+K=6, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=7, Affinity=none, Linkage=none, Covariance=full
+K=7, Affinity=none, Linkage=none, Covariance=tied
+K=7, Affinity=none, Linkage=none, Covariance=diag
+K=7, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=8, Affinity=none, Linkage=none, Covariance=full
+K=8, Affinity=none, Linkage=none, Covariance=tied
+K=8, Affinity=none, Linkage=none, Covariance=diag
+K=8, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=9, Affinity=none, Linkage=none, Covariance=full
+K=9, Affinity=none, Linkage=none, Covariance=tied
+K=9, Affinity=none, Linkage=none, Covariance=diag
+K=9, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=10, Affinity=none, Linkage=none, Covariance=full
+K=10, Affinity=none, Linkage=none, Covariance=tied
+K=10, Affinity=none, Linkage=none, Covariance=diag
+K=10, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=2, Affinity=none, Linkage=none, Covariance=full
+K=2, Affinity=none, Linkage=none, Covariance=tied
+K=2, Affinity=none, Linkage=none, Covariance=diag
+K=2, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=3, Affinity=none, Linkage=none, Covariance=full
+K=3, Affinity=none, Linkage=none, Covariance=tied
+K=3, Affinity=none, Linkage=none, Covariance=diag
+K=3, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=4, Affinity=none, Linkage=none, Covariance=full
+K=4, Affinity=none, Linkage=none, Covariance=tied
+K=4, Affinity=none, Linkage=none, Covariance=diag
+K=4, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=5, Affinity=none, Linkage=none, Covariance=full
+K=5, Affinity=none, Linkage=none, Covariance=tied
+K=5, Affinity=none, Linkage=none, Covariance=diag
+K=5, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=6, Affinity=none, Linkage=none, Covariance=full
+K=6, Affinity=none, Linkage=none, Covariance=tied
+K=6, Affinity=none, Linkage=none, Covariance=diag
+K=6, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=7, Affinity=none, Linkage=none, Covariance=full
+K=7, Affinity=none, Linkage=none, Covariance=tied
+K=7, Affinity=none, Linkage=none, Covariance=diag
+K=7, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=8, Affinity=none, Linkage=none, Covariance=full
+K=8, Affinity=none, Linkage=none, Covariance=tied
+K=8, Affinity=none, Linkage=none, Covariance=diag
+K=8, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=9, Affinity=none, Linkage=none, Covariance=full
+K=9, Affinity=none, Linkage=none, Covariance=tied
+K=9, Affinity=none, Linkage=none, Covariance=diag
+K=9, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=10, Affinity=none, Linkage=none, Covariance=full
+K=10, Affinity=none, Linkage=none, Covariance=tied
+K=10, Affinity=none, Linkage=none, Covariance=diag
+K=10, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=2, Affinity=none, Linkage=none, Covariance=full
+K=2, Affinity=none, Linkage=none, Covariance=tied
+K=2, Affinity=none, Linkage=none, Covariance=diag
+K=2, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=3, Affinity=none, Linkage=none, Covariance=full
+K=3, Affinity=none, Linkage=none, Covariance=tied
+K=3, Affinity=none, Linkage=none, Covariance=diag
+K=3, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=4, Affinity=none, Linkage=none, Covariance=full
+K=4, Affinity=none, Linkage=none, Covariance=tied
+K=4, Affinity=none, Linkage=none, Covariance=diag
+K=4, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=5, Affinity=none, Linkage=none, Covariance=full
+K=5, Affinity=none, Linkage=none, Covariance=tied
+K=5, Affinity=none, Linkage=none, Covariance=diag
+K=5, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=6, Affinity=none, Linkage=none, Covariance=full
+K=6, Affinity=none, Linkage=none, Covariance=tied
+K=6, Affinity=none, Linkage=none, Covariance=diag
+K=6, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=7, Affinity=none, Linkage=none, Covariance=full
+K=7, Affinity=none, Linkage=none, Covariance=tied
+K=7, Affinity=none, Linkage=none, Covariance=diag
+K=7, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=8, Affinity=none, Linkage=none, Covariance=full
+K=8, Affinity=none, Linkage=none, Covariance=tied
+K=8, Affinity=none, Linkage=none, Covariance=diag
+K=8, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=9, Affinity=none, Linkage=none, Covariance=full
+K=9, Affinity=none, Linkage=none, Covariance=tied
+K=9, Affinity=none, Linkage=none, Covariance=diag
+K=9, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=10, Affinity=none, Linkage=none, Covariance=full
+K=10, Affinity=none, Linkage=none, Covariance=tied
+K=10, Affinity=none, Linkage=none, Covariance=diag
+K=10, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=2, Affinity=none, Linkage=none, Covariance=full
+K=2, Affinity=none, Linkage=none, Covariance=tied
+K=2, Affinity=none, Linkage=none, Covariance=diag
+K=2, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=3, Affinity=none, Linkage=none, Covariance=full
+K=3, Affinity=none, Linkage=none, Covariance=tied
+K=3, Affinity=none, Linkage=none, Covariance=diag
+K=3, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=4, Affinity=none, Linkage=none, Covariance=full
+K=4, Affinity=none, Linkage=none, Covariance=tied
+K=4, Affinity=none, Linkage=none, Covariance=diag
+K=4, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=5, Affinity=none, Linkage=none, Covariance=full
+K=5, Affinity=none, Linkage=none, Covariance=tied
+K=5, Affinity=none, Linkage=none, Covariance=diag
+K=5, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=6, Affinity=none, Linkage=none, Covariance=full
+K=6, Affinity=none, Linkage=none, Covariance=tied
+K=6, Affinity=none, Linkage=none, Covariance=diag
+K=6, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=7, Affinity=none, Linkage=none, Covariance=full
+K=7, Affinity=none, Linkage=none, Covariance=tied
+K=7, Affinity=none, Linkage=none, Covariance=diag
+K=7, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=8, Affinity=none, Linkage=none, Covariance=full
+K=8, Affinity=none, Linkage=none, Covariance=tied
+K=8, Affinity=none, Linkage=none, Covariance=diag
+K=8, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=9, Affinity=none, Linkage=none, Covariance=full
+K=9, Affinity=none, Linkage=none, Covariance=tied
+K=9, Affinity=none, Linkage=none, Covariance=diag
+K=9, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=10, Affinity=none, Linkage=none, Covariance=full
+K=10, Affinity=none, Linkage=none, Covariance=tied
+K=10, Affinity=none, Linkage=none, Covariance=diag
+K=10, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=2, Affinity=none, Linkage=none, Covariance=full
+K=2, Affinity=none, Linkage=none, Covariance=tied
+K=2, Affinity=none, Linkage=none, Covariance=diag
+K=2, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=3, Affinity=none, Linkage=none, Covariance=full
+K=3, Affinity=none, Linkage=none, Covariance=tied
+K=3, Affinity=none, Linkage=none, Covariance=diag
+K=3, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=4, Affinity=none, Linkage=none, Covariance=full
+K=4, Affinity=none, Linkage=none, Covariance=tied
+K=4, Affinity=none, Linkage=none, Covariance=diag
+K=4, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=5, Affinity=none, Linkage=none, Covariance=full
+K=5, Affinity=none, Linkage=none, Covariance=tied
+K=5, Affinity=none, Linkage=none, Covariance=diag
+K=5, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=6, Affinity=none, Linkage=none, Covariance=full
+K=6, Affinity=none, Linkage=none, Covariance=tied
+K=6, Affinity=none, Linkage=none, Covariance=diag
+K=6, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=7, Affinity=none, Linkage=none, Covariance=full
+K=7, Affinity=none, Linkage=none, Covariance=tied
+K=7, Affinity=none, Linkage=none, Covariance=diag
+K=7, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=8, Affinity=none, Linkage=none, Covariance=full
+K=8, Affinity=none, Linkage=none, Covariance=tied
+K=8, Affinity=none, Linkage=none, Covariance=diag
+K=8, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=9, Affinity=none, Linkage=none, Covariance=full
+K=9, Affinity=none, Linkage=none, Covariance=tied
+K=9, Affinity=none, Linkage=none, Covariance=diag
+K=9, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=10, Affinity=none, Linkage=none, Covariance=full
+K=10, Affinity=none, Linkage=none, Covariance=tied
+K=10, Affinity=none, Linkage=none, Covariance=diag
+K=10, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=2, Affinity=none, Linkage=none, Covariance=full
+K=2, Affinity=none, Linkage=none, Covariance=tied
+K=2, Affinity=none, Linkage=none, Covariance=diag
+K=2, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=3, Affinity=none, Linkage=none, Covariance=full
+K=3, Affinity=none, Linkage=none, Covariance=tied
+K=3, Affinity=none, Linkage=none, Covariance=diag
+K=3, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=4, Affinity=none, Linkage=none, Covariance=full
+K=4, Affinity=none, Linkage=none, Covariance=tied
+K=4, Affinity=none, Linkage=none, Covariance=diag
+K=4, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=5, Affinity=none, Linkage=none, Covariance=full
+K=5, Affinity=none, Linkage=none, Covariance=tied
+K=5, Affinity=none, Linkage=none, Covariance=diag
+K=5, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=6, Affinity=none, Linkage=none, Covariance=full
+K=6, Affinity=none, Linkage=none, Covariance=tied
+K=6, Affinity=none, Linkage=none, Covariance=diag
+K=6, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=7, Affinity=none, Linkage=none, Covariance=full
+K=7, Affinity=none, Linkage=none, Covariance=tied
+K=7, Affinity=none, Linkage=none, Covariance=diag
+K=7, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=8, Affinity=none, Linkage=none, Covariance=full
+K=8, Affinity=none, Linkage=none, Covariance=tied
+K=8, Affinity=none, Linkage=none, Covariance=diag
+K=8, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=9, Affinity=none, Linkage=none, Covariance=full
+K=9, Affinity=none, Linkage=none, Covariance=tied
+K=9, Affinity=none, Linkage=none, Covariance=diag
+K=9, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=10, Affinity=none, Linkage=none, Covariance=full
+K=10, Affinity=none, Linkage=none, Covariance=tied
+K=10, Affinity=none, Linkage=none, Covariance=diag
+K=10, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=2, Affinity=none, Linkage=none, Covariance=full
+K=2, Affinity=none, Linkage=none, Covariance=tied
+K=2, Affinity=none, Linkage=none, Covariance=diag
+K=2, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=3, Affinity=none, Linkage=none, Covariance=full
+K=3, Affinity=none, Linkage=none, Covariance=tied
+K=3, Affinity=none, Linkage=none, Covariance=diag
+K=3, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=4, Affinity=none, Linkage=none, Covariance=full
+K=4, Affinity=none, Linkage=none, Covariance=tied
+K=4, Affinity=none, Linkage=none, Covariance=diag
+K=4, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=5, Affinity=none, Linkage=none, Covariance=full
+K=5, Affinity=none, Linkage=none, Covariance=tied
+K=5, Affinity=none, Linkage=none, Covariance=diag
+K=5, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=6, Affinity=none, Linkage=none, Covariance=full
+K=6, Affinity=none, Linkage=none, Covariance=tied
+K=6, Affinity=none, Linkage=none, Covariance=diag
+K=6, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=7, Affinity=none, Linkage=none, Covariance=full
+K=7, Affinity=none, Linkage=none, Covariance=tied
+K=7, Affinity=none, Linkage=none, Covariance=diag
+K=7, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=8, Affinity=none, Linkage=none, Covariance=full
+K=8, Affinity=none, Linkage=none, Covariance=tied
+K=8, Affinity=none, Linkage=none, Covariance=diag
+K=8, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=9, Affinity=none, Linkage=none, Covariance=full
+K=9, Affinity=none, Linkage=none, Covariance=tied
+K=9, Affinity=none, Linkage=none, Covariance=diag
+K=9, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=10, Affinity=none, Linkage=none, Covariance=full
+K=10, Affinity=none, Linkage=none, Covariance=tied
+K=10, Affinity=none, Linkage=none, Covariance=diag
+K=10, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=2, Affinity=none, Linkage=none, Covariance=full
+K=2, Affinity=none, Linkage=none, Covariance=tied
+K=2, Affinity=none, Linkage=none, Covariance=diag
+K=2, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=3, Affinity=none, Linkage=none, Covariance=full
+K=3, Affinity=none, Linkage=none, Covariance=tied
+K=3, Affinity=none, Linkage=none, Covariance=diag
+K=3, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=4, Affinity=none, Linkage=none, Covariance=full
+K=4, Affinity=none, Linkage=none, Covariance=tied
+K=4, Affinity=none, Linkage=none, Covariance=diag
+K=4, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=5, Affinity=none, Linkage=none, Covariance=full
+K=5, Affinity=none, Linkage=none, Covariance=tied
+K=5, Affinity=none, Linkage=none, Covariance=diag
+K=5, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=6, Affinity=none, Linkage=none, Covariance=full
+K=6, Affinity=none, Linkage=none, Covariance=tied
+K=6, Affinity=none, Linkage=none, Covariance=diag
+K=6, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=7, Affinity=none, Linkage=none, Covariance=full
+K=7, Affinity=none, Linkage=none, Covariance=tied
+K=7, Affinity=none, Linkage=none, Covariance=diag
+K=7, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=8, Affinity=none, Linkage=none, Covariance=full
+K=8, Affinity=none, Linkage=none, Covariance=tied
+K=8, Affinity=none, Linkage=none, Covariance=diag
+K=8, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=9, Affinity=none, Linkage=none, Covariance=full
+K=9, Affinity=none, Linkage=none, Covariance=tied
+K=9, Affinity=none, Linkage=none, Covariance=diag
+K=9, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=10, Affinity=none, Linkage=none, Covariance=full
+K=10, Affinity=none, Linkage=none, Covariance=tied
+K=10, Affinity=none, Linkage=none, Covariance=diag
+K=10, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=2, Affinity=none, Linkage=none, Covariance=full
+K=2, Affinity=none, Linkage=none, Covariance=tied
+K=2, Affinity=none, Linkage=none, Covariance=diag
+K=2, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=3, Affinity=none, Linkage=none, Covariance=full
+K=3, Affinity=none, Linkage=none, Covariance=tied
+K=3, Affinity=none, Linkage=none, Covariance=diag
+K=3, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=4, Affinity=none, Linkage=none, Covariance=full
+K=4, Affinity=none, Linkage=none, Covariance=tied
+K=4, Affinity=none, Linkage=none, Covariance=diag
+K=4, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=5, Affinity=none, Linkage=none, Covariance=full
+K=5, Affinity=none, Linkage=none, Covariance=tied
+K=5, Affinity=none, Linkage=none, Covariance=diag
+K=5, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=6, Affinity=none, Linkage=none, Covariance=full
+K=6, Affinity=none, Linkage=none, Covariance=tied
+K=6, Affinity=none, Linkage=none, Covariance=diag
+K=6, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=7, Affinity=none, Linkage=none, Covariance=full
+K=7, Affinity=none, Linkage=none, Covariance=tied
+K=7, Affinity=none, Linkage=none, Covariance=diag
+K=7, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=8, Affinity=none, Linkage=none, Covariance=full
+K=8, Affinity=none, Linkage=none, Covariance=tied
+K=8, Affinity=none, Linkage=none, Covariance=diag
+K=8, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=9, Affinity=none, Linkage=none, Covariance=full
+K=9, Affinity=none, Linkage=none, Covariance=tied
+K=9, Affinity=none, Linkage=none, Covariance=diag
+K=9, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=10, Affinity=none, Linkage=none, Covariance=full
+K=10, Affinity=none, Linkage=none, Covariance=tied
+K=10, Affinity=none, Linkage=none, Covariance=diag
+K=10, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=2, Affinity=none, Linkage=none, Covariance=full
+K=2, Affinity=none, Linkage=none, Covariance=tied
+K=2, Affinity=none, Linkage=none, Covariance=diag
+K=2, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=3, Affinity=none, Linkage=none, Covariance=full
+K=3, Affinity=none, Linkage=none, Covariance=tied
+K=3, Affinity=none, Linkage=none, Covariance=diag
+K=3, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=4, Affinity=none, Linkage=none, Covariance=full
+K=4, Affinity=none, Linkage=none, Covariance=tied
+K=4, Affinity=none, Linkage=none, Covariance=diag
+K=4, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=5, Affinity=none, Linkage=none, Covariance=full
+K=5, Affinity=none, Linkage=none, Covariance=tied
+K=5, Affinity=none, Linkage=none, Covariance=diag
+K=5, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=6, Affinity=none, Linkage=none, Covariance=full
+K=6, Affinity=none, Linkage=none, Covariance=tied
+K=6, Affinity=none, Linkage=none, Covariance=diag
+K=6, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=7, Affinity=none, Linkage=none, Covariance=full
+K=7, Affinity=none, Linkage=none, Covariance=tied
+K=7, Affinity=none, Linkage=none, Covariance=diag
+K=7, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=8, Affinity=none, Linkage=none, Covariance=full
+K=8, Affinity=none, Linkage=none, Covariance=tied
+K=8, Affinity=none, Linkage=none, Covariance=diag
+K=8, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=9, Affinity=none, Linkage=none, Covariance=full
+K=9, Affinity=none, Linkage=none, Covariance=tied
+K=9, Affinity=none, Linkage=none, Covariance=diag
+K=9, Affinity=none, Linkage=none, Covariance=spherical
+HERE - TRYING NONE
+K=10, Affinity=none, Linkage=none, Covariance=full
+K=10, Affinity=none, Linkage=none, Covariance=tied
+K=10, Affinity=none, Linkage=none, Covariance=diag
+K=10, Affinity=none, Linkage=none, Covariance=spherical
+INFO - Drosophila model selection 3 - SBM, RDPG, tSBM - Result: (          mse  n_block_try  n_components_try  ...          rss         score  sim_ind
+0    0.166239          1.0               1.0  ...  3613.379594 -11221.955282        0
+1    0.126354          2.0               1.0  ...  2746.423176  -7634.900063        0
+2    0.107102          3.0               1.0  ...  2327.976855  -7027.232530        0
+3    0.090412          4.0               1.0  ...  1965.187521  -5890.086601        0
+4    0.127972          5.0               1.0  ...  2781.595604 -16295.799117        0
+5    0.092456          6.0               1.0  ...  2009.633751  -7416.208957        0
+6    0.076752          7.0               1.0  ...  1668.282556  -6595.710860        0
+7    0.098904          8.0               1.0  ...  2149.787758 -12789.197975        0
+8    0.084244          9.0               1.0  ...  1831.137820  -5901.012810        0
+9    0.089020         10.0               1.0  ...  1934.934215  -6621.521809        0
+10   0.166239          1.0               2.0  ...  3613.379594 -11221.955282        0
+11   0.127883          2.0               2.0  ...  2779.666141  -8346.857791        0
+12   0.097775          3.0               2.0  ...  2125.240855  -6497.556499        0
+13   0.093819          4.0               2.0  ...  2039.253410  -5953.516610        0
+14   0.092992          5.0               2.0  ...  2021.264300  -6222.708548        0
+15   0.085891          6.0               2.0  ...  1866.921602 -10610.564685        0
+16   0.068715          7.0               2.0  ...  1493.588924  -5698.011265        0
+17   0.080221          8.0               2.0  ...  1743.688082  -9208.196602        0
+18   0.075474          9.0               2.0  ...  1640.512885  -7958.136848        0
+19   0.113144         10.0               2.0  ...  2459.290127 -17943.741200        0
+20   0.166239          1.0               3.0  ...  3613.379594 -11221.955282        0
+21   0.125902          2.0               3.0  ...  2736.600430  -8279.621647        0
+22   0.113547          3.0               3.0  ...  2468.061202  -7686.319753        0
+23   0.072137          4.0               3.0  ...  1567.963286  -5146.841652        0
+24   0.116026          5.0               3.0  ...  2521.949649 -15685.287602        0
+25   0.089482          6.0               3.0  ...  1944.989997 -10913.581785        0
+26   0.113775          7.0               3.0  ...  2473.011098 -17122.054935        0
+27   0.090163          8.0               3.0  ...  1959.781448 -12330.394799        0
+28   0.105723          9.0               3.0  ...  2297.985098 -15519.940221        0
+29   0.111789         10.0               3.0  ...  2429.853011 -17204.504535        0
+..        ...          ...               ...  ...          ...           ...      ...
+90   0.166239          1.0              10.0  ...  3613.379594 -11221.955282        0
+91   0.127862          2.0              10.0  ...  2779.200933  -8343.478695        0
+92   0.076764          3.0              10.0  ...  1668.537519  -5887.766884        0
+93   0.109743          4.0              10.0  ...  2385.378873  -7125.937918        0
+94   0.116400          5.0              10.0  ...  2530.074370  -8303.085386        0
+95   0.075042          6.0              10.0  ...  1631.117669  -5366.090325        0
+96   0.066807          7.0              10.0  ...  1452.125827  -4857.551419        0
+97   0.113851          8.0              10.0  ...  2474.661357 -11587.185959        0
+98   0.103175          9.0              10.0  ...  2242.609012  -8210.252549        0
+99   0.121196         10.0              10.0  ...  2634.317737 -20443.892617        0
+100  0.166239          1.0              11.0  ...  3613.379594 -11221.955282        0
+101  0.165438          2.0              11.0  ...  3595.960329 -11162.159387        0
+102  0.077328          3.0              11.0  ...  1680.803311  -5944.430052        0
+103  0.116547          4.0              11.0  ...  2533.260885  -8324.705335        0
+104  0.121352          5.0              11.0  ...  2637.704779  -7988.228179        0
+105  0.065694          6.0              11.0  ...  1427.935597  -4637.738039        0
+106  0.077360          7.0              11.0  ...  1681.503779  -5254.126221        0
+107  0.112558          8.0              11.0  ...  2446.558795  -9051.331784        0
+108  0.080085          9.0              11.0  ...  1740.734635  -6475.292314        0
+109  0.100803         10.0              11.0  ...  2191.047419  -8995.867546        0
+110  0.166239          1.0              12.0  ...  3613.379594 -11221.955282        0
+111  0.136491          2.0              12.0  ...  2966.771256  -9134.378617        0
+112  0.121492          3.0              12.0  ...  2640.752737  -8016.735877        0
+113  0.118938          4.0              12.0  ...  2585.228058  -8618.141866        0
+114  0.133186          5.0              12.0  ...  2894.933441 -21030.219809        0
+115  0.125902          6.0              12.0  ...  2736.604959 -20355.380426        0
+116  0.122765          7.0              12.0  ...  2668.419124  -8922.976655        0
+117  0.097903          8.0              12.0  ...  2128.024207 -10347.561775        0
+118  0.085938          9.0              12.0  ...  1867.942821  -7479.140444        0
+119  0.112439         10.0              12.0  ...  2443.979024 -10238.383105        0
+
+[120 rows x 8 columns],             rss       mse        score  n_components_try  n_params  directed
+0   3069.390125  0.070606 -9865.323669               1.0     418.0      True
+1   2670.641738  0.061434 -8878.036470               2.0     836.0      True
+2   2304.472540  0.053011 -7501.234134               3.0    1254.0      True
+3   2221.274860  0.051097 -7225.033581               4.0    1672.0      True
+4   2146.686214  0.049381 -7003.629894               5.0    2090.0      True
+5   2078.017729  0.047801 -6843.424105               6.0    2508.0      True
+6   2011.652955  0.046275 -6638.912047               7.0    2926.0      True
+7   1948.955614  0.044832 -6398.862048               8.0    3344.0      True
+8   1889.964833  0.043475 -6293.870214               9.0    3762.0      True
+9   1825.772856  0.041999 -6033.051570              10.0    4180.0      True
+10  1766.329478  0.040631 -5848.232618              11.0    4598.0      True
+11  1712.209040  0.039386 -5645.806639              12.0    5016.0      True,      n_params_gmm  n_params_sbm  ...  n_components_try  n_block_try
+0             1.0           1.0  ...               1.0          1.0
+1            11.0           3.0  ...               1.0          2.0
+2            17.0           6.0  ...               1.0          3.0
+3            23.0          10.0  ...               1.0          4.0
+4            24.0          15.0  ...               1.0          5.0
+5            29.0          21.0  ...               1.0          6.0
+6            34.0          28.0  ...               1.0          7.0
+7            39.0          36.0  ...               1.0          8.0
+8            44.0          45.0  ...               1.0          9.0
+9            59.0          55.0  ...               1.0         10.0
+10            1.0           1.0  ...               2.0          1.0
+11           29.0           3.0  ...               2.0          2.0
+12           44.0           6.0  ...               2.0          3.0
+13           59.0          10.0  ...               2.0          4.0
+14           74.0          15.0  ...               2.0          5.0
+15           89.0          21.0  ...               2.0          6.0
+16          104.0          28.0  ...               2.0          7.0
+17          119.0          36.0  ...               2.0          8.0
+18           80.0          45.0  ...               2.0          9.0
+19          149.0          55.0  ...               2.0         10.0
+20            1.0           1.0  ...               3.0          1.0
+21           55.0           3.0  ...               3.0          2.0
+22           83.0           6.0  ...               3.0          3.0
+23          111.0          10.0  ...               3.0          4.0
+24           64.0          15.0  ...               3.0          5.0

@@ -213,6 +213,7 @@ def cluster(data, aff, link, cov, k, c_true=None):
     iter_num = 100
     if aff == "none" or link == "none":
         try:  # no regularization
+            raise ValueError
             reg = 0
             gmm = GaussianMixture(
                 n_components=k,
@@ -224,8 +225,8 @@ def cluster(data, aff, link, cov, k, c_true=None):
             )
             c_hat = gmm.fit_predict(data)
             bic = processBIC(data, gmm.weights_, gmm.means_, gmm.covariances_, cov)
-            # if any([sum(c_hat == i) <= 1 for i in range(k)]) or bic == -np.inf:
-            #     raise ValueError
+            if any([sum(c_hat == i) <= 1 for i in range(k)]) or bic == -np.inf:
+                raise ValueError
         # if there was a numerical error during EM,or while calculating BIC,
         # or if the clustering found a class with only one element
         except:  # regularize
