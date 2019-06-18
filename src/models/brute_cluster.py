@@ -224,8 +224,8 @@ def cluster(data, aff, link, cov, k, c_true=None):
             )
             c_hat = gmm.fit_predict(data)
             bic = processBIC(data, gmm.weights_, gmm.means_, gmm.covariances_, cov)
-            if any([sum(c_hat == i) <= 1 for i in range(k)]) or bic == -np.inf:
-                raise ValueError
+            # if any([sum(c_hat == i) <= 1 for i in range(k)]) or bic == -np.inf:
+            #     raise ValueError
         # if there was a numerical error during EM,or while calculating BIC,
         # or if the clustering found a class with only one element
         except:  # regularize
@@ -297,7 +297,7 @@ def brute_cluster(
     c_true=None,
     plot=False,
     savefigs=None,
-    verbose=0,
+    verbose=1,
 ):
     """
     Cluster all combinations of options and plot results
@@ -349,16 +349,7 @@ def brute_cluster(
                     continue
                 for cov in covariance_types:
                     if verbose == 1:
-                        print(
-                            "K="
-                            + k
-                            + " Affinity= "
-                            + af
-                            + " Linkage= "
-                            + li
-                            + " Covariance= "
-                            + cov
-                        )
+                        print(f"K={k}, Affinity={af}, Linkage={li}, Covariance={cov}")
                     row = 11 * cov_dict[cov] + 3 * aff_dict[af] + link_dict[li]
 
                     c_hat, means, bic, ari, reg, n_params = cluster(
@@ -379,7 +370,6 @@ def brute_cluster(
                         best_combo_bic = [af, li, cov]
                         best_c_hat_bic = c_hat
                         best_k_bic = k
-                        best_ari_bic = ari
                         best_means_bic = means
                         reg_bic = reg
                         best_n_params = n_params
