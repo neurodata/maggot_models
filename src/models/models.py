@@ -35,6 +35,10 @@ def estimate_assignments(graph, n_communities, n_components=None, method="gc"):
         n_params = gc.model_._n_parameters()
     elif method == "bc":
         vertex_assignments, n_params = brute_cluster(latent, [n_communities])
+    elif method == "bc-none":
+        vertex_assignments, n_params = brute_cluster(
+            latent, [n_communities], affinities=["none"], linkages=["none"]
+        )
     else:
         raise ValueError("Unspecified clustering method")
     return (vertex_assignments, n_params)

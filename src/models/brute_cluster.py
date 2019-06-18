@@ -295,8 +295,8 @@ def brute_cluster(
     linkages=None,
     covariance_types=None,
     c_true=None,
-    plot=True,
-    savefigs="trysave",
+    plot=False,
+    savefigs=None,
     verbose=0,
 ):
     """
@@ -452,6 +452,7 @@ def brute_cluster(
             "Pyclust's ARI vs BIC for Drosophila Data with Correlation r^2=%2.2f"
             % (r_value ** 2)
         )
+        plt.show()
         if savefigs is not None:
             plt.savefig(savefigs + "_python_bicari.png")
 
@@ -497,6 +498,7 @@ def brute_cluster(
         ax2.set(ylabel="bic")
         ax3.set_title(titles[3])
         ax3.set(xlabel="k")
+        plt.show()
         if savefigs is not None:
             plt.savefig(savefigs + "_python_bicplot.png")
 

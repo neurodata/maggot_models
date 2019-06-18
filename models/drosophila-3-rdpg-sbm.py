@@ -76,7 +76,11 @@ def run_fit(
         sbm_master_df = sbm_master_df.append(sbm_df, ignore_index=True, sort=True)
     rdpg_df = select_rdpg(graph, n_components_try_rdpg, directed)
     tsbm_master_df = select_sbm(
-        graph, n_components_try_range, n_block_try_range, directed=directed, method="bc"
+        graph,
+        n_components_try_range,
+        n_block_try_range,
+        directed=directed,
+        method="bc-none",
     )
     return (sbm_master_df, rdpg_df, tsbm_master_df)
 
