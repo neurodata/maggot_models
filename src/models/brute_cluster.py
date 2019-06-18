@@ -230,6 +230,7 @@ def cluster(data, aff, link, cov, k, c_true=None):
         # if there was a numerical error during EM,or while calculating BIC,
         # or if the clustering found a class with only one element
         except:  # regularize
+            print("regularizing!s")
             reg = 1e-6
             gmm = GaussianMixture(
                 n_components=k,
