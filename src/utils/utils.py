@@ -126,7 +126,7 @@ def compute_mse_from_assignments(assignments, graph, directed=True, loops=False)
     return compute_mse(estimator, graph)
 
 
-def get_best_df(df):
+def get_best_df(input_df):
     """super hard coded right now (e.g. column names)
     
     Parameters
@@ -139,22 +139,22 @@ def get_best_df(df):
     [type]
         [description]
     """
-    param_df = df[df["sim_ind"] == 0]
+    param_df = input_df[input_df["sim_ind"] == 0]
     labels = ["n_block_try", "n_components_try", "mse"]
     param_df = param_df.loc[:, labels]
     param_df["best_sim"] = 0
     param_df["best_ind"] = 0
     for i in range(50):
-        df = df[df["sim_ind"] == i]
+        df = input_df[input_df["sim_ind"] == i]
         for j, row in df.iterrows():
-            p_df = param_df.loc[
+            temp_df = param_df.loc[
                 (param_df[labels[0]] == row[labels[0]])
                 & (param_df[labels[1]] == row[labels[1]])
             ]
-            ind = p_df.index
+            ind = temp_df.index
             if row["mse"] <= param_df.loc[ind, "mse"].values[0]:
                 param_df.loc[ind, "mse"] = row["mse"]
                 param_df.loc[ind, "best_sim"] = row["sim_ind"]
                 param_df.loc[ind, "best_ind"] = j
-    best_df = df.loc[param_df["best_ind"].values, :]
+    best_df = input_df.loc[param_df["best_ind"].values, :]
     return best_df

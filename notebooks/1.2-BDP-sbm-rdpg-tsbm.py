@@ -27,8 +27,8 @@ os.getcwd()
 
 #%%
 experiment = "drosophila-3-rdpg-sbm"
-run = 11
-exp_path = Path(f"../models/runs/{experiment}/{run}")
+run = 12
+exp_path = Path(f"./maggot_models/models/runs/{experiment}/{run}")
 run_path = exp_path / "run.json"
 config_path = exp_path / "config.json"
 
@@ -56,7 +56,7 @@ rdpg_df["RDPG"] = "RDPG"
 # ### Plot the noise observed in SBM model fitting
 
 #%%
-# Plotting setup
+# Plotting setup}
 plt.style.use("seaborn-white")
 sns.set_context("talk", font_scale=1.5)
 plt_kws = dict(s=75, linewidth=0, legend="brief")
@@ -115,6 +115,8 @@ plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 
 
 #%%
+best_sbm_df = utils.get_best_df(sbm_df)
+best_tsbm_df = utils.get_best_df(tsbm_df)
 plt.figure(figsize=(22, 12))
 cmap = sns.light_palette("purple", as_cmap=True)
 
@@ -161,7 +163,7 @@ sns.scatterplot(
 
 cmap = sns.light_palette("teal", as_cmap=True)
 s = sns.scatterplot(
-    data=tsbm_df,
+    data=best_tsbm_df,
     x="n_params_gmm",
     y="mse",
     hue="n_components_try",
