@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from graspy.simulations import p_from_latent, sample_edges, sbm
+from graspy.models import SBMEstimator
 
 
 def hardy_weinberg(theta):
@@ -117,3 +118,9 @@ def get_json(file_path):
     out = json.load(f)
     f.close()
     return out
+
+
+def compute_mse_from_assignments(assignments, graph, directed=True, loops=False):
+    estimator = SBMEstimator(loops=loops, directed=directed)
+    estimator.fit(graph, y=assignments)
+    return compute_mse(estimator, graph)

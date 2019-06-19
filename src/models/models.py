@@ -11,7 +11,9 @@ from ..utils import compute_rss, compute_mse
 from .brute_cluster import brute_cluster
 
 
-def estimate_assignments(graph, n_communities, n_components=None, method="gc"):
+def estimate_assignments(
+    graph, n_communities, n_components=None, method="gc", metric=None
+):
     """Given a graph and n_comunities, sweeps over covariance structures
     Not deterministic
     Not using graph bic or mse to calculate best
@@ -37,6 +39,10 @@ def estimate_assignments(graph, n_communities, n_components=None, method="gc"):
         vertex_assignments, n_params = brute_cluster(
             latent, [n_communities], covariance_types=["full"]
         )
+    elif method == "bc-metric":
+        vertex_assignments, n_params = brute_cluster(
+            latent, [n_communities], covariance_types=["full"], metric=metric
+        )
     elif method == "bc-none":
         vertex_assignments, n_params = brute_cluster(
             latent,
@@ -59,7 +65,7 @@ def estimate_sbm(
         n_params = estimator._n_parameters()
     else:
         vertex_assignments, n_params = estimate_assignments(
-            graph, n_communities, n_components, method=method
+            graph, n_communities, n_components, method=method, metric=metric
         )
         estimator = SBMEstimator(directed=directed, loops=False)
         estimator.fit(graph, y=vertex_assignments)

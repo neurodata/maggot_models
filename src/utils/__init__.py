@@ -7,5 +7,6 @@ from .utils import (
     run_to_df,
     get_json,
     compute_mse,
+    compute_mse_from_assignments,
 )
 

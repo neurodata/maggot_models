@@ -8,6 +8,7 @@ from graspy.datasets import load_drosophila_left
 from graspy.utils import binarize, symmetrize, is_fully_connected
 from graspy.plot import heatmap
 from src.models import select_sbm, select_rdpg
+from src.utils import compute_mse_from_assignments
 import matplotlib.pyplot as plt
 
 ex = Experiment("Drosophila model selection 3 - SBM, RDPG, tSBM")
@@ -77,12 +78,16 @@ def run_fit(
 
     rdpg_df = select_rdpg(graph, n_components_try_rdpg, directed)
 
+    def metric(assignments, *args):
+        return -compute_mse_from_assignments(assignments, graph, directed=directed)
+
     tsbm_master_df = select_sbm(
         graph,
         n_components_try_range,
         n_block_try_range,
         directed=directed,
-        method="bc-none",
+        method="bc-metric",
+        metric=metric,
     )
     return (sbm_master_df, rdpg_df, tsbm_master_df)
 
