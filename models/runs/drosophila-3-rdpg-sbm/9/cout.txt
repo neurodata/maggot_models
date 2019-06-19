@@ -1,0 +1,239 @@
+INFO - Drosophila model selection 3 - SBM, RDPG, tSBM - Running command 'main'
+INFO - Drosophila model selection 3 - SBM, RDPG, tSBM - Started run with ID "9"
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+regularizing!s
+INFO - Drosophila model selection 3 - SBM, RDPG, tSBM - Result: (           mse  n_block_try  ...         score  sim_ind
+0     0.166239          1.0  ... -11221.955282        0
+1     0.126354          2.0  ...  -7634.900063        0
+2     0.107102          3.0  ...  -7027.232530        0
+3     0.090412          4.0  ...  -5890.086601        0
+4     0.127972          5.0  ... -16295.799117        0
+5     0.092456          6.0  ...  -7416.208957        0
+6     0.076752          7.0  ...  -6595.710860        0
+7     0.098904          8.0  ... -12789.197975        0
+8     0.084244          9.0  ...  -5901.012810        0
+9     0.089020         10.0  ...  -6621.521809        0
+10    0.166239          1.0  ... -11221.955282        0
+11    0.127883          2.0  ...  -8346.857791        0
+12    0.097775          3.0  ...  -6497.556499        0
+13    0.093819          4.0  ...  -5953.516610        0
+14    0.092992          5.0  ...  -6222.708548        0
+15    0.085891          6.0  ... -10610.564685        0
+16    0.068715          7.0  ...  -5698.011265        0
+17    0.080221          8.0  ...  -9208.196602        0
+18    0.075474          9.0  ...  -7958.136848        0
+19    0.113144         10.0  ... -17943.741200        0
+20    0.166239          1.0  ... -11221.955282        0
+21    0.125902          2.0  ...  -8279.621647        0
+22    0.113547          3.0  ...  -7686.319753        0
+23    0.072137          4.0  ...  -5146.841652        0
+24    0.116026          5.0  ... -15685.287602        0
+25    0.089482          6.0  ... -10913.581785        0
+26    0.113775          7.0  ... -17122.054935        0
+27    0.090163          8.0  ... -12330.394799        0
+28    0.105723          9.0  ... -15519.940221        0
+29    0.111789         10.0  ... -17204.504535        0
+...        ...          ...  ...           ...      ...
+5970  0.166239          1.0  ... -11221.955282       49
+5971  0.127862          2.0  ...  -8343.478695       49
+5972  0.129288          3.0  ...  -8541.789649       49
+5973  0.117176          4.0  ...  -8355.735397       49
+5974  0.069909          5.0  ...  -4983.839542       49
+5975  0.105146          6.0  ...  -6740.531567       49
+5976  0.083193          7.0  ...  -9979.654673       49
+5977  0.123311          8.0  ... -14387.297367       49
+5978  0.122716          9.0  ... -14430.497385       49
+5979  0.114211         10.0  ... -18018.133012       49
+5980  0.166239          1.0  ... -11221.955282       49
+5981  0.136491          2.0  ...  -9134.378617       49
+5982  0.077271          3.0  ...  -5899.025629       49
+5983  0.118889          4.0  ...  -8581.876295       49
+5984  0.107550          5.0  ...  -6954.460787       49
+5985  0.127195          6.0  ... -20861.817885       49
+5986  0.084660          7.0  ...  -7190.014321       49
+5987  0.095322          8.0  ...  -6352.297138       49
+5988  0.074216          9.0  ...  -8021.374191       49
+5989  0.111385         10.0  ... -12640.313851       49
+5990  0.166239          1.0  ... -11221.955282       49
+5991  0.104098          2.0  ...  -7255.769027       49
+5992  0.124909          3.0  ...  -8906.157711       49
+5993  0.077544          4.0  ...  -5908.096164       49
+5994  0.102306          5.0  ...  -6814.631557       49
+5995  0.125439          6.0  ... -13453.756796       49
+5996  0.082366          7.0  ...  -6724.186687       49
+5997  0.124189          8.0  ... -10419.195953       49
+5998  0.087810          9.0  ...  -7380.924015       49
+5999  0.091442         10.0  ...  -9021.927389       49
+
+[6000 rows x 8 columns],             rss       mse        score  n_components_try  n_params  directed
+0   3069.390125  0.070606 -9865.323669               1.0     418.0      True
+1   2670.641738  0.061434 -8878.036470               2.0     836.0      True
+2   2304.472540  0.053011 -7501.234134               3.0    1254.0      True
+3   2221.274860  0.051097 -7225.033581               4.0    1672.0      True
+4   2146.686214  0.049381 -7003.629894               5.0    2090.0      True
+5   2078.017729  0.047801 -6843.424105               6.0    2508.0      True
+6   2011.652955  0.046275 -6638.912047               7.0    2926.0      True
+7   1948.955614  0.044832 -6398.862048               8.0    3344.0      True
+8   1889.964833  0.043475 -6293.870214               9.0    3762.0      True
+9   1825.772856  0.041999 -6033.051570              10.0    4180.0      True
+10  1766.329478  0.040631 -5848.232618              11.0    4598.0      True
+11  1712.209040  0.039386 -5645.806639              12.0    5016.0      True,      n_params_gmm  n_params_sbm  ...  n_components_try  n_block_try
+0             1.0           1.0  ...               1.0          1.0
+1            11.0           3.0  ...               1.0          2.0
+2            17.0           6.0  ...               1.0          3.0
+3            23.0          10.0  ...               1.0          4.0
+4            29.0          15.0  ...               1.0          5.0
+5            35.0          21.0  ...               1.0          6.0
+6            41.0          28.0  ...               1.0          7.0
+7            47.0          36.0  ...               1.0          8.0
+8            53.0          45.0  ...               1.0          9.0
+9            59.0          55.0  ...               1.0         10.0
+10            1.0           1.0  ...               2.0          1.0
+11           29.0           3.0  ...               2.0          2.0
+12           44.0           6.0  ...               2.0          3.0
+13           59.0          10.0  ...               2.0          4.0
+14           74.0          15.0  ...               2.0          5.0
+15           89.0          21.0  ...               2.0          6.0
+16          104.0          28.0  ...               2.0          7.0
+17          119.0          36.0  ...               2.0          8.0
+18          134.0          45.0  ...               2.0          9.0
+19          149.0          55.0  ...               2.0         10.0
+20            1.0           1.0  ...               3.0          1.0
+21           55.0           3.0  ...               3.0          2.0
+22           83.0           6.0  ...               3.0          3.0
+23          111.0          10.0  ...               3.0          4.0
+24          139.0          15.0  ...               3.0          5.0
+25          167.0          21.0  ...               3.0          6.0
+26          195.0          28.0  ...               3.0          7.0
+27          223.0          36.0  ...               3.0          8.0
+28          251.0          45.0  ...               3.0          9.0
+29          279.0          55.0  ...               3.0         10.0
+..            ...           ...  ...               ...          ...
+90            1.0           1.0  ...              10.0          1.0
+91          461.0           3.0  ...              10.0          2.0
+92          692.0           6.0  ...              10.0          3.0
+93          923.0          10.0  ...              10.0          4.0
+94         1154.0          15.0  ...              10.0          5.0
+95         1385.0          21.0  ...              10.0          6.0
+96         1616.0          28.0  ...              10.0          7.0
+97         1847.0          36.0  ...              10.0          8.0
+98         2078.0          45.0  ...              10.0          9.0
+99         2309.0          55.0  ...              10.0         10.0
+100           1.0           1.0  ...              11.0          1.0
+101         551.0           3.0  ...              11.0          2.0
+102         827.0           6.0  ...              11.0          3.0
+103        1103.0          10.0  ...              11.0          4.0
+104        1379.0          15.0  ...              11.0          5.0
+105        1655.0          21.0  ...              11.0          6.0
+106        1931.0          28.0  ...              11.0          7.0
+107        2207.0          36.0  ...              11.0          8.0
+108        2483.0          45.0  ...              11.0          9.0
+109        2759.0          55.0  ...              11.0         10.0
+110           1.0           1.0  ...              12.0          1.0
+111         649.0      

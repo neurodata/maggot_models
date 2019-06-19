@@ -2,32 +2,9 @@ import json
 
 import numpy as np
 import pandas as pd
-from graspy.cluster import GaussianCluster
-from graspy.embed import AdjacencySpectralEmbed
-from graspy.models import RDPGEstimator, SBMEstimator
+
 from graspy.simulations import p_from_latent, sample_edges, sbm
-
-
-def estimate_assignments(graph, n_communities, n_components=None):
-    """Given a graph and n_comunities, sweeps over covariance structures
-    Not deterministic
-    Not using graph bic or mse to calculate best
-
-    1. Does an embedding on the raw graph
-    2. GaussianCluster on the embedding. This will sweep covariance structure for the 
-       given n_communities
-    3. Returns n_parameters based on the number used in GaussianCluster
-
-    """
-    embed_graph = graph.copy()
-    latent = AdjacencySpectralEmbed(n_components=n_components).fit_transform(
-        embed_graph
-    )
-    if isinstance(latent, tuple):
-        latent = np.concatenate(latent, axis=1)
-    gc = GaussianCluster(min_components=n_communities, max_components=n_communities)
-    vertex_assignments = gc.fit_predict(latent)
-    return (vertex_assignments, gc.model_._n_parameters())
+from graspy.models import SBMEstimator
 
 
 def hardy_weinberg(theta):
@@ -36,24 +13,6 @@ def hardy_weinberg(theta):
     """
     hw = [theta ** 2, 2 * theta * (1 - theta), (1 - theta) ** 2]
     return np.array(hw).T
-
-
-def estimate_sbm(graph, n_communities, n_components=None, directed=False):
-    vertex_assignments, n_params = estimate_assignments(
-        graph, n_communities, n_components
-    )
-    estimator = SBMEstimator(directed=directed, loops=False)
-    estimator.fit(graph, y=vertex_assignments)
-    return estimator, n_params
-
-
-def estimate_rdpg(graph, n_components=None):
-    estimator = RDPGEstimator(loops=False, n_components=n_components)
-    estimator.fit(graph)
-    if n_components is None:
-        n_components = estimator.latent_.shape[0]
-    n_params = graph.shape[0] * n_components
-    return estimator, n_params
 
 
 def gen_hw_graph(n_verts):
@@ -141,67 +100,61 @@ def gen_sbm(n_verts, n_blocks, B_mat):
     return graph, labels
 
 
-def select_sbm(graph, n_components_try_range, n_block_try_range, directed=False):
-    """sweeps over n_components, n_blocks, fits an sbm for each 
-    Using GaussianCluster, so will internally sweep covariance structure and pick best
-
-    Returns n_params for the gaussian
-    N_params for the sbm kinda
-    rss
-    score
-
-    Maybe at some point this will sweep rank of B
-
-    Parameters
-    ----------
-    graph : [type]
-        [description]
-    n_block_try_range : [type]
-        [description]
-    n_components_try_range : [type]
-        [description]
-    directed : bool, optional
-        [description], by default False
-    """
-    n_exps = len(n_components_try_range) * len(n_block_try_range)
-    columns = [
-        "n_params_gmm",
-        "n_params_sbm",
-        "rss",
-        "mse",
-        "score",
-        "n_components_try",
-        "n_block_try",
-    ]
-    out_df = pd.DataFrame(np.nan, index=range(n_exps), columns=columns)
-
-    for i, n_components_try in enumerate(n_components_try_range):
-        for j, n_block_try in enumerate(n_block_try_range):
-            # TODO figure out low rank B?
-            # TODO try tommy clust instead here
-            estimator, n_params_gmm = estimate_sbm(
-                graph, n_block_try, n_components=n_components_try, directed=False
-            )
-            rss = compute_rss(estimator, graph)
-            mse = compute_mse(estimator, graph)
-            score = compute_log_lik(estimator, graph)
-            n_params_sbm = estimator._n_parameters()
-
-            ind = i * len(n_block_try_range) + j
-            out_df.loc[ind, "n_params_gmm"] = n_params_gmm
-            out_df.loc[ind, "n_params_sbm"] = n_params_sbm
-            out_df.loc[ind, "rss"] = rss
-            out_df.loc[ind, "mse"] = mse
-            out_df.loc[ind, "score"] = score
-            out_df.loc[ind, "n_components_try"] = n_components_try
-            out_df.loc[ind, "n_block_try"] = n_block_try
-
-    return out_df
-
-
 def run_to_df(file_path):
+    out = get_json(file_path)
+    result = out["result"]
+    if "py/tuple" in result:
+        dfs = []
+        for elem in result["py/tuple"]:
+            df = pd.DataFrame.from_dict(elem["values"])
+            dfs.append(df)
+        return dfs
+    else:
+        return pd.DataFrame.from_dict(result["values"])
+
+
+def get_json(file_path):
     f = open(str(file_path), mode="r")
     out = json.load(f)
     f.close()
-    data_dict = out["result"]["values"]
-    return pd.DataFrame.from_dict(data_dict)
+    return out
+
+
+def compute_mse_from_assignments(assignments, graph, directed=True, loops=False):
+    estimator = SBMEstimator(loops=loops, directed=directed)
+    estimator.fit(graph, y=assignments)
+    return compute_mse(estimator, graph)
+
+
+def get_best_df(df):
+    """super hard coded right now (e.g. column names)
+    
+    Parameters
+    ----------
+    df : dataframe
+        [description]
+    
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    param_df = df[df["sim_ind"] == 0]
+    labels = ["n_block_try", "n_components_try", "mse"]
+    param_df = param_df.loc[:, labels]
+    param_df["best_sim"] = 0
+    param_df["best_ind"] = 0
+    for i in range(50):
+        df = df[df["sim_ind"] == i]
+        for j, row in df.iterrows():
+            p_df = param_df.loc[
+                (param_df[labels[0]] == row[labels[0]])
+                & (param_df[labels[1]] == row[labels[1]])
+            ]
+            ind = p_df.index
+            if row["mse"] <= param_df.loc[ind, "mse"].values[0]:
+                param_df.loc[ind, "mse"] = row["mse"]
+                param_df.loc[ind, "best_sim"] = row["sim_ind"]
+                param_df.loc[ind, "best_ind"] = j
+    best_df = df.loc[param_df["best_ind"].values, :]
+    return best_df
