@@ -88,7 +88,7 @@ def run_fit(
             n_components_try_range,
             n_block_try_range,
             directed=directed,
-            method="bc-metric",
+            method="bc-none",
             metric=metric,
         )
         tsbm_df["sim_ind"] = i

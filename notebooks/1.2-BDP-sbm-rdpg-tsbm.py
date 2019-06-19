@@ -27,7 +27,7 @@ os.getcwd()
 
 #%%
 experiment = "drosophila-3-rdpg-sbm"
-run = 9
+run = 11
 exp_path = Path(f"../models/runs/{experiment}/{run}")
 run_path = exp_path / "run.json"
 config_path = exp_path / "config.json"
@@ -146,6 +146,7 @@ plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 plt.figure(figsize=(22, 12))
 plt_kws = dict(s=75, linewidth=0, legend=False)
 
+
 cmap = sns.light_palette("purple", as_cmap=True)
 sns.scatterplot(
     data=best_sbm_df,
@@ -157,6 +158,7 @@ sns.scatterplot(
     **plt_kws,
 )
 
+
 cmap = sns.light_palette("teal", as_cmap=True)
 s = sns.scatterplot(
     data=tsbm_df,
@@ -167,6 +169,7 @@ s = sns.scatterplot(
     palette=cmap,
     **plt_kws,
 )
+
 
 cmap = sns.xkcd_palette(["grass green"])
 s = sns.scatterplot(
