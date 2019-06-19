@@ -1,0 +1,86 @@
+{
+  "artifacts": [],
+  "command": "main",
+  "experiment": {
+    "base_dir": "/Users/bpedigo/JHU_code/maggot_models/maggot_models/models",
+    "dependencies": [
+      "graspy==0.0.3",
+      "matplotlib==3.1.0",
+      "numpy==1.16.4",
+      "pandas==0.24.2",
+      "sacred==0.7.4",
+      "src==0.1.0"
+    ],
+    "mainfile": "drosophila-3-rdpg-sbm.py",
+    "name": "Drosophila model selection 3 - SBM, RDPG, tSBM",
+    "repositories": [
+      {
+        "commit": "92d20126948e534479f3875a863d569e31b7b5d6",
+        "dirty": false,
+        "url": "https://github.com/neurodata/maggot_models.git"
+      }
+    ],
+    "sources": [
+      [
+        "drosophila-3-rdpg-sbm.py",
+        "_sources/drosophila-3-rdpg-sbm_af8d29e9028aa11a0930abbef484780d.py"
+      ]
+    ]
+  },
+  "fail_trace": [
+    "Traceback (most recent call last):\n",
+    "  File \"/miniconda3/envs/maggot_models/lib/python3.7/site-packages/sacred/config/captured_function.py\", line 46, in captured_function\n    result = wrapped(*args, **kwargs)\n",
+    "  File \"/Users/bpedigo/JHU_code/maggot_models/maggot_models/models/drosophila-3-rdpg-sbm.py\", line 114, in main\n    n_sims_sbm,\n",
+    "  File \"/Users/bpedigo/JHU_code/maggot_models/maggot_models/models/drosophila-3-rdpg-sbm.py\", line 92, in run_fit\n    metric=metric,\n",
+    "  File \"/Users/bpedigo/JHU_code/maggot_models/maggot_models/src/models/models.py\", line 135, in select_sbm\n    metric=metric,\n",
+    "  File \"/Users/bpedigo/JHU_code/maggot_models/maggot_models/src/models/models.py\", line 66, in estimate_sbm\n    graph, n_communities, n_components, method=method, metric=metric\n",
+    "  File \"/Users/bpedigo/JHU_code/maggot_models/maggot_models/src/models/models.py\", line 42, in estimate_assignments\n    latent, [n_communities], metric=metric\n",
+    "  File \"/Users/bpedigo/JHU_code/maggot_models/maggot_models/src/models/brute_cluster.py\", line 368, in brute_cluster\n    x, af, li, cov, k, c_true\n",
+    "  File \"/Users/bpedigo/JHU_code/maggot_models/maggot_models/src/models/brute_cluster.py\", line 261, in cluster\n    c_hat = gmm.fit_predict(data)\n",
+    "  File \"/miniconda3/envs/maggot_models/lib/python3.7/site-packages/sklearn/mixture/base.py\", line 267, in fit_predict\n    self._set_parameters(best_params)\n",
+    "UnboundLocalError: local variable 'best_params' referenced before assignment\n"
+  ],
+  "heartbeat": "2019-06-19T17:40:57.348094",
+  "host": {
+    "ENV": {},
+    "cpu": "Intel(R) Core(TM) i7-8850H CPU @ 2.60GHz",
+    "hostname": "Benjamins-MacBook-Pro.local",
+    "os": [
+      "Darwin",
+      "Darwin-18.6.0-x86_64-i386-64bit"
+    ],
+    "python_version": "3.7.3"
+  },
+  "meta": {
+    "command": "main",
+    "options": {
+      "--beat_interval": null,
+      "--capture": null,
+      "--comment": null,
+      "--debug": false,
+      "--enforce_clean": true,
+      "--file_storage": null,
+      "--force": false,
+      "--help": false,
+      "--loglevel": null,
+      "--mongo_db": null,
+      "--name": null,
+      "--pdb": false,
+      "--print_config": false,
+      "--priority": null,
+      "--queue": false,
+      "--sql": null,
+      "--tiny_db": null,
+      "--unobserved": false,
+      "COMMAND": null,
+      "UPDATE": [],
+      "help": false,
+      "with": false
+    }
+  },
+  "resources": [],
+  "result": null,
+  "start_time": "2019-06-19T17:37:03.038358",
+  "status": "FAILED",
+  "stop_time": "2019-06-19T17:40:57.349612"
+}

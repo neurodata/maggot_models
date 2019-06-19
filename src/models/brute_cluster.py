@@ -229,7 +229,7 @@ def cluster(data, aff, link, cov, k, c_true=None):
                 raise ValueError
         # if there was a numerical error during EM,or while calculating BIC,
         # or if the clustering found a class with only one element
-        except ValueError:  # regularize
+        except:  # regularize
             reg = 1e-6
             gmm = GaussianMixture(
                 n_components=k,
@@ -264,7 +264,7 @@ def cluster(data, aff, link, cov, k, c_true=None):
                 raise ValueError
         # if there was a numerical error, or if initial clustering produced a
         # mixture component with only one element
-        except ValueError:
+        except:
             reg = 1e-6
             gmm = GaussianMixture(
                 n_components=k,
