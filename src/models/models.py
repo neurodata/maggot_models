@@ -36,12 +36,10 @@ def estimate_assignments(
         vertex_assignments = gc.fit_predict(latent)
         n_params = gc.model_._n_parameters()
     elif method == "bc":
-        vertex_assignments, n_params = brute_cluster(
-            latent, [n_communities], covariance_types=["full"]
-        )
+        vertex_assignments, n_params = brute_cluster(latent, [n_communities])
     elif method == "bc-metric":
         vertex_assignments, n_params = brute_cluster(
-            latent, [n_communities], covariance_types=["full"], metric=metric
+            latent, [n_communities], metric=metric
         )
     elif method == "bc-none":
         vertex_assignments, n_params = brute_cluster(

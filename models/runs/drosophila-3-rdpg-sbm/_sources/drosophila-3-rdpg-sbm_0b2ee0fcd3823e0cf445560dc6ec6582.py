@@ -81,18 +81,14 @@ def run_fit(
     def metric(assignments, *args):
         return -compute_mse_from_assignments(assignments, graph, directed=directed)
 
-    tsbm_master_df = pd.DataFrame(columns=columns)
-    for i in range(n_sims_sbm):
-        tsbm_df = select_sbm(
-            graph,
-            n_components_try_range,
-            n_block_try_range,
-            directed=directed,
-            method="bc-metric",
-            metric=metric,
-        )
-        tsbm_df["sim_ind"] = i
-        tsbm_master_df = tsbm_master_df.append(tsbm_df, ignore_index=True, sort=True)
+    tsbm_master_df = select_sbm(
+        graph,
+        n_components_try_range,
+        n_block_try_range,
+        directed=directed,
+        method="bc-metric",
+        metric=metric,
+    )
     return (sbm_master_df, rdpg_df, tsbm_master_df)
 
 

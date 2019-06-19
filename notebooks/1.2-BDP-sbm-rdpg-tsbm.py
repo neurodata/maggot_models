@@ -1,21 +1,23 @@
-#%% Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting
-# ms-python.python added
-import os
+# #%% Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting
+# # ms-python.python added
+# import os
 
-try:
-    os.chdir(os.path.join(os.getcwd(), "maggot_models/notebooks"))
-    print(os.getcwd())
-except:
-    pass
-
+# try:
+#     os.chdir(os.path.join(os.getcwd(), "maggot_models/notebooks"))
+#     print(os.getcwd())
+# except:
+#     pass
 #%%
-from pathlib import Path
 import os
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+from IPython import get_ipython  # just to decieve flake8
+
+import src.utils as utils
 
 get_ipython().run_line_magic("autoreload", "2")
-import src.utils as utils
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 get_ipython().run_line_magic("matplotlib", "inline")
 os.getcwd()
@@ -25,7 +27,7 @@ os.getcwd()
 
 #%%
 experiment = "drosophila-3-rdpg-sbm"
-run = 8
+run = 9
 exp_path = Path(f"../models/runs/{experiment}/{run}")
 run_path = exp_path / "run.json"
 config_path = exp_path / "config.json"
@@ -261,4 +263,3 @@ plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 
 
 #%%
-

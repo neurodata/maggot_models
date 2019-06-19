@@ -17,21 +17,20 @@ import matplotlib.pyplot as plt
 from scipy import stats
 from scipy.stats import multivariate_normal
 
-"""
-Calculates likelihood of a set of data from a GMM, then calculates BIC
-Inputs:
-    x - nxd datapoints
-    wts - list of mixture weights (same length as means and variances)
-    means - list of d numpy arrays of mixture means
-    variances - list of dxd covariance matrices
-    k - number of parameters
-    
-Outputs:
-    bic - BIC where higher is better
-"""
-
 
 def calcBIC(x, wts, means, variances, k):
+    """
+    Calculates likelihood of a set of data from a GMM, then calculates BIC
+    Inputs:
+        x - nxd datapoints
+        wts - list of mixture weights (same length as means and variances)
+        means - list of d numpy arrays of mixture means
+        variances - list of dxd covariance matrices
+        k - number of parameters
+        
+    Outputs:
+        bic - BIC where higher is better
+    """
     n = x.shape[0]
     likelihood = 0
     for wt, mu, var in zip(wts, means, variances):
@@ -47,24 +46,24 @@ def calcBIC(x, wts, means, variances, k):
     return bic
 
 
-"""
-Calculates BIC from input that is formatted either as the sklearn GaussianMixture
-components or from data that was saved to a csv in R
- 
-Inputs
-    data - nxd numpy array of data
-    wts - k numpy array of mixture weights
-    mus - kxd numpy array of means
-    covs - kxdxd in the case of r and in python, the shape depends on the model type
-        (see GaussianMixture class)
-    m - a string that specifies the model, and implies that format of the other inputs
-        (e.g. 'VII' implies that the parameters were read from a csv that was written by R)
-Outputs
-    BIC - bic value as calculated by the function above
-"""
-
-
 def processBIC(data, wts, mus, covs, m):
+    """
+    Calculates BIC from input that is formatted either as the sklearn GaussianMixture
+    components or from data that was saved to a csv in R
+    
+    Inputs
+        data - nxd numpy array of data
+        wts - k numpy array of mixture weights
+        mus - kxd numpy array of means
+        covs - kxdxd in the case of r and in python, the shape depends on the model type
+            (see GaussianMixture class)
+        m - a string that specifies the model, implies that format of the other inputs
+            (e.g. 'VII' implies that the parameters were read from a csv that was
+            written by R)
+    Outputs
+        BIC - bic value as calculated by the function above
+    """
+
     d = data.shape[1]
     k = len(wts)
 
@@ -198,8 +197,10 @@ def cluster(data, aff, link, cov, k, c_true=None):
     input:
         data - nxk numpy matrix of data
         c_true - n array of true cluster membership
-        aff - affinity, element of ['euclidean','manhattan','cosine'] or none for EM from scratch
-        link - linkage, element of ['ward','complete','average','single'], or none for EM from scratch
+        aff - affinity, element of ['euclidean','manhattan','cosine'] or none for EM
+              from scratch
+        link - linkage, element of ['ward','complete','average','single'], or none for
+                EM from scratch
         cov - covariance, element of ['full','tied','diag','spherical']
         k - # of clusters
     output:
@@ -213,7 +214,6 @@ def cluster(data, aff, link, cov, k, c_true=None):
     iter_num = 100
     if aff == "none" or link == "none":
         try:  # no regularization
-            raise ValueError
             reg = 0
             gmm = GaussianMixture(
                 n_components=k,
@@ -229,8 +229,7 @@ def cluster(data, aff, link, cov, k, c_true=None):
                 raise ValueError
         # if there was a numerical error during EM,or while calculating BIC,
         # or if the clustering found a class with only one element
-        except:  # regularize
-            print("regularizing!s")
+        except ValueError:  # regularize
             reg = 1e-6
             gmm = GaussianMixture(
                 n_components=k,
@@ -265,7 +264,7 @@ def cluster(data, aff, link, cov, k, c_true=None):
                 raise ValueError
         # if there was a numerical error, or if initial clustering produced a
         # mixture component with only one element
-        except:
+        except ValueError:
             reg = 1e-6
             gmm = GaussianMixture(
                 n_components=k,
