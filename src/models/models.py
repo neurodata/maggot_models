@@ -36,12 +36,11 @@ def estimate_assignments(graph, n_communities, n_components=None, method="gc"):
     elif method == "bc":
         vertex_assignments, n_params = brute_cluster(latent, [n_communities])
     elif method == "bc-none":
-        print("HERE - TRYING NONE")
         vertex_assignments, n_params = brute_cluster(
             latent,
             [n_communities],
-            affinities=["none"],
-            linkages=["none"],
+            affinities=None,
+            linkages=None,
             covariance_types=["full"],
         )
     else:
