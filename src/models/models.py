@@ -34,13 +34,15 @@ def estimate_assignments(graph, n_communities, n_components=None, method="gc"):
         vertex_assignments = gc.fit_predict(latent)
         n_params = gc.model_._n_parameters()
     elif method == "bc":
-        vertex_assignments, n_params = brute_cluster(latent, [n_communities])
+        vertex_assignments, n_params = brute_cluster(
+            latent, [n_communities], covariance_types=["full"]
+        )
     elif method == "bc-none":
         vertex_assignments, n_params = brute_cluster(
             latent,
             [n_communities],
-            affinities=None,
-            linkages=None,
+            affinities=["none"],
+            linkages=["none"],
             covariance_types=["full"],
         )
     else:

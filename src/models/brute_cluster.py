@@ -299,7 +299,7 @@ def brute_cluster(
     c_true=None,
     plot=False,
     savefigs=None,
-    verbose=1,
+    verbose=0,
 ):
     """
     Cluster all combinations of options and plot results

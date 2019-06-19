@@ -32,7 +32,7 @@ def config():
     n_components_try_range = list(range(1, 13))  # noqa: F841
     n_components_try_rdpg = list(range(1, 13))  # noqa: F841
     directed = True  # noqa: F841
-    n_sims_sbm = 1  # 50  # noqa: F841
+    n_sims_sbm = 50  # 50  # noqa: F841
 
 
 def run_fit(
@@ -74,7 +74,9 @@ def run_fit(
         )
         sbm_df["sim_ind"] = i
         sbm_master_df = sbm_master_df.append(sbm_df, ignore_index=True, sort=True)
+
     rdpg_df = select_rdpg(graph, n_components_try_rdpg, directed)
+
     tsbm_master_df = select_sbm(
         graph,
         n_components_try_range,

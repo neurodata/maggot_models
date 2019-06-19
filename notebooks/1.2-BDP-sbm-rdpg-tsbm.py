@@ -25,7 +25,7 @@ os.getcwd()
 
 #%%
 experiment = "drosophila-3-rdpg-sbm"
-run = 6
+run = 7
 exp_path = Path(f"../models/runs/{experiment}/{run}")
 run_path = exp_path / "run.json"
 config_path = exp_path / "config.json"
@@ -150,10 +150,10 @@ s = sns.scatterplot(
     data=rdpg_df, x="n_params", y="mse", hue="RDPG", palette=cmap, **plt_kws
 )
 
-leg = s.axes.get_legend()
-leg.get_texts()[0].set_text("SBM: K, best of 50")
-leg.get_texts()[6].set_text("SBM: d, best of 50")
-leg.get_texts()[11].set_text("RDPG: directed")
+# leg = s.axes.get_legend()
+# leg.get_texts()[0].set_text("SBM: K, best of 50")
+# leg.get_texts()[6].set_text("SBM: d, best of 50")
+# leg.get_texts()[11].set_text("RDPG: directed")
 plt.xlabel("# Params (GMM params for SBMs)")
 plt.ylabel("MSE")
 plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
@@ -198,60 +198,66 @@ plt.xlabel("# Params (GMM params for SBMs)")
 plt.ylabel("MSE")
 plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 
+# #%%
+# plt.figure(figsize=(22, 12))
+
+# cmap = sns.light_palette("purple", as_cmap=True)
+# sns.scatterplot(
+#     data=best_sbm_df,
+#     x="n_params_gmm",
+#     y="score",
+#     hue="n_block_try",
+#     size="n_components_try",
+#     palette=cmap,
+#     **plt_kws,
+# )
+
+# cmap = sns.xkcd_palette(["grass green"])
+# s = sns.scatterplot(
+#     data=rdpg_df, x="n_params", y="score", hue="RDPG", palette=cmap, **plt_kws
+# )
+
+# leg = s.axes.get_legend()
+# leg.get_texts()[0].set_text("SBM: K, best of 50")
+# leg.get_texts()[6].set_text("SBM: d, best of 50")
+# leg.get_texts()[11].set_text("RDPG: directed")
+# plt.xlabel("# Params (GMM params for SBMs)")
+# plt.ylabel("MSE")
+# plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
+
+# #####
+
+# plt.figure(figsize=(22, 12))
+
+# cmap = sns.light_palette("purple", as_cmap=True)
+# sns.scatterplot(
+#     data=best_sbm_df,
+#     x="n_params_gmm",
+#     y="score",
+#     hue="n_components_try",
+#     size="n_block_try",
+#     palette=cmap,
+#     **plt_kws,
+# )
+
+# cmap = sns.xkcd_palette(["grass green"])
+# s = sns.scatterplot(
+#     data=rdpg_df, x="n_params", y="score", hue="RDPG", palette=cmap, **plt_kws
+# )
+
+# leg = s.axes.get_legend()
+# leg.get_texts()[0].set_text("SBM: d, best of 50")
+# leg.get_texts()[5].set_text("SBM: K, best of 50")
+# leg.get_texts()[11].set_text("RDPG: directed")
+# plt.xlabel("# Params (GMM params for SBMs)")
+# plt.ylabel("MSE")
+# plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
+
+
+# #%%
+
+
 #%%
-plt.figure(figsize=(22, 12))
-
-cmap = sns.light_palette("purple", as_cmap=True)
-sns.scatterplot(
-    data=best_sbm_df,
-    x="n_params_gmm",
-    y="score",
-    hue="n_block_try",
-    size="n_components_try",
-    palette=cmap,
-    **plt_kws,
-)
-
-cmap = sns.xkcd_palette(["grass green"])
-s = sns.scatterplot(
-    data=rdpg_df, x="n_params", y="score", hue="RDPG", palette=cmap, **plt_kws
-)
-
-leg = s.axes.get_legend()
-leg.get_texts()[0].set_text("SBM: K, best of 50")
-leg.get_texts()[6].set_text("SBM: d, best of 50")
-leg.get_texts()[11].set_text("RDPG: directed")
-plt.xlabel("# Params (GMM params for SBMs)")
-plt.ylabel("MSE")
-plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
-
-#####
-
-plt.figure(figsize=(22, 12))
-
-cmap = sns.light_palette("purple", as_cmap=True)
-sns.scatterplot(
-    data=best_sbm_df,
-    x="n_params_gmm",
-    y="score",
-    hue="n_components_try",
-    size="n_block_try",
-    palette=cmap,
-    **plt_kws,
-)
-
-cmap = sns.xkcd_palette(["grass green"])
-s = sns.scatterplot(
-    data=rdpg_df, x="n_params", y="score", hue="RDPG", palette=cmap, **plt_kws
-)
-
-leg = s.axes.get_legend()
-leg.get_texts()[0].set_text("SBM: d, best of 50")
-leg.get_texts()[5].set_text("SBM: K, best of 50")
-leg.get_texts()[11].set_text("RDPG: directed")
-plt.xlabel("# Params (GMM params for SBMs)")
-plt.ylabel("MSE")
-plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 
 
 #%%
