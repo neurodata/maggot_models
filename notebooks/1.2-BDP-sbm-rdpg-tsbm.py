@@ -25,7 +25,7 @@ os.getcwd()
 
 #%%
 experiment = "drosophila-3-rdpg-sbm"
-run = 7
+run = 8
 exp_path = Path(f"../models/runs/{experiment}/{run}")
 run_path = exp_path / "run.json"
 config_path = exp_path / "config.json"

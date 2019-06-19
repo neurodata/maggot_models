@@ -300,6 +300,7 @@ def brute_cluster(
     plot=False,
     savefigs=None,
     verbose=0,
+    metric=None,
 ):
     """
     Cluster all combinations of options and plot results
@@ -341,6 +342,16 @@ def brute_cluster(
 
     best_n_params = np.inf
 
+    if metric is not None:
+        best_metric = float("-inf")
+        best_bic_metric = float("-inf")
+        best_combo_metric = []
+        best_c_hat_metric = []
+        best_k_metric = 0
+        best_means_metric = []
+        best_reg_metric = 0
+        best_n_params_metric = 0
+
     for i, k in enumerate(ks):
         for af in affinities:
             for li in linkages:
@@ -375,6 +386,18 @@ def brute_cluster(
                         best_means_bic = means
                         reg_bic = reg
                         best_n_params = n_params
+
+                    if metric is not None:
+                        score = metric(c_hat, n_params)
+                        if score > best_metric:
+                            best_bic_metric = bic
+                            best_combo_metric = [af, li, cov]
+                            best_c_hat_metric = c_hat
+                            best_k_metric = k
+                            best_means_metric = means
+                            best_reg_metric = reg
+                            best_n_params_metric = n_params
+                            best_metric = score
 
     # True plot**********************************
     if plot and c_true is not None:
@@ -493,6 +516,8 @@ def brute_cluster(
         plt.show()
         if savefigs is not None:
             plt.savefig(savefigs + "_python_bicplot.png")
-    print(best_combo_bic)
-    return best_c_hat_bic, best_n_params
+    if metric is not None:
+        return best_c_hat_metric, best_n_params_metric
+    else:
+        return best_c_hat_bic, best_n_params
 

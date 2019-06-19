@@ -50,7 +50,9 @@ def estimate_assignments(graph, n_communities, n_components=None, method="gc"):
     return (vertex_assignments, n_params)
 
 
-def estimate_sbm(graph, n_communities, n_components=None, directed=False, method="gc"):
+def estimate_sbm(
+    graph, n_communities, n_components=None, directed=False, method="gc", metric=None
+):
     if n_communities == 1:
         estimator = EREstimator(directed=directed, loops=False)
         estimator.fit(graph)
@@ -75,7 +77,12 @@ def estimate_rdpg(graph, n_components=None):
 
 
 def select_sbm(
-    graph, n_components_try_range, n_block_try_range, directed=False, method="gc"
+    graph,
+    n_components_try_range,
+    n_block_try_range,
+    directed=False,
+    method="gc",
+    metric=None,
 ):
     """sweeps over n_components, n_blocks, fits an sbm for each 
     Using GaussianCluster, so will internally sweep covariance structure and pick best
@@ -121,6 +128,7 @@ def select_sbm(
                 n_components=n_components_try,
                 directed=False,
                 method=method,
+                metric=metric,
             )
             rss = compute_rss(estimator, graph)
             mse = compute_mse(estimator, graph)
