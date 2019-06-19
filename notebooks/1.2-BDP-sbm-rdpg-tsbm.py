@@ -112,25 +112,6 @@ plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 # ### Get the best MSE SBM model fitting for each parameter set
 
 #%%
-param_df = sbm_df[sbm_df["sim_ind"] == 0]
-labels = ["n_block_try", "n_components_try", "mse"]
-param_df = param_df.loc[:, labels]
-param_df["best_sim"] = 0
-param_df["best_ind"] = 0
-for i in range(50):
-    df = sbm_df[sbm_df["sim_ind"] == i]
-    for j, row in df.iterrows():
-        params = row[labels]
-        p_df = param_df.loc[
-            (param_df[labels[0]] == row[labels[0]])
-            & (param_df[labels[1]] == row[labels[1]])
-        ]
-        ind = p_df.index
-        if row["mse"] <= param_df.loc[ind, "mse"].values[0]:
-            param_df.loc[ind, "mse"] = row["mse"]
-            param_df.loc[ind, "best_sim"] = row["sim_ind"]
-            param_df.loc[ind, "best_ind"] = j
-best_sbm_df = sbm_df.loc[param_df["best_ind"].values, :]
 
 
 #%%
