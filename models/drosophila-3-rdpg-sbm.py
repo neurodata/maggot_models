@@ -89,7 +89,6 @@ def run_fit(
             n_block_try_range,
             directed=directed,
             method="bc-none",
-            metric=metric,
         )
         tsbm_df["sim_ind"] = i
         tsbm_master_df = tsbm_master_df.append(tsbm_df, ignore_index=True, sort=True)
