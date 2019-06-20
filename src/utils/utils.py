@@ -7,7 +7,7 @@ import pandas as pd
 
 from graspy.simulations import p_from_latent, sample_edges, sbm
 
-# from graspy.models import SBMEstimator
+from graspy.models import SBMEstimator
 
 
 def hardy_weinberg(theta):

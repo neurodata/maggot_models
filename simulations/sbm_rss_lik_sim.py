@@ -6,7 +6,8 @@ from joblib import Parallel, delayed
 from sacred import Experiment
 from sacred.observers import FileStorageObserver, SlackObserver
 
-from src.utils import gen_B, gen_sbm, select_sbm, save_obj
+from src.utils import gen_B, gen_sbm, save_obj
+from src.models import select_sbm
 
 ex = Experiment("SBM model selection")
 
@@ -27,10 +28,10 @@ ex.observers.append(file_obs)
 def config():
     """Variables defined in config get automatically passed to main"""
 
-    n_sims = 50  # noqa: F841
+    n_sims = 2  # noqa: F841
     n_jobs = -2  # noqa: F841
     n_blocks_range = list(range(1, 9))
-    n_verts_range = [100, 200, 300, 500, 800, 1000]  # noqa: F841
+    n_verts_range = [100]  # [100, 200, 300, 500, 800, 1000]  # noqa: F841
     n_block_try_range = list(range(1, 11))  # noqa: F841
     n_components_try_range = list(range(1, 13))  # noqa: F841
 
