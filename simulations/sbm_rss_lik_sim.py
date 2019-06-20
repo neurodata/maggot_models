@@ -31,7 +31,7 @@ def config():
     n_sims = 2  # noqa: F841
     n_jobs = -2  # noqa: F841
     n_blocks_range = list(range(1, 9))
-    n_verts_range = [100, 200, 300, 500, 800, 1000]  # noqa: F841
+    n_verts_range = [100]  # [100, 200, 300, 500, 800, 1000]  # noqa: F841
     n_block_try_range = list(range(1, 11))  # noqa: F841
     n_components_try_range = list(range(1, 13))  # noqa: F841
 
@@ -127,5 +127,5 @@ def main(
     for i, out in enumerate(outs):
         out["sim_ind"] = i
         master_out_df = master_out_df.append(out, ignore_index=True, sort=True)
-    # save_obj(master_out_df, file_obs, "master_out_df")
-    # return 1
+    save_obj(master_out_df, file_obs, "master_out_df")
+    return 0
