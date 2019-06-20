@@ -48,6 +48,7 @@ def config():
     directed = False  # noqa: F841
 
 
+@wrap_non_picklable_objects
 def run_sim(
     seed,
     n_blocks_range,
@@ -98,7 +99,6 @@ def main(
 ):
     seeds = np.random.randint(1e8, size=n_sims)
 
-    @delayed
     @wrap_non_picklable_objects
     def run(seed):
         """ Like a lambda func """
