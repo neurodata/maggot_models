@@ -29,8 +29,8 @@ ex.observers.append(file_obs)
 def config():
     """Variables defined in config get automatically passed to main"""
 
-    n_sims = 2  # noqa: F841
-    n_jobs = -2  # noqa: F841
+    n_sims = 100  # noqa: F841
+    n_jobs = 50  # noqa: F841
     n_blocks_range = list(range(1, 9))
     n_verts_range = [100, 200, 300, 500, 800, 1000]  # noqa: F841
     n_block_try_range = list(range(1, 11))  # noqa: F841
