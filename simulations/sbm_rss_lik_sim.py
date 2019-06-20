@@ -98,8 +98,8 @@ def main(
 ):
     seeds = np.random.randint(1e8, size=n_sims)
 
-    @delayed
-    @wrap_non_picklable_objects
+    # @delayed
+    # @wrap_non_picklable_objects
     def run(seed):
         """ Like a lambda func """
         return run_sim(
