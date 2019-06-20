@@ -2,6 +2,7 @@
 from sacred import Experiment
 from sacred.observers import SlackObserver, FileStorageObserver
 from sacred import SETTINGS
+from src.utils import save_obj
 
 SETTINGS
 
@@ -9,7 +10,9 @@ ex = Experiment("config_demo")
 
 slack_obs = SlackObserver.from_config("slack.json")
 ex.observers.append(slack_obs)
-ex.observers.append(FileStorageObserver.create("./simulations/runs/hello_world"))
+fso = FileStorageObserver.create("./simulations/runs/hello_world")
+ex.observers.append(fso)
+print(dir(fso))
 
 
 @ex.config
@@ -28,5 +31,10 @@ def print_a_and_b(a, b):
 def my_main(a, b):
     print(a)
     print(b)
+    print(fso.run_entry)
+    print(fso.info)
+    # print(fso._id)
+    print(fso.dir)
+    save_obj(b, fso, "test")
     return 1
 

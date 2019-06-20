@@ -1,10 +1,13 @@
 import json
+from pathlib import Path
+import pickle
 
 import numpy as np
 import pandas as pd
 
 from graspy.simulations import p_from_latent, sample_edges, sbm
-from graspy.models import SBMEstimator
+
+# from graspy.models import SBMEstimator
 
 
 def hardy_weinberg(theta):
@@ -110,6 +113,7 @@ def run_to_df(file_path):
             dfs.append(df)
         return dfs
     else:
+        print(result["values"][:100])
         return pd.DataFrame.from_dict(result["values"])
 
 
@@ -158,3 +162,36 @@ def get_best_df(input_df):
                 param_df.loc[ind, "best_ind"] = j
     best_df = input_df.loc[param_df["best_ind"].values, :]
     return best_df
+
+
+def load_config(path, experiment, run):
+    exp_path = Path(path)
+    exp_path = exp_path / experiment
+    exp_path = exp_path / str(run)
+    run_path = exp_path / "run.json"
+    config_path = exp_path / "config.json"
+
+    config = get_json(config_path)
+    print(f"Experiment: {experiment}")
+    print(f"Run: {run}")
+    print(f"Path: {run_path}")
+    print()
+    print("Experiment configuration:")
+    print()
+    for key, value in config.items():
+        if not key == "__doc__":
+            print(key)
+            print(value)
+            print()
+
+    dfs = run_to_df(run_path)
+    return dfs
+
+
+def save_obj(obj, fso, name):
+    path = fso.dir
+    path = Path(path)
+    path = path / str(name + ".pickle")
+    with open(path, "wb") as file:
+        pickle.dump(obj, file)
+    print(f"Saved to {path}")

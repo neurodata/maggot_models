@@ -6,7 +6,7 @@ from joblib import Parallel, delayed
 from sacred import Experiment
 from sacred.observers import FileStorageObserver, SlackObserver
 
-from src.utils import gen_B, gen_sbm, select_sbm
+from src.utils import gen_B, gen_sbm, select_sbm, save_obj
 
 ex = Experiment("SBM model selection")
 
@@ -126,5 +126,5 @@ def main(
     for i, out in enumerate(outs):
         out["sim_ind"] = i
         master_out_df = master_out_df.append(out, ignore_index=True, sort=True)
-
-    return master_out_df
+    save_obj(master_out_df, file_obs, "master_out_df")
+    return 1

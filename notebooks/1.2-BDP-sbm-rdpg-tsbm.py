@@ -26,29 +26,31 @@ os.getcwd()
 # ### Choose experiment, print out configurations
 
 #%%
+base_path = "./maggot_models/models/runs/"
 experiment = "drosophila-3-rdpg-sbm"
 run = 12
-exp_path = Path(f"./maggot_models/models/runs/{experiment}/{run}")
-run_path = exp_path / "run.json"
-config_path = exp_path / "config.json"
+sbm_df, rdpg_df, tsbm_df = utils.load_run(base_path, experiment, run)
+# exp_path = Path(f"./maggot_models/models/runs/{experiment}/{run}")
+# run_path = exp_path / "run.json"
+# config_path = exp_path / "config.json"
 
-config = utils.get_json(config_path)
-print(f"Experiment: {experiment}")
-print(f"Run: {run}")
-print(f"Path: {run_path}")
-print()
-print("Experiment configuration:")
-print()
-for key, value in config.items():
-    if not key == "__doc__":
-        print(key)
-        print(value)
-        print()
+# config = utils.get_json(config_path)
+# print(f"Experiment: {experiment}")
+# print(f"Run: {run}")
+# print(f"Path: {run_path}")
+# print()
+# print("Experiment configuration:")
+# print()
+# for key, value in config.items():
+#     if not key == "__doc__":
+#         print(key)
+#         print(value)
+#         print()
 
-dfs = utils.run_to_df(run_path)
-sbm_df = dfs[0]
-rdpg_df = dfs[1]
-tsbm_df = dfs[2]
+# dfs = utils.run_to_df(run_path)
+# sbm_df = dfs[0]
+# rdpg_df = dfs[1]
+# tsbm_df = dfs[2]
 
 rdpg_df["RDPG"] = "RDPG"
 
@@ -135,10 +137,6 @@ s = sns.scatterplot(
     data=rdpg_df, x="n_params", y="mse", hue="RDPG", palette=cmap, **plt_kws
 )
 
-# leg = s.axes.get_legend()
-# leg.get_texts()[0].set_text("SBM: K, best of 50")
-# leg.get_texts()[6].set_text("SBM: d, best of 50")
-# leg.get_texts()[11].set_text("RDPG: directed")
 plt.xlabel("# Params (GMM params for SBMs)")
 plt.ylabel("MSE")
 plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
