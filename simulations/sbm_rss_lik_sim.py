@@ -2,12 +2,13 @@ from os.path import basename
 from pathlib import Path
 import numpy as np
 import pandas as pd
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, wrap_non_picklable_objects
 from sacred import Experiment
 from sacred.observers import FileStorageObserver, SlackObserver
 
 from src.utils import gen_B, gen_sbm, save_obj
 from src.models import select_sbm
+
 
 ex = Experiment("SBM model selection")
 
@@ -47,6 +48,7 @@ def config():
     directed = False  # noqa: F841
 
 
+@wrap_non_picklable_objects
 def run_sim(
     seed,
     n_blocks_range,
