@@ -1,0 +1,41 @@
+INFO - SBM model selection - Running command 'main'
+INFO - SBM model selection - Started run with ID "8"
+[Parallel(n_jobs=50)]: Using backend LokyBackend with 50 concurrent workers.
+[Parallel(n_jobs=50)]: Done   1 tasks      | elapsed: 42.0min
+[Parallel(n_jobs=50)]: Done   4 out of 100 | elapsed: 43.8min remaining: 1052.0min
+[Parallel(n_jobs=50)]: Done   7 out of 100 | elapsed: 44.7min remaining: 593.2min
+[Parallel(n_jobs=50)]: Done  10 out of 100 | elapsed: 46.5min remaining: 418.2min
+[Parallel(n_jobs=50)]: Done  13 out of 100 | elapsed: 47.5min remaining: 317.6min
+[Parallel(n_jobs=50)]: Done  16 out of 100 | elapsed: 48.4min remaining: 254.1min
+[Parallel(n_jobs=50)]: Done  19 out of 100 | elapsed: 48.4min remaining: 206.5min
+[Parallel(n_jobs=50)]: Done  22 out of 100 | elapsed: 49.0min remaining: 173.6min
+[Parallel(n_jobs=50)]: Done  25 out of 100 | elapsed: 49.1min remaining: 147.4min
+[Parallel(n_jobs=50)]: Done  28 out of 100 | elapsed: 49.5min remaining: 127.3min
+[Parallel(n_jobs=50)]: Done  31 out of 100 | elapsed: 49.9min remaining: 111.1min
+[Parallel(n_jobs=50)]: Done  34 out of 100 | elapsed: 50.1min remaining: 97.3min
+[Parallel(n_jobs=50)]: Done  37 out of 100 | elapsed: 50.2min remaining: 85.5min
+[Parallel(n_jobs=50)]: Done  40 out of 100 | elapsed: 50.5min remaining: 75.7min
+[Parallel(n_jobs=50)]: Done  43 out of 100 | elapsed: 50.8min remaining: 67.4min
+[Parallel(n_jobs=50)]: Done  46 out of 100 | elapsed: 51.2min remaining: 60.1min
+[Parallel(n_jobs=50)]: Done  49 out of 100 | elapsed: 52.2min remaining: 54.4min
+[Parallel(n_jobs=50)]: Done  52 out of 100 | elapsed: 86.6min remaining: 80.0min
+[Parallel(n_jobs=50)]: Done  55 out of 100 | elapsed: 92.4min remaining: 75.6min
+[Parallel(n_jobs=50)]: Done  58 out of 100 | elapsed: 92.9min remaining: 67.3min
+[Parallel(n_jobs=50)]: Done  61 out of 100 | elapsed: 94.2min remaining: 60.2min
+[Parallel(n_jobs=50)]: Done  64 out of 100 | elapsed: 94.6min remaining: 53.2min
+[Parallel(n_jobs=50)]: Done  67 out of 100 | elapsed: 94.8min remaining: 46.7min
+[Parallel(n_jobs=50)]: Done  70 out of 100 | elapsed: 95.3min remaining: 40.8min
+[Parallel(n_jobs=50)]: Done  73 out of 100 | elapsed: 96.3min remaining: 35.6min
+[Parallel(n_jobs=50)]: Done  76 out of 100 | elapsed: 96.6min remaining: 30.5min
+[Parallel(n_jobs=50)]: Done  79 out of 100 | elapsed: 96.7min remaining: 25.7min
+[Parallel(n_jobs=50)]: Done  82 out of 100 | elapsed: 96.9min remaining: 21.3min
+[Parallel(n_jobs=50)]: Done  85 out of 100 | elapsed: 97.5min remaining: 17.2min
+[Parallel(n_jobs=50)]: Done  88 out of 100 | elapsed: 97.7min remaining: 13.3min
+[Parallel(n_jobs=50)]: Done  91 out of 100 | elapsed: 97.9min remaining:  9.7min
+[Parallel(n_jobs=50)]: Done  94 out of 100 | elapsed: 98.1min remaining:  6.3min
+[Parallel(n_jobs=50)]: Done  97 out of 100 | elapsed: 98.8min remaining:  3.1min
+[Parallel(n_jobs=50)]: Done 100 out of 100 | elapsed: 99.4min remaining:    0.0s
+[Parallel(n_jobs=50)]: Done 100 out of 100 | elapsed: 99.4min finished
+Saved to maggot_models/simulations/runs/sbm_rss_lik_sim/8/master_out_df.pickle
+INFO - SBM model selection - Result: 0
+INFO - SBM model selection - Completed after 1:39:30
