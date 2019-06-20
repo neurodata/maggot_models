@@ -130,6 +130,6 @@ def main(
     for i, out in enumerate(outs):
         out["sim_ind"] = i
         master_out_df = master_out_df.append(out, ignore_index=True, sort=True)
-    file_obs = ex.observers[1]
+    # file_obs = ex.observers[1]
     save_obj(master_out_df, file_obs, "master_out_df")
     return 0
