@@ -24,6 +24,16 @@ def estimate_assignments(
     3. Returns n_parameters based on the number used in GaussianCluster
 
     method can be "gc" or "bc" 
+
+    method 
+    "gc" : use graspy GaussianCluster
+        this defaults to full covariance
+    "bc" : tommyclust with defaults
+        so sweep covariance, agglom, linkage
+    "bc-metric" : tommyclust with custom metric
+        still sweep everything
+    "bc-none" : mostly for testing, should behave just like GaussianCluster
+    
     """
     embed_graph = graph.copy()
     latent = AdjacencySpectralEmbed(n_components=n_components).fit_transform(

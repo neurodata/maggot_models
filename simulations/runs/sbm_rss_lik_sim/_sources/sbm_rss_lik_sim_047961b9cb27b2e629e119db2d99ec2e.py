@@ -31,7 +31,7 @@ def config():
     n_sims = 2  # noqa: F841
     n_jobs = -2  # noqa: F841
     n_blocks_range = list(range(1, 9))
-    n_verts_range = [100, 200, 300, 500, 800, 1000]  # noqa: F841
+    n_verts_range = [100]  # [100, 200, 300, 500, 800, 1000]  # noqa: F841
     n_block_try_range = list(range(1, 11))  # noqa: F841
     n_components_try_range = list(range(1, 13))  # noqa: F841
 

@@ -1,0 +1,8 @@
+INFO - SBM model selection - Running command 'main'
+INFO - SBM model selection - Started run with ID "2"
+[Parallel(n_jobs=-2)]: Using backend LokyBackend with 11 concurrent workers.
+   17.0s
+[Parallel(n_jobs=-2)]: Done   2 out of   2 | elapsed:   17.3s remaining:    0.0s
+[Parallel(n_jobs=-2)]: Done   2 out of   2 | elapsed:   17.3s finished
+Saved to maggot_models/simulations/runs/sbm_rss_lik_sim/2/master_out_df.pickle
+INFO - SBM model selection - Result: 1

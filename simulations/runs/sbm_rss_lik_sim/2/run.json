@@ -1,0 +1,72 @@
+{
+  "artifacts": [],
+  "command": "main",
+  "experiment": {
+    "base_dir": "/Users/bpedigo/JHU_code/maggot_models/maggot_models/simulations",
+    "dependencies": [
+      "joblib==0.13.2",
+      "numpy==1.16.4",
+      "pandas==0.24.2",
+      "sacred==0.7.4",
+      "src==0.1.0"
+    ],
+    "mainfile": "sbm_rss_lik_sim.py",
+    "name": "SBM model selection",
+    "repositories": [
+      {
+        "commit": "98e3371bc462d258b2d886c21f8ea858ebc577e5",
+        "dirty": false,
+        "url": "https://github.com/neurodata/maggot_models.git"
+      }
+    ],
+    "sources": [
+      [
+        "sbm_rss_lik_sim.py",
+        "_sources/sbm_rss_lik_sim_047961b9cb27b2e629e119db2d99ec2e.py"
+      ]
+    ]
+  },
+  "heartbeat": "2019-06-20T13:21:32.671485",
+  "host": {
+    "ENV": {},
+    "cpu": "Intel(R) Core(TM) i7-8850H CPU @ 2.60GHz",
+    "hostname": "Benjamins-MacBook-Pro.local",
+    "os": [
+      "Darwin",
+      "Darwin-18.6.0-x86_64-i386-64bit"
+    ],
+    "python_version": "3.7.3"
+  },
+  "meta": {
+    "command": "main",
+    "options": {
+      "--beat_interval": null,
+      "--capture": null,
+      "--comment": null,
+      "--debug": false,
+      "--enforce_clean": true,
+      "--file_storage": null,
+      "--force": false,
+      "--help": false,
+      "--loglevel": null,
+      "--mongo_db": null,
+      "--name": null,
+      "--pdb": false,
+      "--print_config": false,
+      "--priority": null,
+      "--queue": false,
+      "--sql": null,
+      "--tiny_db": null,
+      "--unobserved": false,
+      "COMMAND": null,
+      "UPDATE": [],
+      "help": false,
+      "with": false
+    }
+  },
+  "resources": [],
+  "result": 1,
+  "start_time": "2019-06-20T13:21:14.292386",
+  "status": "COMPLETED",
+  "stop_time": "2019-06-20T13:21:31.666865"
+}
