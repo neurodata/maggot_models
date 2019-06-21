@@ -147,25 +147,25 @@ def select_sbm(
     out_dict = {}
     for i, n_components_try in enumerate(n_components_try_range):
         for j, n_block_try in enumerate(n_block_try_range):
+            # check special case for ER, don't need to cluster
             if n_block_try == 1:
-                estimator = EREstimator(directed=directed, loops=False)
-                estimator.fit(graph)
-                n_params_gmm = estimator._n_parameters()
+                vertex_assignments = np.zeros(graph.shape[0])
+                n_params_gmm = 1
             else:
                 vertex_assignments, n_params_gmm = estimate_assignments(
                     graph, n_block_try, n_components_try, method=method, metric=metric
                 )
-                estimator = SBMEstimator(directed=directed, loops=False, rank=rank)
-                estimator.fit(graph, y=vertex_assignments)
 
-            if rank != "full":
+            if rank == "sweep":
                 rank_try_range = list(range(1, n_block_try + 1))
             else:
                 rank_try_range = [n_block_try]
+
             for k, rank_try in enumerate(rank_try_range):
                 ind = i * len(n_block_try_range) + j * len(rank_try_range) + k
 
                 estimator = SBMEstimator(directed=directed, loops=False, rank=rank_try)
+                estimator.fit(graph, y=vertex_assignments)
 
                 rss = compute_rss(estimator, graph)
                 mse = compute_mse(estimator, graph)
@@ -184,7 +184,7 @@ def select_sbm(
                     "n_block_try": n_block_try,
                     "rank_try": rank_try,
                 }
-    out_df = pd.DataFrame.from_dict(out_dict)
+    out_df = pd.DataFrame.from_dict(out_dict, orient="index")
     # # out_df.loc[ind, "n_params_gmm"] = n_params_gmm
     # # out_df.loc[ind, "n_params_sbm"] = n_params_sbm
     # out_df.loc[ind, "rss"] = rss
