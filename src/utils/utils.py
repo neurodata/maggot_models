@@ -164,6 +164,40 @@ def get_best_df(input_df):
     return best_df
 
 
+def get_best_df2(input_df):
+    """super hard coded right now (e.g. column names)
+    
+    Parameters
+    ----------
+    df : dataframe
+        [description]
+    
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    # param_df = input_df[input_df["sim_ind"] == 0]
+    labels = ["n_block_try", "mse"]
+    param_df = pd.DataFrame()
+    # param_df = param_df.loc[:, labels]
+    param_df["n_block_try"] = np.unique(input_df["n_block_try"].values)
+    param_df["best_sim"] = 0
+    param_df["best_ind"] = 0
+    param_df["mse"] = np.inf
+    for i in range(50):
+        df = input_df[input_df["sim_ind"] == i]
+        for j, row in df.iterrows():
+            temp_df = param_df.loc[(param_df[labels[0]] == row[labels[0]])]
+            ind = temp_df.index
+            if row["mse"] <= param_df.loc[ind, "mse"].values[0]:
+                param_df.loc[ind, "mse"] = row["mse"]
+                param_df.loc[ind, "best_sim"] = row["sim_ind"]
+                param_df.loc[ind, "best_ind"] = j
+    best_df = input_df.loc[param_df["best_ind"].values, :]
+    return best_df
+
+
 def load_config(path, experiment, run):
     exp_path = Path(path)
     exp_path = exp_path / experiment
@@ -178,17 +212,20 @@ def load_config(path, experiment, run):
     print()
     print("Experiment configuration:")
     print()
-    try:
-        for key, value in config.items():
-            if not key == "__doc__":
-                print(key)
-                print(value)
-                print()
+    return config
 
+
+def load_run(path, experiment, run):
+    exp_path = Path(path)
+    exp_path = exp_path / experiment
+    exp_path = exp_path / str(run)
+    run_path = exp_path / "run.json"
+
+    try:
         dfs = run_to_df(run_path)
         return dfs
-    except TypeError:
-        return config
+    except:
+        print("Could not find df in run")
 
 
 def load_pickle(path, experiment, run, name="master_out_df"):

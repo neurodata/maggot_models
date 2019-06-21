@@ -33,7 +33,7 @@ def estimate_assignments(
     "bc-metric" : tommyclust with custom metric
         still sweep everything
     "bc-none" : mostly for testing, should behave just like GaussianCluster
-    
+
     """
     embed_graph = graph.copy()
     latent = AdjacencySpectralEmbed(n_components=n_components).fit_transform(
@@ -42,7 +42,11 @@ def estimate_assignments(
     if isinstance(latent, tuple):
         latent = np.concatenate(latent, axis=1)
     if method == "gc":
-        gc = GaussianCluster(min_components=n_communities, max_components=n_communities)
+        gc = GaussianCluster(
+            min_components=n_communities,
+            max_components=n_communities,
+            covariance_type="all",
+        )
         vertex_assignments = gc.fit_predict(latent)
         n_params = gc.model_._n_parameters()
     elif method == "bc":

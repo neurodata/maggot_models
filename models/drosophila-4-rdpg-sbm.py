@@ -8,10 +8,10 @@ from graspy.datasets import load_drosophila_left
 from graspy.utils import binarize, symmetrize, is_fully_connected
 from graspy.plot import heatmap
 from src.models import select_sbm, select_rdpg
-from src.utils import compute_mse_from_assignments
+from src.utils import compute_mse_from_assignments, save_obj
 import matplotlib.pyplot as plt
 
-ex = Experiment("Drosophila model selection 3 - SBM, RDPG, tSBM")
+ex = Experiment("Drosophila model selection 4 - tSBM")
 
 current_file = basename(__file__)[:-3]
 
@@ -76,23 +76,19 @@ def run_fit(
         sbm_df["sim_ind"] = i
         sbm_master_df = sbm_master_df.append(sbm_df, ignore_index=True, sort=True)
 
-    rdpg_df = select_rdpg(graph, n_components_try_rdpg, directed)
-
     def metric(assignments, *args):
         return -compute_mse_from_assignments(assignments, graph, directed=directed)
 
-    tsbm_master_df = pd.DataFrame(columns=columns)
-    for i in range(n_sims_sbm):
-        tsbm_df = select_sbm(
-            graph,
-            n_components_try_range,
-            n_block_try_range,
-            directed=directed,
-            method="bc-metric",
-        )
-        tsbm_df["sim_ind"] = i
-        tsbm_master_df = tsbm_master_df.append(tsbm_df, ignore_index=True, sort=True)
-    return (sbm_master_df, rdpg_df, tsbm_master_df)
+    tsbm_df = select_sbm(
+        graph,
+        n_components_try_range,
+        n_block_try_range,
+        directed=directed,
+        method="bc-metric",
+    )
+    save_obj(tsbm_df, file_obs, "tsbm_df")
+    save_obj(sbm_master_df, file_obs, "sbm_master_df")
+    return 0
 
 
 @ex.automain
