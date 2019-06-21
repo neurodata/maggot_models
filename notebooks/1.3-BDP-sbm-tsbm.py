@@ -18,10 +18,11 @@ os.getcwd()
 
 #%%
 base_path = "./maggot_models/models/runs/"
-experiment = "drosophila-3-rdpg-sbm"
-run = 13
-sbm_df, _, tsbm_df = utils.load_run(base_path, experiment, run)
-
+experiment = "drosophila-4-rdpg-sbm"
+run = 1
+config = utils.load_config(base_path, experiment, run)
+sbm_df = utils.load_pickle(base_path, experiment, run, "sbm_master_df")
+tsbm_df = utils.load_pickle(base_path, experiment, run, "tsbm_df")
 
 #%% [markdown]
 # ### Plot the noise observed in SBM model fitting
@@ -46,9 +47,6 @@ sns.scatterplot(
     palette=sbm_cmap,
     **plt_kws,
 )
-sns.scatterplot(
-    data=rdpg_df, x="n_params", y="mse", hue="RDPG", palette=rdpg_cmap, **plt_kws
-)
 plt.xlabel("# Params (GMM params for SBMs)")
 plt.ylabel("MSE")
 plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
@@ -64,36 +62,21 @@ sns.scatterplot(
     alpha=0.5,
     **plt_kws,
 )
-sns.scatterplot(
-    data=rdpg_df, x="n_params", y="mse", hue="RDPG", palette=rdpg_cmap, **plt_kws
-)
 plt.xlabel("# Params (GMM params for SBMs)")
 plt.ylabel("MSE")
 plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 
-# # Plot 3
-# plt.figure(figsize=(20,10))
-# sns.scatterplot(data=sbm_df, x="n_params_sbm", y="mse", hue="n_components_try", **plt_kws, alpha=0.5)
-# sns.scatterplot(data=rdpg_df, x="n_params", y="mse", **plt_kws)
-# plt.xlabel("# Params (SBM params for SBMs)")
-# plt.ylabel("MSE")
-# plt.title(f"Drosophila old MB left, directed ({experiment}:{run})");
 
-#%% [markdown]
-# ### Get the best MSE SBM model fitting for each parameter set
+best_sbm_df = utils.get_best_df2(sbm_df)
 
 #%%
-
-
-#%%
-best_sbm_df = utils.get_best_df(sbm_df)
-best_tsbm_df = utils.get_best_df(tsbm_df)
 plt.figure(figsize=(22, 12))
+
 cmap = sns.light_palette("purple", as_cmap=True)
 
 sns.scatterplot(
     data=best_sbm_df,
-    x="n_params_gmm",
+    x="n_params_sbm",
     y="mse",
     hue="n_block_try",
     size="n_components_try",
@@ -101,19 +84,28 @@ sns.scatterplot(
     **plt_kws,
 )
 
-cmap = sns.xkcd_palette(["grass green"])
-s = sns.scatterplot(
-    data=rdpg_df, x="n_params", y="mse", hue="RDPG", palette=cmap, **plt_kws
+plt.xlabel("# Params (GMM params)")
+plt.ylabel("MSE")
+
+cmap = sns.light_palette("purple", as_cmap=True)
+sns.scatterplot(
+    data=tsbm_df,
+    x="n_params_sbm",
+    y="mse",
+    hue="n_block_try",
+    size="n_components_try",
+    palette=cmap,
+    **plt_kws,
 )
 
-plt.xlabel("# Params (GMM params for SBMs)")
+plt.xlabel("# Params (SBM params)")
 plt.ylabel("MSE")
 plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 
 
-#%%
+#%% GMM params
 plt.figure(figsize=(22, 12))
-plt_kws = dict(s=75, linewidth=0, legend=False)
+plt_kws = dict(s=75, linewidth=0, legend="brief")
 
 
 cmap = sns.light_palette("purple", as_cmap=True)
@@ -122,7 +114,6 @@ sns.scatterplot(
     x="n_params_gmm",
     y="mse",
     hue="n_components_try",
-    size="n_block_try",
     palette=cmap,
     **plt_kws,
 )
@@ -130,22 +121,45 @@ sns.scatterplot(
 
 cmap = sns.light_palette("teal", as_cmap=True)
 s = sns.scatterplot(
-    data=best_tsbm_df,
+    data=tsbm_df,
     x="n_params_gmm",
     y="mse",
     hue="n_components_try",
-    size="n_block_try",
+    palette=cmap,
+    **plt_kws,
+)
+
+plt.xlabel("# Params (GMM params for SBMs)")
+plt.ylabel("MSE")
+plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
+
+#%% SBM params
+plt.figure(figsize=(22, 12))
+plt_kws = dict(s=75, linewidth=0, legend="brief")
+
+
+cmap = sns.light_palette("purple", as_cmap=True)
+sns.scatterplot(
+    data=best_sbm_df,
+    x="n_params_sbm",
+    y="mse",
+    hue="n_components_try",
     palette=cmap,
     **plt_kws,
 )
 
 
-cmap = sns.xkcd_palette(["grass green"])
+cmap = sns.light_palette("teal", as_cmap=True)
 s = sns.scatterplot(
-    data=rdpg_df, x="n_params", y="mse", hue="RDPG", palette=cmap, **plt_kws
+    data=tsbm_df,
+    x="n_params_sbm",
+    y="mse",
+    hue="n_components_try",
+    palette=cmap,
+    **plt_kws,
 )
 
-plt.xlabel("# Params (GMM params for SBMs)")
+plt.xlabel("# Params (SBM params for SBMs)")
 plt.ylabel("MSE")
 plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 

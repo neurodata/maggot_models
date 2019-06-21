@@ -153,6 +153,7 @@ def select_sbm(
             # score = compute_log_lik(estimator, graph)
             score = np.sum(estimator.score_samples(graph, clip=c))
             n_params_sbm = estimator._n_parameters()
+            n_params_sbm += estimator.block_weights_.shape[0] - 1
 
             ind = i * len(n_block_try_range) + j
             out_df.loc[ind, "n_params_gmm"] = n_params_gmm

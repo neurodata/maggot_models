@@ -212,6 +212,9 @@ def load_config(path, experiment, run):
     print()
     print("Experiment configuration:")
     print()
+    for key, value in config.items():
+        print(key)
+        print(value)
     return config
 
 
