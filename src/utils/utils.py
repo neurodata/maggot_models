@@ -185,7 +185,7 @@ def get_best_df2(input_df):
     param_df["best_sim"] = 0
     param_df["best_ind"] = 0
     param_df["mse"] = np.inf
-    for i in range(50):
+    for i in range(max(input_df["sim_ind"].values) + 1):
         df = input_df[input_df["sim_ind"] == i]
         for j, row in df.iterrows():
             temp_df = param_df.loc[(param_df[labels[0]] == row[labels[0]])]

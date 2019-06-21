@@ -1,0 +1,8 @@
+INFO - Drosophila model selection 4 - tSBM - Running command 'main'
+INFO - Drosophila model selection 4 - tSBM - Started run with ID "2"
+/miniconda3/envs/maggot_models/lib/python3.7/site-packages/sklearn/mixture/base.py:265: ConvergenceWarning: Initialization 1 did not converge. Try different init parameters, or increase max_iter, tol or check for degenerate data.
+  % (init + 1), ConvergenceWarning)
+Saved to maggot_models/models/runs/drosophila-4-rdpg-sbm/2/tsbm_df.pickle
+Saved to maggot_models/models/runs/drosophila-4-rdpg-sbm/2/sbm_master_df.pickle
+INFO - Drosophila model selection 4 - tSBM - Result: 0
+INFO - Drosophila model selection 4 - tSBM - Completed after 0:06:48

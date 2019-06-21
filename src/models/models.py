@@ -69,7 +69,13 @@ def estimate_assignments(
 
 
 def estimate_sbm(
-    graph, n_communities, n_components=None, directed=False, method="gc", metric=None
+    graph,
+    n_communities,
+    n_components=None,
+    directed=False,
+    method="gc",
+    metric=None,
+    rank="full",
 ):
     if n_communities == 1:
         estimator = EREstimator(directed=directed, loops=False)
@@ -79,7 +85,7 @@ def estimate_sbm(
         vertex_assignments, n_params = estimate_assignments(
             graph, n_communities, n_components, method=method, metric=metric
         )
-        estimator = SBMEstimator(directed=directed, loops=False)
+        estimator = SBMEstimator(directed=directed, loops=False, rank=rank)
         estimator.fit(graph, y=vertex_assignments)
     return estimator, n_params
 
@@ -101,6 +107,8 @@ def select_sbm(
     directed=False,
     method="gc",
     metric=None,
+    c=None,
+    rank="full",
 ):
     """sweeps over n_components, n_blocks, fits an sbm for each 
     Using GaussianCluster, so will internally sweep covariance structure and pick best
@@ -134,36 +142,56 @@ def select_sbm(
         "n_block_try",
     ]
     out_df = pd.DataFrame(np.nan, index=range(n_exps), columns=columns)
-    c = 1 / (graph.size - graph.shape[0])
-
+    if c is None:
+        c = 1 / (graph.size - graph.shape[0])
+    out_dict = {}
     for i, n_components_try in enumerate(n_components_try_range):
         for j, n_block_try in enumerate(n_block_try_range):
-            # TODO figure out low rank B?
-            # TODO try tommy clust instead here
-            estimator, n_params_gmm = estimate_sbm(
-                graph,
-                n_block_try,
-                n_components=n_components_try,
-                directed=directed,
-                method=method,
-                metric=metric,
-            )
-            rss = compute_rss(estimator, graph)
-            mse = compute_mse(estimator, graph)
-            # score = compute_log_lik(estimator, graph)
-            score = np.sum(estimator.score_samples(graph, clip=c))
-            n_params_sbm = estimator._n_parameters()
-            if type(estimator) == SBMEstimator:
-                n_params_sbm += estimator.block_p_.shape[0] - 1
+            if n_block_try == 1:
+                estimator = EREstimator(directed=directed, loops=False)
+                estimator.fit(graph)
+                n_params_gmm = estimator._n_parameters()
+            else:
+                vertex_assignments, n_params_gmm = estimate_assignments(
+                    graph, n_block_try, n_components_try, method=method, metric=metric
+                )
+                estimator = SBMEstimator(directed=directed, loops=False, rank=rank)
+                estimator.fit(graph, y=vertex_assignments)
 
-            ind = i * len(n_block_try_range) + j
-            out_df.loc[ind, "n_params_gmm"] = n_params_gmm
-            out_df.loc[ind, "n_params_sbm"] = n_params_sbm
-            out_df.loc[ind, "rss"] = rss
-            out_df.loc[ind, "mse"] = mse
-            out_df.loc[ind, "score"] = score
-            out_df.loc[ind, "n_components_try"] = n_components_try
-            out_df.loc[ind, "n_block_try"] = n_block_try
+            if rank != "full":
+                rank_try_range = list(range(1, n_block_try + 1))
+            else:
+                rank_try_range = [n_block_try]
+            for k, rank_try in enumerate(rank_try_range):
+                ind = i * len(n_block_try_range) + j * len(rank_try_range) + k
+
+                estimator = SBMEstimator(directed=directed, loops=False, rank=rank_try)
+
+                rss = compute_rss(estimator, graph)
+                mse = compute_mse(estimator, graph)
+                score = np.sum(estimator.score_samples(graph, clip=c))
+                n_params_sbm = estimator._n_parameters()
+                if type(estimator) == SBMEstimator:
+                    n_params_sbm += estimator.block_p_.shape[0] - 1
+
+                out_dict[ind] = {
+                    "n_params_gmm": n_params_gmm,
+                    "n_params_sbm": n_params_sbm,
+                    "rss": rss,
+                    "mse": mse,
+                    "score": score,
+                    "n_components_try": n_components_try,
+                    "n_block_try": n_block_try,
+                    "rank_try": rank_try,
+                }
+    out_df = pd.DataFrame.from_dict(out_dict)
+    # # out_df.loc[ind, "n_params_gmm"] = n_params_gmm
+    # # out_df.loc[ind, "n_params_sbm"] = n_params_sbm
+    # out_df.loc[ind, "rss"] = rss
+    # out_df.loc[ind, "mse"] = mse
+    # out_df.loc[ind, "score"] = score
+    # out_df.loc[ind, "n_components_try"] = n_components_try
+    # out_df.loc[ind, "n_block_try"] = n_block_try
 
     return out_df
 

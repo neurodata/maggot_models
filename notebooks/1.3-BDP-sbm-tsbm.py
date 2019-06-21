@@ -19,11 +19,11 @@ os.getcwd()
 #%%
 base_path = "./maggot_models/models/runs/"
 experiment = "drosophila-4-rdpg-sbm"
-run = 1
+run = 2
 config = utils.load_config(base_path, experiment, run)
 sbm_df = utils.load_pickle(base_path, experiment, run, "sbm_master_df")
 tsbm_df = utils.load_pickle(base_path, experiment, run, "tsbm_df")
-
+tsbm_df["sim_ind"] = 0
 #%% [markdown]
 # ### Plot the noise observed in SBM model fitting
 
@@ -66,44 +66,42 @@ plt.xlabel("# Params (GMM params for SBMs)")
 plt.ylabel("MSE")
 plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 
-
-best_sbm_df = utils.get_best_df2(sbm_df)
-
-#%%
+# Plot 3
 plt.figure(figsize=(22, 12))
-
-cmap = sns.light_palette("purple", as_cmap=True)
-
 sns.scatterplot(
-    data=best_sbm_df,
+    data=sbm_df,
     x="n_params_sbm",
     y="mse",
     hue="n_block_try",
     size="n_components_try",
-    palette=cmap,
+    alpha=0.5,
+    palette=sbm_cmap,
     **plt_kws,
 )
-
-plt.xlabel("# Params (GMM params)")
+plt.xlabel("# Params (SBM params)")
 plt.ylabel("MSE")
+plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 
-cmap = sns.light_palette("purple", as_cmap=True)
+# Plot 4
+plt.figure(figsize=(20, 10))
 sns.scatterplot(
-    data=tsbm_df,
+    data=sbm_df,
     x="n_params_sbm",
     y="mse",
-    hue="n_block_try",
-    size="n_components_try",
-    palette=cmap,
+    hue="n_components_try",
+    palette=sbm_cmap,
+    alpha=0.5,
     **plt_kws,
 )
-
 plt.xlabel("# Params (SBM params)")
 plt.ylabel("MSE")
 plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 
 
-#%% GMM params
+#%%
+best_sbm_df = utils.get_best_df2(sbm_df)
+
+#%% GMM params - with hue
 plt.figure(figsize=(22, 12))
 plt_kws = dict(s=75, linewidth=0, legend="brief")
 
@@ -133,7 +131,11 @@ plt.xlabel("# Params (GMM params for SBMs)")
 plt.ylabel("MSE")
 plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 
-#%% SBM params
+leg = s.axes.get_legend()
+leg.get_texts()[0].set_text("GraspyGMM: d, best of 50")
+leg.get_texts()[5].set_text("AutoGMM: d")
+
+#%% SBM params - with hue
 plt.figure(figsize=(22, 12))
 plt_kws = dict(s=75, linewidth=0, legend="brief")
 
@@ -163,3 +165,97 @@ plt.xlabel("# Params (SBM params for SBMs)")
 plt.ylabel("MSE")
 plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 
+leg = s.axes.get_legend()
+leg.get_texts()[0].set_text("GraspyGMM: d, best of 50")
+leg.get_texts()[5].set_text("AutoGMM: d")
+
+#%% GMM params - no hue
+sns.set_palette("Set1")
+
+plt.figure(figsize=(22, 12))
+plt_kws = dict(s=75, linewidth=0, legend="brief")
+
+
+sns.scatterplot(
+    data=best_sbm_df,
+    x="n_params_gmm",
+    y="mse",
+    palette=cmap,
+    label="GraspyGMM",
+    **plt_kws,
+)
+
+s = sns.scatterplot(
+    data=tsbm_df, x="n_params_gmm", y="mse", palette=cmap, label="AutoGMM", **plt_kws
+)
+
+plt.xlabel("# Params (GMM params for SBMs)")
+plt.ylabel("MSE")
+plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
+
+#%% SBM params - no hue
+plt.figure(figsize=(22, 12))
+plt_kws = dict(s=75, linewidth=0, legend="brief")
+
+sns.scatterplot(
+    data=best_sbm_df, x="n_params_sbm", y="mse", label="GraspyGMM", **plt_kws
+)
+
+
+s = sns.scatterplot(data=tsbm_df, x="n_params_sbm", y="mse", label="AutoGMM", **plt_kws)
+
+plt.xlabel("# Params (SBM params for SBMs)")
+plt.ylabel("MSE")
+plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
+
+
+#%%
+best_tsbm_df = utils.get_best_df2(tsbm_df)
+#%% GMM params - no hue
+sns.set_palette("Set1")
+
+plt.figure(figsize=(22, 12))
+plt_kws = dict(s=75, linewidth=0, legend="brief")
+
+
+sns.scatterplot(
+    data=best_sbm_df,
+    x="n_params_gmm",
+    y="mse",
+    palette=cmap,
+    label="GraspyGMM",
+    **plt_kws,
+)
+
+s = sns.scatterplot(
+    data=best_tsbm_df,
+    x="n_params_gmm",
+    y="mse",
+    palette=cmap,
+    label="AutoGMM",
+    **plt_kws,
+)
+
+plt.xlabel("# Params (GMM params for SBMs)")
+plt.ylabel("MSE")
+plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
+
+#%% SBM params - no hue
+plt.figure(figsize=(22, 12))
+plt_kws = dict(s=75, linewidth=0, legend="brief")
+
+sns.scatterplot(
+    data=best_sbm_df, x="n_params_sbm", y="mse", label="GraspyGMM", **plt_kws
+)
+
+
+s = sns.scatterplot(
+    data=best_tsbm_df, x="n_params_sbm", y="mse", label="AutoGMM", **plt_kws
+)
+
+plt.xlabel("# Params (SBM params for SBMs)")
+plt.ylabel("MSE")
+plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
+
+
+#%%
