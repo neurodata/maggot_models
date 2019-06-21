@@ -11,5 +11,6 @@ from .utils import (
     get_best_df,
     load_config,
     save_obj,
+    load_pickle,
 )
 

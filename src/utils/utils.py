@@ -178,14 +178,27 @@ def load_config(path, experiment, run):
     print()
     print("Experiment configuration:")
     print()
-    for key, value in config.items():
-        if not key == "__doc__":
-            print(key)
-            print(value)
-            print()
+    try:
+        for key, value in config.items():
+            if not key == "__doc__":
+                print(key)
+                print(value)
+                print()
 
-    dfs = run_to_df(run_path)
-    return dfs
+        dfs = run_to_df(run_path)
+        return dfs
+    except TypeError:
+        return config
+
+
+def load_pickle(path, experiment, run, name="master_out_df"):
+    exp_path = Path(path)
+    exp_path = exp_path / experiment
+    exp_path = exp_path / str(run)
+    exp_path = exp_path / str(name + ".pickle")
+    with open(exp_path, "rb") as f:
+        data = pickle.load(f)
+    return data
 
 
 def save_obj(obj, fso, name):
