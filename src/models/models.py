@@ -144,7 +144,7 @@ def select_sbm(
                 graph,
                 n_block_try,
                 n_components=n_components_try,
-                directed=False,
+                directed=directed,
                 method=method,
                 metric=metric,
             )
