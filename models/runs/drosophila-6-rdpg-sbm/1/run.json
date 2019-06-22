@@ -1,0 +1,96 @@
+{
+  "artifacts": [],
+  "command": "main",
+  "experiment": {
+    "base_dir": "/Users/bpedigo/JHU_code/maggot_models/maggot_models/models",
+    "dependencies": [
+      "graspy==0.0.3",
+      "numpy==1.16.4",
+      "pandas==0.24.2",
+      "sacred==0.7.4",
+      "scikit-learn==0.21.2",
+      "src==0.1.0"
+    ],
+    "mainfile": "drosophila-6-rdpg-sbm.py",
+    "name": "Drosophila model selection 6 - new, DCSBM",
+    "repositories": [
+      {
+        "commit": "8c0d8907dd1efc2bb679264276b0ec57caa92e41",
+        "dirty": true,
+        "url": "https://github.com/neurodata/maggot_models.git"
+      }
+    ],
+    "sources": [
+      [
+        "drosophila-6-rdpg-sbm.py",
+        "_sources/drosophila-6-rdpg-sbm_4d85ccc7330e23d3decf5e74a337ceb6.py"
+      ]
+    ]
+  },
+  "fail_trace": [
+    "Traceback (most recent call last):\n",
+    "  File \"/miniconda3/envs/maggot_models/lib/python3.7/site-packages/sacred/config/captured_function.py\", line 46, in captured_function\n    result = wrapped(*args, **kwargs)\n",
+    "  File \"/Users/bpedigo/JHU_code/maggot_models/maggot_models/models/drosophila-6-rdpg-sbm.py\", line 89, in main\n    embed_kws_try_range,\n",
+    "  File \"/Users/bpedigo/JHU_code/maggot_models/maggot_models/models/drosophila-6-rdpg-sbm.py\", line 64, in run_fit\n    out_df = select_dcsbm(graph, param_grid, directed=directed, degree_directed=False)\n",
+    "  File \"/Users/bpedigo/JHU_code/maggot_models/maggot_models/src/models/models.py\", line 239, in select_dcsbm\n    grid_search.fit(graph)\n",
+    "  File \"/miniconda3/envs/maggot_models/lib/python3.7/site-packages/sklearn/model_selection/_search.py\", line 687, in fit\n    self._run_search(evaluate_candidates)\n",
+    "  File \"/miniconda3/envs/maggot_models/lib/python3.7/site-packages/sklearn/model_selection/_search.py\", line 1148, in _run_search\n    evaluate_candidates(ParameterGrid(self.param_grid))\n",
+    "  File \"/miniconda3/envs/maggot_models/lib/python3.7/site-packages/sklearn/model_selection/_search.py\", line 666, in evaluate_candidates\n    cv.split(X, y, groups)))\n",
+    "  File \"/miniconda3/envs/maggot_models/lib/python3.7/site-packages/joblib/parallel.py\", line 924, in __call__\n    while self.dispatch_one_batch(iterator):\n",
+    "  File \"/miniconda3/envs/maggot_models/lib/python3.7/site-packages/joblib/parallel.py\", line 759, in dispatch_one_batch\n    self._dispatch(tasks)\n",
+    "  File \"/miniconda3/envs/maggot_models/lib/python3.7/site-packages/joblib/parallel.py\", line 716, in _dispatch\n    job = self._backend.apply_async(batch, callback=cb)\n",
+    "  File \"/miniconda3/envs/maggot_models/lib/python3.7/site-packages/joblib/_parallel_backends.py\", line 182, in apply_async\n    result = ImmediateResult(func)\n",
+    "  File \"/miniconda3/envs/maggot_models/lib/python3.7/site-packages/joblib/_parallel_backends.py\", line 549, in __init__\n    self.results = batch()\n",
+    "  File \"/miniconda3/envs/maggot_models/lib/python3.7/site-packages/joblib/parallel.py\", line 225, in __call__\n    for func, args, kwargs in self.items]\n",
+    "  File \"/miniconda3/envs/maggot_models/lib/python3.7/site-packages/joblib/parallel.py\", line 225, in <listcomp>\n    for func, args, kwargs in self.items]\n",
+    "  File \"/miniconda3/envs/maggot_models/lib/python3.7/site-packages/sklearn/model_selection/_validation.py\", line 512, in _fit_and_score\n    estimator.fit(X_train, **fit_params)\n",
+    "  File \"/Users/bpedigo/JHU_code/graspy/graspy/models/sbm.py\", line 330, in fit\n    self._estimate_assignments(graph)\n",
+    "  File \"/Users/bpedigo/JHU_code/graspy/graspy/models/sbm.py\", line 295, in _estimate_assignments\n    vertex_assignments = gc.fit_predict(latent)\n",
+    "  File \"/Users/bpedigo/JHU_code/graspy/graspy/cluster/base.py\", line 100, in fit_predict\n    self.fit(X, y)\n",
+    "  File \"/Users/bpedigo/JHU_code/graspy/graspy/cluster/gclust.py\", line 243, in fit\n    self.model_ = models[best_component - 1][best_covariance_idx]\n",
+    "IndexError: list index out of range\n"
+  ],
+  "heartbeat": "2019-06-22T19:58:35.257406",
+  "host": {
+    "ENV": {},
+    "cpu": "Intel(R) Core(TM) i7-8850H CPU @ 2.60GHz",
+    "hostname": "Benjamins-MacBook-Pro.local",
+    "os": [
+      "Darwin",
+      "Darwin-18.6.0-x86_64-i386-64bit"
+    ],
+    "python_version": "3.7.3"
+  },
+  "meta": {
+    "command": "main",
+    "options": {
+      "--beat_interval": null,
+      "--capture": null,
+      "--comment": null,
+      "--debug": false,
+      "--enforce_clean": false,
+      "--file_storage": null,
+      "--force": false,
+      "--help": false,
+      "--loglevel": null,
+      "--mongo_db": null,
+      "--name": null,
+      "--pdb": false,
+      "--print_config": false,
+      "--priority": null,
+      "--queue": false,
+      "--sql": null,
+      "--tiny_db": null,
+      "--unobserved": false,
+      "COMMAND": null,
+      "UPDATE": [],
+      "help": false,
+      "with": false
+    }
+  },
+  "resources": [],
+  "result": null,
+  "start_time": "2019-06-22T19:58:34.716450",
+  "status": "FAILED",
+  "stop_time": "2019-06-22T19:58:35.258422"
+}

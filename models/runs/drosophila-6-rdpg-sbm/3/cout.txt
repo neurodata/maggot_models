@@ -1,0 +1,13 @@
+INFO - Drosophila model selection 6 - new, DCSBM - Running command 'main'
+INFO - Drosophila model selection 6 - new, DCSBM - Started run with ID "3"
+   mean_fit_time  mean_score_time  ...       mse n_params
+0       0.045797         0.000148  ...  0.088114      210
+1       0.031853         0.000109  ...  0.088114      210
+2       0.031849         0.000116  ...  0.088114      210
+3       0.031107         0.000129  ...  0.088114      210
+4       0.030051         0.000106  ...  0.088114      210
+
+[5 rows x 11 columns]
+Saved to maggot_models/models/runs/drosophila-6-rdpg-sbm/3/grid_search_out.pickle
+INFO - Drosophila model selection 6 - new, DCSBM - Result: 0
+INFO - Drosophila model selection 6 - new, DCSBM - Completed after 0:00:58

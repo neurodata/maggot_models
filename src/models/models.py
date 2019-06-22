@@ -1,15 +1,36 @@
 import numpy as np
 import pandas as pd
 
+# def estimate_sbm(
+#     graph,
+#     n_communities,
+#     n_components=None,
+#     directed=False,
+#     method="gc",
+#     metric=None,
+#     rank="full",
+# ):
+#     if n_communities == 1:
+#         estimator = EREstimator(directed=directed, loops=False)
+#         estimator.fit(graph)
+#         n_params = estimator._n_parameters()
+#     else:
+#         vertex_assignments, n_params = estimate_assignments(
+#             graph, n_communities, n_components, method=method, metric=metric
+#         )
+#         estimator = SBMEstimator(directed=directed, loops=False, rank=rank)
+#         estimator.fit(graph, y=vertex_assignments)
+#     return estimator, n_params
+from sklearn.metrics import make_scorer, mean_squared_error
+from sklearn.model_selection import GridSearchCV
+
 from graspy.cluster import GaussianCluster
 from graspy.embed import AdjacencySpectralEmbed
-from graspy.models import RDPGEstimator, SBMEstimator, EREstimator
-
+from graspy.models import DCSBMEstimator, EREstimator, RDPGEstimator, SBMEstimator
 from graspy.utils import is_symmetric
 
-from ..utils import compute_rss, compute_mse
+from ..utils import compute_mse, compute_rss
 from .brute_cluster import brute_cluster
-
 
 
 def estimate_assignments(
@@ -185,33 +206,60 @@ def select_rdpg(graph, n_components_try_range, directed):
     return out_df
 
 
-# def estimate_sbm(
-#     graph,
-#     n_communities,
-#     n_components=None,
-#     directed=False,
-#     method="gc",
-#     metric=None,
-#     rank="full",
-# ):
-#     if n_communities == 1:
-#         estimator = EREstimator(directed=directed, loops=False)
-#         estimator.fit(graph)
-#         n_params = estimator._n_parameters()
-#     else:
-#         vertex_assignments, n_params = estimate_assignments(
-#             graph, n_communities, n_components, method=method, metric=metric
-#         )
-#         estimator = SBMEstimator(directed=directed, loops=False, rank=rank)
-#         estimator.fit(graph, y=vertex_assignments)
-#     return estimator, n_params
+class DummyCV:
+    def __init__(self):
+        self.n_splits = 1
+
+    def split(self, X, y, groups=None):
+        yield (np.arange(X.shape[0]), np.arange(X.shape[0]))
+
+    def get_n_splits(self, X, y, groups=None):
+        return self.n_splits
 
 
-def select_DCSBM(
+def select_dcsbm(
     graph,
-    param_grid
-    directed=False,
+    param_grid,
+    directed=True,
+    degree_directed=False,
     metric=None,
     c=0,
     rank="full",
+    n_jobs=1,
+    n_init=1,
 ):
+    dcsbm = DCSBMEstimator(
+        directed=directed, degree_directed=degree_directed, loops=False, n_init=n_init
+    )
+
+    def scorer(estimator, graph, y=None):
+        mse = estimator.mse(graph)
+        return -mse
+
+    cv = DummyCV()
+    grid_search = GridSearchCV(
+        dcsbm, param_grid, scoring=scorer, cv=cv, n_jobs=n_jobs, verbose=10
+    )
+    grid_search.fit(graph)
+
+    # format outputs
+    out_df = pd.DataFrame.from_dict(grid_search.cv_results_)
+    out_df["param_regularizer"] = [
+        v["regularizer"] for v in out_df["param_embed_kws"].values
+    ]
+    out_df.drop(
+        columns=[
+            "std_fit_time",
+            "std_score_time",
+            "split0_test_score",
+            "std_test_score",
+        ],
+        inplace=True,
+    )
+    out_df["mse"] = -out_df["mean_test_score"]
+    n_verts = graph.shape[0]
+    out_df["n_params"] = out_df["param_n_blocks"] ** 2
+    out_df["n_params"] += n_verts
+    if degree_directed:
+        out_df["n_params"] += n_verts
+    return out_df

@@ -4,5 +4,5 @@ from .models import (
     select_rdpg,
     estimate_assignments,
     estimate_rdpg,
-    estimate_sbm,
+    select_dcsbm,
 )

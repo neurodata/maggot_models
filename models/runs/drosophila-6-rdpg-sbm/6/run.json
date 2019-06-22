@@ -1,0 +1,73 @@
+{
+  "artifacts": [],
+  "command": "main",
+  "experiment": {
+    "base_dir": "/Users/bpedigo/JHU_code/maggot_models/maggot_models/models",
+    "dependencies": [
+      "graspy==0.0.3",
+      "numpy==1.16.4",
+      "pandas==0.24.2",
+      "sacred==0.7.4",
+      "scikit-learn==0.21.2",
+      "src==0.1.0"
+    ],
+    "mainfile": "drosophila-6-rdpg-sbm.py",
+    "name": "Drosophila model selection 6 - new, DCSBM",
+    "repositories": [
+      {
+        "commit": "8c0d8907dd1efc2bb679264276b0ec57caa92e41",
+        "dirty": true,
+        "url": "https://github.com/neurodata/maggot_models.git"
+      }
+    ],
+    "sources": [
+      [
+        "drosophila-6-rdpg-sbm.py",
+        "_sources/drosophila-6-rdpg-sbm_05c3491ee6aa302c433b6a825e3d3302.py"
+      ]
+    ]
+  },
+  "heartbeat": "2019-06-22T20:17:40.666156",
+  "host": {
+    "ENV": {},
+    "cpu": "Intel(R) Core(TM) i7-8850H CPU @ 2.60GHz",
+    "hostname": "Benjamins-MacBook-Pro.local",
+    "os": [
+      "Darwin",
+      "Darwin-18.6.0-x86_64-i386-64bit"
+    ],
+    "python_version": "3.7.3"
+  },
+  "meta": {
+    "command": "main",
+    "options": {
+      "--beat_interval": null,
+      "--capture": null,
+      "--comment": null,
+      "--debug": false,
+      "--enforce_clean": false,
+      "--file_storage": null,
+      "--force": false,
+      "--help": false,
+      "--loglevel": null,
+      "--mongo_db": null,
+      "--name": null,
+      "--pdb": false,
+      "--print_config": false,
+      "--priority": null,
+      "--queue": false,
+      "--sql": null,
+      "--tiny_db": null,
+      "--unobserved": false,
+      "COMMAND": null,
+      "UPDATE": [],
+      "help": false,
+      "with": false
+    }
+  },
+  "resources": [],
+  "result": 0,
+  "start_time": "2019-06-22T20:13:35.003525",
+  "status": "COMPLETED",
+  "stop_time": "2019-06-22T20:17:39.663772"
+}

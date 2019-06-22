@@ -1,0 +1,2258 @@
+INFO - Drosophila model selection 6 - new, DCSBM - Running command 'main'
+INFO - Drosophila model selection 6 - new, DCSBM - Started run with ID "6"
+Fitting 1 folds for each of 1200 candidates, totalling 1200 fits
+[Parallel(n_jobs=-1)]: Using backend LokyBackend with 12 concurrent workers.
+[Parallel(n_jobs=-1)]: Done   1 tasks      | elapsed:    5.3s
+[Parallel(n_jobs=-1)]: Done   2 tasks      | elapsed:    5.3s
+[Parallel(n_jobs=-1)]: Done   3 tasks      | elapsed:    5.4s
+[Parallel(n_jobs=-1)]: Done   4 tasks      | elapsed:    5.4s
+[Parallel(n_jobs=-1)]: Done   5 tasks      | elapsed:    5.4s
+[Parallel(n_jobs=-1)]: Done   6 tasks      | elapsed:    5.5s
+[Parallel(n_jobs=-1)]: Done   7 tasks      | elapsed:    5.5s
+[Parallel(n_jobs=-1)]: Done   8 tasks      | elapsed:    5.5s
+[Parallel(n_jobs=-1)]: Done   9 tasks      | elapsed:    5.5s
+[Parallel(n_jobs=-1)]: Done  10 tasks      | elapsed:    5.5s
+[Parallel(n_jobs=-1)]: Done  11 tasks      | elapsed:    5.5s
+[Parallel(n_jobs=-1)]: Done  12 tasks      | elapsed:    5.6s
+[Parallel(n_jobs=-1)]: Done  13 tasks      | elapsed:    6.3s
+[Parallel(n_jobs=-1)]: Done  14 tasks      | elapsed:    6.3s
+[Parallel(n_jobs=-1)]: Done  15 tasks      | elapsed:    6.5s
+[Parallel(n_jobs=-1)]: Done  16 tasks      | elapsed:    6.6s
+[Parallel(n_jobs=-1)]: Done  17 tasks      | elapsed:    6.6s
+[Parallel(n_jobs=-1)]: Done  18 tasks      | elapsed:    6.6s
+[Parallel(n_jobs=-1)]: Done  19 tasks      | elapsed:    6.7s
+[Parallel(n_jobs=-1)]: Done  20 tasks      | elapsed:    6.7s
+[Parallel(n_jobs=-1)]: Done  21 tasks      | elapsed:    6.8s
+[Parallel(n_jobs=-1)]: Done  22 tasks      | elapsed:    6.8s
+[Parallel(n_jobs=-1)]: Done  23 tasks      | elapsed:    6.9s
+[Parallel(n_jobs=-1)]: Done  24 tasks      | elapsed:    7.1s
+[Parallel(n_jobs=-1)]: Done  25 tasks      | elapsed:    7.3s
+[Parallel(n_jobs=-1)]: Done  26 tasks      | elapsed:    7.5s
+[Parallel(n_jobs=-1)]: Done  27 tasks      | elapsed:    7.8s
+[Parallel(n_jobs=-1)]: Done  28 tasks      | elapsed:    7.8s
+[Parallel(n_jobs=-1)]: Done  29 tasks      | elapsed:    8.0s
+[Parallel(n_jobs=-1)]: Done  30 tasks      | elapsed:    8.2s
+[Parallel(n_jobs=-1)]: Done  31 tasks      | elapsed:    8.3s
+[Parallel(n_jobs=-1)]: Done  32 tasks      | elapsed:    8.3s
+[Parallel(n_jobs=-1)]: Done  33 tasks      | elapsed:    8.4s
+[Parallel(n_jobs=-1)]: Done  34 tasks      | elapsed:    8.4s
+[Parallel(n_jobs=-1)]: Done  35 tasks      | elapsed:    8.4s
+[Parallel(n_jobs=-1)]: Done  36 tasks      | elapsed:    8.5s
+[Parallel(n_jobs=-1)]: Done  37 tasks      | elapsed:    8.5s
+[Parallel(n_jobs=-1)]: Done  38 tasks      | elapsed:    9.2s
+[Parallel(n_jobs=-1)]: Done  39 tasks      | elapsed:    9.2s
+[Parallel(n_jobs=-1)]: Done  40 tasks      | elapsed:    9.4s
+[Parallel(n_jobs=-1)]: Done  41 tasks      | elapsed:    9.5s
+[Parallel(n_jobs=-1)]: Done  42 tasks      | elapsed:    9.8s
+[Parallel(n_jobs=-1)]: Done  43 tasks      | elapsed:   10.0s
+[Parallel(n_jobs=-1)]: Done  44 tasks      | elapsed:   10.1s
+[Parallel(n_jobs=-1)]: Done  45 tasks      | elapsed:   10.2s
+[Parallel(n_jobs=-1)]: Done  46 tasks      | elapsed:   10.2s
+[Parallel(n_jobs=-1)]: Done  47 tasks      | elapsed:   10.2s
+[Parallel(n_jobs=-1)]: Done  48 tasks      | elapsed:   10.3s
+[Parallel(n_jobs=-1)]: Done  49 tasks      | elapsed:   10.5s
+[Parallel(n_jobs=-1)]: Done  50 tasks      | elapsed:   11.1s
+[Parallel(n_jobs=-1)]: Done  51 tasks      | elapsed:   11.3s
+[Parallel(n_jobs=-1)]: Done  52 tasks      | elapsed:   11.3s
+[Parallel(n_jobs=-1)]: Done  53 tasks      | elapsed:   11.7s
+[Parallel(n_jobs=-1)]: Done  54 tasks      | elapsed:   11.7s
+[Parallel(n_jobs=-1)]: Done  55 tasks      | elapsed:   11.9s
+[Parallel(n_jobs=-1)]: Done  56 tasks      | elapsed:   12.1s
+[Parallel(n_jobs=-1)]: Done  57 tasks      | elapsed:   12.2s
+[Parallel(n_jobs=-1)]: Done  58 tasks      | elapsed:   12.2s
+[Parallel(n_jobs=-1)]: Done  59 tasks      | elapsed:   12.4s
+[Parallel(n_jobs=-1)]: Done  60 tasks      | elapsed:   12.4s
+[Parallel(n_jobs=-1)]: Done  61 tasks      | elapsed:   12.5s
+[Parallel(n_jobs=-1)]: Done  62 tasks      | elapsed:   13.0s
+[Parallel(n_jobs=-1)]: Done  63 tasks      | elapsed:   13.3s
+[Parallel(n_jobs=-1)]: Done  64 tasks      | elapsed:   13.7s
+[Parallel(n_jobs=-1)]: Done  65 tasks      | elapsed:   13.8s
+[Parallel(n_jobs=-1)]: Done  66 tasks      | elapsed:   13.9s
+[Parallel(n_jobs=-1)]: Done  67 tasks      | elapsed:   14.1s
+[Parallel(n_jobs=-1)]: Done  68 tasks      | elapsed:   14.1s
+[Parallel(n_jobs=-1)]: Done  69 tasks      | elapsed:   14.1s
+[Parallel(n_jobs=-1)]: Done  70 tasks      | elapsed:   14.2s
+[Parallel(n_jobs=-1)]: Done  71 tasks      | elapsed:   14.2s
+[Parallel(n_jobs=-1)]: Done  72 tasks      | elapsed:   14.7s
+[Parallel(n_jobs=-1)]: Done  73 tasks      | elapsed:   14.7s
+[Parallel(n_jobs=-1)]: Done  74 tasks      | elapsed:   15.2s
+[Parallel(n_jobs=-1)]: Done  75 tasks      | elapsed:   15.6s
+[Parallel(n_jobs=-1)]: Done  76 tasks      | elapsed:   16.1s
+[Parallel(n_jobs=-1)]: Done  77 tasks      | elapsed:   16.2s
+[Parallel(n_jobs=-1)]: Done  78 tasks      | elapsed:   16.3s
+[Parallel(n_jobs=-1)]: Done  79 tasks      | elapsed:   16.3s
+[Parallel(n_jobs=-1)]: Done  80 tasks      | elapsed:   16.4s
+[Parallel(n_jobs=-1)]: Done  81 tasks      | elapsed:   16.4s
+[Parallel(n_jobs=-1)]: Done  82 tasks      | elapsed:   16.4s
+[Parallel(n_jobs=-1)]: Done  83 tasks      | elapsed:   16.4s
+[Parallel(n_jobs=-1)]: Done  84 tasks      | elapsed:   16.9s
+[Parallel(n_jobs=-1)]: Done  85 tasks      | elapsed:   17.2s
+[Parallel(n_jobs=-1)]: Done  86 tasks      | elapsed:   17.5s
+[Parallel(n_jobs=-1)]: Done  87 tasks      | elapsed:   18.1s
+[Parallel(n_jobs=-1)]: Done  88 tasks      | elapsed:   18.6s
+[Parallel(n_jobs=-1)]: Done  89 tasks      | elapsed:   18.6s
+[Parallel(n_jobs=-1)]: Done  90 tasks      | elapsed:   18.8s
+[Parallel(n_jobs=-1)]: Done  91 tasks      | elapsed:   18.8s
+[Parallel(n_jobs=-1)]: Done  92 tasks      | elapsed:   18.8s
+[Parallel(n_jobs=-1)]: Done  93 tasks      | elapsed:   18.8s
+[Parallel(n_jobs=-1)]: Done  94 tasks      | elapsed:   18.9s
+[Parallel(n_jobs=-1)]: Done  95 tasks      | elapsed:   18.9s
+[Parallel(n_jobs=-1)]: Done  96 tasks      | elapsed:   19.1s
+[Parallel(n_jobs=-1)]: Done  97 tasks      | elapsed:   19.2s
+[Parallel(n_jobs=-1)]: Done  98 tasks      | elapsed:   20.2s
+[Parallel(n_jobs=-1)]: Done  99 tasks      | elapsed:   20.9s
+[Parallel(n_jobs=-1)]: Done 100 tasks      | elapsed:   21.2s
+[Parallel(n_jobs=-1)]: Done 101 tasks      | elapsed:   21.7s
+[Parallel(n_jobs=-1)]: Done 102 tasks      | elapsed:   21.8s
+[Parallel(n_jobs=-1)]: Done 103 tasks      | elapsed:   21.8s
+[Parallel(n_jobs=-1)]: Done 104 tasks      | elapsed:   21.9s
+[Parallel(n_jobs=-1)]: Done 105 tasks      | elapsed:   22.0s
+[Parallel(n_jobs=-1)]: Done 106 tasks      | elapsed:   22.0s
+[Parallel(n_jobs=-1)]: Done 107 tasks      | elapsed:   22.0s
+[Parallel(n_jobs=-1)]: Done 108 tasks      | elapsed:   22.2s
+[Parallel(n_jobs=-1)]: Done 109 tasks      | elapsed:   22.3s
+[Parallel(n_jobs=-1)]: Done 110 tasks      | elapsed:   23.2s
+[Parallel(n_jobs=-1)]: Done 111 tasks      | elapsed:   23.6s
+[Parallel(n_jobs=-1)]: Done 112 tasks      | elapsed:   23.8s
+[Parallel(n_jobs=-1)]: Done 113 tasks      | elapsed:   24.4s
+[Parallel(n_jobs=-1)]: Done 114 tasks      | elapsed:   24.5s
+[Parallel(n_jobs=-1)]: Done 115 tasks      | elapsed:   24.6s
+[Parallel(n_jobs=-1)]: Done 116 tasks      | elapsed:   25.0s
+[Parallel(n_jobs=-1)]: Done 117 tasks      | elapsed:   25.0s
+[Parallel(n_jobs=-1)]: Done 118 tasks      | elapsed:   25.0s
+[Parallel(n_jobs=-1)]: Done 119 tasks      | elapsed:   25.2s
+[Parallel(n_jobs=-1)]: Done 120 tasks      | elapsed:   25.2s
+[Parallel(n_jobs=-1)]: Done 121 tasks      | elapsed:   25.3s
+[Parallel(n_jobs=-1)]: Done 122 tasks      | elapsed:   25.3s
+[Parallel(n_jobs=-1)]: Done 123 tasks      | elapsed:   25.4s
+[Parallel(n_jobs=-1)]: Done 124 tasks      | elapsed:   25.5s
+[Parallel(n_jobs=-1)]: Done 125 tasks      | elapsed:   25.7s
+[Parallel(n_jobs=-1)]: Done 126 tasks      | elapsed:   25.7s
+[Parallel(n_jobs=-1)]: Done 127 tasks      | elapsed:   25.8s
+[Parallel(n_jobs=-1)]: Done 128 tasks      | elapsed:   25.8s
+[Parallel(n_jobs=-1)]: Done 129 tasks      | elapsed:   25.8s
+[Parallel(n_jobs=-1)]: Done 130 tasks      | elapsed:   25.9s
+[Parallel(n_jobs=-1)]: Done 131 tasks      | elapsed:   26.0s
+[Parallel(n_jobs=-1)]: Done 132 tasks      | elapsed:   26.0s
+[Parallel(n_jobs=-1)]: Done 133 tasks      | elapsed:   26.3s
+[Parallel(n_jobs=-1)]: Done 134 tasks      | elapsed:   26.7s
+[Parallel(n_jobs=-1)]: Done 135 tasks      | elapsed:   26.7s
+[Parallel(n_jobs=-1)]: Done 136 tasks      | elapsed:   26.8s
+[Parallel(n_jobs=-1)]: Done 137 tasks      | elapsed:   27.0s
+[Parallel(n_jobs=-1)]: Done 138 tasks      | elapsed:   27.0s
+[Parallel(n_jobs=-1)]: Done 139 tasks      | elapsed:   27.0s
+[Parallel(n_jobs=-1)]: Done 140 tasks      | elapsed:   27.1s
+[Parallel(n_jobs=-1)]: Done 141 tasks      | elapsed:   27.1s
+[Parallel(n_jobs=-1)]: Done 142 tasks      | elapsed:   27.4s
+[Parallel(n_jobs=-1)]: Done 143 tasks      | elapsed:   27.4s
+[Parallel(n_jobs=-1)]: Done 144 tasks      | elapsed:   27.5s
+[Parallel(n_jobs=-1)]: Done 145 tasks      | elapsed:   27.5s
+[Parallel(n_jobs=-1)]: Done 146 tasks      | elapsed:   28.3s
+[Parallel(n_jobs=-1)]: Done 147 tasks      | elapsed:   28.4s
+[Parallel(n_jobs=-1)]: Done 148 tasks      | elapsed:   28.5s
+[Parallel(n_jobs=-1)]: Done 149 tasks      | elapsed:   28.5s
+[Parallel(n_jobs=-1)]: Done 150 tasks      | elapsed:   28.5s
+[Parallel(n_jobs=-1)]: Done 151 tasks      | elapsed:   28.7s
+[Parallel(n_jobs=-1)]: Done 152 tasks      | elapsed:   28.7s
+[Parallel(n_jobs=-1)]: Done 153 tasks      | elapsed:   28.9s
+[Parallel(n_jobs=-1)]: Done 154 tasks      | elapsed:   28.9s
+[Parallel(n_jobs=-1)]: Done 155 tasks      | elapsed:   29.0s
+[Parallel(n_jobs=-1)]: Done 156 tasks      | elapsed:   29.0s
+[Parallel(n_jobs=-1)]: Done 157 tasks      | elapsed:   29.3s
+[Parallel(n_jobs=-1)]: Done 158 tasks      | elapsed:   30.2s
+[Parallel(n_jobs=-1)]: Done 159 tasks      | elapsed:   30.3s
+[Parallel(n_jobs=-1)]: Done 160 tasks      | elapsed:   30.4s
+[Parallel(n_jobs=-1)]: Done 161 tasks      | elapsed:   30.4s
+[Parallel(n_jobs=-1)]: Done 162 tasks      | elapsed:   30.5s
+[Parallel(n_jobs=-1)]: Done 163 tasks      | elapsed:   30.6s
+[Parallel(n_jobs=-1)]: Done 164 tasks      | elapsed:   30.6s
+[Parallel(n_jobs=-1)]: Done 165 tasks      | elapsed:   30.7s
+[Parallel(n_jobs=-1)]: Done 166 tasks      | elapsed:   30.8s
+[Parallel(n_jobs=-1)]: Done 167 tasks      | elapsed:   30.8s
+[Parallel(n_jobs=-1)]: Done 168 tasks      | elapsed:   30.8s
+[Parallel(n_jobs=-1)]: Done 169 tasks      | elapsed:   31.1s
+[Parallel(n_jobs=-1)]: Done 170 tasks      | elapsed:   32.3s
+[Parallel(n_jobs=-1)]: Done 171 tasks      | elapsed:   32.8s
+[Parallel(n_jobs=-1)]: Done 172 tasks      | elapsed:   32.9s
+[Parallel(n_jobs=-1)]: Done 173 tasks      | elapsed:   33.0s
+[Parallel(n_jobs=-1)]: Done 174 tasks      | elapsed:   33.0s
+[Parallel(n_jobs=-1)]: Done 175 tasks      | elapsed:   33.0s
+[Parallel(n_jobs=-1)]: Done 176 tasks      | elapsed:   33.0s
+[Parallel(n_jobs=-1)]: Done 177 tasks      | elapsed:   33.1s
+[Parallel(n_jobs=-1)]: Done 178 tasks      | elapsed:   33.1s
+[Parallel(n_jobs=-1)]: Done 179 tasks      | elapsed:   33.2s
+[Parallel(n_jobs=-1)]: Done 180 tasks      | elapsed:   33.4s
+[Parallel(n_jobs=-1)]: Done 181 tasks      | elapsed:   33.6s
+[Parallel(n_jobs=-1)]: Done 182 tasks      | elapsed:   35.0s
+[Parallel(n_jobs=-1)]: Done 183 tasks      | elapsed:   35.4s
+[Parallel(n_jobs=-1)]: Done 184 tasks      | elapsed:   35.5s
+[Parallel(n_jobs=-1)]: Done 185 tasks      | elapsed:   35.5s
+[Parallel(n_jobs=-1)]: Done 186 tasks      | elapsed:   35.6s
+[Parallel(n_jobs=-1)]: Done 187 tasks      | elapsed:   35.6s
+[Parallel(n_jobs=-1)]: Done 188 tasks      | elapsed:   35.6s
+[Parallel(n_jobs=-1)]: Done 189 tasks      | elapsed:   35.7s
+[Parallel(n_jobs=-1)]: Done 190 tasks      | elapsed:   35.8s
+[Parallel(n_jobs=-1)]: Done 191 tasks      | elapsed:   35.8s
+[Parallel(n_jobs=-1)]: Done 192 tasks      | elapsed:   36.1s
+[Parallel(n_jobs=-1)]: Done 193 tasks      | elapsed:   36.4s
+[Parallel(n_jobs=-1)]: Done 194 tasks      | elapsed:   38.2s
+[Parallel(n_jobs=-1)]: Done 195 tasks      | elapsed:   38.5s
+[Parallel(n_jobs=-1)]: Done 196 tasks      | elapsed:   38.5s
+[Parallel(n_jobs=-1)]: Done 197 tasks      | elapsed:   38.6s
+[Parallel(n_jobs=-1)]: Done 198 tasks      | elapsed:   38.8s
+[Parallel(n_jobs=-1)]: Done 199 tasks      | elapsed:   38.8s
+[Parallel(n_jobs=-1)]: Done 200 tasks      | elapsed:   38.9s
+[Parallel(n_jobs=-1)]: Done 201 tasks      | elapsed:   38.9s
+[Parallel(n_jobs=-1)]: Done 202 tasks      | elapsed:   39.0s
+[Parallel(n_jobs=-1)]: Done 203 tasks      | elapsed:   39.1s
+[Parallel(n_jobs=-1)]: Done 204 tasks      | elapsed:   39.2s
+[Parallel(n_jobs=-1)]: Done 205 tasks      | elapsed:   39.2s
+[Parallel(n_jobs=-1)]: Done 206 tasks      | elapsed:   41.1s
+[Parallel(n_jobs=-1)]: Done 207 tasks      | elapsed:   41.4s
+[Parallel(n_jobs=-1)]: Done 208 tasks      | elapsed:   41.5s
+[Parallel(n_jobs=-1)]: Done 209 tasks      | elapsed:   41.6s
+[Parallel(n_jobs=-1)]: Done 210 tasks      | elapsed:   41.6s
+[Parallel(n_jobs=-1)]: Done 211 tasks      | elapsed:   41.7s
+[Parallel(n_jobs=-1)]: Done 212 tasks      | elapsed:   41.8s
+[Parallel(n_jobs=-1)]: Done 213 tasks      | elapsed:   42.0s
+[Parallel(n_jobs=-1)]: Done 214 tasks      | elapsed:   42.4s
+[Parallel(n_jobs=-1)]: Done 215 tasks      | elapsed:   42.5s
+[Parallel(n_jobs=-1)]: Done 216 tasks      | elapsed:   42.5s
+[Parallel(n_jobs=-1)]: Done 217 tasks      | elapsed:   43.1s
+[Parallel(n_jobs=-1)]: Done 218 tasks      | elapsed:   44.2s
+[Parallel(n_jobs=-1)]: Done 219 tasks      | elapsed:   44.6s
+[Parallel(n_jobs=-1)]: Done 220 tasks      | elapsed:   44.6s
+[Parallel(n_jobs=-1)]: Done 221 tasks      | elapsed:   44.9s
+[Parallel(n_jobs=-1)]: Done 222 tasks      | elapsed:   44.9s
+[Parallel(n_jobs=-1)]: Done 223 tasks      | elapsed:   45.1s
+[Parallel(n_jobs=-1)]: Done 224 tasks      | elapsed:   45.2s
+[Parallel(n_jobs=-1)]: Done 225 tasks      | elapsed:   45.3s
+[Parallel(n_jobs=-1)]: Done 226 tasks      | elapsed:   45.8s
+[Parallel(n_jobs=-1)]: Done 227 tasks      | elapsed:   46.2s
+[Parallel(n_jobs=-1)]: Done 228 tasks      | elapsed:   46.2s
+[Parallel(n_jobs=-1)]: Done 229 tasks      | elapsed:   46.3s
+[Parallel(n_jobs=-1)]: Done 230 tasks      | elapsed:   47.1s
+[Parallel(n_jobs=-1)]: Done 231 tasks      | elapsed:   47.5s
+[Parallel(n_jobs=-1)]: Done 232 tasks      | elapsed:   47.9s
+[Parallel(n_jobs=-1)]: Done 233 tasks      | elapsed:   48.2s
+[Parallel(n_jobs=-1)]: Done 234 tasks      | elapsed:   48.3s
+[Parallel(n_jobs=-1)]: Done 235 tasks      | elapsed:   48.4s
+[Parallel(n_jobs=-1)]: Done 236 tasks      | elapsed:   48.4s
+[Parallel(n_jobs=-1)]: Done 237 tasks      | elapsed:   48.5s
+[Parallel(n_jobs=-1)]: Done 238 tasks      | elapsed:   48.6s
+[Parallel(n_jobs=-1)]: Done 239 tasks      | elapsed:   48.7s
+[Parallel(n_jobs=-1)]: Done 240 tasks      | elapsed:   48.7s
+[Parallel(n_jobs=-1)]: Done 241 tasks      | elapsed:   49.0s
+[Parallel(n_jobs=-1)]: Done 242 tasks      | elapsed:   49.1s
+[Parallel(n_jobs=-1)]: Done 243 tasks      | elapsed:   49.2s
+[Parallel(n_jobs=-1)]: Done 244 tasks      | elapsed:   49.3s
+[Parallel(n_jobs=-1)]: Done 245 tasks      | elapsed:   49.4s
+[Parallel(n_jobs=-1)]: Done 246 tasks      | elapsed:   49.4s
+[Parallel(n_jobs=-1)]: Done 247 tasks      | elapsed:   49.4s
+[Parallel(n_jobs=-1)]: Done 248 tasks      | elapsed:   49.6s
+[Parallel(n_jobs=-1)]: Done 249 tasks      | elapsed:   49.6s
+[Parallel(n_jobs=-1)]: Done 250 tasks      | elapsed:   49.6s
+[Parallel(n_jobs=-1)]: Done 251 tasks      | elapsed:   49.8s
+[Parallel(n_jobs=-1)]: Done 252 tasks      | elapsed:   50.2s
+[Parallel(n_jobs=-1)]: Done 253 tasks      | elapsed:   50.2s
+[Parallel(n_jobs=-1)]: Done 254 tasks      | elapsed:   50.6s
+[Parallel(n_jobs=-1)]: Done 255 tasks      | elapsed:   50.8s
+[Parallel(n_jobs=-1)]: Done 256 tasks      | elapsed:   50.8s
+[Parallel(n_jobs=-1)]: Done 257 tasks      | elapsed:   50.9s
+[Parallel(n_jobs=-1)]: Done 258 tasks      | elapsed:   50.9s
+[Parallel(n_jobs=-1)]: Done 259 tasks      | elapsed:   51.1s
+[Parallel(n_jobs=-1)]: Done 260 tasks      | elapsed:   51.1s
+[Parallel(n_jobs=-1)]: Done 261 tasks      | elapsed:   51.1s
+[Parallel(n_jobs=-1)]: Done 262 tasks      | elapsed:   51.1s
+[Parallel(n_jobs=-1)]: Done 263 tasks      | elapsed:   51.3s
+[Parallel(n_jobs=-1)]: Done 264 tasks      | elapsed:   51.5s
+[Parallel(n_jobs=-1)]: Done 265 tasks      | elapsed:   51.8s
+[Parallel(n_jobs=-1)]: Done 266 tasks      | elapsed:   52.6s
+[Parallel(n_jobs=-1)]: Done 267 tasks      | elapsed:   52.7s
+[Parallel(n_jobs=-1)]: Done 268 tasks      | elapsed:   52.8s
+[Parallel(n_jobs=-1)]: Done 269 tasks      | elapsed:   52.9s
+[Parallel(n_jobs=-1)]: Done 270 tasks      | elapsed:   52.9s
+[Parallel(n_jobs=-1)]: Done 271 tasks      | elapsed:   52.9s
+[Parallel(n_jobs=-1)]: Done 272 tasks      | elapsed:   53.0s
+[Parallel(n_jobs=-1)]: Done 273 tasks      | elapsed:   53.0s
+[Parallel(n_jobs=-1)]: Done 274 tasks      | elapsed:   53.0s
+[Parallel(n_jobs=-1)]: Done 275 tasks      | elapsed:   53.1s
+[Parallel(n_jobs=-1)]: Done 276 tasks      | elapsed:   53.3s
+[Parallel(n_jobs=-1)]: Done 277 tasks      | elapsed:   53.4s
+[Parallel(n_jobs=-1)]: Done 278 tasks      | elapsed:   54.5s
+[Parallel(n_jobs=-1)]: Done 279 tasks      | elapsed:   54.9s
+[Parallel(n_jobs=-1)]: Done 280 tasks      | elapsed:   54.9s
+[Parallel(n_jobs=-1)]: Done 281 tasks      | elapsed:   54.9s
+[Parallel(n_jobs=-1)]: Done 282 tasks      | elapsed:   54.9s
+[Parallel(n_jobs=-1)]: Done 283 tasks      | elapsed:   55.0s
+[Parallel(n_jobs=-1)]: Done 284 tasks      | elapsed:   55.1s
+[Parallel(n_jobs=-1)]: Done 285 tasks      | elapsed:   55.2s
+[Parallel(n_jobs=-1)]: Done 286 tasks      | elapsed:   55.2s
+[Parallel(n_jobs=-1)]: Done 287 tasks      | elapsed:   55.3s
+[Parallel(n_jobs=-1)]: Done 288 tasks      | elapsed:   55.4s
+[Parallel(n_jobs=-1)]: Done 289 tasks      | elapsed:   55.5s
+[Parallel(n_jobs=-1)]: Done 290 tasks      | elapsed:   56.6s
+[Parallel(n_jobs=-1)]: Done 291 tasks      | elapsed:   57.1s
+[Parallel(n_jobs=-1)]: Done 292 tasks      | elapsed:   57.2s
+[Parallel(n_jobs=-1)]: Done 293 tasks      | elapsed:   57.2s
+[Parallel(n_jobs=-1)]: Done 294 tasks      | elapsed:   57.3s
+[Parallel(n_jobs=-1)]: Done 295 tasks      | elapsed:   57.4s
+[Parallel(n_jobs=-1)]: Done 296 tasks      | elapsed:   57.4s
+[Parallel(n_jobs=-1)]: Done 297 tasks      | elapsed:   57.5s
+[Parallel(n_jobs=-1)]: Done 298 tasks      | elapsed:   57.5s
+[Parallel(n_jobs=-1)]: Done 299 tasks      | elapsed:   57.7s
+[Parallel(n_jobs=-1)]: Done 300 tasks      | elapsed:   57.8s
+[Parallel(n_jobs=-1)]: Done 301 tasks      | elapsed:   57.9s
+[Parallel(n_jobs=-1)]: Done 302 tasks      | elapsed:   59.4s
+[Parallel(n_jobs=-1)]: Done 303 tasks      | elapsed:   59.5s
+[Parallel(n_jobs=-1)]: Done 304 tasks      | elapsed:   59.9s
+[Parallel(n_jobs=-1)]: Done 305 tasks      | elapsed:   59.9s
+[Parallel(n_jobs=-1)]: Done 306 tasks      | elapsed:   59.9s
+[Parallel(n_jobs=-1)]: Done 307 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-1)]: Done 308 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-1)]: Done 309 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-1)]: Done 310 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-1)]: Done 311 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-1)]: Done 312 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-1)]: Done 313 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-1)]: Done 314 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-1)]: Done 315 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-1)]: Done 316 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-1)]: Done 317 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-1)]: Done 318 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-1)]: Done 319 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-1)]: Done 320 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-1)]: Done 321 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 322 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 323 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 324 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 325 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 326 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 327 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 328 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 329 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 330 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 331 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 332 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 333 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 334 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 335 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 336 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 337 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 338 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-1)]: Done 339 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 340 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 341 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 342 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 343 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 344 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 345 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 346 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 347 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 348 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 349 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 350 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 351 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 352 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 353 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 354 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 355 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 356 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 357 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 358 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 359 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 360 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 361 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 362 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 363 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 364 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 365 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 366 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 367 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 368 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 369 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 370 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 371 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 372 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 373 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 374 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 375 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 376 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 377 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 378 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 379 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 380 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-1)]: Done 381 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 382 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 383 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 384 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 385 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 386 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 387 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 388 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 389 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 390 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 391 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 392 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 393 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 394 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 395 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 396 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 397 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 398 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 399 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 400 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 401 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 402 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 403 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 404 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 405 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 406 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 407 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 408 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 409 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 410 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 411 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 412 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 413 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 414 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 415 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 416 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 417 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-1)]: Done 418 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 419 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 420 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 421 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 422 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 423 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 424 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 425 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 426 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 427 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 428 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 429 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 430 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 431 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 432 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 433 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 434 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 435 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 436 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 437 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 438 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 439 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 440 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 441 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 442 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 443 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 444 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 445 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-1)]: Done 446 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 447 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 448 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 449 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 450 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 451 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 452 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 453 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 454 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 455 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 456 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 457 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 458 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 459 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 460 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 461 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 462 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 463 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 464 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 465 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 466 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 467 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 468 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 469 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-1)]: Done 470 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 471 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 472 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 473 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 474 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 475 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 476 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 477 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 478 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 479 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 480 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 481 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 482 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 483 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 484 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 485 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 486 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 487 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 488 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 489 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 490 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 491 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 492 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 493 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 494 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 495 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 496 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 497 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 498 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 499 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 500 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 501 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-1)]: Done 502 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 503 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 504 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 505 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 506 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 507 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 508 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 509 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 510 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 511 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 512 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 513 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 514 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 515 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 516 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 517 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 518 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 519 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 520 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 521 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 522 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 523 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 524 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 525 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 526 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 527 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 528 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 529 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-1)]: Done 530 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 531 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 532 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 533 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 534 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 535 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 536 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 537 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 538 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 539 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 540 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 541 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 542 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 543 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 544 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 545 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 546 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 547 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 548 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 549 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 550 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 551 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 552 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 553 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=-1)]: Done 554 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 555 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 556 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 557 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 558 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 559 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 560 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 561 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 562 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 563 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 564 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 565 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 566 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 567 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 568 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 569 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 570 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 571 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 572 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 573 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 574 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 575 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 576 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 577 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-1)]: Done 578 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 579 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 580 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 581 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 582 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 583 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 584 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 585 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 586 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 587 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 588 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 589 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 590 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 591 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 592 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 593 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 594 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 595 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 596 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 597 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 598 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 599 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 600 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 601 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 602 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 603 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 604 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 605 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 606 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 607 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 608 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 609 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 610 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 611 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 612 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-1)]: Done 613 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 614 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 615 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 616 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 617 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 618 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 619 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 620 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 621 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 622 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 623 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 624 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 625 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 626 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 627 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 628 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 629 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 630 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 631 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 632 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 633 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 634 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 635 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 636 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 637 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 638 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 639 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 640 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 641 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 642 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 643 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 644 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 645 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 646 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 647 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 648 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 649 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-1)]: Done 650 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 651 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 652 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 653 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 654 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 655 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 656 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 657 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 658 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 659 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 660 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 661 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 662 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 663 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 664 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 665 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 666 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 667 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 668 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 669 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 670 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 671 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 672 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 673 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-1)]: Done 674 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 675 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 676 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 677 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 678 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 679 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 680 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 681 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 682 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 683 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 684 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 685 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 686 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 687 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 688 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 689 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 690 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 691 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 692 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 693 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 694 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 695 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 696 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 697 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-1)]: Done 698 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 699 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 700 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 701 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 702 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 703 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 704 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 705 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 706 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 707 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 708 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 709 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 710 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 711 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 712 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 713 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 714 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 715 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 716 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 717 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 718 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 719 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 720 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 721 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 722 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 723 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 724 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 725 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 726 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 727 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 728 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 729 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 730 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 731 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 732 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 733 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-1)]: Done 734 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 735 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 736 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 737 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 738 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 739 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 740 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 741 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 742 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 743 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 744 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 745 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 746 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 747 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 748 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 749 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 750 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 751 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 752 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 753 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 754 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 755 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 756 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 757 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 758 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 759 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 760 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 761 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 762 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 763 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 764 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 765 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 766 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 767 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 768 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 769 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=-1)]: Done 770 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 771 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 772 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 773 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 774 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 775 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 776 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 777 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 778 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 779 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 780 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 781 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 782 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 783 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 784 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 785 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 786 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 787 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 788 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 789 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 790 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 791 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 792 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 793 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-1)]: Done 794 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 795 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 796 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 797 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 798 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 799 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 800 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 801 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 802 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 803 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 804 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 805 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 806 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 807 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 808 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 809 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 810 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 811 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-1)]: Done 812 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 813 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 814 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 815 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 816 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 817 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 818 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 819 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 820 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 821 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 822 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 823 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 824 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 825 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 826 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 827 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 828 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 829 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 830 tasks      | elapsed:  2.8min
+[Parallel(n_jobs=-1)]: Done 831 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 832 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 833 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 834 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 835 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 836 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 837 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 838 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 839 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 840 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 841 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 842 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 843 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 844 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 845 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 846 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 847 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 848 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 849 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 850 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 851 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 852 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 853 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 854 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 855 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 856 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 857 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 858 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 859 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 860 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 861 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 862 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 863 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 864 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 865 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 866 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 867 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 868 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 869 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 870 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-1)]: Done 871 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 872 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 873 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 874 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 875 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 876 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 877 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 878 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 879 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 880 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 881 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 882 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 883 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 884 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 885 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 886 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 887 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 888 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 889 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 890 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 891 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 892 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 893 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 894 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 895 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 896 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 897 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 898 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 899 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 900 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 901 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-1)]: Done 902 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 903 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 904 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 905 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 906 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 907 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 908 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 909 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 910 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 911 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 912 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 913 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 914 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 915 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 916 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 917 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 918 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 919 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 920 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 921 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 922 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 923 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 924 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 925 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 926 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 927 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 928 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 929 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-1)]: Done 930 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 931 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 932 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 933 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 934 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 935 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 936 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 937 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 938 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 939 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 940 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 941 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 942 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 943 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 944 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 945 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 946 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 947 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 948 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 949 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 950 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 951 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 952 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 953 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 954 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 955 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 956 tasks      | elapsed:  3.2min
+[Parallel(n_jobs=-1)]: Done 957 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 958 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 959 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 960 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 961 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 962 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 963 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 964 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 965 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 966 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 967 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 968 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 969 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 970 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 971 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 972 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 973 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 974 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 975 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 976 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 977 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 978 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 979 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 980 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 981 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 982 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 983 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 984 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 985 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 986 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 987 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 988 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 989 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 990 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 991 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 992 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 993 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 994 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 995 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 996 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 997 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 998 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 999 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 1000 tasks      | elapsed:  3.3min
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=12 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=12, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=7 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=7, score=-0.077, total=   1.1s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=8 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=8, score=-0.077, total=   1.6s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=11 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=11, score=-0.075, total=   1.6s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=9 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=9, score=-0.081, total=   1.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=9 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=9, score=-0.074, total=   1.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=10 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=10, score=-0.075, total=   2.1s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=8 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=8, score=-0.074, total=   2.4s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=7 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=7, score=-0.073, total=   3.5s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=1 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=1, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=2 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=2, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=4 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=4, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=7 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=7, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=1 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=1, score=-0.088, total=   0.9s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=1 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=1, score=-0.080, total=   1.1s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=10 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=10, score=-0.075, total=   1.8s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=1 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=1, score=-0.079, total=   1.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=1 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=1, score=-0.079, total=   2.0s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=11 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=11, score=-0.072, total=   2.6s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=11 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=11, score=-0.072, total=   3.2s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=11 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=11, score=-0.072, total=   3.2s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=10 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=10, score=-0.069, total=   3.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=12 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=12, score=-0.071, total=   3.9s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=1 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=1, score=-0.080, total=   1.2s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=12 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=12, score=-0.074, total=   1.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=12 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=12, score=-0.072, total=   2.0s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=12 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=12, score=-0.071, total=   2.3s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=12 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=12, score=-0.071, total=   2.4s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=10 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=10, score=-0.070, total=   2.6s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=7 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=7, score=-0.070, total=   2.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=3 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=3, score=-0.068, total=   4.0s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=8 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=8, score=-0.070, total=   3.1s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=10 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=10, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=10 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=10, score=-0.077, total=   1.3s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=8 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=8, score=-0.077, total=   1.5s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=8 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=8, score=-0.071, total=   2.0s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=7 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=7, score=-0.071, total=   2.2s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=8 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=8, score=-0.071, total=   2.5s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=6 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=6, score=-0.069, total=   3.0s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=11 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=11, score=-0.069, total=   2.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=12 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=12, score=-0.067, total=   3.0s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=6 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=6, score=-0.068, total=   4.2s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=3 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=3, score=-0.081, total=   1.5s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=2 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=2, score=-0.084, total=   1.9s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=2 [Parallel(n_jobs=-1)]: Done 1001 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 1002 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 1003 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 1004 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 1005 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-1)]: Done 1006 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1007 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1008 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1009 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1010 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1011 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1012 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1013 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1014 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1015 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1016 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1017 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1018 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1019 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1020 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1021 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1022 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1023 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1024 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1025 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1026 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1027 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1028 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1029 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1030 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1031 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1032 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1033 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-1)]: Done 1034 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1035 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1036 tasks      | elapsed:  3.5min
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=7 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=7, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=8 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=8, score=-0.077, total=   1.2s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=11 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=11, score=-0.081, total=   1.5s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=12 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=12, score=-0.076, total=   1.6s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=8 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=8, score=-0.077, total=   2.3s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=1 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=1, score=-0.074, total=   1.6s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=11 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=11, score=-0.074, total=   2.2s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=11 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=11, score=-0.074, total=   2.3s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=6 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=6, score=-0.071, total=   2.8s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=5 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=5, score=-0.074, total=   3.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=8 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=8, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=6 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=6, score=-0.077, total=   1.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=8 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=8, score=-0.077, total=   1.5s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=7 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=7, score=-0.077, total=   1.6s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=5 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=5, score=-0.073, total=   2.5s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=4 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=4, score=-0.073, total=   2.6s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=6 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=6, score=-0.071, total=   3.5s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=12 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=12, score=-0.072, total=   3.2s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=12 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=12, score=-0.072, total=   3.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=1 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=1, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=2 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=2, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=4 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=4, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=11 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=11, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=9 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=9, score=-0.081, total=   1.5s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=7 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=7, score=-0.074, total=   1.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=10 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=10, score=-0.073, total=   2.1s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=9 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=9, score=-0.071, total=   2.2s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=7 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=7, score=-0.071, total=   2.6s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=8 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=8, score=-0.072, total=   2.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=6 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=6, score=-0.071, total=   4.6s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=1 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=1, score=-0.074, total=   2.1s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=9 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=9, score=-0.070, total=   3.0s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=7 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=7, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=7 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=7, score=-0.081, total=   1.2s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=6 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=6, score=-0.077, total=   1.5s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=5 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=5, score=-0.077, total=   2.0s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=6 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=6, score=-0.071, total=   2.2s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=6 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=6, score=-0.071, total=   2.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=8 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=8, score=-0.069, total=   2.5s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=7 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=7, score=-0.070, total=   2.4s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=5 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=5, score=-0.070, total=   4.0s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=12 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=12, score=-0.069, total=   3.2s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=7 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=7, score=-0.088, total=   0.9s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=7 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=7, score=-0.081, total=   1.7s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=8 
+[CV]  embed_kws={'re[Parallel(n_jobs=-1)]: Done 1037 tasks      | elapsed:  3.5min
+gularizer': 4.444444444444445}, n_blocks=3, n_components=8, score=-0.074, total=   2.0s[Parallel(n_jobs=-1)]: Done 1038 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1039 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1040 tasks      | elapsed:  3.5min
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=9 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=9, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=5 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=5, score=-0.086, total=   1.0s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=3 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=3, score=-0.088, total=   1.0s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=2 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=2, score=-0.085, total=   1.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=5 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=5, score=-0.086, total=   1.6s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=2 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=2, score=-0.084, total=   1.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=2 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=2, score=-0.072, total=   2.1s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=2 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=2, score=-0.071, total=   2.3s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=2 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=2, score=-0.072, total=   2.6s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=2 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=2, score=-0.068, total=   3.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=3 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=3, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=5 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=5, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=10 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=10, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=9 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=9, score=-0.077, total=   1.5s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=11 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=11, score=-0.077, total=   1.5s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=11 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=11, score=-0.072, total=   1.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=9 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=9, score=-0.074, total=   2.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=10 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=10, score=-0.076, total=   2.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=3 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=3, score=-0.068, total=   2.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=2 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=2, score=-0.071, total=   3.2s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=3 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=3, score=-0.068, total=   3.1s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=4 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=4, score=-0.068, total=   3.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=8 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=8, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=4 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=4, score=-0.078, total=   1.5s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=3 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=3, score=-0.077, total=   1.9s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=3 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=3, score=-0.073, total=   1.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=2 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=2, score=-0.071, total=   3.3s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=1 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=1, score=-0.076, total=   2.0s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=5 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=5, score=-0.070, total=   3.3s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=10 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=10, score=-0.071, total=   2.6s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=5 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=5, score=-0.071, total=   3.5s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=5 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=5, score=-0.068, total=   3.5s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=11 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=11, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=11 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=11, score=-0.081, total=   1.1s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=9 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=9, score=-0.075, total=   1.6s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=9 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=9, score=-0.073, total=   1.9s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=8 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=8, score=-0.070, total=   2.0s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=7 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=7, score=-0.070, total=   2.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=7 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=7, score=-0.070, total=   2.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=8 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=8, score=-0.069, total=   2.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=9 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=9, score=-0.069, total=   2.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=5 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=5, score=-0.070, total=   4.9s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=5 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=5, score=-0.078, total=   1.5s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=4 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=4, score=-0.077, total=   2.6s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=8 
+[CV]  embed_kws={'re[Parallel(n_jobs=-1)]: Done 1041 tasks      | elapsed:  3.5min
+gularizer': 4.444444444444445}, n_blocks=4, n_components=8, score=-0.071, total=   2.3s[Parallel(n_jobs=-1)]: Done 1042 tasks      | elapsed:  3.5min
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=2 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=2, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=2 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=2, score=-0.086, total=   1.7s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=12 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=12, score=-0.075, total=   1.3s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=1 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=1, score=-0.077, total=   1.2s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=6 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=6, score=-0.076, total=   1.8s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=6 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=6, score=-0.078, total=   2.1s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=6 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=6, score=-0.072, total=   2.3s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=6 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=6, score=-0.073, total=   2.5s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=11 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=11, score=-0.073, total=   2.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=7 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=7, score=-0.072, total=   3.5s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=2 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=2, score=-0.084, total=   1.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=2 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=2, score=-0.085, total=   1.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=6 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=6, score=-0.077, total=   1.6s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=2 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=2, score=-0.074, total=   3.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=1 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=1, score=-0.074, total=   1.9s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=5 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=5, score=-0.070, total=   3.2s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=7 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=7, score=-0.070, total=   2.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=7 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=7, score=-0.069, total=   2.9s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=3 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=3, score=-0.067, total=   3.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=9 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=9, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=5 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=5, score=-0.081, total=   1.5s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=6 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=6, score=-0.077, total=   1.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=4 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=4, score=-0.077, total=   2.1s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=6 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=6, score=-0.076, total=   2.4s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=8 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=8, score=-0.071, total=   2.4s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=4 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=4, score=-0.071, total=   2.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=4 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=4, score=-0.068, total=   3.2s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=6 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=6, score=-0.070, total=   4.1s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=1 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=1, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=2 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=2, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=3 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=3, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=4 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=4, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=1 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=1, score=-0.088, total=   1.1s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=1 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=1, score=-0.080, total=   1.0s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=1 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=1, score=-0.078, total=   1.5s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=12 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=12, score=-0.072, total=   1.9s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=11 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=11, score=-0.072, total=   2.3s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=1 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=1, score=-0.077, total=   2.3s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=10 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=10, score=-0.070, total=   2.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=1 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=1, score=-0.076, total=   2.0s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=2 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=2, score=-0.068, total=   3.9s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=9 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=9, score=-0.070, total=   3.6s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=9 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=9, score=-0.088, total=   1.0s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=9 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=9, score=-0.078, total=   1.8s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=10 
+[CV]  embed_kws={'regulariz[Parallel(n_jobs=-1)]: Done 1043 tasks      | elapsed:  3.5min
+er': 4.444444444444445}, n_blocks=3, n_components=10, score=-0.073, total=   2.2s[Parallel(n_jobs=-1)]: Done 1044 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1045 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1046 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1047 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1048 tasks      | elapsed:  3.5min
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=5 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=5, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=9 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=9, score=-0.081, total=   1.0s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=6 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=6, score=-0.081, total=   1.7s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=9 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=9, score=-0.078, total=   2.0s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=1 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=1, score=-0.076, total=   1.4s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=7 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=7, score=-0.077, total=   2.1s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=7 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=7, score=-0.073, total=   2.2s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=7 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=7, score=-0.073, total=   2.4s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=8 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=8, score=-0.072, total=   3.1s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=11 ....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=11, score=-0.073, total=   3.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=3 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=3, score=-0.081, total=   1.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=4 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=4, score=-0.078, total=   1.4s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=3 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=3, score=-0.073, total=   1.9s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=3 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=3, score=-0.071, total=   1.9s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=2 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=2, score=-0.071, total=   3.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=8 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=8, score=-0.072, total=   3.1s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=6 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=6, score=-0.072, total=   4.2s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=1 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=1, score=-0.073, total=   2.0s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=8 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=8, score=-0.069, total=   2.9s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=5 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=5, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=1 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=1, score=-0.088, total=   1.1s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=12 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=12, score=-0.077, total=   1.5s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=1 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=1, score=-0.080, total=   1.6s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=1 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=1, score=-0.078, total=   2.0s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=1 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=1, score=-0.078, total=   2.0s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=10 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=10, score=-0.071, total=   2.6s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=9 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=9, score=-0.071, total=   2.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=8 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=8, score=-0.070, total=   3.0s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=7 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=7, score=-0.069, total=   2.9s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=2 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=2, score=-0.067, total=   3.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=9 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=9, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=9 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=9, score=-0.077, total=   1.4s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=11 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=11, score=-0.073, total=   1.6s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=11 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=11, score=-0.072, total=   2.0s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=12 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=12, score=-0.072, total=   2.2s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=12 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=12, score=-0.071, total=   2.6s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=1 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=1, score=-0.077, total=   1.9s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=5 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=5, score=-0.070, total=   3.5s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=1 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=1, score=-0.075, total=   2.2s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=3 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=3, score=-0.065, total=   4.3s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=6 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=6, score=-0.088, total=   0.9s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=6 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=6, score=-0.081, total=   1.7s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=6 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=6, score=-0.079, total=   2.1s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=6 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=6, score=-0.072, total=   3.2s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=5, n_components=12 
+[CV]  embed_kws={'re[Parallel(n_jobs=-1)]: Done 1049 tasks      | elapsed:  3.5min
+gularizer': 4.444444444444445}, n_blocks=5, n_components=12, score=-0.071, total=   2.7s[Parallel(n_jobs=-1)]: Done 1050 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1051 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1052 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1053 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1054 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1055 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1056 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1057 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-1)]: Done 1058 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1059 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1060 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1061 tasks      | elapsed:  3.6min
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=6 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=6, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=10 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=10, score=-0.081, total=   1.1s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=9 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=9, score=-0.077, total=   1.4s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=6 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=6, score=-0.074, total=   2.0s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=10 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=10, score=-0.078, total=   2.2s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=12 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=12, score=-0.073, total=   2.2s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=12 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=12, score=-0.072, total=   2.4s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=1 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=1, score=-0.074, total=   1.6s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=10 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=10, score=-0.073, total=   3.1s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=10 ....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=10, score=-0.072, total=   3.6s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=5 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=5, score=-0.077, total=   1.2s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=5 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=5, score=-0.081, total=   1.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=8 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=8, score=-0.071, total=   1.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=6 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=6, score=-0.074, total=   2.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=3 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=3, score=-0.070, total=   2.1s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=2 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=2, score=-0.072, total=   3.8s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=9 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=9, score=-0.071, total=   3.1s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=9 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=9, score=-0.071, total=   3.2s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=9 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=9, score=-0.069, total=   3.4s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=12 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=12, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=8 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=8, score=-0.077, total=   1.5s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=9 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=9, score=-0.077, total=   1.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=8 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=8, score=-0.074, total=   1.9s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=7 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=7, score=-0.071, total=   2.1s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=3 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=3, score=-0.070, total=   2.2s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=2 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=2, score=-0.081, total=   3.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=9 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=9, score=-0.071, total=   3.3s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=12 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=12, score=-0.069, total=   3.1s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=10 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=10, score=-0.069, total=   2.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=5 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=5, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=3 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=3, score=-0.081, total=   1.3s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=2 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=2, score=-0.084, total=   1.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=4 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=4, score=-0.076, total=   1.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=3 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=3, score=-0.071, total=   1.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=2 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=2, score=-0.071, total=   2.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=2 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=2, score=-0.071, total=   2.9s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=4 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=4, score=-0.069, total=   3.2s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=6 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=6, score=-0.069, total=   3.5s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=7 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=7, score=-0.069, total=   3.9s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=11 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=11, score=-0.088, total=   1.0s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=10 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=10, score=-0.077, total=   2.0s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=1 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=1, score=-0.080, total=   1.9s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=10 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=10, score=-0.071, total=   2.4s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=5, n_components=7 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=5, n_components=7, score=-0.076, total=   2.8s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=6, n_components=7 
+[CV]  embed_kws={'regu[Parallel(n_jobs=-1)]: Done 1062 tasks      | elapsed:  3.6min
+larizer': 4.444444444444445}, n_blocks=6, n_components=7, score=-0.069, total=   3.4s[Parallel(n_jobs=-1)]: Done 1063 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1064 tasks      | elapsed:  3.6min
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=4 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=4, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=6 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=6, score=-0.078, total=   1.3s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=10 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=10, score=-0.081, total=   1.4s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=7 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=7, score=-0.081, total=   1.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=11 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=11, score=-0.077, total=   1.8s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=8 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=8, score=-0.075, total=   1.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=9 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=9, score=-0.074, total=   1.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=4 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=4, score=-0.084, total=   2.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=12 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=12, score=-0.071, total=   3.0s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=12 ....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=12, score=-0.071, total=   3.5s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=10 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=10, score=-0.081, total=   1.6s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=1 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=1, score=-0.080, total=   1.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=9 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=9, score=-0.072, total=   1.6s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=8 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=8, score=-0.074, total=   2.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=5 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=5, score=-0.071, total=   3.0s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=12 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=12, score=-0.072, total=   3.1s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=1 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=1, score=-0.073, total=   1.8s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=2 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=2, score=-0.066, total=   3.1s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=2 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=2, score=-0.067, total=   3.2s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=3 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=3, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=6 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=6, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=2 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=2, score=-0.085, total=   1.6s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=5 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=5, score=-0.081, total=   1.6s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=2 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=2, score=-0.084, total=   2.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=11 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=11, score=-0.071, total=   2.3s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=11 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=11, score=-0.071, total=   2.6s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=11 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=11, score=-0.070, total=   2.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=11 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=11, score=-0.069, total=   3.1s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=9 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=9, score=-0.070, total=   3.2s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=7 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=7, score=-0.069, total=   2.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=6 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=6, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=4 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=4, score=-0.078, total=   1.3s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=3 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=3, score=-0.078, total=   1.5s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=3 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=3, score=-0.073, total=   1.6s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=2 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=2, score=-0.071, total=   2.0s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=3 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=3, score=-0.068, total=   2.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=4 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=4, score=-0.069, total=   2.6s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=3 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=3, score=-0.067, total=   3.1s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=3 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=3, score=-0.069, total=   3.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=8 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=8, score=-0.068, total=   2.8s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=4 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=4, score=-0.088, total=   0.9s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=10 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=10, score=-0.088, total=   1.0s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=11 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=11, score=-0.077, total=   1.6s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=9 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=9, score=-0.074, total=   2.1s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=9 
+[CV]  embed_kws={'[Parallel(n_jobs=-1)]: Done 1065 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1066 tasks      | elapsed:  3.6min
+regularizer': 4.444444444444445}, n_blocks=4, n_components=9, score=-0.073, total=   2.6s[Parallel(n_jobs=-1)]: Done 1067 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1068 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1069 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1070 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1071 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1072 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1073 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1074 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1075 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1076 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1077 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1078 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1079 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1080 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=-1)]: Done 1081 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1082 tasks      | elapsed:  3.7min
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=10 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=10, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=11 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=11, score=-0.077, total=   1.1s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=7 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=7, score=-0.081, total=   1.5s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=8 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=8, score=-0.081, total=   1.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=12 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=12, score=-0.074, total=   1.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=10 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=10, score=-0.074, total=   1.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=8 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=8, score=-0.075, total=   2.0s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=5 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=5, score=-0.078, total=   2.6s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=9 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=9, score=-0.072, total=   3.0s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=9 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=9, score=-0.072, total=   3.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=8 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=8, score=-0.077, total=   1.2s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=6 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=6, score=-0.078, total=   1.4s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=5 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=5, score=-0.077, total=   1.8s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=4 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=4, score=-0.072, total=   2.6s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=6 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=6, score=-0.071, total=   3.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=1 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=1, score=-0.074, total=   2.0s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=3 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=3, score=-0.068, total=   2.9s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=4 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=4, score=-0.067, total=   3.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=6 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=6, score=-0.070, total=   4.4s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=6 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=6, score=-0.081, total=   1.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=10 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=10, score=-0.077, total=   1.9s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=11 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=11, score=-0.071, total=   2.0s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=10 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=10, score=-0.072, total=   2.3s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=9 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=9, score=-0.071, total=   2.5s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=7 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=7, score=-0.069, total=   2.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=5 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=5, score=-0.070, total=   3.4s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=8 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=8, score=-0.069, total=   2.9s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=4 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=4, score=-0.068, total=   3.5s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=8 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=8, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=8 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=8, score=-0.081, total=   1.4s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=10 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=10, score=-0.074, total=   1.6s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=10 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=10, score=-0.072, total=   1.9s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=9 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=9, score=-0.072, total=   2.3s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=11 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=11, score=-0.071, total=   2.5s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=11 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=11, score=-0.071, total=   2.6s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=10 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=10, score=-0.070, total=   2.9s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=11 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=11, score=-0.069, total=   3.5s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=1 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=1, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=2 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=2, score=-0.088, total=   0.9s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=3 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=3, score=-0.088, total=   0.9s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=5 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=5, score=-0.088, total=   0.9s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=2 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=2, score=-0.085, total=   1.8s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=3 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=3, score=-0.077, total=   2.2s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=3 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=3, score=-0.071, total=   1.8s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=5, n_components=2 
+[CV]  embed_kws={'regula[Parallel(n_jobs=-1)]: Done 1083 tasks      | elapsed:  3.7min
+rizer': 4.444444444444445}, n_blocks=5, n_components=2, score=-0.072, total=   2.7s[Parallel(n_jobs=-1)]: Done 1084 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1085 tasks      | elapsed:  3.7min
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=8 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=8, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=3 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=3, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=1 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=1, score=-0.080, total=   1.0s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=1 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=1, score=-0.079, total=   1.1s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=10 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=10, score=-0.077, total=   1.5s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=7 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=7, score=-0.078, total=   2.3s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=11 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=11, score=-0.074, total=   2.3s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=1 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=1, score=-0.073, total=   1.7s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=10 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=10, score=-0.074, total=   2.1s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=4 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=4, score=-0.074, total=   3.2s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=8 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=8, score=-0.073, total=   3.5s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=4 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=4, score=-0.081, total=   1.2s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=3 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=3, score=-0.075, total=   1.5s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=2 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=2, score=-0.084, total=   2.4s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=10 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=10, score=-0.072, total=   2.2s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=8 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=8, score=-0.072, total=   2.4s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=4 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=4, score=-0.070, total=   3.0s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=5 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=5, score=-0.070, total=   2.9s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=5 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=5, score=-0.070, total=   3.2s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=5 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=5, score=-0.070, total=   3.6s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=10 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=10, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=7 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=7, score=-0.081, total=   1.4s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=4 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=4, score=-0.081, total=   2.0s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=6 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=6, score=-0.077, total=   1.9s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=5 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=5, score=-0.071, total=   2.2s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=5 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=5, score=-0.071, total=   2.6s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=6 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=6, score=-0.071, total=   3.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=1 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=1, score=-0.076, total=   2.0s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=4 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=4, score=-0.070, total=   3.6s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=6 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=6, score=-0.069, total=   3.9s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=6 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=6, score=-0.081, total=   1.3s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=7 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=7, score=-0.077, total=   1.6s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=7 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=7, score=-0.071, total=   1.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=4 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=4, score=-0.072, total=   1.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=4 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=4, score=-0.072, total=   2.5s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=3 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=3, score=-0.069, total=   2.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=2 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=2, score=-0.069, total=   3.4s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=7 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=7, score=-0.068, total=   2.9s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=4 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=4, score=-0.068, total=   4.5s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=1 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=1, score=-0.088, total=   1.4s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=1 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=1, score=-0.080, total=   1.3s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=11 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=11, score=-0.074, total=   2.1s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=12 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=12, score=-0.072, total=   2.7s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=6, n_components=1 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=6, n_components=1, score=-0.079, total=   2.7s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=6, n_components=11 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=6, n_components=11, score=-0.070, total=   2.7s[Parallel(n_jobs=-1)]: Done 1086 tasks      | elapsed:  3.7min
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=3 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=3, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=4 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=4, score=-0.088, total=   1.1s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=5 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=5, score=-0.086, total=   1.3s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=5 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=5, score=-0.086, total=   1.4s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=4 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=4, score=-0.086, total=   1.8s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=3 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=3, score=-0.077, total=   1.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=3 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=3, score=-0.086, total=   2.3s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=3 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=3, score=-0.075, total=   2.4s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=3 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=3, score=-0.074, total=   2.8s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=3 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=3, score=-0.073, total=   3.4s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=6 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=6, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=11 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=11, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=12 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=12, score=-0.081, total=   1.4s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=12 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=12, score=-0.077, total=   1.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=10 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=10, score=-0.073, total=   1.6s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=7 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=7, score=-0.072, total=   2.4s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=7 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=7, score=-0.070, total=   2.6s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=9 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=9, score=-0.072, total=   3.1s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=8 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=8, score=-0.071, total=   2.8s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=8 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=8, score=-0.070, total=   3.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=7 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=7, score=-0.069, total=   3.2s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=7 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=1, n_components=7, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=3 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=3, score=-0.081, total=   1.4s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=2 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=2, score=-0.084, total=   2.2s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=5 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=5, score=-0.077, total=   1.9s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=3 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=3, score=-0.071, total=   1.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=2 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=2, score=-0.071, total=   3.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=1 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=1, score=-0.076, total=   1.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=2 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=2, score=-0.068, total=   4.1s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=11 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=11, score=-0.070, total=   3.5s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=12 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=12, score=-0.070, total=   3.2s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=5 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=5, score=-0.081, total=   1.2s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=4 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=4, score=-0.078, total=   1.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=6 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=6, score=-0.071, total=   1.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=5 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=5, score=-0.071, total=   2.3s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=5 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=5, score=-0.071, total=   2.3s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=5 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=5, score=-0.070, total=   3.2s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=9 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=9, score=-0.069, total=   2.3s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=4 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=4, score=-0.069, total=   4.0s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=11 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=11, score=-0.068, total=   3.9s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=4 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=4, score=-0.078, total=   1.9s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=7 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=7, score=-0.077, total=   2.0s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=4 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=4, score=-0.077, total=   2.2s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=5, n_components=3 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=5, n_components=3, score=-0.072, total=   2.0s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=6, n_components=2 
+[CV]  embed_kws={'regula[Parallel(n_jobs=-1)]: Done 1087 tasks      | elapsed:  3.7min
+rizer': 4.444444444444445}, n_blocks=6, n_components=2, score=-0.070, total=   3.5s[Parallel(n_jobs=-1)]: Done 1088 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1089 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1090 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1091 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1092 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1093 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1094 tasks      | elapsed:  3.7min
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=11 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=11, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=12 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=12, score=-0.086, total=   0.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=4 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=4, score=-0.086, total=   1.2s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=4 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=4, score=-0.087, total=   1.3s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=2 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=2, score=-0.084, total=   2.5s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=5 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=5, score=-0.086, total=   2.0s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=5 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=5, score=-0.085, total=   2.5s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=9 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=9, score=-0.074, total=   2.2s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=5 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=9, n_components=5, score=-0.084, total=   3.1s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=6 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=6, score=-0.070, total=   3.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=12 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=12, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=11 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=11, score=-0.081, total=   1.1s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=9 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=9, score=-0.077, total=   1.8s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=12 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=12, score=-0.073, total=   1.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=12 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=12, score=-0.072, total=   2.5s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=12 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=12, score=-0.072, total=   2.4s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=10 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=10, score=-0.072, total=   3.1s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=10 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=10, score=-0.072, total=   3.4s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=11 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=11, score=-0.070, total=   3.3s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=10 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=10, score=-0.071, total=   3.9s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=11 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=11, score=-0.081, total=   1.4s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=11 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=11, score=-0.074, total=   1.6s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=9 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=9, score=-0.073, total=   2.0s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=8 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=8, score=-0.071, total=   2.1s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=4 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=4, score=-0.071, total=   2.2s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=3 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=3, score=-0.069, total=   2.8s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=3 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=3, score=-0.068, total=   3.2s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=2 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=2, score=-0.065, total=   4.3s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=11 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=11, score=-0.069, total=   3.1s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=2 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=2, score=-0.085, total=   1.4s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=5 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=5, score=-0.078, total=   1.5s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=2 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=4, n_components=2, score=-0.084, total=   2.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=1 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=1, score=-0.079, total=   2.0s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=9 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=9, score=-0.070, total=   2.6s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=9 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=9, score=-0.070, total=   2.3s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=6 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=6, score=-0.069, total=   3.1s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=10 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=10, score=-0.070, total=   3.4s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=10 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=10, score=-0.069, total=   3.7s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=12 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=12, score=-0.088, total=   1.0s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=12 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=12, score=-0.077, total=   1.8s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=12 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=12, score=-0.073, total=   2.3s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=5, n_components=1 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=5, n_components=1, score=-0.079, total=   2.3s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=5, n_components=10 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=5, n_components=10, score=-0.070, total=   2.9s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=6, n_components=10 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=6, n_components=10, score=-0.071, total=   2.7s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=7, n_components=7 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=7, n_components=7, score=-0.070, total=   3.6s[Parallel(n_jobs=-1)]: Done 1095 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1096 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1097 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1098 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1099 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1100 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1101 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1102 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1103 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1104 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1105 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1106 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1107 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1108 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1109 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1110 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1111 tasks      | elapsed:  3.7min
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=1 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=1, n_components=1, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=1 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=2, n_components=1, score=-0.088, total=   0.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=2 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=3, n_components=2, score=-0.087, total=   1.5s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=3 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=4, n_components=3, score=-0.087, total=   1.4s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=3 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=5, n_components=3, score=-0.087, total=   2.0s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=4 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=6, n_components=4, score=-0.085, total=   2.3s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=4 ......
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=7, n_components=4, score=-0.085, total=   3.0s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=12 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=8, n_components=12, score=-0.071, total=   2.3s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=1 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=1, score=-0.073, total=   1.9s
+[CV] embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=4 .....
+[CV]  embed_kws={'regularizer': 0.0}, n_blocks=10, n_components=4, score=-0.073, total=   3.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=9 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=1, n_components=9, score=-0.088, total=   0.7s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=7 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=2, n_components=7, score=-0.081, total=   1.2s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=7 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=3, n_components=7, score=-0.077, total=   1.4s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=4 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=4, n_components=4, score=-0.077, total=   2.2s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=11 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=5, n_components=11, score=-0.072, total=   2.2s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=9 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=6, n_components=9, score=-0.072, total=   2.5s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=7 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=7, n_components=7, score=-0.071, total=   2.9s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=4 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=8, n_components=4, score=-0.067, total=   3.0s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=6 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=9, n_components=6, score=-0.070, total=   4.5s
+[CV] embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=11 
+[CV]  embed_kws={'regularizer': 1.1111111111111112}, n_blocks=10, n_components=11, score=-0.071, total=   3.4s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=10 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=2, n_components=10, score=-0.078, total=   1.4s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=8 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=3, n_components=8, score=-0.077, total=   1.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=7 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=4, n_components=7, score=-0.073, total=   1.9s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=4 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=5, n_components=4, score=-0.072, total=   2.3s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=6 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=6, n_components=6, score=-0.073, total=   3.1s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=12 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=7, n_components=12, score=-0.070, total=   2.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=12 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=8, n_components=12, score=-0.070, total=   3.0s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=10 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=9, n_components=10, score=-0.068, total=   2.7s
+[CV] embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=3 
+[CV]  embed_kws={'regularizer': 2.2222222222222223}, n_blocks=10, n_components=3, score=-0.067, total=   3.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=12 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=1, n_components=12, score=-0.088, total=   0.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=12 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=2, n_components=12, score=-0.077, total=   1.3s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=12 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=3, n_components=12, score=-0.073, total=   1.6s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=1 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=1, score=-0.078, total=   1.8s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=10 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=5, n_components=10, score=-0.072, total=   2.2s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=10 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=6, n_components=10, score=-0.071, total=   2.7s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=12 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=7, n_components=12, score=-0.070, total=   2.6s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=12 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=8, n_components=12, score=-0.069, total=   2.5s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=8 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=9, n_components=8, score=-0.068, total=   2.2s
+[CV] embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=2 
+[CV]  embed_kws={'regularizer': 3.3333333333333335}, n_blocks=10, n_components=2, score=-0.063, total=   4.6s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=8 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=1, n_components=8, score=-0.088, total=   0.9s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=8 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=2, n_components=8, score=-0.078, total=   1.6s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=5 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=3, n_components=5, score=-0.075, total=   2.2s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=7 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=4, n_components=7, score=-0.071, total=   2.1s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=5, n_components=4 
+[CV]  embed_kws={'regularizer': 4.444444444444445}, n_blocks=5, n_components=4, score=-0.071, total=   2.5s
+[CV] embed_kws={'regularizer': 4.444444444444445}, n_blocks=6, n_components=4 
+[CV]  embed_[Parallel(n_jobs=-1)]: Done 1112 tasks      | elapsed:  3.7min
+kws={'regularizer': 4.444444444444445}, n_blocks=6, n_components=4, score=-0.070, total=   2.4s[Parallel(n_jobs=-1)]: Done 1113 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1114 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1115 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1116 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1117 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1118 tasks      | elapsed:  3.7min
+[Parallel(n_jobs=-1)]: Done 1119 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1120 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1121 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1122 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1123 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1124 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1125 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1126 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1127 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1128 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1129 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1130 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1131 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1132 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1133 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1134 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1135 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1136 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1137 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1138 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1139 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1140 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1141 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1142 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1143 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1144 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1145 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1146 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1147 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1148 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1149 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1150 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1151 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1152 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1153 tasks      | elapsed:  3.8min
+[Parallel(n_jobs=-1)]: Done 1154 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1155 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1156 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1157 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1158 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1159 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1160 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1161 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1162 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1163 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1164 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1165 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1166 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1167 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1168 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1169 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1170 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1171 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1172 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1173 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1174 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1175 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1176 tasks      | elapsed:  3.9min
+[Parallel(n_jobs=-1)]: Done 1177 tasks      | elapsed:  3.9min
+ mean_fit_time  mean_score_time  ...       mse n_params
+0       0.675097         0.000506  ...  0.088114      210
+1       0.703010         0.000483  ...  0.088114      210
+2       0.733158         0.000432  ...  0.088114      210
+3       0.752015         0.000561  ...  0.088114      210
+4       0.764715         0.000588  ...  0.088114      210
+
+[5 rows x 11 columns]
+Saved to maggot_models/models/runs/drosophila-6-rdpg-sbm/6/grid_search_out.pickle
+INFO - Drosophila model selection 6 - new, DCSBM - Result: 0
