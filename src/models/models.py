@@ -11,6 +11,7 @@ from ..utils import compute_rss, compute_mse
 from .brute_cluster import brute_cluster
 
 
+
 def estimate_assignments(
     graph, n_communities, n_components=None, method="gc", metric=None
 ):
@@ -68,28 +69,6 @@ def estimate_assignments(
     return (vertex_assignments, n_params)
 
 
-def estimate_sbm(
-    graph,
-    n_communities,
-    n_components=None,
-    directed=False,
-    method="gc",
-    metric=None,
-    rank="full",
-):
-    if n_communities == 1:
-        estimator = EREstimator(directed=directed, loops=False)
-        estimator.fit(graph)
-        n_params = estimator._n_parameters()
-    else:
-        vertex_assignments, n_params = estimate_assignments(
-            graph, n_communities, n_components, method=method, metric=metric
-        )
-        estimator = SBMEstimator(directed=directed, loops=False, rank=rank)
-        estimator.fit(graph, y=vertex_assignments)
-    return estimator, n_params
-
-
 def estimate_rdpg(graph, n_components=None):
     estimator = RDPGEstimator(loops=False, n_components=n_components)
     estimator.fit(graph)
@@ -107,7 +86,7 @@ def select_sbm(
     directed=False,
     method="gc",
     metric=None,
-    c=None,
+    c=0,
     rank="full",
 ):
     """sweeps over n_components, n_blocks, fits an sbm for each 
@@ -131,19 +110,7 @@ def select_sbm(
     directed : bool, optional
         [description], by default False
     """
-    n_exps = len(n_components_try_range) * len(n_block_try_range)
-    columns = [
-        "n_params_gmm",
-        "n_params_sbm",
-        "rss",
-        "mse",
-        "score",
-        "n_components_try",
-        "n_block_try",
-    ]
-    out_df = pd.DataFrame(np.nan, index=range(n_exps), columns=columns)
-    if c is None:
-        c = 1 / (graph.size - graph.shape[0])
+
     out_dict = {}
     for i, n_components_try in enumerate(n_components_try_range):
         for j, n_block_try in enumerate(n_block_try_range):
@@ -171,6 +138,7 @@ def select_sbm(
                 mse = compute_mse(estimator, graph)
                 score = np.sum(estimator.score_samples(graph, clip=c))
                 n_params_sbm = estimator._n_parameters()
+                # account for the estimated positions
                 if type(estimator) == SBMEstimator:
                     n_params_sbm += estimator.block_p_.shape[0] - 1
 
@@ -185,14 +153,6 @@ def select_sbm(
                     "rank_try": rank_try,
                 }
     out_df = pd.DataFrame.from_dict(out_dict, orient="index")
-    # # out_df.loc[ind, "n_params_gmm"] = n_params_gmm
-    # # out_df.loc[ind, "n_params_sbm"] = n_params_sbm
-    # out_df.loc[ind, "rss"] = rss
-    # out_df.loc[ind, "mse"] = mse
-    # out_df.loc[ind, "score"] = score
-    # out_df.loc[ind, "n_components_try"] = n_components_try
-    # out_df.loc[ind, "n_block_try"] = n_block_try
-
     return out_df
 
 
@@ -224,3 +184,34 @@ def select_rdpg(graph, n_components_try_range, directed):
 
     return out_df
 
+
+# def estimate_sbm(
+#     graph,
+#     n_communities,
+#     n_components=None,
+#     directed=False,
+#     method="gc",
+#     metric=None,
+#     rank="full",
+# ):
+#     if n_communities == 1:
+#         estimator = EREstimator(directed=directed, loops=False)
+#         estimator.fit(graph)
+#         n_params = estimator._n_parameters()
+#     else:
+#         vertex_assignments, n_params = estimate_assignments(
+#             graph, n_communities, n_components, method=method, metric=metric
+#         )
+#         estimator = SBMEstimator(directed=directed, loops=False, rank=rank)
+#         estimator.fit(graph, y=vertex_assignments)
+#     return estimator, n_params
+
+
+def select_DCSBM(
+    graph,
+    param_grid
+    directed=False,
+    metric=None,
+    c=0,
+    rank="full",
+):

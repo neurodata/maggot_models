@@ -1,0 +1,5 @@
+INFO - Drosophila model selection 5 - rank SBM - Running command 'main'
+INFO - Drosophila model selection 5 - rank SBM - Started run with ID "4"
+pickle
+INFO - Drosophila model selection 5 - rank SBM - Result: 0
+INFO - Drosophila model selection 5 - rank SBM - Completed after 0:07:06

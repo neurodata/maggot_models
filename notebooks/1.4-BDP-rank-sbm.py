@@ -19,9 +19,10 @@ os.getcwd()
 #%%
 base_path = "./maggot_models/models/runs/"
 experiment = "drosophila-5-rdpg-sbm"
-run = 3
+run = 4
 config = utils.load_config(base_path, experiment, run)
 sbm_df = utils.load_pickle(base_path, experiment, run, "sbm_master_df")
+sbm_df = sbm_df.apply(pd.to_numeric)
 #%% [markdown]
 # ### Plot the noise observed in SBM model fitting
 
@@ -96,7 +97,7 @@ plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 
 
 #%%
-best_sbm_df = utils.get_best_df2(sbm_df)
+best_sbm_df = utils.get_best_df3(sbm_df)
 
 #%% GMM params - with hue
 plt.figure(figsize=(22, 12))
@@ -105,32 +106,13 @@ plt_kws = dict(s=75, linewidth=0, legend="brief")
 
 cmap = sns.light_palette("purple", as_cmap=True)
 sns.scatterplot(
-    data=best_sbm_df,
-    x="n_params_gmm",
-    y="mse",
-    hue="n_components_try",
-    palette=cmap,
-    **plt_kws,
+    data=best_sbm_df, x="n_params_gmm", y="mse", hue="rank_try", palette=cmap, **plt_kws
 )
 
-
-cmap = sns.light_palette("teal", as_cmap=True)
-s = sns.scatterplot(
-    data=tsbm_df,
-    x="n_params_gmm",
-    y="mse",
-    hue="n_components_try",
-    palette=cmap,
-    **plt_kws,
-)
 
 plt.xlabel("# Params (GMM params for SBMs)")
 plt.ylabel("MSE")
 plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
-
-leg = s.axes.get_legend()
-leg.get_texts()[0].set_text("GraspyGMM: d, best of 50")
-leg.get_texts()[5].set_text("AutoGMM: d")
 
 #%% SBM params - with hue
 plt.figure(figsize=(22, 12))
@@ -138,22 +120,13 @@ plt_kws = dict(s=75, linewidth=0, legend="brief")
 
 
 cmap = sns.light_palette("purple", as_cmap=True)
+best_sbm_df["rank_proportion"] = best_sbm_df["rank_try"] / best_sbm_df["n_block_try"]
 sns.scatterplot(
     data=best_sbm_df,
     x="n_params_sbm",
     y="mse",
-    hue="n_components_try",
-    palette=cmap,
-    **plt_kws,
-)
-
-
-cmap = sns.light_palette("teal", as_cmap=True)
-s = sns.scatterplot(
-    data=tsbm_df,
-    x="n_params_sbm",
-    y="mse",
-    hue="n_components_try",
+    size="n_block_try",
+    hue="rank_try",
     palette=cmap,
     **plt_kws,
 )
@@ -162,9 +135,36 @@ plt.xlabel("# Params (SBM params for SBMs)")
 plt.ylabel("MSE")
 plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 
-leg = s.axes.get_legend()
-leg.get_texts()[0].set_text("GraspyGMM: d, best of 50")
-leg.get_texts()[5].set_text("AutoGMM: d")
+plt.figure(figsize=(22, 12))
+sns.scatterplot(
+    data=best_sbm_df,
+    x="n_params_sbm",
+    y="mse",
+    hue="n_block_try",
+    size="rank_try",
+    palette=cmap,
+    **plt_kws,
+)
+
+plt.xlabel("# Params (SBM params for SBMs)")
+plt.ylabel("MSE")
+plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
+
+plt.figure(figsize=(22, 12))
+
+sns.scatterplot(
+    data=best_sbm_df,
+    x="n_params_sbm",
+    y="mse",
+    hue="n_block_try",
+    size="rank_proportion",
+    palette=cmap,
+    **plt_kws,
+)
+
+plt.xlabel("# Params (SBM params for SBMs)")
+plt.ylabel("MSE")
+plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 
 #%% GMM params - no hue
 sns.set_palette("Set1")
