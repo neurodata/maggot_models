@@ -1,0 +1,58 @@
+INFO - Fit DSCSBM - Running command 'main'
+INFO - Fit DSCSBM - Started run with ID "2"
+Fitting 1 folds for each of 1200 candidates, totalling 1200 fits
+[Parallel(n_jobs=-2)]: Using backend LokyBackend with 55 concurrent workers.
+[Parallel(n_jobs=-2)]: Done   3 tasks      | elapsed:    7.5s
+[Parallel(n_jobs=-2)]: Done  18 tasks      | elapsed:    9.6s
+[Parallel(n_jobs=-2)]: Done  35 tasks      | elapsed:   11.4s
+[Parallel(n_jobs=-2)]: Done  52 tasks      | elapsed:   13.7s
+[Parallel(n_jobs=-2)]: Done  71 tasks      | elapsed:   19.5s
+[Parallel(n_jobs=-2)]: Done  90 tasks      | elapsed:   22.8s
+[Parallel(n_jobs=-2)]: Done 111 tasks      | elapsed:   25.0s
+[Parallel(n_jobs=-2)]: Done 132 tasks      | elapsed:   29.7s
+[Parallel(n_jobs=-2)]: Done 155 tasks      | elapsed:   32.5s
+[Parallel(n_jobs=-2)]: Done 178 tasks      | elapsed:   36.8s
+[Parallel(n_jobs=-2)]: Done 203 tasks      | elapsed:   43.7s
+[Parallel(n_jobs=-2)]: Done 228 tasks      | elapsed:   46.4s
+[Parallel(n_jobs=-2)]: Done 255 tasks      | elapsed:   51.7s
+[Parallel(n_jobs=-2)]: Done 282 tasks      | elapsed:   54.9s
+[Parallel(n_jobs=-2)]: Done 311 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-2)]: Done 340 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-2)]: Done 371 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-2)]: Done 402 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-2)]: Done 435 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-2)]: Done 468 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-2)]: Done 503 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-2)]: Done 538 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-2)]: Done 575 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-2)]: Done 612 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-2)]: Done 651 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-2)]: Done 690 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-2)]: Done 731 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-2)]: Done 772 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-2)]: Done 815 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-2)]: Done 858 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-2)]: Done 903 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-2)]: Done 948 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-2)]: Done 995 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-2)]: Done 1042 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-2)]: Done 1091 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-2)]: Done 1200 out of 1200 | elapsed:  3.8min finished
+   mean_fit_time  std_fit_time  ...  rank_test_likelihood  param_regularizer
+0       4.110328           0.0  ...                  1076                0.0
+1       4.139588           0.0  ...                  1076                0.0
+2       4.197454           0.0  ...                  1076                0.0
+3       4.645821           0.0  ...                  1076                0.0
+4       4.433587           0.0  ...                  1076                0.0
+
+[5 rows x 21 columns]
+Index(['mean_fit_time', 'std_fit_time', 'mean_score_time', 'std_score_time',
+       'param_embed_kws', 'param_n_blocks', 'param_n_components', 'params',
+       'split0_test_mse', 'mse', 'std_test_mse', 'rank_test_mse',
+       'split0_test_n_params', 'n_params', 'std_test_n_params',
+       'rank_test_n_params', 'split0_test_likelihood', 'likelihood',
+       'std_test_likelihood', 'rank_test_likelihood', 'param_regularizer'],
+      dtype='object')
+Saved to maggot_models/models/runs/fit_dcsbm/2/dcsbm_out_df.pickle
+INFO - Fit DSCSBM - Result: 0
+INFO - Fit DSCSBM - Completed after 0:03:47

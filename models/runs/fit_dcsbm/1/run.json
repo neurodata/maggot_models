@@ -1,0 +1,79 @@
+{
+  "artifacts": [],
+  "command": "main",
+  "experiment": {
+    "base_dir": "/home/bpedigo/maggot_models/maggot_models/models",
+    "dependencies": [
+      "graspy==0.0.3",
+      "numpy==1.16.4",
+      "sacred==0.7.4",
+      "src==0.1.0"
+    ],
+    "mainfile": "fit_dcsbm.py",
+    "name": "Fit DSCSBM",
+    "repositories": [
+      {
+        "commit": "247b1116955ca67c65880eb6120f72b406858bc4",
+        "dirty": false,
+        "url": "https://github.com/neurodata/maggot_models.git"
+      }
+    ],
+    "sources": [
+      [
+        "fit_dcsbm.py",
+        "_sources/fit_dcsbm_023883ad957c932a9c5960c29612cff9.py"
+      ]
+    ]
+  },
+  "fail_trace": [
+    "Traceback (most recent call last):\n",
+    "  File \"/home/bpedigo/.conda/envs/maggot_models/lib/python3.7/site-packages/sacred/config/captured_function.py\", line 46, in captured_function\n    result = wrapped(*args, **kwargs)\n",
+    "  File \"./maggot_models/models/fit_dcsbm.py\", line 73, in main\n    out = run_fit(seed, param_grid, directed, n_init, n_jobs)\n",
+    "  File \"./maggot_models/models/fit_dcsbm.py\", line 50, in run_fit\n    graph = load_drosophila_left()\n",
+    "  File \"/home/bpedigo/.conda/envs/maggot_models/lib/python3.7/site-packages/graspy/datasets/base.py\", line 40, in load_drosophila_left\n    with open(join(module_path, folder, filename)) as csv_file:\n",
+    "FileNotFoundError: [Errno 2] No such file or directory: '/home/bpedigo/.conda/envs/maggot_models/lib/python3.7/site-packages/graspy/datasets/drosophila/left_adjacency.csv'\n"
+  ],
+  "heartbeat": "2019-06-23T20:36:12.006632",
+  "host": {
+    "ENV": {},
+    "cpu": "Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz",
+    "hostname": "synaptomes1",
+    "os": [
+      "Linux",
+      "Linux-4.15.0-43-generic-x86_64-with-debian-buster-sid"
+    ],
+    "python_version": "3.7.3"
+  },
+  "meta": {
+    "command": "main",
+    "options": {
+      "--beat_interval": null,
+      "--capture": null,
+      "--comment": null,
+      "--debug": false,
+      "--enforce_clean": false,
+      "--file_storage": null,
+      "--force": false,
+      "--help": false,
+      "--loglevel": null,
+      "--mongo_db": null,
+      "--name": null,
+      "--pdb": false,
+      "--print_config": false,
+      "--priority": null,
+      "--queue": false,
+      "--sql": null,
+      "--tiny_db": null,
+      "--unobserved": false,
+      "COMMAND": null,
+      "UPDATE": [],
+      "help": false,
+      "with": false
+    }
+  },
+  "resources": [],
+  "result": null,
+  "start_time": "2019-06-23T20:36:11.999154",
+  "status": "FAILED",
+  "stop_time": "2019-06-23T20:36:12.008932"
+}
