@@ -20,11 +20,10 @@ os.getcwd()
 
 #%%
 base_path = "./maggot_models/models/runs/"
-experiment = "drosophila-6-rdpg-sbm"
-run = 7
+experiment = "fit_dcsbm"
+run = 3
 config = utils.load_config(base_path, experiment, run)
 dcsbm_df = utils.load_pickle(base_path, experiment, run, "dcsbm_out_df")
-ddcsbm_df = utils.load_pickle(base_path, experiment, run, "ddcsbm_out_df")
 
 # dcsbm_df = dcsbm_df.apply(pd.to_numeric)
 dcsbm_df.head()
