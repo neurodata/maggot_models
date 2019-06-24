@@ -29,9 +29,9 @@ def config():
     # Variables defined in config get automatically passed to main
 
     # Parameter range for the models
-    n_block_try_range = list(range(1, 11))
-    n_components_try_range = list(range(1, 13))
-    reg_try_range = np.linspace(0, 10, 10)
+    n_block_try_range = list(range(1, 21))
+    n_components_try_range = list(range(1, 21))
+    reg_try_range = np.linspace(0, 20, 20)
     embed_kws_try_range = [{"regularizer": i} for i in reg_try_range]
 
     param_grid = {  # noqa: F841

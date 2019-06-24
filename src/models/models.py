@@ -199,24 +199,11 @@ def select_dcsbm(
     )
 
     # define scoring functions to evaluate models
-    def mse_scorer(estimator, graph, y=None):
-        return estimator.mse(graph)
-
-    def n_params_scorer(estimator, graph, y=None):
-        return estimator._n_parameters()
-
-    def likelihood_scorer(estimator, graph, y=None):
-        return estimator.score(graph, clip=1 / graph.size)
-
-    scorers = {
-        "mse": mse_scorer,
-        "n_params": n_params_scorer,
-        "likelihood": likelihood_scorer,
-    }
+    scorers = gen_scorers(dcsbm, graph)
 
     # run the grid search
     grid_search = GridSearchUS(
-        dcsbm, param_grid, scoring=scorers, n_jobs=n_jobs, verbose=10, refit=False
+        dcsbm, param_grid, scoring=scorers, n_jobs=n_jobs, verbose=5, refit=False
     )
     grid_search.fit(graph)
 
@@ -225,13 +212,6 @@ def select_dcsbm(
     out_df["param_regularizer"] = [
         v["regularizer"] for v in out_df["param_embed_kws"].values
     ]
-
-    # add number of parameters
-    # n_verts = graph.shape[0]
-    # out_df["n_params"] = out_df["param_n_blocks"] ** 2
-    # out_df["n_params"] += n_verts
-    # if degree_directed:
-    #     out_df["n_params"] += n_verts
 
     return out_df
 
@@ -246,26 +226,12 @@ def select_rdpg(graph, param_grid, directed=True, n_jobs=1):
 
     rdpg = RDPGEstimator(loops=False)
 
-    # define scoring functions to evaluate models
-    # define scoring functions to evaluate models
-    def mse_scorer(estimator, graph, y=None):
-        return estimator.mse(graph)
-
-    def n_params_scorer(estimator, graph, y=None):
-        return estimator._n_parameters()
-
-    def likelihood_scorer(estimator, graph, y=None):
-        return estimator.score(graph, clip=1 / graph.size)
-
-    scorers = {
-        "mse": mse_scorer,
-        "n_params": n_params_scorer,
-        "likelihood": likelihood_scorer,
-    }
+    # # define scoring functions to evaluate models
+    scorers = gen_scorers(rdpg, graph)
 
     # run the grid search
     grid_search = GridSearchUS(
-        rdpg, param_grid, scoring=scorers, n_jobs=n_jobs, verbose=10
+        rdpg, param_grid, scoring=scorers, n_jobs=n_jobs, verbose=5
     )
     grid_search.fit(graph)
 

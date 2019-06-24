@@ -1,6 +1,5 @@
 #%%
 import os
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,14 +24,22 @@ run = 2
 config = utils.load_config(base_path, experiment, run)
 dcsbm_df = utils.load_pickle(base_path, experiment, run, "dcsbm_out_df")
 
+#%% Load dDCSBM
+base_path = "./maggot_models/models/runs/"
+experiment = "fit_ddcsbm"
+run = 1
+config = utils.load_config(base_path, experiment, run)
+ddcsbm_df = utils.load_pickle(base_path, experiment, run, "ddcsbm_out_df")
+
 #%% Load RDPG
 base_path = "./maggot_models/models/runs/"
 experiment = "fit_rdpg"
-run = 1
+run = 2
 config = utils.load_config(base_path, experiment, run)
 rdpg_df = utils.load_pickle(base_path, experiment, run, "rdpg_out_df")
 
 
+#%%
 def get_best(df, param_name="param_n_components", score_name="mse"):
     param_range = np.unique(df[param_name].values)
     best_rows = []
@@ -44,8 +51,8 @@ def get_best(df, param_name="param_n_components", score_name="mse"):
 
 
 best_dcsbm_df = get_best(dcsbm_df, param_name="param_n_blocks")
+best_ddcsbm_df = get_best(ddcsbm_df, param_name="param_n_blocks")
 best_rdpg_df = get_best(rdpg_df, param_name="param_n_components")
-
 
 #%% Settings for all plots
 plt.style.use("seaborn-white")
@@ -55,6 +62,7 @@ sns.set_palette("Set1")
 
 #%% Figure - show RDPG, DCSBM bests
 sns.scatterplot(data=best_dcsbm_df, y="mse", x="n_params", label="DCSBM")
+sns.scatterplot(data=best_ddcsbm_df, y="mse", x="n_params", label="dDCSBM")
 sns.scatterplot(data=best_rdpg_df, y="mse", x="n_params", label="RDPG")
 plt.legend()
 
