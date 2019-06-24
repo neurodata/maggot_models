@@ -1,0 +1,43 @@
+INFO - Fit dDSCSBM - Running command 'main'
+INFO - Fit dDSCSBM - Started run with ID "1"
+Fitting 1 folds for each of 1200 candidates, totalling 1200 fits
+[Parallel(n_jobs=-2)]: Using backend LokyBackend with 55 concurrent workers.
+[Parallel(n_jobs=-2)]: Done   3 tasks      | elapsed:    7.5s
+[Parallel(n_jobs=-2)]: Done  18 tasks      | elapsed:    9.7s
+[Parallel(n_jobs=-2)]: Done  35 tasks      | elapsed:   11.5s
+[Parallel(n_jobs=-2)]: Done  52 tasks      | elapsed:   13.7s
+[Parallel(n_jobs=-2)]: Done  71 tasks      | elapsed:   19.1s
+[Parallel(n_jobs=-2)]: Done  90 tasks      | elapsed:   22.5s
+[Parallel(n_jobs=-2)]: Done 111 tasks      | elapsed:   25.4s
+[Parallel(n_jobs=-2)]: Done 132 tasks      | elapsed:   29.3s
+[Parallel(n_jobs=-2)]: Done 155 tasks      | elapsed:   32.5s
+[Parallel(n_jobs=-2)]: Done 178 tasks      | elapsed:   37.1s
+[Parallel(n_jobs=-2)]: Done 203 tasks      | elapsed:   43.7s
+[Parallel(n_jobs=-2)]: Done 228 tasks      | elapsed:   46.3s
+[Parallel(n_jobs=-2)]: Done 255 tasks      | elapsed:   52.4s
+[Parallel(n_jobs=-2)]: Done 282 tasks      | elapsed:   55.0s
+[Parallel(n_jobs=-2)]: Done 311 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-2)]: Done 340 tasks      | elapsed:  1.1min
+[Parallel(n_jobs=-2)]: Done 371 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=-2)]: Done 402 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=-2)]: Done 435 tasks      | elapsed:  1.4min
+[Parallel(n_jobs=-2)]: Done 468 tasks      | elapsed:  1.5min
+[Parallel(n_jobs=-2)]: Done 503 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=-2)]: Done 538 tasks      | elapsed:  1.7min
+[Parallel(n_jobs=-2)]: Done 575 tasks      | elapsed:  1.9min
+[Parallel(n_jobs=-2)]: Done 612 tasks      | elapsed:  2.0min
+[Parallel(n_jobs=-2)]: Done 651 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=-2)]: Done 690 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=-2)]: Done 731 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=-2)]: Done 772 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=-2)]: Done 815 tasks      | elapsed:  2.6min
+[Parallel(n_jobs=-2)]: Done 858 tasks      | elapsed:  2.7min
+[Parallel(n_jobs=-2)]: Done 903 tasks      | elapsed:  2.9min
+[Parallel(n_jobs=-2)]: Done 948 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-2)]: Done 995 tasks      | elapsed:  3.1min
+[Parallel(n_jobs=-2)]: Done 1042 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=-2)]: Done 1091 tasks      | elapsed:  3.5min
+[Parallel(n_jobs=-2)]: Done 1200 out of 1200 | elapsed:  3.8min finished
+Saved to maggot_models/models/runs/fit_ddcsbm/1/ddcsbm_out_df.pickle
+INFO - Fit dDSCSBM - Result: 0
+INFO - Fit dDSCSBM - Completed after 0:03:47
