@@ -6,3 +6,4 @@ from .models import (
     estimate_rdpg,
     select_dcsbm,
 )
+from .grid_search import GridSearchUS

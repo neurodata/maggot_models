@@ -22,7 +22,7 @@ import pandas as pd
 #         estimator.fit(graph, y=vertex_assignments)
 #     return estimator, n_params
 from sklearn.metrics import make_scorer, mean_squared_error
-from sklearn.model_selection import GridSearchCV
+
 
 from graspy.cluster import GaussianCluster
 from graspy.embed import AdjacencySpectralEmbed
@@ -30,6 +30,7 @@ from graspy.models import DCSBMEstimator, EREstimator, RDPGEstimator, SBMEstimat
 from graspy.utils import is_symmetric
 
 from ..utils import compute_mse, compute_rss
+from .grid_search import GridSearchUS
 from .brute_cluster import brute_cluster
 
 
@@ -177,17 +178,6 @@ def select_sbm(
     return out_df
 
 
-class DummyCV:
-    def __init__(self):
-        self.n_splits = 1
-
-    def split(self, X, y, groups=None):
-        yield (np.arange(X.shape[0]), np.arange(X.shape[0]))
-
-    def get_n_splits(self, X, y, groups=None):
-        return self.n_splits
-
-
 def select_dcsbm(
     graph,
     param_grid,
@@ -225,49 +215,28 @@ def select_dcsbm(
     }
 
     # run the grid search
-    cv = DummyCV()
-    grid_search = GridSearchCV(
-        dcsbm,
-        param_grid,
-        scoring=scorers,
-        cv=cv,
-        n_jobs=n_jobs,
-        verbose=10,
-        refit=False,
+    grid_search = GridSearchUS(
+        dcsbm, param_grid, scoring=scorers, n_jobs=n_jobs, verbose=10, refit=False
     )
     grid_search.fit(graph)
 
     # format outputs
-    out_df = pd.DataFrame.from_dict(grid_search.cv_results_)
+    out_df = grid_search.cv_results_
     out_df["param_regularizer"] = [
         v["regularizer"] for v in out_df["param_embed_kws"].values
     ]
-    out_df.rename(columns=format_columns, inplace=True)
-    print(out_df.head())
-    print(out_df.columns)
-    # columns
-    # out_df.drop(
-    #     columns=[
-    #         "std_fit_time",
-    #         "std_score_time",
-    #         "split0_test_score",
-    #         "std_test_score",
-    #     ],
-    #     inplace=True,
-    # )
-    # out_df["mse"] = -out_df["mean_test_score"]
 
     # add number of parameters
-    n_verts = graph.shape[0]
-    out_df["n_params"] = out_df["param_n_blocks"] ** 2
-    out_df["n_params"] += n_verts
-    if degree_directed:
-        out_df["n_params"] += n_verts
+    # n_verts = graph.shape[0]
+    # out_df["n_params"] = out_df["param_n_blocks"] ** 2
+    # out_df["n_params"] += n_verts
+    # if degree_directed:
+    #     out_df["n_params"] += n_verts
 
     return out_df
 
 
-def select_rdpg(graph, n_components_try_range, directed):
+def select_rdpg(graph, param_grid, directed=True, n_jobs=1):
     if is_symmetric(graph) and directed:
         msg = (
             "select_RDPG was given an undirected graph but you wanted"
@@ -275,75 +244,33 @@ def select_rdpg(graph, n_components_try_range, directed):
         )
         raise ValueError(msg)
 
-    # columns = ["rss", "mse", "score", "n_components_try", "n_params", "directed"]
-    # out_df = pd.DataFrame(
-    #     np.nan, index=range(len(n_components_try_range)), columns=columns
-    # )
-    # c = 1 / (graph.size - graph.shape[0])
-    # for i, n_components in enumerate(n_components_try_range):
-    #     estimator, n_params = estimate_rdpg(graph, n_components=n_components)
-    #     rss = compute_rss(estimator, graph)
-    #     mse = compute_mse(estimator, graph)
-    #     # score = compute_log_lik(estimator, graph)
+    rdpg = RDPGEstimator(directed=directed, loops=False, metric="mse")
 
-    #     score = np.sum(estimator.score_samples(graph, clip=c))
-    #     out_df.loc[i, "n_params"] = n_params
-    #     out_df.loc[i, "rss"] = rss
-    #     out_df.loc[i, "mse"] = mse
-    #     out_df.loc[i, "score"] = score
-    #     out_df.loc[i, "n_components_try"] = n_components
-    #     out_df.loc[i, "directed"] = directed
-
-    # common parameters of all estimators
-    dcsbm = DCSBMEstimator(
-        directed=directed,
-        degree_directed=degree_directed,
-        loops=False,
-        n_init=n_init,
-        metric="mse",
-    )
-
-    # define a scoring function to evaluate models
-    def scorer(estimator, graph, y=None):
-        mse = estimator.mse(graph)
-        return -mse
+    # define scoring functions to evaluate models
+    scorers = gen_scorers(rdpg, graph)
 
     # run the grid search
-    cv = DummyCV()
-    grid_search = GridSearchCV(
-        dcsbm, param_grid, scoring=scorer, cv=cv, n_jobs=n_jobs, verbose=10
+    grid_search = GridSearchUS(
+        rdpg, param_grid, scoring=scorers, n_jobs=n_jobs, verbose=10
     )
     grid_search.fit(graph)
 
-    # format outputs
-    out_df = pd.DataFrame.from_dict(grid_search.cv_results_)
-    out_df["param_regularizer"] = [
-        v["regularizer"] for v in out_df["param_embed_kws"].values
-    ]
-    out_df.rename()
-    out_df.drop(
-        columns=[
-            "std_fit_time",
-            "std_score_time",
-            "split0_test_score",
-            "std_test_score",
-        ],
-        inplace=True,
-    )
-    out_df["mse"] = -out_df["mean_test_score"]
-
-    # add number of parameters
-    n_verts = graph.shape[0]
-    out_df["n_params"] = out_df["param_n_blocks"] ** 2
-    out_df["n_params"] += n_verts
-    if degree_directed:
-        out_df["n_params"] += n_verts
-
-    return out_df
+    return grid_search.cv_results_
 
 
-def format_columns(string):
-    if isinstance(string, str):
-        if "mean_test_" in string:
-            string = string.replace("mean_test_", "")
-    return string
+def gen_scorers(estimator, graph):
+    def mse_scorer(estimator, graph, y=None):
+        return estimator.mse(graph)
+
+    def n_params_scorer(estimator, graph, y=None):
+        return estimator._n_parameters()
+
+    def likelihood_scorer(estimator, graph, y=None):
+        return estimator.score(graph, clip=1 / graph.size)
+
+    scorers = {
+        "mse": mse_scorer,
+        "n_params": n_params_scorer,
+        "likelihood": likelihood_scorer,
+    }
+    return scorers
