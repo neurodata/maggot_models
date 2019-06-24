@@ -244,10 +244,24 @@ def select_rdpg(graph, param_grid, directed=True, n_jobs=1):
         )
         raise ValueError(msg)
 
-    rdpg = RDPGEstimator(directed=directed, loops=False, metric="mse")
+    rdpg = RDPGEstimator(loops=False)
 
     # define scoring functions to evaluate models
-    scorers = gen_scorers(rdpg, graph)
+    # define scoring functions to evaluate models
+    def mse_scorer(estimator, graph, y=None):
+        return estimator.mse(graph)
+
+    def n_params_scorer(estimator, graph, y=None):
+        return estimator._n_parameters()
+
+    def likelihood_scorer(estimator, graph, y=None):
+        return estimator.score(graph, clip=1 / graph.size)
+
+    scorers = {
+        "mse": mse_scorer,
+        "n_params": n_params_scorer,
+        "likelihood": likelihood_scorer,
+    }
 
     # run the grid search
     grid_search = GridSearchUS(

@@ -49,7 +49,7 @@ class GridSearchUS(GridSearchCV):
         error_score="raise-deprecating",
         return_train_score=False,
     ):
-        super.__init__(
+        super().__init__(
             estimator,
             param_grid,
             scoring=scoring,
@@ -64,7 +64,7 @@ class GridSearchUS(GridSearchCV):
         )
 
     def fit(self, X, y=None):
-        sup = super.fit(X, y=None)
+        sup = super().fit(X, y=None)
         cv_results = pd.DataFrame.from_dict(sup.cv_results_)
         cv_results = remove_columns(cv_results)
         cv_results.rename(columns=format_columns, inplace=True)
