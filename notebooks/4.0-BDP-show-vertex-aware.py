@@ -18,30 +18,56 @@ os.getcwd()
 #%% [markdown]
 # ### Choose experiment, print out configurations
 
-#%%
+#%% Load DCSBM
 base_path = "./maggot_models/models/runs/"
 experiment = "fit_dcsbm"
 run = 2
 config = utils.load_config(base_path, experiment, run)
 dcsbm_df = utils.load_pickle(base_path, experiment, run, "dcsbm_out_df")
 
-#%%
-def get_best(df):
-    # out_df = df[(df["param_n_components"] == 1) & (df["param_regularizer"] == 0)]
-    # kept_params = ["param_n_blocks"]
-    param_range = np.unique(df["param_n_blocks"].values)
+#%% Load RDPG
+base_path = "./maggot_models/models/runs/"
+experiment = "fit_rdpg"
+run = 1
+config = utils.load_config(base_path, experiment, run)
+rdpg_df = utils.load_pickle(base_path, experiment, run, "rdpg_out_df")
+
+
+def get_best(df, param_name="param_n_components", score_name="mse"):
+    param_range = np.unique(df[param_name].values)
     best_rows = []
-    for p in param_range:
-        temp_df = df[df["param_n_blocks"] == p]
-        ind = temp_df["mse"].idxmin()
+    for param_value in param_range:
+        temp_df = df[df[param_name] == param_value]
+        ind = temp_df[score_name].idxmin()  # this is the metric we are choosing on
         best_rows.append(temp_df.loc[ind, :])
     return pd.DataFrame(best_rows)
 
 
-best_dcsbm_df = get_best(dcsbm_df)
-# best_ddcsbm_df = get_best(ddcsbm_df)
+best_dcsbm_df = get_best(dcsbm_df, param_name="param_n_blocks")
+best_rdpg_df = get_best(rdpg_df, param_name="param_n_components")
 
 
-#%%
-sns.scatterplot(data=best_dcsbm_df, y="mse", x="n_params")
-# sns.scatterplot(data=best_ddcsbm_df, y="mse", x="n_params")
+#%% Settings for all plots
+plt.style.use("seaborn-white")
+sns.set_context("talk")
+sns.set_palette("Set1")
+
+
+#%% Figure - show RDPG, DCSBM bests
+sns.scatterplot(data=best_dcsbm_df, y="mse", x="n_params", label="DCSBM")
+sns.scatterplot(data=best_rdpg_df, y="mse", x="n_params", label="RDPG")
+plt.legend()
+
+
+#%% Figure - observe the effect of regularization on RDPG fitting
+plot_df = rdpg_df[rdpg_df["param_plus_c_weight"] == 0]
+plt.figure(figsize=(20, 10))
+sns.scatterplot(
+    data=plot_df,
+    x="n_params",
+    y="mse",
+    hue="param_diag_aug_weight",
+    size="param_diag_aug_weight",
+    alpha=0.5,
+    linewidth=0,
+)
