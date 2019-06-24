@@ -5,7 +5,7 @@ import numpy as np
 from sacred import Experiment
 from sacred.observers import FileStorageObserver, SlackObserver
 
-from graspy.datasets import load_drosophila_left
+from graspy.datasets import load_drosophila_left, load_drosophila_right
 from graspy.utils import binarize, symmetrize
 from src.models import select_dcsbm
 from src.utils import save_obj
@@ -47,14 +47,12 @@ def config():
 
 
 def run_fit(seed, param_grid, directed, n_init, n_jobs):
+    # run left
     graph = load_drosophila_left()
     if not directed:
         graph = symmetrize(graph, method="avg")
     graph = binarize(graph)
-
-    np.random.seed(seed)
-
-    dcsbm_out_df = select_dcsbm(
+    ddcsbm_left_df = select_dcsbm(
         graph,
         param_grid,
         directed=directed,
@@ -62,8 +60,23 @@ def run_fit(seed, param_grid, directed, n_init, n_jobs):
         n_jobs=n_jobs,
         n_init=n_init,
     )
+    save_obj(ddcsbm_left_df, file_obs, "ddcsbm_left_df")
 
-    save_obj(dcsbm_out_df, file_obs, "dcsbm_out_df")
+    # run right
+    graph = load_drosophila_right()
+    if not directed:
+        graph = symmetrize(graph, method="avg")
+    graph = binarize(graph)
+    ddcsbm_right_df = select_dcsbm(
+        graph,
+        param_grid,
+        directed=directed,
+        degree_directed=False,
+        n_jobs=n_jobs,
+        n_init=n_init,
+    )
+    save_obj(ddcsbm_right_df, file_obs, "ddcsbm_right_df")
+
     return 0
 
 

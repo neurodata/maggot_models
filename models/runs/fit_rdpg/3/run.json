@@ -1,0 +1,71 @@
+{
+  "artifacts": [],
+  "command": "main",
+  "experiment": {
+    "base_dir": "/Users/bpedigo/JHU_code/maggot_models/maggot_models/models",
+    "dependencies": [
+      "graspy==0.0.3",
+      "numpy==1.16.4",
+      "sacred==0.7.4",
+      "src==0.1.0"
+    ],
+    "mainfile": "fit_rdpg.py",
+    "name": "Fit RDPG",
+    "repositories": [
+      {
+        "commit": "8fed9b83ab8ba67b68ee49296d1fadb8dba8f321",
+        "dirty": true,
+        "url": "https://github.com/neurodata/maggot_models.git"
+      }
+    ],
+    "sources": [
+      [
+        "fit_rdpg.py",
+        "_sources/fit_rdpg_864b08a952fc9582f58162c3150f1bdb.py"
+      ]
+    ]
+  },
+  "heartbeat": "2019-06-24T20:55:08.930302",
+  "host": {
+    "ENV": {},
+    "cpu": "Intel(R) Core(TM) i7-8850H CPU @ 2.60GHz",
+    "hostname": "Benjamins-MacBook-Pro.local",
+    "os": [
+      "Darwin",
+      "Darwin-18.6.0-x86_64-i386-64bit"
+    ],
+    "python_version": "3.7.3"
+  },
+  "meta": {
+    "command": "main",
+    "options": {
+      "--beat_interval": null,
+      "--capture": null,
+      "--comment": null,
+      "--debug": false,
+      "--enforce_clean": false,
+      "--file_storage": null,
+      "--force": false,
+      "--help": false,
+      "--loglevel": null,
+      "--mongo_db": null,
+      "--name": null,
+      "--pdb": false,
+      "--print_config": false,
+      "--priority": null,
+      "--queue": false,
+      "--sql": null,
+      "--tiny_db": null,
+      "--unobserved": false,
+      "COMMAND": null,
+      "UPDATE": [],
+      "help": false,
+      "with": false
+    }
+  },
+  "resources": [],
+  "result": 0,
+  "start_time": "2019-06-24T20:54:12.149538",
+  "status": "COMPLETED",
+  "stop_time": "2019-06-24T20:55:07.924668"
+}

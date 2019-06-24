@@ -20,14 +20,14 @@ os.getcwd()
 #%% Load DCSBM
 base_path = "./maggot_models/models/runs/"
 experiment = "fit_dcsbm"
-run = 2
+run = 7
 config = utils.load_config(base_path, experiment, run)
 dcsbm_df = utils.load_pickle(base_path, experiment, run, "dcsbm_out_df")
 
 #%% Load dDCSBM
 base_path = "./maggot_models/models/runs/"
 experiment = "fit_ddcsbm"
-run = 1
+run = 2
 config = utils.load_config(base_path, experiment, run)
 ddcsbm_df = utils.load_pickle(base_path, experiment, run, "ddcsbm_out_df")
 
@@ -61,11 +61,20 @@ sns.set_palette("Set1")
 
 
 #%% Figure - show RDPG, DCSBM bests
-sns.scatterplot(data=best_dcsbm_df, y="mse", x="n_params", label="DCSBM")
-sns.scatterplot(data=best_ddcsbm_df, y="mse", x="n_params", label="dDCSBM")
-sns.scatterplot(data=best_rdpg_df, y="mse", x="n_params", label="RDPG")
+plt.figure(figsize=(20, 10))
+plt_kws = dict(linewidth=0, y="mse", x="n_params")
+sns.scatterplot(data=best_dcsbm_df, label="DCSBM", **plt_kws)
+sns.scatterplot(data=best_ddcsbm_df, label="dDCSBM", **plt_kws)
+sns.scatterplot(data=best_rdpg_df, label="RDPG", **plt_kws)
 plt.legend()
 
+#%%
+plt.figure(figsize=(20, 10))
+plt_kws = dict(linewidth=0, y="likelihood", x="n_params")
+sns.scatterplot(data=best_dcsbm_df, label="DCSBM", **plt_kws)
+sns.scatterplot(data=best_ddcsbm_df, label="dDCSBM", **plt_kws)
+sns.scatterplot(data=best_rdpg_df, label="RDPG", **plt_kws)
+plt.legend()
 
 #%% Figure - observe the effect of regularization on RDPG fitting
 plot_df = rdpg_df[rdpg_df["param_plus_c_weight"] == 0]
@@ -79,3 +88,6 @@ sns.scatterplot(
     alpha=0.5,
     linewidth=0,
 )
+
+
+#%%

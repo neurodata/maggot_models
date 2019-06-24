@@ -47,3 +47,9 @@ best_dcsbm_df = get_best(dcsbm_df)
 #%%
 sns.scatterplot(data=best_dcsbm_df, y="mse", x="n_params")
 # sns.scatterplot(data=best_ddcsbm_df, y="mse", x="n_params")
+
+
+#%%
+
+
+#%%
