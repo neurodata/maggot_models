@@ -1,0 +1,71 @@
+{
+  "artifacts": [],
+  "command": "main",
+  "experiment": {
+    "base_dir": "/home/bpedigo/maggot_models/maggot_models/models",
+    "dependencies": [
+      "graspy==0.0.3",
+      "numpy==1.16.4",
+      "sacred==0.7.4",
+      "src==0.1.0"
+    ],
+    "mainfile": "fit_ddcsbm.py",
+    "name": "Fit dDSCSBM",
+    "repositories": [
+      {
+        "commit": "ca8db517e4a3ae3eb9eeb96b1d761e921c00a308",
+        "dirty": false,
+        "url": "https://github.com/neurodata/maggot_models.git"
+      }
+    ],
+    "sources": [
+      [
+        "fit_ddcsbm.py",
+        "_sources/fit_ddcsbm_8e83976f9f0a806454d2140c18a2be06.py"
+      ]
+    ]
+  },
+  "heartbeat": "2019-06-24T16:35:41.830449",
+  "host": {
+    "ENV": {},
+    "cpu": "Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz",
+    "hostname": "synaptomes1",
+    "os": [
+      "Linux",
+      "Linux-4.15.0-43-generic-x86_64-with-debian-buster-sid"
+    ],
+    "python_version": "3.7.3"
+  },
+  "meta": {
+    "command": "main",
+    "options": {
+      "--beat_interval": null,
+      "--capture": null,
+      "--comment": null,
+      "--debug": false,
+      "--enforce_clean": false,
+      "--file_storage": null,
+      "--force": false,
+      "--help": false,
+      "--loglevel": null,
+      "--mongo_db": null,
+      "--name": null,
+      "--pdb": false,
+      "--print_config": false,
+      "--priority": null,
+      "--queue": false,
+      "--sql": null,
+      "--tiny_db": null,
+      "--unobserved": false,
+      "COMMAND": null,
+      "UPDATE": [],
+      "help": false,
+      "with": false
+    }
+  },
+  "resources": [],
+  "result": 0,
+  "start_time": "2019-06-24T16:00:03.665665",
+  "status": "COMPLETED",
+  "stop_time": "2019-06-24T16:35:40.828136"
+}
