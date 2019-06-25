@@ -52,7 +52,7 @@ def run_fit(seed, param_grid, directed, n_init, n_jobs):
     if not directed:
         graph = symmetrize(graph, method="avg")
     graph = binarize(graph)
-    ddcsbm_left_df = select_dcsbm(
+    dcsbm_left_df = select_dcsbm(
         graph,
         param_grid,
         directed=directed,
@@ -60,14 +60,14 @@ def run_fit(seed, param_grid, directed, n_init, n_jobs):
         n_jobs=n_jobs,
         n_init=n_init,
     )
-    save_obj(ddcsbm_left_df, file_obs, "ddcsbm_left_df")
+    save_obj(dcsbm_left_df, file_obs, "dcsbm_left_df")
 
     # run right
     graph = load_drosophila_right()
     if not directed:
         graph = symmetrize(graph, method="avg")
     graph = binarize(graph)
-    ddcsbm_right_df = select_dcsbm(
+    dcsbm_right_df = select_dcsbm(
         graph,
         param_grid,
         directed=directed,
@@ -75,7 +75,7 @@ def run_fit(seed, param_grid, directed, n_init, n_jobs):
         n_jobs=n_jobs,
         n_init=n_init,
     )
-    save_obj(ddcsbm_right_df, file_obs, "ddcsbm_right_df")
+    save_obj(dcsbm_right_df, file_obs, "dcsbm_right_df")
 
     return 0
 

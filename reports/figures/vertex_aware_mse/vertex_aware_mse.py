@@ -9,10 +9,6 @@ from IPython import get_ipython  # just to decieve flake8
 
 import src.utils as utils
 
-get_ipython().run_line_magic("autoreload", "2")
-
-get_ipython().run_line_magic("matplotlib", "inline")
-os.getcwd()
 
 #%% [markdown]
 # ### Choose experiment, print out configurations
