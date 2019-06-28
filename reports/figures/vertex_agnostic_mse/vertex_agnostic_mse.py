@@ -1,18 +1,11 @@
 #%%
-import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-from IPython import get_ipython  # just to decieve flake8
 
 import src.utils as utils
-
-get_ipython().run_line_magic("autoreload", "2")
-
-get_ipython().run_line_magic("matplotlib", "inline")
-os.getcwd()
 
 
 #%% [markdown]
@@ -152,4 +145,24 @@ plt.ylabel("MSE")
 plt.title(f"Drosophila old MB left, directed ({experiment}:{run})")
 plt.savefig(save_dir / "rank_sbm_Klines.pdf", format="pdf", facecolor="w")
 
+#%%
+from graspy.models import SBMEstimator
+from graspy.datasets import load_drosophila_left, load_drosophila_right
+from graspy.utils import binarize
+
+sbm = SBMEstimator(directed=True, loops=False)
+left_adj, left_labels = load_drosophila_left(return_labels=True)
+left_adj = binarize(left_adj)
+sbm.fit(left_adj, y=left_labels)
+sbm.mse(left_adj)
+sbm._n_parameters()
+
+right_adj, right_labels = load_drosophila_right(return_labels=True)
+
+er = SBMEstimator(directed=True, loops=False, n_blocks=2)
+er.fit(left_adj)
+er.mse(left_adj)
+heatmap(
+    left_adj, inner_hier_labels=er.vertex_assignments_, outer_hier_labels=left_labels
+)
 #%%

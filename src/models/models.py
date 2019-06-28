@@ -103,13 +103,14 @@ def estimate_rdpg(graph, n_components=None):
 
 def select_sbm(
     graph,
-    n_components_try_range,
-    n_block_try_range,
-    directed=False,
-    method="gc",
-    metric=None,
+    param_grid,
+    directed=True,
+    co_block=False,
+    metric="mse",
     c=0,
     rank="full",
+    n_jobs=1,
+    n_init=1,
 ):
     """sweeps over n_components, n_blocks, fits an sbm for each 
     Using GaussianCluster, so will internally sweep covariance structure and pick best
@@ -133,48 +134,71 @@ def select_sbm(
         [description], by default False
     """
 
-    out_dict = {}
-    for i, n_components_try in enumerate(n_components_try_range):
-        for j, n_block_try in enumerate(n_block_try_range):
-            # check special case for ER, don't need to cluster
-            if n_block_try == 1:
-                vertex_assignments = np.zeros(graph.shape[0])
-                n_params_gmm = 1
-            else:
-                vertex_assignments, n_params_gmm = estimate_assignments(
-                    graph, n_block_try, n_components_try, method=method, metric=metric
-                )
+    # common parameters of all estimators
+    sbm = SBMEstimator(
+        directed=directed,
+        loops=False,
+        n_init=n_init,
+        co_block=co_block,
+        metric=metric,
+        rank=rank,
+    )
 
-            if rank == "sweep":
-                rank_try_range = list(range(1, n_block_try + 1))
-            else:
-                rank_try_range = [n_block_try]
+    # define scoring functions to evaluate models
+    scorers = gen_scorers(sbm, graph)
 
-            for k, rank_try in enumerate(rank_try_range):
-                ind = i * len(n_block_try_range) + j * len(rank_try_range) + k
+    # run the grid search
+    grid_search = GridSearchUS(
+        sbm, param_grid, scoring=scorers, n_jobs=n_jobs, verbose=5, refit=False
+    )
+    grid_search.fit(graph)
 
-                estimator = SBMEstimator(directed=directed, loops=False, rank=rank_try)
-                estimator.fit(graph, y=vertex_assignments)
+    out_df = grid_search.cv_results_
+    # out_df["param_regularizer"] = [
+    #     v["regularizer"] for v in out_df["param_embed_kws"].values
+    # ]
+    # out_dict = {}
+    # for i, n_components_try in enumerate(n_components_try_range):
+    #     for j, n_block_try in enumerate(n_block_try_range):
+    #         # check special case for ER, don't need to cluster
+    #         if n_block_try == 1:
+    #             vertex_assignments = np.zeros(graph.shape[0])
+    #             n_params_gmm = 1
+    #         else:
+    #             vertex_assignments, n_params_gmm = estimate_assignments(
+    #                 graph, n_block_try, n_components_try, method=method, metric=metric
+    #             )
 
-                rss = compute_rss(estimator, graph)
-                mse = compute_mse(estimator, graph)
-                score = np.sum(estimator.score_samples(graph, clip=c))
-                n_params_sbm = estimator._n_parameters()
-                # account for the estimated positions
-                if type(estimator) == SBMEstimator:
-                    n_params_sbm += estimator.block_p_.shape[0] - 1
+    #         if rank == "sweep":
+    #             rank_try_range = list(range(1, n_block_try + 1))
+    #         else:
+    #             rank_try_range = [n_block_try]
 
-                out_dict[ind] = {
-                    "n_params_gmm": n_params_gmm,
-                    "n_params_sbm": n_params_sbm,
-                    "rss": rss,
-                    "mse": mse,
-                    "score": score,
-                    "n_components_try": n_components_try,
-                    "n_block_try": n_block_try,
-                    "rank_try": rank_try,
-                }
-    out_df = pd.DataFrame.from_dict(out_dict, orient="index")
+    #         for k, rank_try in enumerate(rank_try_range):
+    #             ind = i * len(n_block_try_range) + j * len(rank_try_range) + k
+
+    #             estimator = SBMEstimator(directed=directed, loops=False, rank=rank_try)
+    #             estimator.fit(graph, y=vertex_assignments)
+
+    #             rss = compute_rss(estimator, graph)
+    #             mse = compute_mse(estimator, graph)
+    #             score = np.sum(estimator.score_samples(graph, clip=c))
+    #             n_params_sbm = estimator._n_parameters()
+    #             # account for the estimated positions
+    #             if type(estimator) == SBMEstimator:
+    #                 n_params_sbm += estimator.block_p_.shape[0] - 1
+
+    #             out_dict[ind] = {
+    #                 "n_params_gmm": n_params_gmm,
+    #                 "n_params_sbm": n_params_sbm,
+    #                 "rss": rss,
+    #                 "mse": mse,
+    #                 "score": score,
+    #                 "n_components_try": n_components_try,
+    #                 "n_block_try": n_block_try,
+    #                 "rank_try": rank_try,
+    #             }
+    # out_df = pd.DataFrame.from_dict(out_dict, orient="index")
     return out_df
 
 
@@ -183,7 +207,7 @@ def select_dcsbm(
     param_grid,
     directed=True,
     degree_directed=False,
-    metric=None,
+    metric="mse",
     c=0,
     rank="full",
     n_jobs=1,
@@ -195,7 +219,7 @@ def select_dcsbm(
         degree_directed=degree_directed,
         loops=False,
         n_init=n_init,
-        metric="mse",
+        metric=metric,
     )
 
     # define scoring functions to evaluate models
