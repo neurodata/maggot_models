@@ -88,7 +88,7 @@ sns.set_palette(custom_cmap)
 #%%
 title_fontsize = 40
 axis_label_fontsize = 30
-ap_marker = "*"
+ap_marker = "X"
 ap_size = 200
 #%% Figure - show RDPG, DCSBM bests
 # Left
@@ -150,23 +150,6 @@ plt.savefig(
     facecolor="w",
     bbox_inches="tight",
 )
-#%%
-# plt.figure(figsize=(20, 10))
-# plt_kws = dict(linewidth=0, y="likelihood", x="n_params")
-# sns.scatterplot(data=best_dcsbm_df, label="DCSBM", **plt_kws)
-# sns.scatterplot(data=best_ddcsbm_df, label="dDCSBM", **plt_kws)
-# sns.scatterplot(data=best_rdpg_df, label="RDPG", **plt_kws)
-# plt.legend()
 
-# #%% Figure - observe the effect of regularization on RDPG fitting
-# plot_df = rdpg_df[rdpg_df["param_plus_c_weight"] == 0]
-# plt.figure(figsize=(20, 10))
-# sns.scatterplot(
-#     data=plot_df,
-#     x="n_params",
-#     y="mse",
-#     hue="param_diag_aug_weight",
-#     size="param_diag_aug_weight",
-#     alpha=0.5,
-#     linewidth=0,
-# )
+
+#%%

@@ -36,7 +36,7 @@ def config():
     directed = True  # noqa: F841
 
 
-def fit_ldt(left_graph, right_graph, n_components, n_bootstraps=500):
+def fit_ldt(left_graph, right_graph, n_components, n_bootstraps=2000):
     ldt = LatentDistributionTest(n_components=n_components, n_bootstraps=n_bootstraps)
     ldt.fit(left_graph, right_graph)
     result = {}

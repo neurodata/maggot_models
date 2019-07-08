@@ -29,8 +29,3 @@ plt.yscale("log")
 plt.ylim([1e-3, 1.3])
 plt.axhline(0.05, c="g")
 
-
-#%%
-
-
-#%%
