@@ -1,0 +1,87 @@
+{
+  "artifacts": [],
+  "command": "main",
+  "experiment": {
+    "base_dir": "/home/bpedigo/maggot_models/maggot_models/models",
+    "dependencies": [
+      "graspy==0.0.3",
+      "joblib==0.13.2",
+      "numpy==1.16.4",
+      "pandas==0.24.2",
+      "sacred==0.7.4",
+      "src==0.1.0"
+    ],
+    "mainfile": "run_ldt.py",
+    "name": "Run LDT",
+    "repositories": [
+      {
+        "commit": "2c40c49e717762f5c7ed5a04515ad2174bd4bfb0",
+        "dirty": false,
+        "url": "https://github.com/neurodata/maggot_models.git"
+      }
+    ],
+    "sources": [
+      [
+        "run_ldt.py",
+        "_sources/run_ldt_1c1b76c421b542ba8771359f84c68887.py"
+      ]
+    ]
+  },
+  "fail_trace": [
+    "joblib.externals.loky.process_executor._RemoteTraceback: \n\"\"\"\nTraceback (most recent call last):\n  File \"/home/bpedigo/.conda/envs/maggot_models/lib/python3.7/site-packages/joblib/externals/loky/process_executor.py\", line 418, in _process_worker\n    r = call_item()\n  File \"/home/bpedigo/.conda/envs/maggot_models/lib/python3.7/site-packages/joblib/externals/loky/process_executor.py\", line 272, in __call__\n    return self.fn(*self.args, **self.kwargs)\n  File \"/home/bpedigo/.conda/envs/maggot_models/lib/python3.7/site-packages/joblib/_parallel_backends.py\", line 567, in __call__\n    return self.func(*args, **kwargs)\n  File \"/home/bpedigo/.conda/envs/maggot_models/lib/python3.7/site-packages/joblib/parallel.py\", line 225, in __call__\n    for func, args, kwargs in self.items]\n  File \"/home/bpedigo/.conda/envs/maggot_models/lib/python3.7/site-packages/joblib/parallel.py\", line 225, in <listcomp>\n    for func, args, kwargs in self.items]\n  File \"./maggot_models/models/run_ldt.py\", line 63, in fit\n    return fit_ldt(left_graph, right_graph, n_components)\n  File \"./maggot_models/models/run_ldt.py\", line 41, in fit_ldt\n    ldt.fit(left_graph, right_graph)\n  File \"/home/bpedigo/maggot_models/graspy/graspy/inference/latent_distribution_test.py\", line 143, in fit\n    raise NotImplementedError()  # TODO asymmetric case\nNotImplementedError\n\"\"\"\n",
+    "\nThe above exception was the direct cause of the following exception:\n\n",
+    "Traceback (most recent call last):\n",
+    "  File \"/home/bpedigo/.conda/envs/maggot_models/lib/python3.7/site-packages/sacred/config/captured_function.py\", line 46, in captured_function\n    result = wrapped(*args, **kwargs)\n",
+    "  File \"./maggot_models/models/run_ldt.py\", line 76, in main\n    out = run_fit(seed, directed, n_components_range)\n",
+    "  File \"./maggot_models/models/run_ldt.py\", line 65, in run_fit\n    outs = Parallel(n_jobs=-2, verbose=5)(delayed(fit)(n) for n in n_components_range)\n",
+    "  File \"/home/bpedigo/.conda/envs/maggot_models/lib/python3.7/site-packages/joblib/parallel.py\", line 934, in __call__\n    self.retrieve()\n",
+    "  File \"/home/bpedigo/.conda/envs/maggot_models/lib/python3.7/site-packages/joblib/parallel.py\", line 833, in retrieve\n    self._output.extend(job.get(timeout=self.timeout))\n",
+    "  File \"/home/bpedigo/.conda/envs/maggot_models/lib/python3.7/site-packages/joblib/_parallel_backends.py\", line 521, in wrap_future_result\n    return future.result(timeout=timeout)\n",
+    "  File \"/home/bpedigo/.conda/envs/maggot_models/lib/python3.7/concurrent/futures/_base.py\", line 432, in result\n    return self.__get_result()\n",
+    "  File \"/home/bpedigo/.conda/envs/maggot_models/lib/python3.7/concurrent/futures/_base.py\", line 384, in __get_result\n    raise self._exception\n",
+    "NotImplementedError\n"
+  ],
+  "heartbeat": "2019-07-08T21:49:33.717573",
+  "host": {
+    "ENV": {},
+    "cpu": "Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz",
+    "hostname": "synaptomes1",
+    "os": [
+      "Linux",
+      "Linux-4.15.0-43-generic-x86_64-with-debian-buster-sid"
+    ],
+    "python_version": "3.7.3"
+  },
+  "meta": {
+    "command": "main",
+    "options": {
+      "--beat_interval": null,
+      "--capture": null,
+      "--comment": null,
+      "--debug": false,
+      "--enforce_clean": false,
+      "--file_storage": null,
+      "--force": false,
+      "--help": false,
+      "--loglevel": null,
+      "--mongo_db": null,
+      "--name": null,
+      "--pdb": false,
+      "--print_config": false,
+      "--priority": null,
+      "--queue": false,
+      "--sql": null,
+      "--tiny_db": null,
+      "--unobserved": false,
+      "COMMAND": null,
+      "UPDATE": [],
+      "help": false,
+      "with": false
+    }
+  },
+  "resources": [],
+  "result": null,
+  "start_time": "2019-07-08T21:49:26.022366",
+  "status": "FAILED",
+  "stop_time": "2019-07-08T21:49:33.720163"
+}

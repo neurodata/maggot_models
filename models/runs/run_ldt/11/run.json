@@ -1,0 +1,73 @@
+{
+  "artifacts": [],
+  "command": "main",
+  "experiment": {
+    "base_dir": "/home/bpedigo/maggot_models/maggot_models/models",
+    "dependencies": [
+      "graspy==0.0.3",
+      "joblib==0.13.2",
+      "numpy==1.16.4",
+      "pandas==0.24.2",
+      "sacred==0.7.4",
+      "src==0.1.0"
+    ],
+    "mainfile": "run_ldt.py",
+    "name": "Run LDT",
+    "repositories": [
+      {
+        "commit": "2c40c49e717762f5c7ed5a04515ad2174bd4bfb0",
+        "dirty": false,
+        "url": "https://github.com/neurodata/maggot_models.git"
+      }
+    ],
+    "sources": [
+      [
+        "run_ldt.py",
+        "_sources/run_ldt_1c1b76c421b542ba8771359f84c68887.py"
+      ]
+    ]
+  },
+  "heartbeat": "2019-07-08T23:07:36.910163",
+  "host": {
+    "ENV": {},
+    "cpu": "Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz",
+    "hostname": "synaptomes1",
+    "os": [
+      "Linux",
+      "Linux-4.15.0-43-generic-x86_64-with-debian-buster-sid"
+    ],
+    "python_version": "3.7.3"
+  },
+  "meta": {
+    "command": "main",
+    "options": {
+      "--beat_interval": null,
+      "--capture": null,
+      "--comment": null,
+      "--debug": false,
+      "--enforce_clean": false,
+      "--file_storage": null,
+      "--force": false,
+      "--help": false,
+      "--loglevel": null,
+      "--mongo_db": null,
+      "--name": null,
+      "--pdb": false,
+      "--print_config": false,
+      "--priority": null,
+      "--queue": false,
+      "--sql": null,
+      "--tiny_db": null,
+      "--unobserved": false,
+      "COMMAND": null,
+      "UPDATE": [],
+      "help": false,
+      "with": false
+    }
+  },
+  "resources": [],
+  "result": 0,
+  "start_time": "2019-07-08T21:51:36.915035",
+  "status": "COMPLETED",
+  "stop_time": "2019-07-08T23:07:35.907582"
+}
