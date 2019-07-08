@@ -1,0 +1,71 @@
+{
+  "artifacts": [],
+  "command": "main",
+  "experiment": {
+    "base_dir": "/Users/bpedigo/JHU_code/maggot_models/maggot_models/models",
+    "dependencies": [
+      "graspy==0.0.3",
+      "numpy==1.16.4",
+      "sacred==0.7.4",
+      "src==0.1.0"
+    ],
+    "mainfile": "fit_a_priori.py",
+    "name": "Fit a priori",
+    "repositories": [
+      {
+        "commit": "f8581158271fdf0c8fb23570ff0d7fb7865ca513",
+        "dirty": true,
+        "url": "https://github.com/neurodata/maggot_models.git"
+      }
+    ],
+    "sources": [
+      [
+        "fit_a_priori.py",
+        "_sources/fit_a_priori_0063cbe760a346752cf5b04434b54013.py"
+      ]
+    ]
+  },
+  "heartbeat": "2019-07-02T13:52:04.480996",
+  "host": {
+    "ENV": {},
+    "cpu": "Intel(R) Core(TM) i7-8850H CPU @ 2.60GHz",
+    "hostname": "Benjamins-MacBook-Pro.local",
+    "os": [
+      "Darwin",
+      "Darwin-18.6.0-x86_64-i386-64bit"
+    ],
+    "python_version": "3.7.3"
+  },
+  "meta": {
+    "command": "main",
+    "options": {
+      "--beat_interval": null,
+      "--capture": null,
+      "--comment": null,
+      "--debug": false,
+      "--enforce_clean": false,
+      "--file_storage": null,
+      "--force": false,
+      "--help": false,
+      "--loglevel": null,
+      "--mongo_db": null,
+      "--name": null,
+      "--pdb": false,
+      "--print_config": false,
+      "--priority": null,
+      "--queue": false,
+      "--sql": null,
+      "--tiny_db": null,
+      "--unobserved": false,
+      "COMMAND": null,
+      "UPDATE": [],
+      "help": false,
+      "with": false
+    }
+  },
+  "resources": [],
+  "result": 0,
+  "start_time": "2019-07-02T13:52:03.984046",
+  "status": "COMPLETED",
+  "stop_time": "2019-07-02T13:52:04.480271"
+}

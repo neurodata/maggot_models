@@ -263,6 +263,8 @@ def select_rdpg(graph, param_grid, directed=True, n_jobs=1):
 
 
 def gen_scorers(estimator, graph):
+    # TODO add clipped MSE
+    # TODO add unclipped likelihood
     def mse_scorer(estimator, graph, y=None):
         return estimator.mse(graph)
 
@@ -278,3 +280,12 @@ def gen_scorers(estimator, graph):
         "likelihood": likelihood_scorer,
     }
     return scorers
+
+
+def fit_a_priori(estimator, graph, labels):
+    estimator.fit(graph, y=labels)
+    param_grid = {}
+    scorers = gen_scorers(estimator, graph)
+    grid_search = GridSearchUS(estimator, param_grid, scoring=scorers, verbose=5)
+    grid_search.fit(graph)
+    return grid_search.cv_results_

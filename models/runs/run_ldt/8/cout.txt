@@ -1,0 +1,45 @@
+INFO - Run LDT - Running command 'main'
+INFO - Run LDT - Started run with ID "8"
+[Parallel(n_jobs=-2)]: Using backend LokyBackend with 11 concurrent workers.
+[Parallel(n_jobs=-2)]: Done  50 tasks      | elapsed:  7.0min
+[Parallel(n_jobs=-2)]: Done 140 tasks      | elapsed: 50.2min
+Done with 2
+Done with 13
+Done with 24
+Done with 35
+Done with 46
+Done with 57
+Done with 68
+Done with 79
+Done with 90
+Done with 101
+Done with 112
+Done with 123
+Done with 134
+Done with 145
+Done with 156
+Done with 167
+Done with 178
+Done with 189
+Done with 3
+Done with 14
+Done with 25
+Done with 36
+Done with 47
+Done with 58
+Done with 69
+Done with 80
+Done with 91
+Done with 102
+Done with 113
+Done with 124
+Done with 135
+Done with 146
+Done with 157
+Done with 168
+Done with 179
+Done with 190
+9 | elapsed: 100.9min finished
+Saved to maggot_models/models/runs/run_ldt/8/ldt_df.pickle
+INFO - Run LDT - Result: 0
+INFO - Run LDT - Completed after 1:40:53

@@ -5,5 +5,6 @@ from .models import (
     estimate_assignments,
     estimate_rdpg,
     select_dcsbm,
+    fit_a_priori,
 )
 from .grid_search import GridSearchUS

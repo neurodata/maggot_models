@@ -1,0 +1,46 @@
+INFO - Fit a priori - Running command 'main'
+INFO - Fit a priori - Started run with ID "1"
+Fitting 1 folds for each of 1 candidates, totalling 1 fits
+[Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
+[CV]  ................................................................
+[CV]  , likelihood=-13851.434, mse=0.100, n_params=5.000, total=   0.1s
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.1s remaining:    0.0s
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.1s finished
+Saved to maggot_models/models/runs/fit_a_priori/1/sbm_left_df.pickle
+Fitting 1 folds for each of 1 candidates, totalling 1 fits
+[Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
+[CV]  ................................................................
+[CV]  , likelihood=-11292.083, mse=0.077, n_params=214.000, total=   0.1s
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.1s remaining:    0.0s
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.1s finished
+Saved to maggot_models/models/runs/fit_a_priori/1/dcsbm_left_df.pickle
+Fitting 1 folds for each of 1 candidates, totalling 1 fits
+[Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
+[CV]  ................................................................
+[CV]  , likelihood=-9774.388, mse=0.069, n_params=423.000, total=   0.1s
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.1s remaining:    0.0s
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.1s finished
+Saved to maggot_models/models/runs/fit_a_priori/1/ddcsbm_left_df.pickle
+Fitting 1 folds for each of 1 candidates, totalling 1 fits
+[Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
+[CV]  ................................................................
+[CV]  , likelihood=-14412.822, mse=0.099, n_params=5.000, total=   0.1s
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.1s remaining:    0.0s
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.1s finished
+Saved to maggot_models/models/runs/fit_a_priori/1/sbm_right_df.pickle
+Fitting 1 folds for each of 1 candidates, totalling 1 fits
+[Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
+[CV]  ................................................................
+[CV]  , likelihood=-11795.602, mse=0.081, n_params=218.000, total=   0.1s
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.1s remaining:    0.0s
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.1s finished
+Saved to maggot_models/models/runs/fit_a_priori/1/dcsbm_right_df.pickle
+Fitting 1 folds for each of 1 candidates, totalling 1 fits
+[Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
+[CV]  ................................................................
+[CV]  , likelihood=-10024.526, mse=0.067, n_params=431.000, total=   0.1s
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.1s remaining:    0.0s
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    0.1s finished
+Saved to maggot_models/models/runs/fit_a_priori/1/ddcsbm_right_df.pickle
+INFO - Fit a priori - Result: 0
+INFO - Fit a priori - Completed after 0:00:00

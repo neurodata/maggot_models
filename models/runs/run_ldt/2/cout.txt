@@ -1,0 +1,25 @@
+INFO - Run LDT - Running command 'main'
+INFO - Run LDT - Started run with ID "2"
+Done with 1
+Done with 2
+Done with 3
+Done with 4
+Done with 5
+Done with 6
+Done with 7
+Done with 8
+Done with 9
+Done with 10
+Done with 11
+Done with 12
+Done with 13
+Done with 14
+Done with 15
+Done with 16
+Done with 17
+Done with 18
+Done with 19
+Done with 20
+Saved to maggot_models/models/runs/run_ldt/2/ldt_df.pickle
+INFO - Run LDT - Result: 0
+INFO - Run LDT - Completed after 0:02:22

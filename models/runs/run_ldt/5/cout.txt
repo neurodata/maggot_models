@@ -1,0 +1,7 @@
+INFO - Run LDT - Running command 'main'
+INFO - Run LDT - Started run with ID "5"
+[Parallel(n_jobs=-2)]: Using backend LokyBackend with 11 concurrent workers.
+[Parallel(n_jobs=-2)]: Done   1 out of   1 | elapsed:    4.0s finished
+Saved to maggot_models/models/runs/run_ldt/5/ldt_df.pickle
+INFO - Run LDT - Result: 0
+INFO - Run LDT - Completed after 0:00:04

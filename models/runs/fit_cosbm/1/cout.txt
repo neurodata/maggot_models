@@ -1,0 +1,17 @@
+INFO - Fit SBM - Running command 'main'
+INFO - Fit SBM - Started run with ID "1"
+Fitting 1 folds for each of 400 candidates, totalling 400 fits
+[Parallel(n_jobs=-2)]: Using backend LokyBackend with 11 concurrent workers.
+[Parallel(n_jobs=-2)]: Done  50 tasks      | elapsed:  1.0min
+[Parallel(n_jobs=-2)]: Done 140 tasks      | elapsed:  3.4min
+[Parallel(n_jobs=-2)]: Done 266 tasks      | elapsed:  8.0min
+[Parallel(n_jobs=-2)]: Done 400 out of 400 | elapsed: 13.9min finished
+Saved to maggot_models/models/runs/fit_cosbm/1/cosbm_left_df.pickle
+Fitting 1 folds for each of 400 candidates, totalling 400 fits
+[Parallel(n_jobs=-2)]: Using backend LokyBackend with 11 concurrent workers.
+[Parallel(n_jobs=-2)]: Done  50 tasks      | elapsed:   47.3s
+[Parallel(n_jobs=-2)]: Done 140 tasks      | elapsed:  3.0min
+[Parallel(n_jobs=-2)]: Done 266 tasks      | elapsed:  7.8min
+0 | elapsed: 14.0min finished
+Saved to maggot_models/models/runs/fit_cosbm/1/cosbm_right_df.pickle
+INFO - Fit SBM - Result: 0
