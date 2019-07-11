@@ -10,21 +10,18 @@ from graspy.utils import binarize, symmetrize
 from src.models import fit_a_priori
 from src.utils import save_obj
 
-slack_me = False
-
 ex = Experiment("Fit a priori")
 
 current_file = basename(__file__)[:-3]
 
 sacred_file_path = Path(f"./maggot_models/models/runs/{current_file}")
 
+slack_obs = SlackObserver.from_config("slack.json")
 
 file_obs = FileStorageObserver.create(sacred_file_path)
-ex.observers.append(file_obs)
 
-if slack_me:
-    slack_obs = SlackObserver.from_config("slack.json")
-    ex.observers.append(slack_obs)
+ex.observers.append(slack_obs)
+ex.observers.append(file_obs)
 
 
 @ex.config

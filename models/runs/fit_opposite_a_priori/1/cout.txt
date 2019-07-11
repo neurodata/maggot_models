@@ -1,0 +1,10 @@
+INFO - Fit a priori to opposite hemisphere - Running command 'main'
+INFO - Fit a priori to opposite hemisphere - Started run with ID "1"
+   n_params       mse
+0        16  0.105521
+Saved to maggot_models/models/runs/fit_opposite_a_priori/1/right_pred_sbm_df.pickle
+   n_params      mse
+0        16  0.10565
+Saved to maggot_models/models/runs/fit_opposite_a_priori/1/left_pred_sbm_df.pickle
+INFO - Fit a priori to opposite hemisphere - Result: 0
+INFO - Fit a priori to opposite hemisphere - Completed after 0:00:00
