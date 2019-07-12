@@ -1,0 +1,24 @@
+INFO - Fit a priori - Running command 'main'
+INFO - Fit a priori - Started run with ID "2"
+['K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K'
+ 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K'
+ 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K'
+ 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K'
+ 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K'
+ 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'K' 'I' 'I' 'I' 'I' 'I' 'I' 'I'
+ 'I' 'I' 'I' 'I' 'I' 'I' 'I' 'I' 'I' 'I' 'I' 'I' 'I' 'I' 'O' 'O' 'O' 'O'
+ 'O' 'O' 'O' 'O' 'O' 'O' 'O' 'O' 'O' 'O' 'O' 'O' 'O' 'O' 'O' 'O' 'O' 'O'
+ 'O' 'O' 'O' 'O' 'O' 'O' 'O' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P'
+ 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P'
+ 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P'
+ 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P' 'P']
+0    16.0
+Name: n_params, dtype: float64
+Saved to maggot_models/models/runs/fit_a_priori/2/sbm_left_df.pickle
+Saved to maggot_models/models/runs/fit_a_priori/2/dcsbm_left_df.pickle
+Saved to maggot_models/models/runs/fit_a_priori/2/ddcsbm_left_df.pickle
+Saved to maggot_models/models/runs/fit_a_priori/2/sbm_right_df.pickle
+Saved to maggot_models/models/runs/fit_a_priori/2/dcsbm_right_df.pickle
+Saved to maggot_models/models/runs/fit_a_priori/2/ddcsbm_right_df.pickle
+INFO - Fit a priori - Result: 0
+INFO - Fit a priori - Completed after 0:00:00

@@ -21,14 +21,14 @@ sbm_right_df = utils.load_pickle(base_path, experiment, run, "sbm_right_df")
 
 # Load a priori
 experiment = "fit_a_priori"
-run = 1
+run = 3
 config = utils.load_config(base_path, experiment, run)
 ap_sbm_left_df = utils.load_pickle(base_path, experiment, run, "sbm_left_df")
 ap_sbm_right_df = utils.load_pickle(base_path, experiment, run, "sbm_right_df")
 
 # Load opposites
 experiment = "fit_opposite_a_priori"
-run = 1
+run = 2
 config = utils.load_config(base_path, experiment, run)
 right_pred_sbm_df = utils.load_pickle(base_path, experiment, run, "right_pred_sbm_df")
 left_pred_sbm_df = utils.load_pickle(base_path, experiment, run, "left_pred_sbm_df")
@@ -61,7 +61,7 @@ rdpg_right_df = utils.load_pickle(base_path, experiment, run, "rdpg_right_df")
 
 # Load a priori
 experiment = "fit_a_priori"
-run = 1
+run = 3
 config = utils.load_config(base_path, experiment, run)
 ap_dcsbm_left_df = utils.load_pickle(base_path, experiment, run, "dcsbm_left_df")
 ap_dcsbm_right_df = utils.load_pickle(base_path, experiment, run, "dcsbm_right_df")
@@ -170,11 +170,13 @@ aware_ylim = (0.035, 0.1)
 aware_xlim = (1e2, 1e4)
 
 
-def plot_arrow(ax, point, label, color, offset=(50, 50), marker_label_fontsize=30):
+def plot_arrow(
+    ax, point, label, color, offset=(50, 50), relpos=(0, 0), marker_label_fontsize=30
+):
     arrowprops = {
         "arrowstyle": "-|>",
         "mutation_scale": 15,
-        "relpos": (0, 0),
+        "relpos": relpos,
         "color": color,
         "shrinkB": 15,
         "shrinkA": 0,
@@ -224,6 +226,8 @@ plot_arrow(
     "A priori SBM - left",
     cmap[4],
     marker_label_fontsize=marker_label_fontsize,
+    offset=(-250, 50),
+    relpos=(1, 0),
 )
 
 sns.scatterplot(data=left_pred_sbm_df, **plt_kws)
@@ -274,6 +278,17 @@ plot_arrow(
     marker_label_fontsize=marker_label_fontsize,
 )
 
+sns.scatterplot(data=right_pred_sbm_df, **plt_kws)
+point = (right_pred_sbm_df.loc[0, "n_params"], ap_sbm_right_df.loc[0, "mse"])
+plot_arrow(
+    current_ax,
+    point,
+    "A priori SBM - left",
+    cmap[4],
+    marker_label_fontsize=marker_label_fontsize,
+    offset=(-250, 50),
+    relpos=(1, 0),
+)
 # labels
 current_ax.set_title("Vertex agnostic - right", fontsize=title_fontsize)
 current_ax.set_xscale("log")
@@ -331,6 +346,7 @@ plot_arrow(
     "A priori DCSBM",
     cmap[5],
     marker_label_fontsize=marker_label_fontsize,
+    offset=(50, 100),
 )
 
 point = np.array(
@@ -407,6 +423,7 @@ plot_arrow(
     "A priori DCSBM",
     cmap[5],
     marker_label_fontsize=marker_label_fontsize,
+    offset=(50, 100),
 )
 
 point = np.array(
