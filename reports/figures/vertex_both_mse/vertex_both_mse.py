@@ -7,6 +7,39 @@ import seaborn as sns
 import src.utils as utils
 from matplotlib import rc
 
+# Settings
+
+plt.style.use("seaborn-white")
+sns.set_context("talk", font_scale=1.5)
+
+title_fontsize = 40
+axis_label_fontsize = 30
+marker_label_fontsize = 25
+ap_marker = "x"
+ap_size = 250
+ap_linewidth = 3
+savefig_kws = dict(facecolor="w", bbox_inches="tight", dpi=150)
+two_fig = False
+
+# vertex agnostic
+agnostic_xticks = [1e0, 1e1, 1e2]
+agnostic_xticklabels = [r"$1 \times 10^0$", r"$1 \times 10^1$", r"$1 \times 10^2$"]
+agnostic_ylim = (0.05, 0.15)
+agnostic_xlim = (5e-1, 8e2)
+
+# vertex aware
+aware_xticks = [2e2, 7e2, 2e3]
+aware_xticklabels = [r"$2 \times 10^2$", r"$7 \times 10^2$", r"$2 \times 10^3$"]
+aware_ylim = (0.035, 0.1)
+aware_xlim = (1.5e2, 7e3)
+
+# colormap
+base_desat = 0.9
+n_colors = 3
+n_step_colors = 6
+step_down = 4
+
+
 # Vertex agnostic
 #
 #
@@ -110,32 +143,6 @@ best_rdpg_right_df = get_best(
 
 #%% Plot
 
-# settings
-title_fontsize = 40
-axis_label_fontsize = 30
-marker_label_fontsize = 25
-ap_marker = "x"
-ap_size = 250
-ap_linewidth = 3
-
-# vertex agnostic
-agnostic_xticks = [1e0, 1e1, 1e2]
-agnostic_xticklabels = [r"$1 \times 10^0$", r"$1 \times 10^1$", r"$1 \times 10^2$"]
-agnostic_ylim = (0.05, 0.15)
-agnostic_xlim = (5e-1, 8e2)
-
-# vertex aware
-aware_xticks = [2e2, 7e2, 2e3]
-aware_xticklabels = [r"$2 \times 10^2$", r"$7 \times 10^2$", r"$2 \times 10^3$"]
-aware_ylim = (0.035, 0.1)
-aware_xlim = (1.5e2, 7e3)
-
-# colormap
-base_desat = 0.9
-n_colors = 3
-n_step_colors = 6
-step_down = 4
-
 
 def plot_arrow(
     ax, point, label, color, offset=(50, 50), relpos=(0, 0), marker_label_fontsize=30
@@ -193,15 +200,17 @@ sns.palplot(set1)
 
 
 # start figure
-plt.style.use("seaborn-white")
-sns.set_context("talk", font_scale=1.5)
-fig, ax = plt.subplots(2, 2, figsize=(20, 20))
 
+if two_fig:
+    fig, ax = plt.subplots(1, 2, figsize=(20, 10))
+else:
+    fig, ax = plt.subplots(2, 2, figsize=(20, 20))
+ax = list(ax.ravel())
 
 # Vertex agnostic left
 #
 #
-current_ax = ax[0, 0]
+current_ax = ax[0]  # ax[0, 0]
 
 # model curves
 plt_kws = dict(
@@ -258,7 +267,7 @@ current_ax.set_ylim(*agnostic_ylim)
 # Vertex agnostic right
 #
 #
-current_ax = ax[0, 1]
+current_ax = ax[1]  # ax[0, 1]
 # model curves
 plt_kws = dict(
     linewidth=0, y=score_name, x="n_params", ax=current_ax, legend=False, c=cmap[0]
@@ -310,12 +319,28 @@ current_ax.set_xticklabels(agnostic_xticklabels)
 current_ax.set_xlim(*agnostic_xlim)
 current_ax.set_ylim(*agnostic_ylim)
 
+# possibly break here
+if two_fig:
+    plt.tight_layout()
+    plt.savefig(
+        "maggot_models/reports/figures/vertex_both_mse/vertex_agnostic_mse.pdf",
+        format="pdf",
+        **savefig_kws
+    )
+    plt.savefig(
+        "maggot_models/reports/figures/vertex_both_mse/vertex_agnostic_mse.png",
+        format="png",
+        **savefig_kws
+    )
+    fig, ax = plt.subplots(1, 2, figsize=(20, 10))
+    ax = [0, 0] + list(ax)
+
 # Vertex aware left
 #
 #
 sns.set_palette(cmap[1:])
 
-current_ax = ax[1, 0]
+current_ax = ax[2]  # ax[1, 0]
 
 # model curves
 plt_kws = dict(linewidth=0, y=score_name, x="n_params", ax=current_ax, legend=False)
@@ -389,7 +414,7 @@ current_ax.set_ylim(*aware_ylim)
 # Right
 #
 #
-current_ax = ax[1, 1]
+current_ax = ax[3]  # ax[1, 1]
 
 
 # model curves
@@ -465,16 +490,25 @@ current_ax.set_ylim(*aware_ylim)
 
 # globals
 plt.tight_layout()
-plt.savefig(
-    "./maggot_models/reports/figures/vertex_both_mse/vertex_both_mse.pdf",
-    format="pdf",
-    facecolor="w",
-    bbox_inches="tight",
-)
-plt.savefig(
-    "./maggot_models/reports/figures/vertex_both_mse/vertex_both_mse.png",
-    format="png",
-    facecolor="w",
-    dpi=150,
-    bbox_inches="tight",
-)
+if two_fig:
+    plt.savefig(
+        "./maggot_models/reports/figures/vertex_both_mse/vertex_aware_mse.pdf",
+        format="pdf",
+        **savefig_kws
+    )
+    plt.savefig(
+        "./maggot_models/reports/figures/vertex_both_mse/vertex_aware_mse.png",
+        format="png",
+        **savefig_kws
+    )
+else:
+    plt.savefig(
+        "./maggot_models/reports/figures/vertex_both_mse/vertex_both_mse.pdf",
+        format="pdf",
+        **savefig_kws
+    )
+    plt.savefig(
+        "./maggot_models/reports/figures/vertex_both_mse/vertex_both_mse.png",
+        format="png",
+        **savefig_kws
+    )
