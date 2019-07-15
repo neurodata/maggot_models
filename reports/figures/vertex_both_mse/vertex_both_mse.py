@@ -110,48 +110,6 @@ best_rdpg_right_df = get_best(
 
 #%% Plot
 
-
-plt.style.use("seaborn-white")
-sns.set_context("talk", font_scale=1.5)
-
-# build a colormap
-base_cmap = sns.color_palette("Set1", n_colors=4, desat=1)
-base_cmap = []
-base_desat = 0.9
-n_colors = 3
-red = sns.color_palette("Reds", n_colors=n_colors, desat=base_desat)[-1]
-base_cmap.append(red)
-blue = sns.color_palette("Blues", n_colors=n_colors, desat=base_desat)[-1]
-base_cmap.append(blue)
-green = sns.color_palette("Greens", n_colors=n_colors, desat=base_desat)[-1]
-base_cmap.append(green)
-purp = sns.color_palette("Purples", n_colors=n_colors, desat=base_desat)[-1]
-base_cmap.append(purp)
-
-ap_cmap = []
-n_colors = 3
-step_down = 2
-light_red = sns.color_palette("Reds", n_colors=n_colors, desat=base_desat)[-step_down]
-ap_cmap.append(light_red)
-light_blue = sns.color_palette("Blues", n_colors=n_colors, desat=base_desat)[-step_down]
-ap_cmap.append(light_blue)
-light_green = sns.color_palette("Greens", n_colors=n_colors, desat=base_desat)[
-    -step_down
-]
-ap_cmap.append(light_green)
-
-cmap = base_cmap + ap_cmap
-sns.palplot(cmap)
-set1 = sns.color_palette("Set1", n_colors=4, desat=base_desat)
-sns.palplot(set1)
-
-#%%
-# sns.palplot(base_cmap)
-# ap_cmap = sns.color_palette("Set1", desat=0.3, n_colors=2)
-# sns.palplot(ap_cmap)
-# cmap = sns.color_palette(["#de2d26", "#3182bd", "#31a354", "#fb6a4a", "#6baed6"])
-
-
 # settings
 title_fontsize = 40
 axis_label_fontsize = 30
@@ -159,15 +117,24 @@ marker_label_fontsize = 25
 ap_marker = "x"
 ap_size = 250
 ap_linewidth = 3
-# start figure
-fig, ax = plt.subplots(2, 2, figsize=(20, 20))
 
+# vertex agnostic
+agnostic_xticks = [1e0, 1e1, 1e2]
+agnostic_xticklabels = [r"$1 \times 10^0$", r"$1 \times 10^1$", r"$1 \times 10^2$"]
+agnostic_ylim = (0.05, 0.15)
+agnostic_xlim = (5e-1, 8e2)
 
 # vertex aware
-aware_xticks = [2e2, 2e3]
-aware_xticklabels = [r"$2 \times 10^2$", r"$2 \times 10^3$"]
+aware_xticks = [2e2, 7e2, 2e3]
+aware_xticklabels = [r"$2 \times 10^2$", r"$7 \times 10^2$", r"$2 \times 10^3$"]
 aware_ylim = (0.035, 0.1)
-aware_xlim = (1e2, 1e4)
+aware_xlim = (1.5e2, 7e3)
+
+# colormap
+base_desat = 0.9
+n_colors = 3
+n_step_colors = 6
+step_down = 4
 
 
 def plot_arrow(
@@ -192,6 +159,43 @@ def plot_arrow(
         arrowprops=arrowprops,
     )
     ax.annotate(label, **annotate_kws)
+
+
+# build a colormap
+base_cmap = []
+red = sns.color_palette("Reds", n_colors=n_colors, desat=base_desat)[-1]
+base_cmap.append(red)
+blue = sns.color_palette("Blues", n_colors=n_colors, desat=base_desat)[-1]
+base_cmap.append(blue)
+green = sns.color_palette("Greens", n_colors=n_colors, desat=base_desat)[-1]
+base_cmap.append(green)
+purp = sns.color_palette("Purples", n_colors=n_colors, desat=base_desat)[-1]
+base_cmap.append(purp)
+
+ap_cmap = []
+light_red = sns.color_palette("Reds", n_colors=n_step_colors, desat=base_desat)[
+    -step_down
+]
+ap_cmap.append(light_red)
+light_blue = sns.color_palette("Blues", n_colors=n_step_colors, desat=base_desat)[
+    -step_down
+]
+ap_cmap.append(light_blue)
+light_green = sns.color_palette("Greens", n_colors=n_step_colors, desat=base_desat)[
+    -step_down
+]
+ap_cmap.append(light_green)
+
+cmap = base_cmap + ap_cmap
+sns.palplot(cmap)
+set1 = sns.color_palette("Set1", n_colors=4, desat=base_desat)
+sns.palplot(set1)
+
+
+# start figure
+plt.style.use("seaborn-white")
+sns.set_context("talk", font_scale=1.5)
+fig, ax = plt.subplots(2, 2, figsize=(20, 20))
 
 
 # Vertex agnostic left
@@ -246,6 +250,11 @@ current_ax.set_xscale("log")
 current_ax.set_xlabel("# of parameters", fontsize=axis_label_fontsize)
 current_ax.set_ylabel("MSE", fontsize=axis_label_fontsize)
 
+current_ax.set_xticks(agnostic_xticks)
+current_ax.set_xticklabels(agnostic_xticklabels)
+current_ax.set_xlim(*agnostic_xlim)
+current_ax.set_ylim(*agnostic_ylim)
+
 # Vertex agnostic right
 #
 #
@@ -255,7 +264,7 @@ plt_kws = dict(
     linewidth=0, y=score_name, x="n_params", ax=current_ax, legend=False, c=cmap[0]
 )
 sns.scatterplot(data=best_sbm_right_df, label="SBM", **plt_kws)
-current_ax.annotate("SBM", (20, 0.06), fontsize=marker_label_fontsize, c=cmap[0])
+current_ax.annotate("SBM", (20, 0.059), fontsize=marker_label_fontsize, c=cmap[0])
 
 # a priori
 plt_kws = dict(
@@ -289,12 +298,17 @@ plot_arrow(
     offset=(-250, 50),
     relpos=(1, 0),
 )
+
 # labels
 current_ax.set_title("Vertex agnostic - right", fontsize=title_fontsize)
 current_ax.set_xscale("log")
 current_ax.set_xlabel("# of parameters", fontsize=axis_label_fontsize)
 current_ax.set_ylabel("MSE", fontsize=axis_label_fontsize)
 
+current_ax.set_xticks(agnostic_xticks)
+current_ax.set_xticklabels(agnostic_xticklabels)
+current_ax.set_xlim(*agnostic_xlim)
+current_ax.set_ylim(*agnostic_ylim)
 
 # Vertex aware left
 #
@@ -409,9 +423,9 @@ plt_kws = dict(
 sns.scatterplot(data=ap_ddcsbm_right_df, label="priori dDCSBM", **plt_kws)
 
 # add text labels for the lines
-current_ax.annotate("DCSBM", (200, 0.0525), fontsize=marker_label_fontsize, c=cmap[1])
-current_ax.annotate("dDCSBM", (500, 0.0485), fontsize=marker_label_fontsize, c=cmap[2])
-current_ax.annotate("RDPG", (1350, 0.045), fontsize=marker_label_fontsize, c=cmap[3])
+current_ax.annotate("DCSBM", (200, 0.053), fontsize=marker_label_fontsize, c=cmap[1])
+current_ax.annotate("dDCSBM", (500, 0.0495), fontsize=marker_label_fontsize, c=cmap[2])
+current_ax.annotate("RDPG", (1350, 0.0455), fontsize=marker_label_fontsize, c=cmap[3])
 
 # add text labels and arrows for the a prioris
 point = np.array(
@@ -443,56 +457,24 @@ current_ax.set_xscale("log")
 current_ax.set_xlabel("# of parameters", fontsize=axis_label_fontsize)
 current_ax.set_ylabel("MSE", fontsize=axis_label_fontsize)
 
-# globals
-
 current_ax.set_xticks(aware_xticks)
 current_ax.set_xticklabels(aware_xticklabels)
 current_ax.set_xlim(*aware_xlim)
 current_ax.set_ylim(*aware_ylim)
+
+
+# globals
 plt.tight_layout()
-# plt.xticks([5e2, 1e3, 5e3])
 plt.savefig(
     "./maggot_models/reports/figures/vertex_both_mse/vertex_both_mse.pdf",
     format="pdf",
     facecolor="w",
     bbox_inches="tight",
 )
-
-#%% JUNK
-# #%% Load coSBM
-# base_path = "./maggot_models/models/runs/"
-# experiment = "fit_cosbm"
-# run = 1
-# config = utils.load_config(base_path, experiment, run)
-# cosbm_left_df = utils.load_pickle(base_path, experiment, run, "cosbm_left_df")
-# cosbm_right_df = utils.load_pickle(base_path, experiment, run, "cosbm_right_df")
-
-
-# best_cosbm_left_df = get_best(
-#     cosbm_left_df, param_name="param_n_blocks", score_name=score_name
-# )
-# best_cosbm_right_df = get_best(
-#     cosbm_right_df, param_name="param_n_blocks", score_name=score_name
-# )
-
-
-# #%%
-# # build a colormap
-# base_cmap = sns.color_palette("Set1", n_colors=1, desat=1)
-# sns.palplot(base_cmap)
-# ap_cmap = sns.color_palette("Set1", desat=0.3, n_colors=2)
-# sns.palplot(ap_cmap)
-# custom_cmap = sns.color_palette(["#de2d26", "#fb6a4a"])
-# # custom_cmap = base_cmap + ap_cmap
-# sns.set_palette(custom_cmap)
-# #%%
-# title_fontsize = 40
-# axis_label_fontsize = 30
-# ap_marker = "*"
-# ap_size = 200
-# #%% Figure - show SBM bests
-# # Left
-# fig, ax = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(20, 10))
-
-
-# #%%
+plt.savefig(
+    "./maggot_models/reports/figures/vertex_both_mse/vertex_both_mse.png",
+    format="png",
+    facecolor="w",
+    dpi=150,
+    bbox_inches="tight",
+)
