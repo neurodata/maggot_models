@@ -5,7 +5,6 @@ import pandas as pd
 import seaborn as sns
 
 import src.utils as utils
-from matplotlib import rc
 
 # Settings
 

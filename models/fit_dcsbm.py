@@ -10,17 +10,19 @@ from graspy.utils import binarize, symmetrize
 from src.models import select_dcsbm
 from src.utils import save_obj
 
+slack_me = True
+
 ex = Experiment("Fit DSCSBM")
 
 current_file = basename(__file__)[:-3]
 
 sacred_file_path = Path(f"./maggot_models/models/runs/{current_file}")
 
-slack_obs = SlackObserver.from_config("slack.json")
+if slack_me:
+    slack_obs = SlackObserver.from_config("slack.json")
+    ex.observers.append(slack_obs)
 
 file_obs = FileStorageObserver.create(sacred_file_path)
-
-ex.observers.append(slack_obs)
 ex.observers.append(file_obs)
 
 
@@ -41,7 +43,7 @@ def config():
     }
 
     # Parameters for the experiment
-    n_init = 100  # 50  # noqa: F841
+    n_init = 100  # noqa: F841
     n_jobs = -2  # noqa: F841
     directed = True  # noqa: F841
 

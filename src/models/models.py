@@ -215,11 +215,7 @@ def select_dcsbm(
 ):
     # common parameters of all estimators
     dcsbm = DCSBMEstimator(
-        directed=directed,
-        degree_directed=degree_directed,
-        loops=False,
-        n_init=n_init,
-        metric=metric,
+        directed=directed, degree_directed=degree_directed, loops=False, metric=metric
     )
 
     # define scoring functions to evaluate models
@@ -227,7 +223,13 @@ def select_dcsbm(
 
     # run the grid search
     grid_search = GridSearchUS(
-        dcsbm, param_grid, scoring=scorers, n_jobs=n_jobs, verbose=5, refit=False
+        dcsbm,
+        param_grid,
+        scoring=scorers,
+        n_jobs=n_jobs,
+        verbose=0,
+        refit=False,
+        n_init=n_init,
     )
     grid_search.fit(graph)
 
@@ -255,7 +257,7 @@ def select_rdpg(graph, param_grid, directed=True, n_jobs=1):
 
     # run the grid search
     grid_search = GridSearchUS(
-        rdpg, param_grid, scoring=scorers, n_jobs=n_jobs, verbose=5
+        rdpg, param_grid, scoring=scorers, n_jobs=n_jobs, verbose=0
     )
     grid_search.fit(graph)
 
@@ -263,21 +265,37 @@ def select_rdpg(graph, param_grid, directed=True, n_jobs=1):
 
 
 def gen_scorers(estimator, graph):
-    # TODO add clipped MSE
-    # TODO add unclipped likelihood
-    def mse_scorer(estimator, graph, y=None):
-        return estimator.mse(graph)
+    small_clip = 1 / graph.size - graph.shape[0]
 
     def n_params_scorer(estimator, graph, y=None):
         return estimator._n_parameters()
 
+    def mse_scorer(estimator, graph, y=None):
+        return estimator.mse(graph)
+
+    def zeroclip_mse_scorer(estimator, graph, y=None):
+        return estimator.mse(graph, clip=0)
+
+    def smallclip_mse_scorer(estimator, graph, y=None):
+        return estimator.mse(graph, clip=small_clip)
+
     def likelihood_scorer(estimator, graph, y=None):
-        return estimator.score(graph, clip=1 / graph.size)
+        return estimator.score(graph)
+
+    def zeroclip_likelihood_scorer(estimator, graph, y=None):
+        return estimator.score(graph, clip=0)
+
+    def smallclip_likelihood_scorer(estimator, graph, y=None):
+        return estimator.score(graph, clip=small_clip)
 
     scorers = {
-        "mse": mse_scorer,
         "n_params": n_params_scorer,
+        "mse": mse_scorer,
+        "zc_mse": zeroclip_mse_scorer,
+        "sc_mse": smallclip_mse_scorer,
         "likelihood": likelihood_scorer,
+        "zc_likelihood": zeroclip_likelihood_scorer,
+        "sc_likelihood": smallclip_likelihood_scorer,
     }
     return scorers
 

@@ -1,6 +1,7 @@
 from sklearn.model_selection import GridSearchCV
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 
 def format_columns(string):
@@ -74,7 +75,7 @@ class GridSearchUS(GridSearchCV):
 
     def fit(self, X, y=None):
         results = []
-        for i in range(self.n_init):
+        for i in tqdm(range(self.n_init)):
             sup = super().fit(X, y=y)
             temp_results = pd.DataFrame.from_dict(sup.cv_results_)
             temp_results = remove_columns(temp_results)
