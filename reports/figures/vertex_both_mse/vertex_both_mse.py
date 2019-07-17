@@ -254,7 +254,7 @@ plot_arrow(
 )
 
 
-current_ax.set_title("Vertex agnostic - left", fontsize=title_fontsize)
+current_ax.set_title("Without node labels: left", fontsize=title_fontsize)
 current_ax.set_xscale("log")
 current_ax.set_xlabel("# of parameters", fontsize=axis_label_fontsize)
 current_ax.set_ylabel("MSE", fontsize=axis_label_fontsize)
@@ -309,7 +309,7 @@ plot_arrow(
 )
 
 # labels
-current_ax.set_title("Vertex agnostic - right", fontsize=title_fontsize)
+current_ax.set_title("Without node labels: right", fontsize=title_fontsize)
 current_ax.set_xscale("log")
 current_ax.set_xlabel("# of parameters", fontsize=axis_label_fontsize)
 current_ax.set_ylabel("MSE", fontsize=axis_label_fontsize)
@@ -401,7 +401,7 @@ plot_arrow(
 
 
 # labels
-current_ax.set_title("Vertex aware - left", fontsize=title_fontsize)
+current_ax.set_title("With node labels: left", fontsize=title_fontsize)
 current_ax.set_xscale("log")
 current_ax.set_xlabel("# of parameters", fontsize=axis_label_fontsize)
 current_ax.set_ylabel("MSE", fontsize=axis_label_fontsize)
@@ -477,7 +477,7 @@ plot_arrow(
 )
 
 # labels
-current_ax.set_title("Vertex aware - right", fontsize=title_fontsize)
+current_ax.set_title("With node labels: right", fontsize=title_fontsize)
 current_ax.set_xscale("log")
 current_ax.set_xlabel("# of parameters", fontsize=axis_label_fontsize)
 current_ax.set_ylabel("MSE", fontsize=axis_label_fontsize)
