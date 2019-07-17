@@ -44,7 +44,7 @@ def config():
 
     # Parameters for the experiment
     n_init = 100  # noqa: F841
-    n_jobs = -2  # noqa: F841
+    n_jobs = 50  # noqa: F841
     directed = True  # noqa: F841
 
 
