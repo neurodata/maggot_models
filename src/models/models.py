@@ -265,7 +265,7 @@ def select_rdpg(graph, param_grid, directed=True, n_jobs=1):
 
 
 def gen_scorers(estimator, graph):
-    small_clip = 1 / graph.size - graph.shape[0]
+    small_clip = 1 / (graph.size - graph.shape[0])
 
     def n_params_scorer(estimator, graph, y=None):
         return estimator._n_parameters()
