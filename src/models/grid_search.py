@@ -22,7 +22,7 @@ def remove_columns(df):
     # columns
     columns = df.columns.values
     remove = []
-    bad_keys = ["std_", "split0_"]
+    bad_keys = ["std_", "split0_", "rank_", "_time"]
     for column in columns:
         for bad_key in bad_keys:
             if bad_key in column:

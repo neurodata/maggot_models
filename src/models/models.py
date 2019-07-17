@@ -301,7 +301,6 @@ def gen_scorers(estimator, graph):
 
 
 def fit_a_priori(estimator, graph, labels):
-    # estimator.fit(graph, y=labels)
     param_grid = {}
     scorers = gen_scorers(estimator, graph)
     grid_search = GridSearchUS(estimator, param_grid, scoring=scorers, verbose=0)
