@@ -72,7 +72,7 @@ left_pred_sbm_df = utils.load_pickle(base_path, experiment, run, "left_pred_sbm_
 # Load DCSBM
 base_path = "./maggot_models/models/runs/"
 experiment = "fit_dcsbm"
-run = 8
+run = 9  # 8
 config = utils.load_config(base_path, experiment, run)
 dcsbm_left_df = utils.load_pickle(base_path, experiment, run, "dcsbm_left_df")
 dcsbm_right_df = utils.load_pickle(base_path, experiment, run, "dcsbm_right_df")
@@ -511,3 +511,25 @@ else:
         format="png",
         **savefig_kws
     )
+
+
+#%%
+from src.utils import get_best
+
+score_name = "sc_likelihood"
+x_name = "param_n_blocks"
+best_df = get_best(
+    dcsbm_right_df, param_name=x_name, score_name=score_name, small_better=False
+)
+plt_kws = dict(linewidth=0, y=score_name, x=x_name, legend=False)
+best_df
+sns.scatterplot(data=best_df, **plt_kws)
+plt.figure()
+x_name = "n_params"
+best_df = get_best(
+    dcsbm_right_df, param_name=x_name, score_name=score_name, small_better=False
+)
+plt_kws = dict(linewidth=0, y=score_name, x=x_name, legend=False)
+best_df
+sns.scatterplot(data=best_df, **plt_kws)
+#%%

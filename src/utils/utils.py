@@ -283,3 +283,15 @@ def save_obj(obj, fso, name):
         pickle.dump(obj, file)
     print(f"Saved to {path}")
 
+
+def get_best(df, param_name="param_n_components", score_name="mse", small_better=True):
+    param_range = np.unique(df[param_name].values)
+    best_rows = []
+    for param_value in param_range:
+        temp_df = df[df[param_name] == param_value]
+        if small_better:
+            ind = temp_df[score_name].idxmin()  # this is the metric we are choosing on
+        else:
+            ind = temp_df[score_name].idxmax()
+        best_rows.append(temp_df.loc[ind, :])
+    return pd.DataFrame(best_rows)
