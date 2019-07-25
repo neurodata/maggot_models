@@ -16,5 +16,7 @@ from .utils import (
     get_best_df2,
     get_best_df3,
     get_best,
+    get_subgraph,
+    to_simple_class,
 )
 

@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 import pickle
+from operator import itemgetter
+
 
 import numpy as np
 import pandas as pd
@@ -295,3 +297,50 @@ def get_best(df, param_name="param_n_components", score_name="mse", small_better
             ind = temp_df[score_name].idxmax()
         best_rows.append(temp_df.loc[ind, :])
     return pd.DataFrame(best_rows)
+
+
+def get_subgraph(graph, feature, key):
+    """return the subgraph of a networkx object
+
+    based on the node data "feature" being equal to "key"
+    
+    Parameters
+    ----------
+    graph : [type]
+        [description]
+    feature : [type]
+        [description]
+    key : [type]
+        [description]
+    
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    sub_nodes = [node for node, meta in graph.nodes(data=True) if meta[feature] == key]
+    return graph.subgraph(sub_nodes)
+
+
+def to_simple_class(classes):
+    if not isinstance(classes, (list, np.ndarray)):
+        classes = [classes]
+    name_map = {
+        "CN": "C/LH",
+        "DANs": "I",
+        "KCs": "KC",
+        "LHN": "C/LH",
+        "LHN; CN": "C/LH",
+        "MBINs": "I",
+        "MBON": "O",
+        "MBON; CN": "O",
+        "OANs": "I",
+        "ORN mPNs": "P",
+        "ORN uPNs": "P",
+        "tPNs": "P",
+        "vPNs": "P",
+        "Unidentified": "U",
+        "Other": "U",
+    }
+    simple_classes = np.array(itemgetter(*classes)(name_map))
+    return simple_classes

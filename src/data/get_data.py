@@ -2,6 +2,7 @@ from graspy.datasets import load_drosophila_left, load_drosophila_right
 from graspy.utils import binarize
 import pandas as pd
 from pathlib import Path
+import networkx as nx
 
 
 def load_left():
@@ -58,3 +59,11 @@ def load_new_right(return_full_labels=False, return_names=False):
         return adj, labels, names
     else:
         return adj, labels
+
+
+def load_june(graph_type):
+    data_path = Path("maggot_models/data/raw/20190615_mw")
+    base_file_name = "mw_20190615_"
+    file_path = data_path / (base_file_name + graph_type + ".graphml")
+    graph = nx.read_graphml(file_path)
+    return graph
