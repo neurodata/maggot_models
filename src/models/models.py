@@ -136,12 +136,7 @@ def select_sbm(
 
     # common parameters of all estimators
     sbm = SBMEstimator(
-        directed=directed,
-        loops=False,
-        n_init=n_init,
-        co_block=co_block,
-        metric=metric,
-        rank=rank,
+        directed=directed, loops=False, co_block=co_block, metric=metric, rank=rank
     )
 
     # define scoring functions to evaluate models
@@ -149,7 +144,13 @@ def select_sbm(
 
     # run the grid search
     grid_search = GridSearchUS(
-        sbm, param_grid, scoring=scorers, n_jobs=n_jobs, verbose=5, refit=False
+        sbm,
+        param_grid,
+        scoring=scorers,
+        n_jobs=n_jobs,
+        verbose=0,
+        refit=False,
+        n_init=n_init,
     )
     grid_search.fit(graph)
 
@@ -235,9 +236,10 @@ def select_dcsbm(
 
     # format outputs
     out_df = grid_search.cv_results_
-    out_df["param_regularizer"] = [
-        v["regularizer"] for v in out_df["param_embed_kws"].values
-    ]
+    if "param_embed_kws" in out_df.columns:
+        out_df["param_regularizer"] = [
+            v["regularizer"] for v in out_df["param_embed_kws"].values
+        ]
 
     return out_df
 

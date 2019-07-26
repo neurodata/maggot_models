@@ -2,7 +2,6 @@ from sklearn.model_selection import GridSearchCV
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from joblib import Parallel, delayed
 
 
 def format_columns(string):
@@ -75,21 +74,13 @@ class GridSearchUS(GridSearchCV):
         self.n_init = n_init
 
     def fit(self, X, y=None):
-        seeds = np.random.randint(1e8, size=self.n_init)
-
-        def run_fit(seed):
+        results = []
+        for i in tqdm(range(self.n_init)):
             sup = super().fit(X, y=y)
             temp_results = pd.DataFrame.from_dict(sup.cv_results_)
             temp_results = remove_columns(temp_results)
             temp_results.rename(columns=format_columns, inplace=True)
-            return temp_results
-
-        results = []
-        # for i in tqdm(range(self.n_init)):
-
-        # results.append(temp_results)
-        parallel = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)
-        results = parallel(delayed(run_fit)(seed) for seed in seeds)
+            results.append(temp_results)
         results_df = pd.concat(results, ignore_index=True)
         self.cv_results_ = results_df
         return self
