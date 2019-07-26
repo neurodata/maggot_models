@@ -49,7 +49,11 @@ def preprocess(graph):
     graph = binarize(graph)
     return graph
 
-def save():
+
+def save(name, fmt="pdf"):
+    path = Path("/Users/bpedigo/JHU_code/maggot_models/maggot_models/notebooks/outs")
+    plt.savefig(path / str(name + "." + fmt), fmt=fmt, facecolor="w")
+
 
 base_title = " o binarized right"
 side = "right"
@@ -84,7 +88,7 @@ ase = AdjacencySpectralEmbed(n_components=n_components)
 latent = ase.fit_transform(embed_graph)
 latent = np.concatenate(latent, axis=-1)
 pairplot(latent, labels=labels, title="ASE" + base_title)
-
+save("ASE")
 #%% LSE
 regularizer = 1
 embed_graph = get_lcc(full_graph)
@@ -96,7 +100,7 @@ lse = LaplacianSpectralEmbed(
 latent = lse.fit_transform(embed_graph)
 latent = np.concatenate(latent, axis=-1)
 pairplot(latent, labels=labels, title="LSE" + base_title)
-
+save("LSE")
 #%% MASE
 embed_graphs = []
 for graph in split_graph_list:
@@ -108,7 +112,7 @@ shared_latent = mase.fit_transform(embed_graphs)
 shared_latent = np.concatenate(shared_latent, axis=-1)
 labels = get_simple(split_graph_list[0])
 pairplot(shared_latent, labels=labels, title="MASE" + base_title)
-
+save("MASE")
 #%% MLSE
 regularizer = 1
 embed_graphs = []
@@ -117,9 +121,12 @@ for graph in split_graph_list:
     laplacian = to_laplace(graph, "R-DAD", regularizer=regularizer)
     embed_graphs.append(laplacian)
 
-mase = MultipleASE(n_components=n_components, scaled=True)
+mase = MultipleASE(n_components=n_components, scaled=False)
 shared_latent = mase.fit_transform(embed_graphs)
 shared_latent = np.concatenate(shared_latent, axis=-1)
 labels = get_simple(split_graph_list[0])
 pairplot(shared_latent, labels=labels, title="MLSE" + base_title)
+save("MLSE")
 
+
+#%%
