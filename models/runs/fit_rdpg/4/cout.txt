@@ -1,0 +1,12 @@
+INFO - Fit RDPG - Running command 'main'
+INFO - Fit RDPG - Started run with ID "4"
+
+  0%|          | 0/1 [00:00<?, ?it/s]
+100%|██████████| 1/1 [00:09<00:00,  9.15s/it]
+Saved to maggot_models/models/runs/fit_rdpg/4/rdpg_left_df.pickle
+
+  0%|          | 0/1 [00:00<?, ?it/s]
+100%|██████████| 1/1 [00:05<00:00,  5.26s/it]
+Saved to maggot_models/models/runs/fit_rdpg/4/rdpg_right_df.pickle
+INFO - Fit RDPG - Result: 0
+INFO - Fit RDPG - Completed after 0:00:14
