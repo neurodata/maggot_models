@@ -1,0 +1,28 @@
+INFO - Fit a priori - Running command 'main'
+INFO - Fit a priori - Started run with ID "4"
+
+  0%|          | 0/1 [00:00<?, ?it/s]
+100%|██████████| 1/1 [00:00<00:00, 53.38it/s]
+Saved to maggot_models/models/runs/fit_a_priori/4/sbm_left_df.pickle
+
+  0%|          | 0/1 [00:00<?, ?it/s]
+100%|██████████| 1/1 [00:00<00:00, 78.44it/s]
+Saved to maggot_models/models/runs/fit_a_priori/4/dcsbm_left_df.pickle
+
+  0%|          | 0/1 [00:00<?, ?it/s]
+100%|██████████| 1/1 [00:00<00:00, 87.84it/s]
+Saved to maggot_models/models/runs/fit_a_priori/4/ddcsbm_left_df.pickle
+
+  0%|          | 0/1 [00:00<?, ?it/s]
+100%|██████████| 1/1 [00:00<00:00, 61.70it/s]
+Saved to maggot_models/models/runs/fit_a_priori/4/sbm_right_df.pickle
+
+  0%|          | 0/1 [00:00<?, ?it/s]
+100%|██████████| 1/1 [00:00<00:00, 79.71it/s]
+Saved to maggot_models/models/runs/fit_a_priori/4/dcsbm_right_df.pickle
+
+  0%|          | 0/1 [00:00<?, ?it/s]
+100%|██████████| 1/1 [00:00<00:00, 66.26it/s]
+Saved to maggot_models/models/runs/fit_a_priori/4/ddcsbm_right_df.pickle
+INFO - Fit a priori - Result: 0
+INFO - Fit a priori - Completed after 0:00:00

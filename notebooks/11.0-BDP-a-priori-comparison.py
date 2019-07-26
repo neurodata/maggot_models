@@ -17,21 +17,21 @@ import seaborn as sns
 # Load SBM
 base_path = "./maggot_models/models/runs/"
 experiment = "fit_sbm"
-run = 1
+run = 2
 config = utils.load_config(base_path, experiment, run)
 sbm_left_df = utils.load_pickle(base_path, experiment, run, "sbm_left_df")
 sbm_right_df = utils.load_pickle(base_path, experiment, run, "sbm_right_df")
 
 # Load a priori
 experiment = "fit_a_priori"
-run = 3
+run = 4
 config = utils.load_config(base_path, experiment, run)
 ap_sbm_left_df = utils.load_pickle(base_path, experiment, run, "sbm_left_df")
 ap_sbm_right_df = utils.load_pickle(base_path, experiment, run, "sbm_right_df")
 
 # Load opposites
 experiment = "fit_opposite_a_priori"
-run = 2
+run = 3
 config = utils.load_config(base_path, experiment, run)
 right_pred_sbm_df = utils.load_pickle(base_path, experiment, run, "right_pred_sbm_df")
 left_pred_sbm_df = utils.load_pickle(base_path, experiment, run, "left_pred_sbm_df")
@@ -50,21 +50,21 @@ dcsbm_right_df = utils.load_pickle(base_path, experiment, run, "dcsbm_right_df")
 
 # Load dDCSBM
 experiment = "fit_ddcsbm"
-run = 3
+run = 4
 config = utils.load_config(base_path, experiment, run)
 ddcsbm_left_df = utils.load_pickle(base_path, experiment, run, "ddcsbm_left_df")
 ddcsbm_right_df = utils.load_pickle(base_path, experiment, run, "ddcsbm_right_df")
 
 # Load RDPG
 experiment = "fit_rdpg"
-run = 3
+run = 4
 config = utils.load_config(base_path, experiment, run)
 rdpg_left_df = utils.load_pickle(base_path, experiment, run, "rdpg_left_df")
 rdpg_right_df = utils.load_pickle(base_path, experiment, run, "rdpg_right_df")
 
 # Load a priori
 experiment = "fit_a_priori"
-run = 3
+run = 4
 config = utils.load_config(base_path, experiment, run)
 ap_dcsbm_left_df = utils.load_pickle(base_path, experiment, run, "dcsbm_left_df")
 ap_dcsbm_right_df = utils.load_pickle(base_path, experiment, run, "dcsbm_right_df")
