@@ -6,5 +6,7 @@ from .models import (
     estimate_rdpg,
     select_dcsbm,
     fit_a_priori,
+    gen_scorers,
 )
 from .grid_search import GridSearchUS
+from .grid_sweep import GridSweep
