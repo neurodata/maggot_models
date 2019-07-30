@@ -55,7 +55,7 @@ def get_simple(graph):
 
 
 def save(name, fmt="pdf"):
-    path = Path("/Users/bpedigo/JHU_code/maggot_models/maggot_models/notebooks/outs")
+    path = Path("./maggot_models/notebooks/outs")
     plt.savefig(path / str(name + "." + fmt), fmt=fmt, facecolor="w")
 
 
