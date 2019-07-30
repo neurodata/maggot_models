@@ -206,8 +206,8 @@ comps = list(range(min_components, max_components))
 cluster_kws = dict(
     min_components=min_components, max_components=max_components, covariance_type="full"
 )
-n_sims = 20
-n_components_range = list(range(3, 5))
+n_sims = 25
+n_components_range = list(range(3, 25))
 
 bic_results = []
 for i, n_components in tqdm(enumerate(n_components_range)):
