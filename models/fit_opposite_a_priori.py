@@ -77,6 +77,16 @@ def mse_on_other(estimator, graph, labels):
     return mse
 
 
+def likelihood_on_other(estimator, graph, labels, clip=0):
+    block_p = estimator.block_p_
+
+    block_vert_inds, block_inds, block_inv = get_block_indices(labels)
+    pred_p_mat = block_to_full(block_p, block_inv, graph.shape)
+    estimator.p_mat_ = pred_p_mat
+    mse = estimator.score(graph, clip=clip)
+    return mse
+
+
 def run_fit(seed):
     np.random.seed(seed)
 
@@ -88,7 +98,20 @@ def run_fit(seed):
     sbm_fit_left = SBMEstimator(directed=True, loops=False)
     sbm_fit_left.fit(left_graph, y=left_labels)
     right_pred_mse = mse_on_other(sbm_fit_left, right_graph, right_labels)
-    right_pred_dict = {"n_params": sbm_fit_left._n_parameters(), "mse": right_pred_mse}
+    right_pred_likelihood = likelihood_on_other(sbm_fit_left, right_graph, right_labels)
+    right_pred_sc_likelihood = likelihood_on_other(
+        sbm_fit_left,
+        right_graph,
+        right_labels,
+        clip=1 / (right_graph.size - right_graph.shape[0]),
+    )
+    right_pred_dict = {
+        "n_params": sbm_fit_left._n_parameters(),
+        "mse": right_pred_mse,
+        "likelihood": right_pred_likelihood,
+        "zc_likelihood": right_pred_likelihood,
+        "sc_likelihood": right_pred_sc_likelihood,
+    }
     right_pred_df = pd.DataFrame(right_pred_dict, index=[0])
     print(right_pred_df)
     save_obj(right_pred_df, file_obs, "right_pred_sbm_df")
@@ -97,7 +120,20 @@ def run_fit(seed):
     sbm_fit_right = SBMEstimator(directed=True, loops=False)
     sbm_fit_right.fit(right_graph, y=right_labels)
     left_pred_mse = mse_on_other(sbm_fit_right, left_graph, left_labels)
-    left_pred_dict = {"n_params": sbm_fit_right._n_parameters(), "mse": left_pred_mse}
+    left_pred_likelihood = likelihood_on_other(sbm_fit_right, left_graph, left_labels)
+    left_pred_sc_likelihood = likelihood_on_other(
+        sbm_fit_right,
+        left_graph,
+        left_labels,
+        clip=1 / (left_graph.size - left_graph.shape[0]),
+    )
+    left_pred_dict = {
+        "n_params": sbm_fit_right._n_parameters(),
+        "mse": left_pred_mse,
+        "likelihood": left_pred_likelihood,
+        "zc_likelihood": left_pred_likelihood,
+        "sc_likelihood": left_pred_sc_likelihood,
+    }
     left_pred_df = pd.DataFrame(left_pred_dict, index=[0])
     print(left_pred_df)
     save_obj(left_pred_df, file_obs, "left_pred_sbm_df")
