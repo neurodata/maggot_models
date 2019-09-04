@@ -3,7 +3,7 @@ from pathlib import Path
 import pickle
 from operator import itemgetter
 
-
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -344,3 +344,19 @@ def to_simple_class(classes):
     }
     simple_classes = np.array(itemgetter(*classes)(name_map))
     return simple_classes
+
+
+def meta_to_array(graph, key):
+    data = [meta[key] for node, meta in graph.nodes(data=True)]
+    return np.array(data)
+
+
+def get_simple(graph):
+    classes = meta_to_array(graph, "Class")
+    simple_classes = to_simple_class(classes)
+    return simple_classes
+
+
+def savefig(name, fmt="pdf", pathname="./maggot_models/notebooks/outs"):
+    path = Path(pathname)
+    plt.savefig(path / str(name + "." + fmt), fmt=fmt, facecolor="w")

@@ -18,5 +18,8 @@ from .utils import (
     get_best,
     get_subgraph,
     to_simple_class,
+    meta_to_array,
+    get_simple,
+    savefig,
 )
 
