@@ -22,8 +22,8 @@ from src.utils import (
 )
 
 
-def normalized_ase(graph, n_components=None):
-    ase = AdjacencySpectralEmbed(n_components=n_components)
+def normalized_ase(graph, n_components=None, embed_kws={}):
+    ase = AdjacencySpectralEmbed(n_components=n_components, **embed_kws)
     latent = ase.fit_transform(graph)
     if isinstance(latent, tuple):
         latent = np.concatenate(latent, axis=-1)
@@ -356,18 +356,30 @@ print("Fitting HSBM")
 
 fit_graph = lcc_graph_t.copy()
 n_subgroups = 3
-n_subgraphs = 6
-n_components_lvl1 = 8
-n_components_lvl2 = 8
+n_subgraphs = 15
+n_components_lvl1 = None
+n_components_lvl2 = None
+cluster_kws = dict(n_init=100)
 hsbm = HSBMEstimator(
     n_levels=2,
     n_subgraphs=n_subgraphs,
     n_subgroups=n_subgroups,
     n_components_lvl1=n_components_lvl1,
     n_components_lvl2=n_components_lvl2,
+    cluster_kws=cluster_kws,
+    cluster_method="sphere-kmeans",
 )
 hsbm.fit(fit_graph)
+#%%
+dists = hsbm.subgraph_dissimilarities_
+dists -= dists.min()
+hierplot(dists)
+#%%
+# c = AgglomerativeClustering(n_clusters=7, affinity="precomputed", linkage="average")
+# labels = hsbm.agglomerative_model_.fit_predict(hsbm.subgraph_dissimilarities_)
 
+latent = normalized_ase(fit_graph, n_components=None, embed_kws=dict(n_elbows=1))
+pairplot(hsbm.latent_, labels=hsbm.vertex_assignments_)
 
 #%%
 
@@ -486,7 +498,7 @@ def get_leaves(gpt, leaf_holder):
 
 
 leaf_holder = get_leaves(split_out, leaf_holder)
-leaf_indicator = np.zeros(embed_graph.shape[0])
+leaf_indicator = -1 * np.ones(embed_graph.shape[0])
 #%%
 for i, leaf in enumerate(leaf_holder):
     leaf_indicator[leaf] = i
