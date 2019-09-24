@@ -22,7 +22,7 @@ df_ids = df_adj.index.values.astype(int)
 np.array_equal(nx_ids, df_ids)
 
 
-def proportional_search(adj, class_map, or_classes, ids, thresh=0.05):
+def proportional_search(adj, class_map, or_classes, ids, thresh):
     """finds the cell ids of neurons who receive a certain proportion of their 
     input from one of the cells in or_classes 
     
@@ -41,11 +41,11 @@ def proportional_search(adj, class_map, or_classes, ids, thresh=0.05):
     """
 
     pred_cell_ids = []
-    for class_name in or_classes:
+    for i, class_name in enumerate(or_classes):
         inds = class_map[class_name]  # indices for neurons of that class
         from_class_adj = adj[inds, :]  # select the rows corresponding to that class
         prop_input = from_class_adj.sum(axis=0)  # sum input from that class
-        flag_inds = np.where(prop_input >= thresh)[0]  # inds above threshold
+        flag_inds = np.where(prop_input >= thresh[i])[0]  # inds above threshold
         pred_cell_ids += list(ids[flag_inds])  # append to cells which satisfied
 
     pred_cell_ids = np.unique(pred_cell_ids)
@@ -65,19 +65,9 @@ class_map
 #%% Estimate the LHN neurons
 # must received summed input of >= 5% from at least a SINGLE class of projection neurs
 pn_types = ["ORN mPNs", "ORN uPNs", "tPNs", "vPNs"]
-lhn_thresh = 0.05
+lhn_thresh = [0.05, 0.05, 0.05, 0.05]
 
-pred_lhn_ids = []
-for class_name in pn_types:
-    inds = class_map[class_name]
-    from_class_adj = adj[inds, :]
-    prop_input = from_class_adj.sum(axis=0)
-    flag_inds = np.where(prop_input >= lhn_thresh)[0]
-    cell_ids = df_ids[flag_inds]
-    pred_lhn_ids += list(cell_ids)
-
-pred_lhn_ids = np.unique(pred_lhn_ids)
-pred_lhn_ids = pred_lhn_ids.astype(int)
+pred_lhn_ids = proportional_search(adj, class_map, pn_types, df_ids, lhn_thresh)
 
 true_lhn_inds = np.concatenate((class_map["LHN"], class_map["LHN; CN"]))
 true_lhn_ids = df_ids[true_lhn_inds]
@@ -87,10 +77,32 @@ print("Recall:")
 print(np.isin(true_lhn_ids, pred_lhn_ids).mean())  # how many of the og lhn i got
 print("Precision:")
 print(np.isin(pred_lhn_ids, true_lhn_ids).mean())  # this is how many of mine are in og
+print(len(pred_lhn_ids))
 
 #%% Estimate CN neurons
-pn_types = ["ORN mPNs", "ORN uPNs", "tPNs", "vPNs"]
-cn_thresh = 0.05
+innate_input_types = ["ORN mPNs", "ORN uPNs", "tPNs", "vPNs", "LHN"]
+innate_thresh = 5 * [0.05]
 
+mb_input_types = ["MBON", "MBON; CN"]
+mb_thresh = 2 * [0.05]
 
+pred_innate_ids = proportional_search(
+    adj, class_map, innate_input_types, df_ids, thresh=innate_thresh
+)
+pred_learn_ids = proportional_search(
+    adj, class_map, mb_input_types, df_ids, thresh=mb_thresh
+)
+pred_cn_ids = np.intersect1d(pred_learn_ids, pred_innate_ids)  # get input from
+
+true_cn_inds = (class_map["CN"], class_map["LHN; CN"], class_map["MBON; CN"])
+true_cn_inds = np.concatenate(true_cn_inds)
+true_cn_ids = df_ids[true_cn_inds]
+
+print("CN")
+print("Recall:")
+print(np.isin(true_cn_ids, pred_cn_ids).mean())  # how many of the og lhn i got
+print("Precision:")
+print(np.isin(pred_cn_ids, true_cn_ids).mean())  # this is how many of mine are in og
+print(len(pred_cn_ids))
 #%%
+gridplot([adj], inner_hier_labels=classes, height=20, sort_nodes=True)
