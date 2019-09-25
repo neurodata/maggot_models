@@ -20,9 +20,10 @@ print(np.unique(classes))
 nx_ids = np.array(list(graph.nodes()), dtype=int)
 df_ids = df_adj.index.values.astype(int)
 np.array_equal(nx_ids, df_ids)
+cell_ids = df_ids
 
 
-def proportional_search(adj, class_map, or_classes, ids, thresh):
+def proportional_search(adj, class_ind_map, or_classes, ids, thresh):
     """finds the cell ids of neurons who receive a certain proportion of their 
     input from one of the cells in or_classes 
     
@@ -42,9 +43,10 @@ def proportional_search(adj, class_map, or_classes, ids, thresh):
 
     pred_cell_ids = []
     for i, class_name in enumerate(or_classes):
-        inds = class_map[class_name]  # indices for neurons of that class
+        inds = class_ind_map[class_name]  # indices for neurons of that class
         from_class_adj = adj[inds, :]  # select the rows corresponding to that class
         prop_input = from_class_adj.sum(axis=0)  # sum input from that class
+        # prop_input /= adj.sum(axis=0)
         flag_inds = np.where(prop_input >= thresh[i])[0]  # inds above threshold
         pred_cell_ids += list(ids[flag_inds])  # append to cells which satisfied
 
@@ -55,11 +57,14 @@ def proportional_search(adj, class_map, or_classes, ids, thresh):
 
 #%% Map MW classes to the indices of cells belonging to them
 unique_classes, inverse_classes = np.unique(classes, return_inverse=True)
-class_map = {}
+class_ind_map = {}
+class_ids_map = {}
 for i, class_name in enumerate(unique_classes):
     inds = np.where(inverse_classes == i)[0]
-    class_map[class_name] = inds
-class_map
+    ids = cell_ids[inds]
+    class_ind_map[class_name] = inds
+    class_ids_map[class_name] = ids
+class_ind_map
 
 
 #%% Estimate the LHN neurons
@@ -67,9 +72,9 @@ class_map
 pn_types = ["ORN mPNs", "ORN uPNs", "tPNs", "vPNs"]
 lhn_thresh = [0.05, 0.05, 0.05, 0.05]
 
-pred_lhn_ids = proportional_search(adj, class_map, pn_types, df_ids, lhn_thresh)
+pred_lhn_ids = proportional_search(adj, class_ind_map, pn_types, df_ids, lhn_thresh)
 
-true_lhn_inds = np.concatenate((class_map["LHN"], class_map["LHN; CN"]))
+true_lhn_inds = np.concatenate((class_ind_map["LHN"], class_ind_map["LHN; CN"]))
 true_lhn_ids = df_ids[true_lhn_inds]
 
 print("LHN")
@@ -87,14 +92,18 @@ mb_input_types = ["MBON", "MBON; CN"]
 mb_thresh = 2 * [0.05]
 
 pred_innate_ids = proportional_search(
-    adj, class_map, innate_input_types, df_ids, thresh=innate_thresh
+    adj, class_ind_map, innate_input_types, df_ids, thresh=innate_thresh
 )
 pred_learn_ids = proportional_search(
-    adj, class_map, mb_input_types, df_ids, thresh=mb_thresh
+    adj, class_ind_map, mb_input_types, df_ids, thresh=mb_thresh
 )
 pred_cn_ids = np.intersect1d(pred_learn_ids, pred_innate_ids)  # get input from
 
-true_cn_inds = (class_map["CN"], class_map["LHN; CN"], class_map["MBON; CN"])
+true_cn_inds = (
+    class_ind_map["CN"],
+    class_ind_map["LHN; CN"],
+    class_ind_map["MBON; CN"],
+)
 true_cn_inds = np.concatenate(true_cn_inds)
 true_cn_ids = df_ids[true_cn_inds]
 
@@ -106,3 +115,6 @@ print(np.isin(pred_cn_ids, true_cn_ids).mean())  # this is how many of mine are 
 print(len(pred_cn_ids))
 #%%
 gridplot([adj], inner_hier_labels=classes, height=20, sort_nodes=True)
+
+
+#%%
