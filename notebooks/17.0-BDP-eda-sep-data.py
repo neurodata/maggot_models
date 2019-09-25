@@ -339,7 +339,7 @@ def _plot_brackets(
 pn_types = ["ORN mPNs", "ORN uPNs", "tPNs", "vPNs"]
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+from src.utils import savefig
 
 for proj_class in pn_types:
     sort_inds = _sort_inds(adj, classes, np.ones_like(classes), True)
@@ -379,51 +379,52 @@ for proj_class in pn_types:
     ax.set_xlim((0, clipped_adj.shape[1]))
     ax.set_ylim((0, clipped_adj.shape[0]))
     ax.axis("off")
+    savefig(proj_class + "_to_all_marginals")
+
+# #%%
+# my_classes = classes.copy()
+# wrong_inds = np.isin(cell_ids, my_wrong_lhn_ids)
+# my_classes[wrong_inds] = "LHN"
+
+# for proj_class in pn_types:
+#     sort_inds = _sort_inds(adj, my_classes, np.ones_like(my_classes), True)
+#     sort_adj = _sort_graph(adj, my_classes, np.ones_like(my_classes), True)
+#     sort_classes = my_classes[sort_inds]
+#     proj_inds = np.where(sort_classes == proj_class)[0]
+#     clipped_adj = sort_adj[proj_inds, :]
+
+#     plt.figure(figsize=(30, 10))
+#     # pn_graph = df_adj.loc[class_ids_map["vPNs"], :].values
+#     xs, ys = np.meshgrid(
+#         range(1, clipped_adj.shape[1] + 1), range(1, clipped_adj.shape[0] + 1)
+#     )
+#     nonzero_inds = np.nonzero(clipped_adj.ravel())
+#     x = xs.ravel()[nonzero_inds]
+#     y = ys.ravel()[nonzero_inds]
+#     weights = clipped_adj.ravel()[nonzero_inds]
+#     ax = sns.scatterplot(x=x, y=y, size=weights, legend=False)
+
+#     plt.ylabel(proj_class)
+#     plt.title(proj_class, pad=100)
+
+#     divider = make_axes_locatable(ax)
+#     ax_top = divider.new_vertical(size="25%", pad=0.0, pack_start=False)
+#     ax.figure.add_axes(ax_top)
+#     sums = clipped_adj.sum(axis=0)
+#     # sums /= sums.max()
+#     # sums = sums[sort_inds]
+#     ax_top.bar(range(1, clipped_adj.shape[1] + 1), sums, width=10)
+#     ax_top.set_xlim((0, clipped_adj.shape[1]))
+#     ax_top.axis("off")
+#     ax_top.hlines(0.05, 0, clipped_adj.shape[1] + 1, color="r", linestyle="--")
+
+#     ax = _plot_groups(
+#         ax, divider, clipped_adj, sort_inds, my_classes, outer_labels=None, fontsize=10
+#     )
+#     ax.set_xlim((0, clipped_adj.shape[1]))
+#     ax.set_ylim((0, clipped_adj.shape[0]))
+#     ax.axis("off")
 
 
 #%%
-my_classes = classes.copy()
-wrong_inds = np.isin(cell_ids, my_wrong_lhn_ids)
-my_classes[wrong_inds] = "LHN"
 
-for proj_class in pn_types:
-    sort_inds = _sort_inds(adj, my_classes, np.ones_like(my_classes), True)
-    sort_adj = _sort_graph(adj, my_classes, np.ones_like(my_classes), True)
-    sort_classes = my_classes[sort_inds]
-    proj_inds = np.where(sort_classes == proj_class)[0]
-    clipped_adj = sort_adj[proj_inds, :]
-
-    plt.figure(figsize=(30, 10))
-    # pn_graph = df_adj.loc[class_ids_map["vPNs"], :].values
-    xs, ys = np.meshgrid(
-        range(1, clipped_adj.shape[1] + 1), range(1, clipped_adj.shape[0] + 1)
-    )
-    nonzero_inds = np.nonzero(clipped_adj.ravel())
-    x = xs.ravel()[nonzero_inds]
-    y = ys.ravel()[nonzero_inds]
-    weights = clipped_adj.ravel()[nonzero_inds]
-    ax = sns.scatterplot(x=x, y=y, size=weights, legend=False)
-
-    plt.ylabel(proj_class)
-    plt.title(proj_class, pad=100)
-
-    divider = make_axes_locatable(ax)
-    ax_top = divider.new_vertical(size="25%", pad=0.0, pack_start=False)
-    ax.figure.add_axes(ax_top)
-    sums = clipped_adj.sum(axis=0)
-    # sums /= sums.max()
-    # sums = sums[sort_inds]
-    ax_top.bar(range(1, clipped_adj.shape[1] + 1), sums, width=10)
-    ax_top.set_xlim((0, clipped_adj.shape[1]))
-    ax_top.axis("off")
-    ax_top.hlines(0.05, 0, clipped_adj.shape[1] + 1, color="r", linestyle="--")
-
-    ax = _plot_groups(
-        ax, divider, clipped_adj, sort_inds, my_classes, outer_labels=None, fontsize=10
-    )
-    ax.set_xlim((0, clipped_adj.shape[1]))
-    ax.set_ylim((0, clipped_adj.shape[0]))
-    ax.axis("off")
-
-
-#%%
