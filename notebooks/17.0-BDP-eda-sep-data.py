@@ -7,7 +7,7 @@ from graspy.plot import degreeplot, edgeplot, gridplot, heatmap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from src.data import load_networkx
-from src.utils import meta_to_array
+from src.utils import meta_to_array, savefig
 
 #%%
 graph_type = "Gn"
@@ -42,12 +42,13 @@ class_ind_map
 
 #%%
 plt.figure(figsize=(10, 5))
-sns.distplot(adj.sum(axis=0))
+sns.distplot(adj.sum(axis=0), norm_hist=False)
 plt.xlabel("Proportion of input w/in current graph")
 plt.ylabel("Frequency")
+plt.tight_layout()
+savefig("proportion_win_graph", fmt="png")
 
-
-degreeplot(adj)
+# degreeplot(adj)
 
 
 #%%
@@ -249,51 +250,6 @@ def _plot_groups(
         graph.shape[1],
         fontsize,
     )
-    # # side inner curves
-    # ax_y = divider.new_horizontal(size="5%", pad=0.0, pack_start=True)
-    # ax.figure.add_axes(ax_y)
-    # _plot_brackets(
-    #     ax_y,
-    #     np.tile(inner_unique, len(outer_unique)),
-    #     inner_tick_loc,
-    #     inner_tick_width,
-    #     curve,
-    #     "inner",
-    #     "y",
-    #     n_verts,
-    #     fontsize,
-    # )
-
-    # if plot_outer:
-    #     # top outer curves
-    #     pad_scalar = 0.35 / 30 * fontsize
-    #     ax_x2 = divider.new_vertical(size="5%", pad=pad_scalar, pack_start=False)
-    #     ax.figure.add_axes(ax_x2)
-    #     _plot_brackets(
-    #         ax_x2,
-    #         outer_unique,
-    #         outer_tick_loc,
-    #         outer_tick_width,
-    #         curve,
-    #         "outer",
-    #         "x",
-    #         n_verts,
-    #         fontsize,
-    #     )
-    #     # side outer curves
-    #     ax_y2 = divider.new_horizontal(size="5%", pad=pad_scalar, pack_start=True)
-    #     ax.figure.add_axes(ax_y2)
-    #     _plot_brackets(
-    #         ax_y2,
-    #         outer_unique,
-    #         outer_tick_loc,
-    #         outer_tick_width,
-    #         curve,
-    #         "outer",
-    #         "y",
-    #         n_verts,
-    #         fontsize,
-    #     )
     return ax
 
 
@@ -349,7 +305,6 @@ for proj_class in pn_types:
     clipped_adj = sort_adj[proj_inds, :]
 
     plt.figure(figsize=(30, 10))
-    # pn_graph = df_adj.loc[class_ids_map["vPNs"], :].values
     xs, ys = np.meshgrid(
         range(1, clipped_adj.shape[1] + 1), range(1, clipped_adj.shape[0] + 1)
     )
@@ -366,8 +321,6 @@ for proj_class in pn_types:
     ax_top = divider.new_vertical(size="25%", pad=0.0, pack_start=False)
     ax.figure.add_axes(ax_top)
     sums = clipped_adj.sum(axis=0)
-    # sums /= sums.max()
-    # sums = sums[sort_inds]
     ax_top.bar(range(1, clipped_adj.shape[1] + 1), sums, width=10)
     ax_top.set_xlim((0, clipped_adj.shape[1]))
     ax_top.axis("off")
@@ -379,7 +332,7 @@ for proj_class in pn_types:
     ax.set_xlim((0, clipped_adj.shape[1]))
     ax.set_ylim((0, clipped_adj.shape[0]))
     ax.axis("off")
-    savefig(proj_class + "_to_all_marginals")
+    # savefig(proj_class + "_to_all_marginals")
 
 # #%%
 # my_classes = classes.copy()
@@ -424,6 +377,9 @@ for proj_class in pn_types:
 #     ax.set_xlim((0, clipped_adj.shape[1]))
 #     ax.set_ylim((0, clipped_adj.shape[0]))
 #     ax.axis("off")
+
+
+#%%
 
 
 #%%

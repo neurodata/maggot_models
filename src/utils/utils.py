@@ -357,6 +357,6 @@ def get_simple(graph):
     return simple_classes
 
 
-def savefig(name, fmt="pdf", pathname="./maggot_models/notebooks/outs"):
+def savefig(name, fmt="pdf", pathname="./maggot_models/notebooks/outs", **kws):
     path = Path(pathname)
-    plt.savefig(path / str(name + "." + fmt), fmt=fmt, facecolor="w")
+    plt.savefig(path / str(name + "." + fmt), fmt=fmt, facecolor="w", **kws)
