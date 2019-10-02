@@ -81,6 +81,7 @@ data/*
 !data/processed/
 data/processed/*
 !data/processed/mb_2019-09-23/
+!data/process_scripts/
 
 # Mac OS-specific storage files
 .DS_Store
