@@ -76,7 +76,11 @@ target/
 .ipynb_checkpoints/
 
 # exclude data from source control by default
-/data/
+# weird order necessary to get just a sub sub folder
+data/*
+!data/processed/
+data/processed/*
+!data/processed/mb_2019-09-23/
 
 # Mac OS-specific storage files
 .DS_Store

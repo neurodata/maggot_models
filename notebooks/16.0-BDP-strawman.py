@@ -124,7 +124,9 @@ pn_types = ["ORN mPNs", "ORN uPNs", "tPNs", "vPNs"]
 lhn_thresh = [0.05, 0.05, 0.05, 0.05]
 
 # this is the actual search
-pred_lhn_ids = proportional_search(adj, og_class_ind_map, pn_types, df_ids, lhn_thresh)
+pred_lhn_ids = proportional_search(
+    adj, og_class_ind_map, pn_types, cell_ids, lhn_thresh
+)
 
 # this is just for estimating how well I did relative to Michael
 true_lhn_inds = np.concatenate((og_class_ind_map["LHN"], og_class_ind_map["LHN; CN"]))
@@ -154,10 +156,10 @@ mb_input_types = ["MBON"]
 mb_thresh = [0.05]
 
 pred_innate_ids = proportional_search(
-    adj, class_ind_map, innate_input_types, df_ids, thresh=innate_thresh
+    adj, class_ind_map, innate_input_types, cell_ids, thresh=innate_thresh
 )
 pred_learn_ids = proportional_search(
-    adj, class_ind_map, mb_input_types, df_ids, thresh=mb_thresh
+    adj, class_ind_map, mb_input_types, cell_ids, thresh=mb_thresh
 )
 pred_cn_ids = np.intersect1d(pred_learn_ids, pred_innate_ids)  # get input from both
 
@@ -186,10 +188,10 @@ innate_input_types = ["ORN mPNs", "ORN uPNs", "tPNs", "vPNs", "LHN"]
 innate_thresh = 5 * [0.05]
 
 pred_learn_ids = proportional_search(
-    adj, class_ind_map, mb_input_types, df_ids, thresh=mb_thresh
+    adj, class_ind_map, mb_input_types, cell_ids, thresh=mb_thresh
 )
 pred_innate_ids = proportional_search(
-    adj, class_ind_map, innate_input_types, df_ids, thresh=innate_thresh
+    adj, class_ind_map, innate_input_types, cell_ids, thresh=innate_thresh
 )
 
 pred_mb2_ids = np.setdiff1d(
@@ -202,12 +204,42 @@ class_ids_map, class_ind_map = update_class_map(cell_ids, pred_classes)
 
 for t in mb_input_types + innate_input_types:
     incidence_plot(adj, pred_classes, t)
-#%%
-inds = ids_to_inds(pred_mb2_ids)
-adj[:, inds][class_ind_map["MBON"], :].sum(axis=0)
+# #%%
+# inds = ids_to_inds(pred_mb2_ids)
+# adj[:, inds][class_ind_map["MBON"], :].sum(axis=0)
 
 
-#%%
-adj[:, inds][class_ind_map["LHN"], :].sum(axis=0)
+# #%%
+# adj[:, inds][class_ind_map["LHN"], :].sum(axis=0)
+
+#%% Estimate Second-order LHN
+mb_input_types = ["MBON"]
+mb_thresh = [0.05]
+
+lhn_input_types = ["LHN"]  # TODO should this include LHN; CN?
+lhn_thresh = [0.05]
+
+pred_from_lhn_ids = proportional_search(
+    adj, class_ind_map, lhn_input_types, cell_ids, thresh=lhn_thresh
+)
+pred_from_mb_ids = proportional_search(
+    adj, class_ind_map, mb_input_types, cell_ids, thresh=mb_thresh
+)
+
+pred_lhn2_ids = np.setdiff1d(
+    pred_from_lhn_ids, pred_from_mb_ids
+)  # get input from LHN, not MB
+
+pred_classes = update_classes(pred_classes, pred_lhn2_ids, "LH2N")
+
+class_ids_map, class_ind_map = update_class_map(cell_ids, pred_classes)
+
+for t in mb_input_types + innate_input_types:
+    incidence_plot(adj, pred_classes, t)
+#%%#
+inds = ids_to_inds(pred_lhn2_ids)
+
+adj[class_ind_map["LHN"], :][:, class_ind_map["LH2N"]].sum(axis=0)
+
 
 #%%
