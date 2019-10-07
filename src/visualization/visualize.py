@@ -206,8 +206,25 @@ def incidence_plot(adj, classes, from_class):
     sort_inds = _sort_inds(adj, classes, np.ones_like(classes), True)
     sort_adj = _sort_graph(adj, classes, np.ones_like(classes), True)
     sort_classes = classes[sort_inds]
-    proj_inds = np.where(sort_classes == from_class)[0]
-    clipped_adj = sort_adj[proj_inds, :]
+
+    #
+    if not isinstance(from_class, list):
+        from_class = [from_class]
+
+    all_proj_inds = []
+    for i, class_name in enumerate(from_class):
+        print(class_name)
+        proj_inds = np.where(sort_classes == class_name)[0]
+        all_proj_inds += list(proj_inds)
+    print(all_proj_inds)
+    all_proj_inds = np.unique(all_proj_inds)
+    print(all_proj_inds)
+    # pred_cell_ids = np.setdiff1d(pred_cell_ids, PREDEFINED_IDS)
+
+    #
+
+    # proj_inds = np.where(sort_classes == from_class)[0]
+    clipped_adj = sort_adj[all_proj_inds, :]
 
     plt.figure(figsize=(30, 10))
     xs, ys = np.meshgrid(

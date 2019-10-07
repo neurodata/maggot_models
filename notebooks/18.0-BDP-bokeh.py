@@ -90,7 +90,7 @@ def _unique_like(vals):
 #%%
 graph_type = "Gn"
 
-graph = load_networkx(graph_type)
+graph = load_networkx(graph_type, version="mb_2019-09-23")
 
 df_adj = nx.to_pandas_adjacency(graph)
 adj = df_adj.values

@@ -1,10 +1,19 @@
 #%% Load data
-import numpy as np
+import matplotlib.pyplot as plt
 import networkx as nx
-from graspy.plot import heatmap, gridplot
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+from graspy.plot import gridplot, heatmap
 from src.data import load_networkx
 from src.utils import meta_to_array
 from src.visualization import incidence_plot
+
+plt.style.use("seaborn-white")
+sns.set_palette("deep")
+plot = False
 
 PREDEFINED_CLASSES = [
     "DANs",
@@ -145,8 +154,9 @@ pred_classes = update_classes(classes, pred_lhn_ids, "LHN")
 class_ids_map, class_ind_map = update_class_map(cell_ids, pred_classes)
 
 # plot output
-for t in pn_types:
-    incidence_plot(adj, pred_classes, t)
+if plot:
+    for t in pn_types:
+        incidence_plot(adj, pred_classes, t)
 
 #%% Estimate CN neurons
 innate_input_types = ["ORN mPNs", "ORN uPNs", "tPNs", "vPNs", "LHN"]
@@ -177,8 +187,9 @@ pred_classes = update_classes(pred_classes, pred_cn_ids, "CN")
 
 class_ids_map, class_ind_map = update_class_map(cell_ids, pred_classes)
 
-for t in mb_input_types + innate_input_types:
-    incidence_plot(adj, pred_classes, t)
+if plot:
+    for t in mb_input_types + innate_input_types:
+        incidence_plot(adj, pred_classes, t)
 
 #%% Estimate Second-order Mushroom Body
 mb_input_types = ["MBON"]
@@ -202,21 +213,34 @@ pred_classes = update_classes(pred_classes, pred_mb2_ids, "MB20N")
 
 class_ids_map, class_ind_map = update_class_map(cell_ids, pred_classes)
 
-for t in mb_input_types + innate_input_types:
-    incidence_plot(adj, pred_classes, t)
-# #%%
-# inds = ids_to_inds(pred_mb2_ids)
-# adj[:, inds][class_ind_map["MBON"], :].sum(axis=0)
+if plot:
+    for t in mb_input_types + innate_input_types:
+        incidence_plot(adj, pred_classes, t)
 
 
-# #%%
-# adj[:, inds][class_ind_map["LHN"], :].sum(axis=0)
+#%%
+print("Sum of input from MBON to MB2ON")
+inds = ids_to_inds(pred_mb2_ids)
+print(adj[:, inds][class_ind_map["MBON"], :].sum(axis=0))
+print("Min")
+print(adj[:, inds][class_ind_map["MBON"], :].sum(axis=0).min())
+print()
+print("Sum of input from LHN to MB20N")
+inds = ids_to_inds(pred_mb2_ids)
+print(adj[:, inds][class_ind_map["LHN"], :].sum(axis=0))
+print("Max")
+print(adj[:, inds][class_ind_map["LHN"], :].sum(axis=0).max())
+print()
 
 #%% Estimate Second-order LHN
 mb_input_types = ["MBON"]
 mb_thresh = [0.05]
 
 lhn_input_types = ["LHN"]  # TODO should this include LHN; CN?
+# TODO the other danger here is just that for doing multiple cell types sometimes you
+# would not care whether LHN or LHN; CN for the purposes of summing input
+# some cells might have not enough input from LHN or LHN; CN, but from summing both,
+# they do.
 lhn_thresh = [0.05]
 
 pred_from_lhn_ids = proportional_search(
@@ -234,12 +258,125 @@ pred_classes = update_classes(pred_classes, pred_lhn2_ids, "LH2N")
 
 class_ids_map, class_ind_map = update_class_map(cell_ids, pred_classes)
 
-for t in mb_input_types + innate_input_types:
-    incidence_plot(adj, pred_classes, t)
+lhn_input_types = [["CN; LHN; LH2N", "LHN", "LHN; CN", "LHN; LH2N"]]
+lhn_input_types = [["LHN", "LHN; LH2N"]]  # these are the ones we chose on
+
+plot = True
+if plot:
+    for t in mb_input_types + lhn_input_types:
+        incidence_plot(adj, pred_classes, t)
+
 #%%#
-inds = ids_to_inds(pred_lhn2_ids)
+print(np.unique(pred_classes))
 
-adj[class_ind_map["LHN"], :][:, class_ind_map["LH2N"]].sum(axis=0)
+#%% try a plot of MBON input vs LHN
 
 
-#%%
+# set up data
+from_lhn_inds = list(class_ind_map["LHN"]) + list(class_ind_map["LHN; LH2N"])
+from_mb_inds = class_ind_map["MBON"]
+lhn_input = adj[from_lhn_inds, :].sum(axis=0)
+mb_input = adj[from_mb_inds, :].sum(axis=0)
+
+class_types = ["Hard class", "LH2N; *", "Not"]
+plot_classes = []
+for id, class_name in zip(cell_ids, pred_classes):
+    if class_name in PREDEFINED_CLASSES:
+        plot_classes.append("Hard class")
+    elif "LH2N" in class_name:
+        plot_classes.append("LH2N; *")
+    else:
+        plot_classes.append("Not")
+
+plot_df = pd.DataFrame(columns=["lhn_input", "mb_input", "class"])
+plot_df["lhn_input"] = lhn_input
+plot_df["mb_input"] = mb_input
+plot_df["class"] = plot_classes
+
+sns.set_context("talk", font_scale=1.5)
+sns.set_palette("Set1")
+
+# scatterplot
+plt.figure(figsize=(15, 15))
+ax = sns.scatterplot(
+    data=plot_df,
+    x="lhn_input",
+    y="mb_input",
+    hue="class",
+    hue_order=class_types,
+    alpha=0.3,
+    s=20,
+)
+
+# add lines for the boundaries
+ax.axvline(0.05, c="k", linestyle="--", alpha=0.5)
+ax.axhline(0.05, c="k", linestyle="--", alpha=0.5)
+
+# add marginals
+divider = make_axes_locatable(ax)
+
+# right marginal
+ax_right = divider.new_horizontal(size="15%", pad=0.05, pack_start=False, sharey=ax)
+ax.figure.add_axes(ax_right)
+ax_right.axis("off")
+bins = np.arange(0, 0.6, 0.02)
+for class_name in class_types:
+    data = plot_df[plot_df["class"] == class_name]
+    x = data["mb_input"].values
+    sns.distplot(
+        x,
+        ax=ax_right,
+        vertical=True,
+        kde=False,
+        bins=bins,
+        norm_hist=True,
+        # hist_kws=hist_kws,
+    )
+
+# left marginal
+ax_top = divider.new_vertical(size="15%", pad=0.05, pack_start=False, sharex=ax)
+ax.figure.add_axes(ax_top)
+ax_top.axis("off")
+bins = np.arange(0, 0.8, 0.02)
+for class_name in class_types:
+    data = plot_df[plot_df["class"] == class_name]
+    x = data["lhn_input"].values
+    sns.distplot(x, ax=ax_top, vertical=False, kde=False, bins=bins, norm_hist=True)
+
+
+#%% ###
+
+# inds = ids_to_inds(pred_lhn2_ids)
+# from_inds = list(class_ind_map["LHN"]) + list(class_ind_map["LHN; LH2N"])
+# adj[from_inds, :][:, inds].sum(axis=0)
+
+# plt.figure(figsize=(15, 15))
+
+# data = plot_df[plot_df["class"] == "Not"]
+# sns.jointplot(
+#     data=data, x="lhn_input", y="mb_input", alpha=0.5, size=10, s=2, kind="kde"
+# )
+# data = plot_df[plot_df["class"] == "LH2N; *"]
+# ax2 = sns.jointplot(
+#     data=data, x="lhn_input", y="mb_input", alpha=0.5, size=10, s=2, kind="kde"
+# )
+
+
+# plt.figure(figsize=(15, 15))
+# # data = plot_df[plot_df["class"] == "Not"]
+# # x = data["lhn_input"]
+# # y = data["mb_input"]
+# # ax1 = sns.kdeplot(
+# #     data=x, data2=y, alpha=0.5, size=10, s=2, kind="kde", cmap="Blues", n_levels=30
+# # )
+# data = plot_df[plot_df["class"] == "LH2N; *"]
+# x = data["lhn_input"]
+# y = data["mb_input"]
+# ax2 = sns.kdeplot(
+#     data=x, data2=y, alpha=0.5, size=10, s=2, kind="kde", cmap="Reds", n_levels=30
+# )
+
+# divider = make_axes_locatable(ax2)
+# ax_right = divider.new_horizontal(size="10%", pad=0.0, pack_start=False)
+# ax.figure.add_axes(ax_right)
+# sns.distplot(y, ax=ax_right)
