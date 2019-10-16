@@ -8,12 +8,12 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from graspy.plot import gridplot, heatmap
 from src.data import load_networkx
-from src.utils import meta_to_array
+from src.utils import meta_to_array, savefig
 from src.visualization import incidence_plot
 
 plt.style.use("seaborn-white")
 sns.set_palette("deep")
-plot = False
+plot = True
 
 PREDEFINED_CLASSES = [
     "DANs",
@@ -79,6 +79,8 @@ def proportional_search(adj, class_ind_map, or_classes, ids, thresh):
     ids : np.array
         names of each cell 
     """
+    if not isinstance(thresh, list):
+        thresh = [thresh]
 
     pred_cell_ids = []
     for i, class_name in enumerate(or_classes):
@@ -86,7 +88,7 @@ def proportional_search(adj, class_ind_map, or_classes, ids, thresh):
         from_class_adj = adj[inds, :]  # select the rows corresponding to that class
         prop_input = from_class_adj.sum(axis=0)  # sum input from that class
         # prop_input /= adj.sum(axis=0)
-        if thresh[i] > 0:
+        if thresh[i] >= 0:
             flag_inds = np.where(prop_input >= thresh[i])[0]  # inds above threshold
         elif thresh[i] < 0:
             flag_inds = np.where(prop_input <= -thresh[i])[0]  # inds below threshold
@@ -157,7 +159,7 @@ class_ids_map, class_ind_map = update_class_map(cell_ids, pred_classes)
 if plot:
     for t in pn_types:
         incidence_plot(adj, pred_classes, t)
-
+        savefig("lhn_" + t)
 #%% Estimate CN neurons
 innate_input_types = ["ORN mPNs", "ORN uPNs", "tPNs", "vPNs", "LHN"]
 innate_thresh = 5 * [0.05]
@@ -190,7 +192,7 @@ class_ids_map, class_ind_map = update_class_map(cell_ids, pred_classes)
 if plot:
     for t in mb_input_types + innate_input_types:
         incidence_plot(adj, pred_classes, t)
-
+        savefig("cn_" + t)
 #%% Estimate Second-order Mushroom Body
 mb_input_types = ["MBON"]
 mb_thresh = [0.05]
@@ -216,7 +218,7 @@ class_ids_map, class_ind_map = update_class_map(cell_ids, pred_classes)
 if plot:
     for t in mb_input_types + innate_input_types:
         incidence_plot(adj, pred_classes, t)
-
+        savefig("mb2on_" + t)
 
 #%%
 print("Sum of input from MBON to MB2ON")
@@ -260,17 +262,28 @@ class_ids_map, class_ind_map = update_class_map(cell_ids, pred_classes)
 
 lhn_input_types = [["CN; LHN; LH2N", "LHN", "LHN; CN", "LHN; LH2N"]]
 lhn_input_types = [["LHN", "LHN; LH2N"]]  # these are the ones we chose on
-
-plot = True
+#%%
 if plot:
     for t in mb_input_types + lhn_input_types:
         incidence_plot(adj, pred_classes, t)
-
+        if "LHN" in t:
+            savefig("lh2n_lhn")
+        else:
+            savefig("lh2n_" + str(t))
 #%%#
 print(np.unique(pred_classes))
 
-#%% try a plot of MBON input vs LHN
+heatmap(
+    adj,
+    inner_hier_labels=pred_classes,
+    figsize=(20, 20),
+    sort_nodes=True,
+    hier_label_fontsize=10,
+    transform="simple-all",
+)
+savefig("updated_heatmap", fmt="png")
 
+#%% try a plot of MBON input vs LHN
 
 # set up data
 from_lhn_inds = list(class_ind_map["LHN"]) + list(class_ind_map["LHN; LH2N"])
@@ -343,6 +356,94 @@ for class_name in class_types:
     x = data["lhn_input"].values
     sns.distplot(x, ax=ax_top, vertical=False, kde=False, bins=bins, norm_hist=True)
 
+savefig("lh2n_partition")
+#%% Try automated splitting
+from sklearn.model_selection import ParameterGrid
+from sklearn.covariance import EmpiricalCovariance
+
+param_grid = {
+    "lhn_thresh": np.linspace(0, 0.4, 50),
+    "mb_thresh": np.linspace(0, 0.4, 50),
+}
+params = list(ParameterGrid(param_grid))
+
+from_lhn_inds = list(class_ind_map["LHN"])
+from_mb_inds = class_ind_map["MBON"]
+lhn_input = adj[from_lhn_inds, :].sum(axis=0)
+mb_input = adj[from_mb_inds, :].sum(axis=0)
+
+
+def find_lhn2(
+    adj, class_ind_map, cell_ids, pred_classes, lhn_thresh=0.05, mb_thresh=0.05
+):
+    mb_input_types = ["MBON"]
+    lhn_input_types = ["LHN"]  # TODO should this include LHN; CN?
+    # TODO the other danger here is just that for doing multiple cell types sometimes
+    # would not care whether LHN or LHN; CN for the purposes of summing input
+    # some cells might have not enough input from LHN or LHN; CN, but from summing both,
+    # they do.
+
+    pred_from_lhn_ids = proportional_search(
+        adj, class_ind_map, lhn_input_types, cell_ids, thresh=lhn_thresh
+    )
+    pred_from_mb_ids = proportional_search(
+        adj, class_ind_map, mb_input_types, cell_ids, thresh=mb_thresh
+    )
+
+    pred_lhn2_ids = np.setdiff1d(
+        pred_from_lhn_ids, pred_from_mb_ids
+    )  # get input from LHN, not MB
+
+    pred_classes = update_classes(pred_classes, pred_lhn2_ids, "LH2N")
+
+    # class_ids_map, class_ind_map = update_class_map(cell_ids, pred_classes)
+    return ids_to_inds(pred_lhn2_ids)
+
+
+unknown_inds = class_ind_map["Other"]
+data = np.stack((lhn_input, mb_input), axis=1)
+
+objective_data = []
+
+
+def cov_objective(class1_data, class2_data):
+    try:
+        class1_cov = EmpiricalCovariance().fit(class1_data).covariance_
+        class2_cov = EmpiricalCovariance().fit(class2_data).covariance_
+        objective = np.trace(class1_cov) + np.trace(class2_cov)
+        return objective
+    except ValueError:
+        return np.nan
+
+
+for p in params:
+    test_pred_inds = find_lhn2(adj, class_ind_map, cell_ids, pred_classes, **p)
+    pred_lhn_data = data[test_pred_inds, :]
+    pred_unknown_inds = np.setdiff1d(unknown_inds, test_pred_inds)
+    unknown_data = data[pred_unknown_inds, :]
+    # print("LH2N: " + str(len(test_pred_inds)))
+    # print("Other: " + str(len(pred_unknown_inds)))
+    objective = cov_objective(pred_lhn_data, unknown_data)
+    objective_data.append([p["lhn_thresh"], p["mb_thresh"], objective])
+
+
+objective_data = np.array(objective_data)
+objective_df = pd.DataFrame(
+    data=objective_data, columns=["lhn_thresh", "mb_thresh", "objective"]
+)
+#%%
+plt.figure(figsize=(15, 15))
+sns.scatterplot(
+    data=objective_df,
+    x="lhn_thresh",
+    y="mb_thresh",
+    size="objective",
+    hue="objective",
+    sizes=(10, 600),
+    legend=False,
+    palette="hot",
+)
+#%%
 
 #%% ###
 
@@ -380,3 +481,6 @@ for class_name in class_types:
 # ax_right = divider.new_horizontal(size="10%", pad=0.0, pack_start=False)
 # ax.figure.add_axes(ax_right)
 # sns.distplot(y, ax=ax_right)
+
+
+#%%

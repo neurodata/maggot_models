@@ -250,7 +250,7 @@ def incidence_plot(adj, classes, from_class):
     ax_top.hlines(0.05, 0, clipped_adj.shape[1] + 1, color="r", linestyle="--")
 
     ax = _plot_groups(
-        ax, divider, clipped_adj, sort_inds, classes, outer_labels=None, fontsize=10
+        ax, divider, clipped_adj, sort_inds, classes, outer_labels=None, fontsize=14
     )
     ax.set_xlim((0, clipped_adj.shape[1]))
     ax.set_ylim((0, clipped_adj.shape[0]))
