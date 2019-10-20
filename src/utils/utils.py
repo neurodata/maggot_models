@@ -346,8 +346,18 @@ def to_simple_class(classes):
     return simple_classes
 
 
-def meta_to_array(graph, key):
+def meta_to_array(graph, key, nodelist=None):
+
+    # if nodelist is not None:
+    #     nodelist_map = dict(zip(nodelist, range(len(nodelist))))
+
+    # data = np.zeros(len(graph), dtype=)
+    # for node, meta in graph.nodes(data=True):
+    #     node_ind = nodelist_map[node]
+    #     data[node_ind] = meta
+
     data = [meta[key] for node, meta in graph.nodes(data=True)]
+
     return np.array(data)
 
 
