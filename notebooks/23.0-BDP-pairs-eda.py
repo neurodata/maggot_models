@@ -33,10 +33,6 @@ def get_paired_adj(graph_type, nodelist):
 
 def get_paired_edges(adj):
     n_per_side = adj.shape[0] // 2
-    left_left_adj = adj[:n_per_side, :n_per_side]
-    left_right_adj = adj[:n_per_side, n_per_side:]
-    right_right_adj = adj[n_per_side:, n_per_side:]
-    right_left_adj = adj[n_per_side:, :n_per_side]
 
     left_left_edges = left_left_adj.ravel()
     left_right_edges = left_right_adj.ravel()
