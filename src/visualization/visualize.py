@@ -6,6 +6,9 @@ import seaborn as sns
 from src.utils import savefig
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
+from sklearn.utils import check_array, check_consistent_length
+from graspy.embed import selectSVD, select_dimension
+
 
 def _sort_inds(graph, inner_labels, outer_labels, sort_nodes):
     sort_df = pd.DataFrame(columns=("inner_labels", "outer_labels"))
@@ -256,3 +259,144 @@ def incidence_plot(adj, classes, from_class):
     ax.set_ylim((0, clipped_adj.shape[0]))
     ax.axis("off")
     return ax
+
+
+def screeplot(
+    X,
+    title="Scree plot",
+    context="talk",
+    font_scale=1,
+    figsize=(10, 5),
+    cumulative=True,
+    show_first=None,
+    n_elbows=2,
+):
+    r"""
+    Plots the distribution of singular values for a matrix, either showing the 
+    raw distribution or an empirical CDF (depending on ``cumulative``)
+
+    Parameters
+    ----------
+    X : np.ndarray (2D)
+        input matrix 
+    title : string, default : 'Scree plot'
+        plot title 
+    context :  None, or one of {talk (default), paper, notebook, poster}
+        Seaborn plotting context
+    font_scale : float, optional, default: 1
+        Separate scaling factor to independently scale the size of the font 
+        elements.
+    figsize : tuple of length 2, default (10, 5)
+        size of the figure (width, height)
+    cumulative : boolean, default: True
+        whether or not to plot a cumulative cdf of singular values 
+    show_first : int or None, default: None 
+        whether to restrict the plot to the first ``show_first`` components
+
+    Returns
+    -------
+    ax : matplotlib axis object
+    """
+    _check_common_inputs(
+        figsize=figsize, title=title, context=context, font_scale=font_scale
+    )
+    check_array(X)
+    if show_first is not None:
+        if not isinstance(show_first, int):
+            msg = "show_first must be an int"
+            raise TypeError(msg)
+    if not isinstance(cumulative, bool):
+        msg = "cumulative must be a boolean"
+        raise TypeError(msg)
+    _, D, _ = selectSVD(X, n_components=X.shape[1], algorithm="full")
+    elbow_locs, elbow_vals = select_dimension(X, n_elbows=n_elbows)
+    elbow_locs = np.array(elbow_locs)
+    D /= D.sum()
+    if cumulative:
+        y = np.cumsum(D[:show_first])
+    else:
+        y = D[:show_first]
+    _ = plt.figure(figsize=figsize)
+    ax = plt.gca()
+    xlabel = "Component"
+    if cumulative:
+        ylabel = "Variance explained"
+    else:
+        ylabel = "Normalized singular value"
+    with sns.plotting_context(context=context, font_scale=font_scale):
+        rng = range(1, len(y) + 1)
+        plt.scatter(rng, y)
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        plt.scatter(elbow_locs, y[elbow_locs - 1], c="r")
+        plt.ylim((y.min() - y.min() / 10, y.max() + (y.max() / 10)))
+    return ax
+
+
+def _check_common_inputs(
+    figsize=None,
+    height=None,
+    title=None,
+    context=None,
+    font_scale=None,
+    legend_name=None,
+    title_pad=None,
+    hier_label_fontsize=None,
+):
+    # Handle figsize
+    if figsize is not None:
+        if not isinstance(figsize, tuple):
+            msg = "figsize must be a tuple, not {}.".format(type(figsize))
+            raise TypeError(msg)
+
+    # Handle heights
+    if height is not None:
+        if not isinstance(height, (int, float)):
+            msg = "height must be an integer or float, not {}.".format(type(height))
+            raise TypeError(msg)
+
+    # Handle title
+    if title is not None:
+        if not isinstance(title, str):
+            msg = "title must be a string, not {}.".format(type(title))
+            raise TypeError(msg)
+
+    # Handle context
+    if context is not None:
+        if not isinstance(context, str):
+            msg = "context must be a string, not {}.".format(type(context))
+            raise TypeError(msg)
+        elif context not in ["paper", "notebook", "talk", "poster"]:
+            msg = "context must be one of (paper, notebook, talk, poster), \
+                not {}.".format(
+                context
+            )
+            raise ValueError(msg)
+
+    # Handle font_scale
+    if font_scale is not None:
+        if not isinstance(font_scale, (int, float)):
+            msg = "font_scale must be an integer or float, not {}.".format(
+                type(font_scale)
+            )
+            raise TypeError(msg)
+
+    # Handle legend name
+    if legend_name is not None:
+        if not isinstance(legend_name, str):
+            msg = "legend_name must be a string, not {}.".format(type(legend_name))
+            raise TypeError(msg)
+
+    if hier_label_fontsize is not None:
+        if not isinstance(hier_label_fontsize, (int, float)):
+            msg = "hier_label_fontsize must be a scalar, not {}.".format(
+                type(legend_name)
+            )
+            raise TypeError(msg)
+
+    if title_pad is not None:
+        if not isinstance(title_pad, (int, float)):
+            msg = "title_pad must be a scalar, not {}.".format(type(legend_name))
+            raise TypeError(msg)
+

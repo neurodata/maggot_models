@@ -7,10 +7,10 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from graspy.cluster import KMeansCluster
-from graspy.embed import LaplacianSpectralEmbed, OmnibusEmbed
+from graspy.embed import LaplacianSpectralEmbed, OmnibusEmbed, AdjacencySpectralEmbed
 from graspy.models import DCSBMEstimator
 from graspy.plot import gridplot, heatmap, pairplot
-from graspy.utils import augment_diagonal, binarize, pass_to_ranks
+from graspy.utils import augment_diagonal, binarize, pass_to_ranks, to_laplace
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from spherecluster import SphericalKMeans
 
@@ -20,6 +20,7 @@ from src.visualization import incidence_plot
 
 plt.style.use("seaborn-white")
 sns.set_palette("deep")
+sns.set_context("talk", font_scale=1)
 
 
 def get_paired_nodelist(pair_df):
@@ -101,6 +102,37 @@ def relabel(labels):
     return new_labels
 
 
+def _get_omni_matrix(graphs):
+    """
+    Helper function for creating the omnibus matrix.
+
+    Parameters
+    ----------
+    graphs : list
+        List of array-like with shapes (n_vertices, n_vertices).
+
+    Returns
+    -------
+    out : 2d-array
+        Array of shape (n_vertices * n_graphs, n_vertices * n_graphs)
+    """
+    shape = graphs[0].shape
+    n = shape[0]  # number of vertices
+    m = len(graphs)  # number of graphs
+
+    A = np.array(graphs, copy=False, ndmin=3)
+
+    # Do some numpy broadcasting magic.
+    # We do sum in 4d arrays and reduce to 2d array.
+    # Super fast and efficient
+    out = (A[:, :, None, :] + A.transpose(1, 0, 2)[None, :, :, :]).reshape(n * m, -1)
+
+    # Averaging
+    out /= 2
+
+    return out
+
+
 #%% Load some graph info
 graph = load_networkx("Gn")
 
@@ -127,18 +159,18 @@ class_labels = meta_df.loc[nodelist.astype(int), "Class"].values
 # Remap class names
 name_map = {
     "CN": "CN",
-    "DANs": "MBIN",
-    "KCs": "MBIN",
+    "DANs": "DAN",
+    "KCs": "KC",
     "LHN": "LHN",
     "LHN; CN": "LHN",
     "MBINs": "MBIN",
     "MBON": "MBON",
     "MBON; CN": "MBON",
-    "OANs": "MBIN",
-    "ORN mPNs": "PN",
-    "ORN uPNs": "PN",
-    "tPNs": "PN",
-    "vPNs": "PN",
+    "OANs": "OAN",
+    "ORN mPNs": "mPN",
+    "ORN uPNs": "uPN",
+    "tPNs": "tPN",
+    "vPNs": "vPN",
     "Unidentified": "Unk",
     "Other": "Unk",
 }
@@ -166,7 +198,6 @@ def survey(labels, category, ax=None):
     for label in uni_labels:
         inds = np.where(labels == label)
         classes_in_cluster = category[inds]
-        print(classes_in_cluster)
         counts_by_class = []
         for c in uni_class:
             num_class_in_cluster = len(np.where(classes_in_cluster == c)[0])
@@ -179,12 +210,11 @@ def survey(labels, category, ax=None):
     # print(category_names)
     # print(data)
     # data = data[:, 1:]
-    print(data)
     sums = data.sum(axis=1)
     data = data / data.sum(axis=1)[:, np.newaxis]
     data_cum = data.cumsum(axis=1)
     # category_names = category_names[1:]
-    category_colors = sns.color_palette("tab10", n_colors=len(uni_class))
+    category_colors = sns.color_palette("Set1", n_colors=len(uni_class))
     if ax is None:
         fig, ax = plt.subplots(figsize=(15, 10))
     ax.invert_yaxis()
@@ -223,68 +253,149 @@ def survey(labels, category, ax=None):
                     color=text_color,
                 )
     ax.legend(
-        ncol=6,  # len(category_names),
-        bbox_to_anchor=(0, 1),
-        loc="lower left",
+        ncol=5,  # len(category_names),
+        bbox_to_anchor=(0, 0),
+        loc="upper left",
         fontsize="small",
     )
 
     return ax
 
 
-# Try with my new labels
-adj = get_paired_adj("G", nodelist)
-adj = adj[:n_per_side, :n_per_side] + adj[n_per_side:, n_per_side:]
-embed_adj = pass_to_ranks(adj)
+#%%
+# 4 kinds of embedding:
+# LSE on Flat
+# LSE on L/R average
+# OMNI on 2- or 4- color
+# OMNI on 2- or 4- color, L/R average
 
-skmeans_kws = dict(n_init=200, n_jobs=-2)
-n_clusters = 12
-n_components = None
+# Parameters for the whole thing
+ptr = True
+augment_diag = False  # non-functional
+n_components = 6
+axo_only = True
+n_verts = n_per_side * 2
+n_colors = 4
+if axo_only:
+    n_colors = 2
+method = "ase"
+
+# LSE on Flat
 regularizer = 1
+flat_adj = get_paired_adj("Gad", nodelist)
+embed_adj = pass_to_ranks(flat_adj)
+if method == "lse":
+    embedder = LaplacianSpectralEmbed(n_components=n_components, form="R-DAD")
+elif method == "ase":
+    embedder = AdjacencySpectralEmbed(n_components=n_components)
+flat_latent = embedder.fit_transform(embed_adj)
+flat_latent = np.concatenate(flat_latent, axis=-1)
+print("Computed latent positions for LSE on flat graph")
+print(flat_latent.shape)
+print()
+pairplot(flat_latent)
 
-lse = LaplacianSpectralEmbed(n_components=n_components, regularizer=regularizer)
-latent = lse.fit_transform(embed_adj)
-latent = np.concatenate(latent, axis=-1)
+# LSE on L/R average
+avg_adj = flat_adj[:n_per_side, :n_per_side] + flat_adj[n_per_side:, n_per_side:]
+embed_adj = pass_to_ranks(avg_adj)
+if method == "lse":
+    embedder = LaplacianSpectralEmbed(n_components=n_components, form="R-DAD")
+elif method == "ase":
+    embedder = AdjacencySpectralEmbed(n_components=n_components)
+avg_latent = embedder.fit_transform(embed_adj)
+avg_latent = np.concatenate(avg_latent, axis=-1)
+print("Computed latent positions for LSE on L/R average")
+print(avg_latent.shape)
+print()
 
-models = []
+# OMNI on 2- or 4- color
+graph_types = ["Gad", "Gaa", "Gdd", "Gda"]
+if axo_only:
+    graph_types = graph_types[:2]
+
+color_adjs = []
+for t in graph_types:
+    adj = get_paired_adj(t, nodelist)
+    if ptr:
+        adj = pass_to_ranks(adj)
+    if method == "lse":
+        adj = to_laplace(adj, form="R-DAD", regularizer=regularizer)
+    color_adjs.append(adj)
+
+# omni = OmnibusEmbed(n_components=n_components)
+# TODO: should use /2 or /4 components?
+# omni_mat = _get_omni_matrix(color_adjs)
+# laplacian_omni_mat = to_laplace(omni_mat, form="R-DAD", regularizer=regularizer)
+omni = OmnibusEmbed(n_components=n_components)
+color_latent = omni.fit_transform(color_adjs)
+color_latent = np.concatenate(color_latent, axis=-1)
+color_latent = np.concatenate(color_latent, axis=-1)
+
+# color_latent = np.concatenate(color_latent, axis=-1)  # concatenate color graphs
+print("Computed latent positions for OMNI on 2- or 4- color graph")
+print(color_latent.shape)
+print()
+
+# OMNI on 2- or 4- color with averaging
+avg_color_adjs = []
+for t in graph_types:
+    adj = get_paired_adj(t, nodelist)
+    left_left_adj = adj[:n_per_side, :n_per_side]
+    right_right_adj = adj[n_per_side:, n_per_side:]
+    avg_adj = (left_left_adj + right_right_adj) / 2
+    if ptr:
+        avg_adj = pass_to_ranks(avg_adj)  # TODO: When to do PTR here?
+    if method == "lse":
+        avg_adj = to_laplace(avg_adj, form="R-DAD", regularizer=regularizer)
+    avg_color_adjs.append(avg_adj)
+
+# omni_mat = _get_omni_matrix(avg_color_adjs)
+omni = OmnibusEmbed(n_components=n_components)
+avg_color_latent = omni.fit_transform(avg_color_adjs)
+# avg_color_latent = [a.reshape(n_per_side, -1) for a in avg_color_latent]
+avg_color_latent = np.concatenate(avg_color_latent, axis=-1)
+avg_color_latent = np.concatenate(avg_color_latent, axis=-1)
+
+# avg_color_latent = np.concatenate(
+#     (avg_color_latent[:n_per_side], avg_color_latent[n_per_side:])
+# )
+# avg_color_latent = np.concatenate(avg_color_latent, axis=-1) #this would be with omni
+print("Computed latent positions for OMNI on 2- or 4- color graph L/R averages")
+print(avg_color_latent.shape)
+print()
+pairplot(avg_color_latent[:, :n_components])
+
+#%%
 
 
-meta_file = "maggot_models/data/processed/2019-09-18-v2/BP_metadata.csv"
+n_clusters = 10
+skmeans_kws = dict(n_init=500, n_jobs=-2)
 
-meta_df = pd.read_csv(meta_file, index_col=0)
-print(meta_df.head())
-class_labels = meta_df.loc[nodelist.astype(int), "BP_Class"].values
-class_labels[class_labels == "LH2N"] = "Other"
+fontsize = 35
 
 
-uni_class, class_counts = np.unique(class_labels, return_counts=True)
-inds = np.argsort(class_counts)[::-1]
-uni_class = uni_class[inds]
-class_counts = class_counts[inds]
-
-n_clusters = 12
-for k in range(2, n_clusters):
+def estimate_clusters(latent, n_clusters, skmeans_kws):
     skmeans = SphericalKMeans(n_clusters=k, **skmeans_kws)
     pred_labels = skmeans.fit_predict(latent)
     pred_labels = relabel(pred_labels)
-    models.append(skmeans)
+    return pred_labels
 
-    # gridplot(
-    #     [adj], inner_hier_labels=pred_labels, hier_label_fontsize=18, sizes=(2, 10)
-    # )
-    fig, ax = plt.subplots(1, 2, figsize=(30, 18))
-    heatmap(
-        binarize(adj),
-        inner_hier_labels=pred_labels,
-        # outer_hier_labels=side_labels,
-        hier_label_fontsize=18,
-        ax=ax[0],
-        cbar=False,
-        sort_nodes=True,
-    )
-    uni_labels = np.unique(pred_labels)
-    # survey(pred_labels, uni_class, ax=ax[1])
-    survey(class_labels[:n_per_side], pred_labels, ax=ax[1])
 
-#%%
-# heatmap(adj, inner_hier_labels=pred_labels)
+for k in range(2, n_clusters + 1):
+
+    flat_pred_labels = estimate_clusters(flat_latent, k, skmeans_kws)
+    avg_pred_labels = estimate_clusters(avg_latent, k, skmeans_kws)
+    color_pred_labels = estimate_clusters(color_latent, k, skmeans_kws)
+    avg_color_pred_labels = estimate_clusters(avg_color_latent, k, skmeans_kws)
+
+    fig, ax = plt.subplots(2, 2, figsize=(30, 30))
+    ax = ax.ravel()
+    survey(class_labels, flat_pred_labels, ax=ax[0])
+    ax[0].set_title("Gaa only", fontsize=fontsize)
+    survey(class_labels[:n_per_side], avg_pred_labels, ax=ax[1])
+    ax[1].set_title("Gaa, avg L/R w/in hemisphere", fontsize=fontsize)
+    survey(class_labels, color_pred_labels, ax=ax[2])
+    ax[2].set_title("2-color only", fontsize=fontsize)
+    survey(class_labels[:n_per_side], avg_color_pred_labels, ax=ax[3])
+    ax[3].set_title("2-color, avg L/R w/in hemisphere", fontsize=fontsize)
+
