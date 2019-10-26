@@ -189,7 +189,7 @@ def countplot(graphs, graph_types, figsize=(12, 1)):
         )
 
 
-def survey(results, category_names, ax=None):
+def survey(labels, category_names, ax=None):
     """
     Parameters
     ----------
@@ -201,6 +201,20 @@ def survey(results, category_names, ax=None):
         The category labels.
     """
     sns.set_context("talk")
+
+    uni_labels = np.unique(labels)
+
+    counts_by_label = []
+    for label in uni_labels:
+        inds = np.where(pred_labels == label)
+        classes_in_cluster = class_labels[inds]
+        counts_by_class = []
+        for c in uni_class:
+            num_class_in_cluster = len(np.where(classes_in_cluster == c)[0])
+            counts_by_class.append(num_class_in_cluster)
+        counts_by_label.append(counts_by_class)
+    results = dict(zip(uni_labels, counts_by_label))
+
     labels = list(results.keys())
     data = np.array(list(results.values()))
     # print(category_names)
@@ -215,9 +229,10 @@ def survey(results, category_names, ax=None):
     ax.xaxis.set_visible(False)
     max_size = np.sum(data, axis=1).max()
     ax.set_xlim(0 - 0.02 * max_size, max_size * 1.02)
-    ax.set_ylim(max(labels) + 1, -1)
+    # ax.set_ylim()
+    # ax.set_ylim(max(labels) + 1, -1)
     ax.set_yticklabels(labels)
-    ax.set_yticks(labels)
+    # ax.set_yticks(labels)
     height = 0.3
 
     for i, (colname, color) in enumerate(zip(category_names, category_colors)):
@@ -270,7 +285,7 @@ inds = np.argsort(class_counts)[::-1]
 uni_class = uni_class[inds]
 class_counts = class_counts[inds]
 
-n_clusters = 10
+n_clusters = 4
 for k in range(2, n_clusters):
     skmeans = SphericalKMeans(n_clusters=k, **skmeans_kws)
     pred_labels = skmeans.fit_predict(latent)
@@ -290,22 +305,9 @@ for k in range(2, n_clusters):
         cbar=False,
         sort_nodes=True,
     )
-
     uni_labels = np.unique(pred_labels)
-
-    counts_by_label = []
-    for label in uni_labels:
-        inds = np.where(pred_labels == label)
-        classes_in_cluster = class_labels[inds]
-        counts_by_class = []
-        for c in uni_class:
-            num_class_in_cluster = len(np.where(classes_in_cluster == c)[0])
-            counts_by_class.append(num_class_in_cluster)
-        counts_by_label.append(counts_by_class)
-
-    results = dict(zip(uni_labels, counts_by_label))
-    survey(results, uni_class, ax=ax[1])
-
+    # survey(pred_labels, uni_class, ax=ax[1])
+    survey(class_labels, uni_labels, ax=ax[1])
 
 #%%
 # heatmap(adj, inner_hier_labels=pred_labels)
