@@ -3,6 +3,8 @@ from graspy.utils import binarize
 import pandas as pd
 from pathlib import Path
 import networkx as nx
+from src.utils import meta_to_array
+import numpy as np
 
 
 def load_left():
@@ -75,3 +77,67 @@ def load_networkx(graph_type, version="2019-09-18-v2"):
     file_path = data_path / (graph_type + ".graphml")
     graph = nx.read_graphml(file_path)
     return graph
+
+
+def load_everything(
+    graph_type,
+    version="2019-09-18-v2",
+    return_class=False,
+    return_side=False,
+    return_df=False,
+    return_ids=False,
+):
+
+    """Function to load an adjacency matrix and optionally return some associated 
+    metadata
+
+    Parameters
+    ----------
+    graph_type : str
+        Which version of the graph to load
+    version : str, optional
+        Date/version descriptor for which dataset to use, by default "2019-09-18-v2"
+    return_class : bool, optional
+        Whether to return associated class labels, by default False
+    return_side : bool, optional
+        Whether to return associated hemisphere labels, by default False
+    return_df : bool, optional
+        Whether to return a Pandas DataFrame representation of the adjacency,
+        by default False
+    return_ids : bool, optional
+        Whether to return the cell ids (skeleton ids), by default False
+
+    Returns
+    -------
+    [type]
+        [description]
+
+    Raises
+    ------
+    ValueError
+        [description]
+    """
+
+    graph = load_networkx(graph_type, version="mb_2019-09-23")
+    nx_ids = np.array(list(graph.nodes()), dtype=int)
+    df_adj = nx.to_pandas_adjacency(graph)
+    df_ids = df_adj.index.values.astype(int)
+    if not np.array_equal(nx_ids, df_ids):
+        raise ValueError("Networkx indexing is inconsistent with Pandas adjacency")
+    adj = nx.to_pandas_adjacency(graph).values
+    outs = [adj]
+    if return_class:
+        class_labels = meta_to_array(graph, "Class")
+        outs.append(class_labels)
+    if return_side:
+        side_labels = meta_to_array(graph, "Hemisphere")
+        outs.append(side_labels)
+    if return_df:
+        outs.append(df_adj)
+    if return_ids:
+        outs.append(df_ids)
+    if len(outs) > 1:
+        outs = tuple(outs)
+        return outs
+    else:
+        return adj

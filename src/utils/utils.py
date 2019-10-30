@@ -370,3 +370,20 @@ def get_simple(graph):
 def savefig(name, fmt="pdf", pathname="./maggot_models/notebooks/outs", **kws):
     path = Path(pathname)
     plt.savefig(path / str(name + "." + fmt), fmt=fmt, facecolor="w", **kws)
+
+
+def relabel(labels):
+    """
+    Remaps integer labels based on who is most frequent
+    """
+    uni_labels, uni_inv, uni_counts = np.unique(
+        labels, return_inverse=True, return_counts=True
+    )
+    sort_inds = np.argsort(uni_counts)[::-1]
+    new_labels = range(len(uni_labels))
+    uni_labels_sorted = uni_labels[sort_inds]
+    relabel_map = dict(zip(uni_labels_sorted, new_labels))
+
+    new_labels = np.array(itemgetter(*labels)(relabel_map))
+    return new_labels
+

@@ -21,5 +21,6 @@ from .utils import (
     meta_to_array,
     get_simple,
     savefig,
+    relabel,
 )
 
