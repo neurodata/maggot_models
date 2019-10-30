@@ -100,21 +100,83 @@ def calc_weighted_entropy(true_labels, pred_labels):
     return total_entropy
 
 
-def estimate_clusters(latent, n_clusters, method="skmeans", kws={}):
-    if method == "kmeans":
-        cluster = KMeans(n_clusters=n_clusters, **kws)
-    if method == "skmeans":
-        cluster = SphericalKMeans(n_clusters=n_clusters, **kws)
-    elif method == "gmm":
-        cluster = GaussianCluster(
-            min_components=n_clusters,
-            max_components=n_clusters,
-            covariance_type="all",
-            **kws
-        )
-    pred_labels = cluster.fit_predict(latent)
-    pred_labels = relabel(pred_labels)
-    return pred_labels
+def generate_experiment_arglist(latents, true_labels):
+    arglist = []
+    for i, (latent, latent_name) in enumerate(zip(latents, EMBED_FUNC_NAMES)):
+        for j, (estimator, estimator_name) in enumerate(
+            zip(ESTIMATORS, ESTIMATOR_NAMES)
+        ):
+            for k in range(min_clusters, max_clusters):
+                arglist.append(
+                    (
+                        true_labels,
+                        latent,
+                        latent_name,
+                        estimator,
+                        estimator_name,
+                        k,
+                        params[j],
+                    )
+                )
+    return arglist
+
+
+def ari_scorer(estimator, latent, y=None):
+    pred_labels = estimator.fit_predict(latent)
+    return adjusted_rand_score(y, pred_labels)
+
+
+def entropy_scorer(estimator, latent, y=None):
+    pred_labels = estimator.fit_predict(latent)
+    return calc_weighted_entropy(y, pred_labels)
+
+
+def run_clustering(
+    seed,
+    true_labels,
+    latent,
+    latent_name,
+    estimator,
+    estimator_name,
+    n_clusters,
+    params,
+):
+    np.random.seed(seed)
+    if estimator == GaussianCluster:
+        e = estimator(min_components=n_clusters, max_components=n_clusters, **params)
+    else:
+        e = estimator(n_clusters=n_clusters, **params)
+    e.fit(latent)
+    ari = ari_scorer(e, latent, y=true_labels)
+    ent = entropy_scorer(e, latent, y=true_labels)
+    out_dict = {
+        "ARI": ari,
+        "Entropy": ent,
+        "Embed": latent_name,
+        "Cluster": estimator_name,
+        "# Clusters": n_clusters,
+    }
+    return out_dict
+
+
+def run_clustering_experiment(
+    latents, true_labels, min_clusters, max_clusters, n_sims, seed=None
+):
+    if seed is not None:
+        np.random.seed(seed)
+
+    arglist = generate_experiment_arglist(latents, true_labels)
+    arglist = arglist * n_sims
+
+    seeds = np.random.randint(1e8, size=n_sims * len(arglist))
+
+    outs = Parallel(n_jobs=-2, verbose=10)(
+        delayed(run_clustering)(s, *i) for s, i in zip(seeds, arglist)
+    )
+
+    cluster_df = pd.DataFrame.from_dict(outs)
+
+    return cluster_df
 
 
 # Global alg parameters
@@ -122,6 +184,8 @@ PTR = True
 EMBED_FUNC_NAMES = ["ASE", "OMNI", "ASE-Cat"]
 EMBED_FUNCS = [ase, omni, ase_concatenate]
 
+ESTIMATORS = [GaussianCluster, SphericalKMeans, KMeans]
+ESTIMATOR_NAMES = ["GMM", "SKmeans", "Kmeans"]
 
 # Set up plotting constants
 plt.style.use("seaborn-white")
@@ -234,170 +298,59 @@ for latent, name in zip(latents, EMBED_FUNC_NAMES):
     pairplot(latent, labels=simple_class_labels, title=name)
 
 
-def ari_scorer(estimator, latent, y=None):
-    pred_labels = estimator.fit_predict(latent)
-    return adjusted_rand_score(y, pred_labels)
-
-
-def entropy_scorer(estimator, latent, y=None):
-    pred_labels = estimator.fit_predict(latent)
-    return calc_weighted_entropy(y, pred_labels)
-
-
-scorers = {"ARI": ari_scorer, "Entropy": entropy_scorer}
-
-
-n_init = 5
-
-max_clusters = 4
-min_clusters = 2
-gmm_params = {
-    "covariance_type": ["full", "tied", "diag", "spherical"],
-    "n_components": range(min_clusters, max_clusters),
-}
-skmeans_params = {"n_clusters": range(min_clusters, max_clusters)}
-kmeans_params = {"n_clusters": range(min_clusters, max_clusters)}
-
-estimators = [GaussianMixture(), SphericalKMeans(), KMeans()]
-estimator_names = ["GMM", "SKmeans", "Kmeans"]
-param_grids = [gmm_params, skmeans_params, kmeans_params]
-
-
-# data_frames = []
-
-# for latent, latent_name in zip(latents, EMBED_FUNC_NAMES):
-#     for j, estimator in enumerate(estimators):
-#         param_grid = param_grids[j]
-#         print(estimator)
-#         gs = GridSearchUS(
-#             estimator, param_grid, scoring=scorers, n_init=n_init, n_jobs=-2
-#         )
-#         gs.fit(ase_latent, simple_class_labels)
-#         results = gs.cv_results_
-#         results["Cluster"] = estimator_names[j]
-#         results["Embed"] = latent_name
-#         data_frames.append(results)
-
-#%%
-# exp_df = pd.concat(data_frames, ignore_index=True, sort=False)
-# n_components = exp_df["param_n_components"].values.astype(float)
-# n_clusters = exp_df["param_n_components"].values.astype(float)
-# n_clusters[np.isnan(n_clusters)] = n_components[np.isnan(n_components)]
-# exp_df["# Clusters"] = n_clusters
-# sns.lineplot(data=exp_df, x="# Clusters", y="ARI", hue="Embed", style="Cluster")
-
-
-# gmm_params = {
-#     # "covariance_type": ["full", "tied", "diag", "spherical"],
-#     "n_components": range(min_clusters, max_clusters)
-# }
-# skmeans_params = {"n_clusters": range(min_clusters, max_clusters)}
-# kmeans_params = {"n_clusters": range(min_clusters, max_clusters)}
-
-
-# param_grids = [gmm_params, skmeans_params, kmeans_params]
-#
-
-# for i, latent in enumerate(latents):
-#     for j, estimator in enumerate(estimators):
-#         cluster_name = estimator_names[j]
-#         params = param_grids[j]
-#         param_list = list(ParameterGrid(params))
-#         for p in param_list:
-#             e = estimator(**p)
-#             pred_labels = estimator.fit_predict(latent)
-#             ari = ari_scorer(estimator, latent, y=true_labels)
-#             ent = entropy_scorer(estimator, latent, y=true_labels)
-
-#             out_dict = {
-#                 "ARI": ari,
-#                 "Entropy": ent,
-#                 "Embed": "OMNI",
-#                 "Cluster": "GMM",
-#                 "# Clusters": n_clusters,
-#             }
-#             print(EMBED_FUNC_NAMES[i])
-#             print(estimator_names[j])
-#             print(p)
-#%%
-
-true_labels = simple_class_labels
-
-
-def run_clustering(
-    seed,
-    true_labels,
-    latent,
-    latent_name,
-    estimator,
-    estimator_name,
-    n_clusters,
-    params,
-):
-    np.random.seed(seed)
-    if estimator == GaussianCluster:
-        e = estimator(min_components=n_clusters, max_components=max_clusters, **params)
-    else:
-        e = estimator(n_clusters=n_clusters, **params)
-    e.fit(latent)
-    ari = ari_scorer(e, latent, y=true_labels)
-    ent = entropy_scorer(e, latent, y=true_labels)
-    out_dict = {
-        "ARI": ari,
-        "Entropy": ent,
-        "Embed": latent_name,
-        "Cluster": estimator_name,
-        "# Clusters": n_clusters,
-    }
-    return out_dict
-
+#%% Run a clustering experiment on the mushroom body right
 
 max_clusters = 12
 min_clusters = 2
+n_sims = 20
 
 gmm_params = {"n_init": 10, "covariance_type": "all"}
-skmeans_params = {"n_init": 100}
-kmeans_params = {"n_init": 100}
+skmeans_params = {"n_init": 10}
+kmeans_params = {"n_init": 10}
 
-estimators = [GaussianCluster, SphericalKMeans, KMeans]
-estimator_names = ["GMM", "SKmeans", "Kmeans"]
+true_labels = simple_class_labels
+
 params = [gmm_params, skmeans_params, kmeans_params]
 
-np.random.seed(8888)
-arglist = []
-for i, (latent, latent_name) in enumerate(zip(latents, EMBED_FUNC_NAMES)):
-    for j, (estimator, estimator_name) in enumerate(zip(estimators, estimator_names)):
-        for k in range(min_clusters, max_clusters):
-            seed = np.random.randint(1e8)
-            arglist.append(
-                (
-                    true_labels,
-                    latent,
-                    latent_name,
-                    estimator,
-                    estimator_name,
-                    k,
-                    params[j],
-                )
-            )
-
-n_sims = 10
-arglist = arglist * n_sims
-
-seeds = np.random.randint(1e8, size=n_sims * len(arglist))
-
-outs = Parallel(n_jobs=-2)(
-    delayed(run_clustering)(s, *i) for s, i in zip(seeds, arglist)
+cluster_df = run_clustering_experiment(
+    latents, true_labels, min_clusters, max_clusters, n_sims, seed=8888
 )
 
-cluster_df = pd.DataFrame.from_dict(outs)
+#%% Plot results of clustering experiments
+sns.set_context("talk", font_scale=1.75)
+figsize = (20, 10)
 
-plt.figure(figsize=(20, 10))
+# Get best ARI
+plot_ari_df = cluster_df.sort_values("ARI", ascending=False).drop_duplicates(
+    ["Embed", "Cluster", "# Clusters"]
+)
+
+plt.figure(figsize=figsize)
+sns.lineplot(data=plot_ari_df, x="# Clusters", y="ARI", hue="Embed", style="Cluster")
+plt.legend(bbox_to_anchor=(1, 1))
+plt.title(f"Best ARIs, n_sims = {n_sims}")
+
+plt.figure(figsize=figsize)
 sns.lineplot(data=cluster_df, x="# Clusters", y="ARI", hue="Embed", style="Cluster")
+plt.legend(bbox_to_anchor=(1, 1))
+plt.title(f"Mean ARIs +/- 95% CI, n_sims = {n_sims}")
 
-plt.figure(figsize=(20, 10))
+# Get best entropy
+plot_ent_df = cluster_df.sort_values("Entropy", ascending=True).drop_duplicates(
+    ["Embed", "Cluster", "# Clusters"]
+)
+
+plt.figure(figsize=figsize)
+sns.lineplot(
+    data=plot_ent_df, x="# Clusters", y="Entropy", hue="Embed", style="Cluster"
+)
+plt.legend(bbox_to_anchor=(1, 1))
+plt.title(f"Best Entropy, n_sims = {n_sims}")
+
+plt.figure(figsize=figsize)
 sns.lineplot(data=cluster_df, x="# Clusters", y="Entropy", hue="Embed", style="Cluster")
-
+plt.legend(bbox_to_anchor=(1, 1))
+plt.title(f"Mean entropy +/- 95% CI, n_sims = {n_sims}")
 
 
 # Experiment 2: Compare clustering on the full mushroom body
