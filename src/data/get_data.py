@@ -118,7 +118,7 @@ def load_everything(
         [description]
     """
 
-    graph = load_networkx(graph_type, version="mb_2019-09-23")
+    graph = load_networkx(graph_type, version=version)
     nx_ids = np.array(list(graph.nodes()), dtype=int)
     df_adj = nx.to_pandas_adjacency(graph)
     df_ids = df_adj.index.values.astype(int)
