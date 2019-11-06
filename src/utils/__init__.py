@@ -22,5 +22,6 @@ from .utils import (
     get_simple,
     savefig,
     relabel,
+    unique_by_size,
 )
 
