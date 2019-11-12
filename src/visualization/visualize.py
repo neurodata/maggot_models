@@ -471,6 +471,7 @@ def sankey(
     fontsize=14,
     figureName=None,
     closePlot=False,
+    palette="Set1",
 ):
     """
     Make Sankey Diagram showing flow from left-->right
@@ -550,7 +551,7 @@ def sankey(
     # If no colorDict given, make one
     if colorDict is None:
         colorDict = {}
-        palette = "hls"
+        # palette = "hls"
         colorPalette = sns.color_palette(palette, len(allLabels))
         for i, label in enumerate(allLabels):
             colorDict[label] = colorPalette[i]
