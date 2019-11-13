@@ -17,6 +17,7 @@
 #%%
 
 import math
+import os
 from operator import itemgetter
 
 import matplotlib.pyplot as plt
@@ -50,6 +51,19 @@ BRAIN_VERSION = "2019-09-18-v2"
 GRAPH_TYPES = ["Gad", "Gaa", "Gdd", "Gda"]
 GRAPH_TYPE_LABELS = [r"A $\to$ D", r"A $\to$ A", r"D $\to$ D", r"D $\to$ A"]
 N_GRAPH_TYPES = len(GRAPH_TYPES)
+
+FNAME = os.path.basename(__file__)[:-3]
+print(FNAME)
+
+SAVEFIGS = True
+DEFAULT_FMT = "png"
+DEFUALT_DPI = 150
+
+
+def stashfig(name, **kws):
+    if SAVEFIGS:
+        savefig(name, foldername=FNAME, fmt=DEFAULT_FMT, dpi=DEFUALT_DPI, **kws)
+
 
 # Set up plotting constants
 palette = "deep"
@@ -149,6 +163,7 @@ ax = heatmap(
     title_pad=90,
     font_scale=1.7,
 )
+stashfig("full-brain-summed")
 
 # Plot the adjacency matrix for the 4-color graphs
 fig, ax = plt.subplots(2, 2, figsize=(20, 20))
@@ -167,6 +182,7 @@ for i, g in enumerate(color_adjs):
     )
 plt.suptitle("Full Brain (4 channels)", fontsize=45, x=0.525, y=1.02)
 plt.tight_layout()
+stashfig("full-brain-4-channel")
 
 # %% [markdown]
 #  ## Plot edge weight sums (edgesums) and degrees for the full (G) graph
@@ -204,7 +220,7 @@ plt.title("Full brain, G, out degrees")
 plt.xlabel("# outbound edges")
 
 # %% [markdown]
-#  ## Look at edgesums in different ways, and make plots for the 4-color edgesums as well
+#  ## Look at edgesums in different ways, and make plots for the 4-color edgesums as
 #  First two plots are still for **G**, the rest are for the 4-color
 
 # %%
@@ -242,7 +258,7 @@ sns.scatterplot(
     linewidth=0,
     palette=palette,
 )
-
+stashfig("edgesum-scatter")
 
 edgesum_mat = calc_edgesums(color_adjs)
 in_cols = ["In " + n for n in GRAPH_TYPES]
@@ -349,20 +365,20 @@ edge_df = get_block_edgeweights(sum_adj, simple_class_labels)
 #  ## Nonzero edge weight for full graph
 
 # %%
-fg = sns.FacetGrid(
-    edge_df, row="From", col="To", sharex=True, sharey=False, margin_titles=True
-)
-fg.map(sns.distplot, "Weight", kde=False)
-fg.set(yticks=[])
+# fg = sns.FacetGrid(
+#     edge_df, row="From", col="To", sharex=True, sharey=False, margin_titles=True
+# )
+# fg.map(sns.distplot, "Weight", kde=False)
+# fg.set(yticks=[])
 # %% [markdown]
 #  ## Nonzero log edge weight for full graph
 
 # %%
-fg = sns.FacetGrid(
-    edge_df, row="From", col="To", sharex=True, sharey=False, margin_titles=True
-)
-fg.map(sns.distplot, "Log weight", kde=False)
-fg.set(yticks=[])
+# fg = sns.FacetGrid(
+#     edge_df, row="From", col="To", sharex=True, sharey=False, margin_titles=True
+# )
+# fg.map(sns.distplot, "Log weight", kde=False)
+# fg.set(yticks=[])
 
 
 # %%
@@ -377,33 +393,33 @@ color_edge_df = pd.concat(dfs)
 #  # Nonzero edge weight split by synapse type
 
 # %%
-fg = sns.FacetGrid(
-    color_edge_df,
-    row="From",
-    col="To",
-    hue="Edge type",
-    sharex=True,
-    sharey=False,
-    margin_titles=True,
-)
-fg = fg.map(sns.distplot, "Weight")
-fg = fg.add_legend()
+# fg = sns.FacetGrid(
+#     color_edge_df,
+#     row="From",
+#     col="To",
+#     hue="Edge type",
+#     sharex=True,
+#     sharey=False,
+#     margin_titles=True,
+# )
+# fg = fg.map(sns.distplot, "Weight")
+# fg = fg.add_legend()
 
 # %% [markdown]
 #  # Nonzero log edge weight split by synapse type
 
-# %%
-fg = sns.FacetGrid(
-    color_edge_df,
-    row="From",
-    col="To",
-    hue="Edge type",
-    sharex=True,
-    sharey=False,
-    margin_titles=True,
-)
-fg = fg.map(sns.distplot, "Log weight")
-fg = fg.add_legend()
+# # %%
+# fg = sns.FacetGrid(
+#     color_edge_df,
+#     row="From",
+#     col="To",
+#     hue="Edge type",
+#     sharex=True,
+#     sharey=False,
+#     margin_titles=True,
+# )
+# fg = fg.map(sns.distplot, "Log weight")
+# fg = fg.add_legend()
 
 # %% [markdown]
 # # Let's fit some binary SBM's to just look at edge density
@@ -416,7 +432,7 @@ def probplot(
     figsize=(20, 20),
     cmap="Purples",
     title="Edge probability",
-    vmin=None,
+    vmin=0,
     vmax=None,
     ax=None,
 ):
@@ -429,8 +445,9 @@ def probplot(
 
     if log_scale:
         data = data + 0.001
-
-        log_norm = LogNorm(vmin=data.min().min(), vmax=data.max().max())
+        vmin = data.min().min()
+        vmax = data.max().max()
+        log_norm = LogNorm(vmin=vmin, vmax=vmax)
         cbar_ticks = [
             math.pow(10, i)
             for i in range(
@@ -443,7 +460,7 @@ def probplot(
     prob_df = pd.DataFrame(columns=uni_labels, index=uni_labels, data=data)
 
     if ax is None:
-        fig = plt.figure(figsize=figsize)
+        plt.figure(figsize=figsize)
         ax = plt.gca()
 
     ax.set_title(title, pad=30, fontsize=30)
@@ -494,23 +511,28 @@ mb_labels = np.array(itemgetter(*og_class_labels)(name_map))
 
 
 probplot(sum_adj, class_labels, title="Edge probability - class")
+stashfig("probplot-class")
 probplot(sum_adj, class_labels, title="Edge probability - class", log_scale=True)
 
 probplot(sum_adj, side_labels, title="Edge probability - side")
+stashfig("probplot-side")
 probplot(sum_adj, side_labels, title="Edge probability - side", log_scale=True)
 
 side_class_labels = merge_labels(side_labels, simple_class_labels)
 
 probplot(sum_adj, side_class_labels, title="Edge probability - side/class")
+stashfig("probplot-side-class")
 probplot(
     sum_adj, side_class_labels, title="Edge probability - side/class", log_scale=True
 )
 
 probplot(sum_adj, mb_labels, title="Edge probability - MB")
+stashfig("probplot-mb")
 probplot(sum_adj, mb_labels, title="Edge probability - MB", log_scale=True)
 
 side_mb_labels = merge_labels(side_labels, mb_labels)
 probplot(sum_adj, side_mb_labels, title="Edge probability - side/MB")
+stashfig("probplot-side-mb")
 ax, prob_df = probplot(
     sum_adj, side_mb_labels, title="Edge probability - side/MB", log_scale=True
 )
@@ -538,6 +560,7 @@ plt.figure(figsize=(20, 10))
 
 ax = sns.pointplot(data=long_prob_df, x="Hemidirection", y="Log prob", hue="Pair")
 ax.get_legend().remove()
+stashfig("hemidirection-pointplot")
 # %% [markdown]
 # #
 sns.catplot(
@@ -548,17 +571,18 @@ sns.catplot(
     kind="point",
     palette="Set1",
 )
-
+stashfig("hemidirection-catplot")
 # %% [markdown]
 # #
 
+plt.figure(figsize=(20, 10))
 pairs = np.unique(long_prob_df["Pair"].values)
 for p in pairs:
     df = long_prob_df[long_prob_df["Pair"] == p]
     print(df)
     print()
     sns.pointplot(data=df, x="Hemidirection", y="Probability")
-
+stashfig("hemidirection-multi-pointplot")
 
 # ax.get_legend().remove()
 #%% Do some of the same but for the 4-colors
@@ -574,8 +598,8 @@ def multi_probplot(
     log_scale=False,
     figsize=(20, 20),
     title="Edge probability",
-    vmin=None,
-    vmax=None,
+    vmins=None,
+    vmaxs=None,
     ax=None,
 ):
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize)
@@ -585,6 +609,10 @@ def multi_probplot(
         cmaps = len(adjs) * ["Purples"]
     if titles is None:
         titles = len(adjs) * [None]
+    if vmins is None:
+        vmins = len(adjs) * [None]
+    if vmaxs is None:
+        vmaxs = len(adjs) * [None]
 
     dfs = []
     for i, a in enumerate(adjs):
@@ -594,8 +622,8 @@ def multi_probplot(
             log_scale=log_scale,
             cmap=cmaps[i],
             title=titles[i],
-            vmin=vmax,
-            vmax=vmax,
+            vmin=vmins[i],
+            vmax=vmaxs[i],
             ax=ax[i],
         )
         dfs.append(prob_df)
@@ -603,22 +631,36 @@ def multi_probplot(
     return ax, dfs
 
 
-cmaps = ["Purples", "Greens", "Oranges", "Reds"]
+cmaps = ["Purples", "Greens", "Oranges", "RdPu"]
 titles = GRAPH_TYPE_LABELS
 figsize = (30, 30)
 multi_probplot(
-    color_adjs, side_labels, cmaps=cmaps, titles=titles, vmin=0, figsize=figsize
+    color_adjs,
+    side_labels,
+    cmaps=cmaps,
+    titles=titles,
+    vmins=[0, 0, 0, 0],
+    figsize=figsize,
 )
+stashfig("multiprob-side")
 multi_probplot(
-    color_adjs, simple_class_labels, cmaps=cmaps, titles=titles, vmin=0, figsize=figsize
+    color_adjs,
+    simple_class_labels,
+    cmaps=cmaps,
+    titles=titles,
+    vmins=[0, 0, 0, 0],
+    figsize=figsize,
 )
+stashfig("multiprob-class")
 multi_probplot(
-    color_adjs, side_class_labels, cmaps=cmaps, titles=titles, vmin=0, figsize=figsize
+    color_adjs, side_class_labels, cmaps=cmaps, titles=titles, figsize=figsize
 )
+stashfig("multiprob-side-class")
 #%%
 _, dfs = multi_probplot(
-    color_adjs, side_mb_labels, cmaps=cmaps, titles=titles, vmin=0, figsize=figsize
+    color_adjs, side_mb_labels, cmaps=cmaps, titles=titles, figsize=figsize
 )
+stashfig("multiprob-side-mb")
 #%%
 new_dfs = []
 for df, name in zip(dfs, GRAPH_TYPE_LABELS):
@@ -634,7 +676,7 @@ ax = sns.pointplot(
     data=overall_prob_df, x="Edge type", y="Probability", hue="Pair", linestyles="--"
 )
 ax.get_legend().remove()
-
+stashfig("pointplot-side-mb")
 #%% how does degree or edge weight correlate across color?
 
 color_in_degrees = []
@@ -664,13 +706,14 @@ color_degrees_df = pd.DataFrame(columns=GRAPH_TYPE_LABELS, data=color_degrees)
 sns.pairplot(
     color_degrees_df, kind="reg", plot_kws=dict(scatter_kws=dict(s=10, alpha=0.3))
 )
+stashfig("color-degrees-reg")
 #%%
 
 
 # Borrowed from http://stackoverflow.com/a/31385996/4099925
 def hexbin(x, y, color, max_series=None, min_series=None, **kwargs):
     cmap = sns.light_palette(color, as_cmap=True)
-    ax = plt.gca()
+    # ax = plt.gca()
     xmin, xmax = min_series[x.name], max_series[x.name]
     ymin, ymax = min_series[y.name], max_series[y.name]
     plt.hexbin(x, y, gridsize=15, cmap=cmap, extent=[xmin, xmax, ymin, ymax], **kwargs)
@@ -730,6 +773,7 @@ sns.distplot(left_to_left, label="Left")
 sns.distplot(right_to_left, label="Right")
 plt.xlabel("Proprtion output synapses to left")
 plt.legend(title="Cell side")
+stashfig("proportion-to-left-synapses")
 
 side_output_df = calc_class_output_proportions(sum_adj, side_labels, weights=False)
 side_output_df["On L"] = side_labels == "L"
@@ -743,6 +787,7 @@ sns.distplot(left_to_left, label="Left")
 sns.distplot(right_to_left, label="Right")
 plt.xlabel("Proprtion output edges to left")
 plt.legend(title="Cell side")
+stashfig("proportion-to-left-edges")
 
 # %% [markdown]
 # # Look at the same thing but split by graph type
@@ -760,6 +805,7 @@ for color_adj, name in zip(color_adjs, GRAPH_TYPE_LABELS):
     plt.xlabel("Proprtion output synapses to left")
     plt.legend(title="Cell side")
     plt.title(name)
+    stashfig("proportion-to-left-" + name)
 
 
 # %% [markdown]
@@ -772,4 +818,3 @@ for color_adj, name in zip(color_adjs, GRAPH_TYPE_LABELS):
 #   - check if the muchsroom body is the most connected
 #       - look at newman modularity clusters?
 #   - A to A and D to D look different if looking at separate MB class, not for whole
-

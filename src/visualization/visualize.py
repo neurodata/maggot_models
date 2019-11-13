@@ -457,6 +457,22 @@ def check_data_matches_labels(labels, data, side):
             )
 
 
+def add_label_counts(labels):
+    new_labels = labels.copy().astype("<U64")
+    uni_labels, counts = np.unique(labels, return_counts=True)
+    new_names = []
+    for name, count in zip(uni_labels, counts):
+        inds = np.where(labels == name)[0]
+        new_name = str(name) + f" ({count})"
+        new_labels[inds] = new_name
+        new_names.append(new_name)
+    return new_labels, dict(zip(uni_labels, new_names))
+
+
+def rename_keys(d, keys):
+    return dict([(keys.get(k), v) for k, v in d.items()])
+
+
 def sankey(
     ax,
     left,
@@ -472,6 +488,7 @@ def sankey(
     figureName=None,
     closePlot=False,
     palette="Set1",
+    append_counts=True,
 ):
     """
     Make Sankey Diagram showing flow from left-->right
@@ -509,6 +526,12 @@ def sankey(
 
     if len(rightWeight) == 0:
         rightWeight = leftWeight
+
+    if append_counts:
+        left, new_left_map = add_label_counts(left)
+        right, new_right_map = add_label_counts(right)
+        new_left_map.update(new_right_map)
+        colorDict = rename_keys(colorDict, new_left_map)
 
     # plt.figure()
     # plt.rc("text", usetex=False)

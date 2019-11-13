@@ -1,32 +1,54 @@
+# notes
+
+# ask michael if we can get the locations of the different cells
+# this thing (LSE) but on the whole brain
+# compare to the omni one
+# bic curves for both
+# compute ARI
+
+# slides for tomorrow
+# when we present (seems like it should be obvious)
+# then show the result, know whether it is what they would have expected
+
+# ARI curve
+# best ARI
+
+# BIC Curve
+# best bic
+
+# at least one where we get cliques (across cliques)
+
+
 #%% Imports
 import math
+import os
 from operator import itemgetter
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from graspy.cluster import GaussianCluster, KMeansCluster
-from graspy.embed import AdjacencySpectralEmbed, LaplacianSpectralEmbed, OmnibusEmbed
-from graspy.models import DCSBMEstimator, SBMEstimator
-from graspy.plot import gridplot, heatmap, pairplot
-from graspy.utils import binarize, cartprod, pass_to_ranks, to_laplace
+from graspy.cluster import GaussianCluster
+from graspy.embed import AdjacencySpectralEmbed, OmnibusEmbed
+from graspy.models import SBMEstimator
+from graspy.plot import heatmap, pairplot
+from graspy.utils import binarize, cartprod, pass_to_ranks
 from joblib.parallel import Parallel, delayed
 from matplotlib.colors import LogNorm
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from scipy.stats import entropy
 from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score
-from sklearn.mixture import GaussianMixture
-from sklearn.model_selection import ParameterGrid
 from spherecluster import SphericalKMeans
 
-from src.data import load_everything, load_networkx
-from src.models import GridSearchUS
-from src.utils import get_best, meta_to_array, relabel, savefig, unique_by_size
-from src.visualization import incidence_plot, sankey, screeplot
+from src.data import load_everything
+from src.utils import savefig
+from src.visualization import sankey
 
-# Global general parameters
+FNAME = os.path.basename(__file__)[:-3]
+print(FNAME)
+
+
+# %% [markdown]
+# # Parameters
 MB_VERSION = "mb_2019-09-23"
 BRAIN_VERSION = "2019-09-18-v2"
 GRAPH_TYPES = ["Gad", "Gaa", "Gdd", "Gda"]
@@ -34,8 +56,21 @@ GRAPH_TYPE_LABELS = [r"A $\to$ D", r"A $\to$ A", r"D $\to$ D", r"D $\to$ A"]
 N_GRAPH_TYPES = len(GRAPH_TYPES)
 
 SAVEFIGS = True
+DEFAULT_FMT = "png"
+DEFUALT_DPI = 150
+
+MAX_CLUSTERS = 16
+MIN_CLUSTERS = 2
+N_INIT = 200
+PTR = True
+
 
 # Functions
+
+
+def stashfig(name, **kws):
+    if SAVEFIGS:
+        savefig(name, foldername=FNAME, fmt=DEFAULT_FMT, dpi=DEFUALT_DPI, **kws)
 
 
 def annotate_arrow(ax, coords=(0.061, 0.93)):
@@ -179,286 +214,6 @@ def degree(adjs, *args):
         deg_mat[:, i] = g.sum(axis=0)
         deg_mat[:, i + N_GRAPH_TYPES] = g.sum(axis=1)
     return deg_mat
-
-
-def calc_weighted_entropy(true_labels, pred_labels):
-    total_entropy = 0
-    unique_true_labels = np.unique(true_labels)
-    unique_pred_labels = np.unique(pred_labels)
-    for true_label in unique_true_labels:
-        if (
-            true_label == -1 or true_label == "Unknown"
-        ):  # this is for "unlabeled" points
-            continue
-        probs = np.zeros(unique_pred_labels.shape)
-        true_inds = np.where(true_labels == true_label)[0]
-        class_pred_labels = pred_labels[
-            true_inds
-        ]  # get the predicted class assignments for this true class
-        uni_inds, counts = np.unique(class_pred_labels, return_counts=True)
-        probs[uni_inds] = counts
-        probs /= len(class_pred_labels)
-        e = entropy(probs)
-        e *= len(class_pred_labels) / len(true_labels)
-        e /= np.log(len(unique_pred_labels))
-        total_entropy += e
-    return total_entropy
-
-
-def generate_experiment_arglist(latents, true_labels):
-    arglist = []
-    for i, (latent, latent_name) in enumerate(zip(latents, EMBED_FUNC_NAMES)):
-        for j, (estimator, estimator_name) in enumerate(
-            zip(ESTIMATORS, ESTIMATOR_NAMES)
-        ):
-            for k in range(MIN_CLUSTERS, MAX_CLUSTERS):
-                arglist.append(
-                    (
-                        true_labels,
-                        latent,
-                        latent_name,
-                        estimator,
-                        estimator_name,
-                        k,
-                        params[j],
-                    )
-                )
-    return arglist
-
-
-def ari_scorer(estimator, latent, y=None):
-    pred_labels = estimator.fit_predict(latent)
-    return adjusted_rand_score(y, pred_labels)
-
-
-def entropy_scorer(estimator, latent, y=None):
-    pred_labels = estimator.fit_predict(latent)
-    return calc_weighted_entropy(y, pred_labels)
-
-
-def bic_scorer(estimator, latent, y=None):
-    if type(estimator) == GaussianCluster:
-        bic = estimator.model_.bic(latent)
-        return bic
-    else:
-        return np.nan
-
-
-def inertia_scorer(estimator, latent, y=None):
-    if type(estimator) == KMeans or type(estimator) == SphericalKMeans:
-        inert = estimator.inertia_
-        return inert
-    else:
-        return np.nan
-
-
-def run_clustering(
-    seed,
-    true_labels,
-    latent,
-    latent_name,
-    estimator,
-    estimator_name,
-    n_clusters,
-    params,
-):
-    np.random.seed(seed)
-    if estimator == GaussianCluster:
-        e = estimator(min_components=n_clusters, max_components=n_clusters, **params)
-    else:
-        e = estimator(n_clusters=n_clusters, **params)
-    e.fit(latent)
-    ari = ari_scorer(e, latent, y=true_labels)
-    ent = entropy_scorer(e, latent, y=true_labels)
-    bic = bic_scorer(e, latent, y=true_labels)
-    inert = inertia_scorer(e, latent, y=true_labels)
-    out_dict = {
-        "ARI": ari,
-        "Entropy": ent,
-        "Embed": latent_name,
-        "Cluster": estimator_name,
-        "# Clusters": n_clusters,
-        "BIC": bic,
-        "Inertia": inert,
-    }
-    return out_dict
-
-
-def run_clustering_experiment(
-    latents, true_labels, min_clusters, max_clusters, n_sims, seed=None
-):
-    if seed is not None:
-        np.random.seed(seed)
-
-    arglist = generate_experiment_arglist(latents, true_labels)
-    arglist = arglist * n_sims
-
-    seeds = np.random.randint(1e8, size=n_sims * len(arglist))
-
-    outs = Parallel(n_jobs=-2, verbose=10)(
-        delayed(run_clustering)(s, *i) for s, i in zip(seeds, arglist)
-    )
-
-    cluster_df = pd.DataFrame.from_dict(outs)
-
-    return cluster_df
-
-
-# Global alg parameters
-PTR = True
-EMBED_FUNC_NAMES = ["ASE", "OMNI", "Degree"]  # "ASE-Cat"]
-EMBED_FUNCS = [ase, omni, degree]  # ase_concatenate]
-
-ESTIMATORS = [GaussianCluster, SphericalKMeans, KMeans]
-ESTIMATOR_NAMES = ["GMM", "SKmeans", "Kmeans"]
-
-
-# Set up plotting constants
-plt.style.use("seaborn-white")
-sns.set_palette("deep")
-sns.set_context("talk", font_scale=1)
-
-
-#%%
-adj, class_labels, side_labels = load_everything(
-    "G", version=BRAIN_VERSION, return_class=True, return_side=True
-)
-
-right_inds = np.where(side_labels == " mw right")[0]
-adj = adj[np.ix_(right_inds, right_inds)]
-degrees = adj.sum(axis=0) + adj.sum(axis=1)
-sort_inds = np.argsort(degrees)[::-1]
-class_labels = class_labels[right_inds]  # need to do right inds, then sort_inds
-class_labels = class_labels[sort_inds]
-
-# notes
-# plot bic for these
-# multiply the probabilities by 100
-# ask michael if we can get the locations of the different cells
-# this thing (LSE) but on the whole brain
-# compare to the omni one
-# bic curves for both
-# compute ARI
-
-# slides for tomorrow
-# when we present (seems like it should be obvious)
-# then show the result, know whether it is what they would have expected
-
-# ARI curve
-# best ARI
-
-# BIC Curve
-# best bic
-
-# at least one where we get cliques (across cliques)
-
-# Remap the names
-name_map = {
-    "CN": "Unknown",
-    "DANs": "MBIN",
-    "KCs": "KC",
-    "LHN": "Unknown",
-    "LHN; CN": "Unknown",
-    "MBINs": "MBIN",
-    "MBON": "MBON",
-    "MBON; CN": "MBON",
-    "OANs": "MBIN",
-    "ORN mPNs": "PN",
-    "ORN uPNs": "PN",
-    "tPNs": "PN",
-    "vPNs": "PN",
-    "Unidentified": "Unknown",
-    "Other": "Unknown",
-}
-simple_class_labels = np.array(itemgetter(*class_labels)(name_map))
-
-name_map = {
-    "CN": "Other",
-    "DANs": "MB",
-    "KCs": "MB",
-    "LHN": "Other",
-    "LHN; CN": "Other",
-    "MBINs": "MB",
-    "MBON": "MB",
-    "MBON; CN": "MB",
-    "OANs": "MB",
-    "ORN mPNs": "PN",
-    "ORN uPNs": "PN",
-    "tPNs": "PN",
-    "vPNs": "PN",
-    "Unidentified": "Other",
-    "Other": "Other",
-}
-mb_labels = np.array(itemgetter(*class_labels)(name_map))
-
-known_inds = np.where(np.logical_or(mb_labels == "MB", mb_labels == "PN"))[0]
-
-
-# Now load all 4 colors
-color_adjs = []
-for t in GRAPH_TYPES:
-    adj = load_everything(t)
-    adj = adj[np.ix_(right_inds, right_inds)]
-    adj = adj[np.ix_(sort_inds, sort_inds)]
-    color_adjs.append(adj)
-
-sum_adj = np.array(color_adjs).sum(axis=0)
-
-
-# Print some stats
-n_verts = adj.shape[0]
-print("Right Brain")
-print()
-print(f"Number of vertices: {n_verts}")
-print()
-for g, name in zip(color_adjs, GRAPH_TYPES):
-    print(name)
-    print(f"Number of edges: {np.count_nonzero(g)}")
-    print(f"Number of synapses: {int(g.sum())}")
-    median_in_degree = np.median(np.count_nonzero(g, axis=0))
-    median_out_degree = np.median(np.count_nonzero(g, axis=1))
-    print(f"Median node in degree: {median_in_degree}")
-    print(f"Median node out degree: {median_out_degree}")
-    print()
-
-
-# Plot the adjacency matrix for the summed graph
-sns.set_context("talk", font_scale=1)
-
-plt.figure(figsize=(5, 5))
-ax = heatmap(
-    sum_adj,
-    inner_hier_labels=simple_class_labels,
-    transform="simple-all",
-    hier_label_fontsize=10,
-    sort_nodes=False,
-    cbar=False,
-    title="Right Brain (summed 4 channels)",
-    title_pad=90,
-    font_scale=1.7,
-)
-annotate_arrow(ax, (0.135, 0.88))
-
-# Plot the adjacency matrix for the 4-color graphs
-fig, ax = plt.subplots(2, 2, figsize=(20, 20))
-ax = ax.ravel()
-for i, g in enumerate(color_adjs):
-    heatmap(
-        binarize(g),
-        inner_hier_labels=simple_class_labels,
-        # transform="si",
-        hier_label_fontsize=10,
-        sort_nodes=False,
-        ax=ax[i],
-        cbar=False,
-        title=GRAPH_TYPE_LABELS[i],
-        title_pad=70,
-        font_scale=1.7,
-    )
-plt.suptitle("Right Brain (4 channels)", fontsize=45, x=0.525, y=1.02)
-plt.tight_layout()
-annotate_arrow(ax[0])
-savefig("4color_brain", fmt="png", dpi=150, bbox_inches="tight", pad_inches=0.5)
 
 
 def get_sbm_prob(adj, labels):
@@ -630,21 +385,143 @@ def sub_ari(known_inds, true_labels, pred_labels):
     return ari
 
 
+# Set up plotting constants
+plt.style.use("seaborn-white")
+sns.set_palette("deep")
+sns.set_context("talk", font_scale=1)
+
+
 # %% [markdown]
-# # Parameters
-n_components = 4
+# # Load the data
+adj, class_labels, side_labels = load_everything(
+    "G", version=BRAIN_VERSION, return_class=True, return_side=True
+)
 
-MAX_CLUSTERS = 10
-MIN_CLUSTERS = 9
-N_SIMS = 1
-N_INIT = 1
+right_inds = np.where(side_labels == " mw right")[0]
+adj = adj[np.ix_(right_inds, right_inds)]
+degrees = adj.sum(axis=0) + adj.sum(axis=1)
+sort_inds = np.argsort(degrees)[::-1]
+class_labels = class_labels[right_inds]  # need to do right inds, then sort_inds
+class_labels = class_labels[sort_inds]
 
 
-gmm_params = {"n_init": N_INIT, "covariance_type": "all"}
-out_dicts = []
+# Remap the names
+name_map = {
+    "CN": "Unk",
+    "DANs": "MBIN",
+    "KCs": "KC",
+    "LHN": "Unk",
+    "LHN; CN": "Unk",
+    "MBINs": "MBIN",
+    "MBON": "MBON",
+    "MBON; CN": "MBON",
+    "OANs": "MBIN",
+    "ORN mPNs": "PN",
+    "ORN uPNs": "PN",
+    "tPNs": "PN",
+    "vPNs": "PN",
+    "Unidentified": "Unk",
+    "Other": "Unk",
+}
+simple_class_labels = np.array(itemgetter(*class_labels)(name_map))
+
+name_map = {
+    "CN": "Other",
+    "DANs": "MB",
+    "KCs": "MB",
+    "LHN": "Other",
+    "LHN; CN": "Other",
+    "MBINs": "MB",
+    "MBON": "MB",
+    "MBON; CN": "MB",
+    "OANs": "MB",
+    "ORN mPNs": "PN",
+    "ORN uPNs": "PN",
+    "tPNs": "PN",
+    "vPNs": "PN",
+    "Unidentified": "Other",
+    "Other": "Other",
+}
+mb_labels = np.array(itemgetter(*class_labels)(name_map))
+
+known_inds = np.where(np.logical_or(mb_labels == "MB", mb_labels == "PN"))[0]
+
+
+# Now load all 4 colors
+color_adjs = []
+for t in GRAPH_TYPES:
+    adj = load_everything(t)
+    adj = adj[np.ix_(right_inds, right_inds)]
+    adj = adj[np.ix_(sort_inds, sort_inds)]
+    color_adjs.append(adj)
+
+sum_adj = np.array(color_adjs).sum(axis=0)
+
+
+# Print some stats
+n_verts = adj.shape[0]
+print("Right Brain")
+print()
+print(f"Number of vertices: {n_verts}")
+print()
+for g, name in zip(color_adjs, GRAPH_TYPES):
+    print(name)
+    print(f"Number of edges: {np.count_nonzero(g)}")
+    print(f"Number of synapses: {int(g.sum())}")
+    median_in_degree = np.median(np.count_nonzero(g, axis=0))
+    median_out_degree = np.median(np.count_nonzero(g, axis=1))
+    print(f"Median node in degree: {median_in_degree}")
+    print(f"Median node out degree: {median_out_degree}")
+    print()
+
+
+# Plot the adjacency matrix for the summed graph
+sns.set_context("talk", font_scale=1)
+
+plt.figure(figsize=(5, 5))
+ax = heatmap(
+    sum_adj,
+    inner_hier_labels=simple_class_labels,
+    transform="simple-all",
+    hier_label_fontsize=10,
+    sort_nodes=False,
+    cbar=False,
+    title="Right Brain (summed 4 channels)",
+    title_pad=90,
+    font_scale=1.7,
+)
+annotate_arrow(ax, (0.135, 0.88))
+stashfig("right_brain_sum")
+
+# Plot the adjacency matrix for the 4-color graphs
+fig, ax = plt.subplots(2, 2, figsize=(20, 20))
+ax = ax.ravel()
+for i, g in enumerate(color_adjs):
+    heatmap(
+        binarize(g),
+        inner_hier_labels=simple_class_labels,
+        # transform="si",
+        hier_label_fontsize=10,
+        sort_nodes=False,
+        ax=ax[i],
+        cbar=False,
+        title=GRAPH_TYPE_LABELS[i],
+        title_pad=70,
+        font_scale=1.7,
+    )
+
+plt.suptitle("Right Brain (4 channels)", fontsize=45, x=0.525, y=1.02)
+plt.tight_layout()
+annotate_arrow(ax[0])
+stashfig("right_brain_4_color")
 
 # %% [markdown]
 # # Run clustering using OMNI on whole 4-color graph
+
+n_components = 4
+gmm_params = {"n_init": N_INIT, "covariance_type": "all"}
+out_dicts = []
+
 
 embed = "OMNI"
 cluster = "GMM"
@@ -671,6 +548,7 @@ for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
         "Cluster": cluster,
         "Embed": embed,
         "Method": f"{cluster} o {embed}",
+        "Score": gmm.model_.score(latent),
     }
     mb_ari = sub_ari(known_inds, mb_labels, pred_labels)
     mb_ari_dict = base_dict.copy()
@@ -690,8 +568,11 @@ for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
     full_ari_dict["Metric"] = "Full ARI"
     out_dicts.append(full_ari_dict)
 
+    save_name = f"k{k}-{cluster}-{embed}-right-4-color-PTR-raw"
+
     # Plot embedding
     pairplot(latent, labels=pred_labels, title=run_name)
+    stashfig("latent-" + save_name)
 
     # Plot everything else
     prob_df = get_sbm_prob(sum_adj, pred_labels)
@@ -702,6 +583,8 @@ for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
         sum_adj, latent, prob_df, block_sum_df, simple_class_labels, pred_labels
     )
     plt.suptitle(run_name, fontsize=40)
+
+    stashfig("clustergram-" + save_name)
 
 # %% [markdown]
 # # Run clustering using LSE on the sum graph
@@ -732,6 +615,7 @@ for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
         "Cluster": cluster,
         "Embed": embed,
         "Method": f"{cluster} o {embed}",
+        "Score": gmm.model_.score(latent),
     }
     mb_ari = sub_ari(known_inds, mb_labels, pred_labels)
     mb_ari_dict = base_dict.copy()
@@ -751,8 +635,11 @@ for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
     full_ari_dict["Metric"] = "Full ARI"
     out_dicts.append(full_ari_dict)
 
+    save_name = f"k{k}-{cluster}-{embed}-right-4-color-PTR-raw"
+
     # Plot embedding
     pairplot(latent, labels=pred_labels, title=run_name)
+    stashfig("latent-" + save_name)
 
     # Plot everything else
     prob_df = get_sbm_prob(sum_adj, pred_labels)
@@ -763,6 +650,8 @@ for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
         sum_adj, latent, prob_df, block_sum_df, simple_class_labels, pred_labels
     )
     plt.suptitle(run_name, fontsize=40)
+
+    stashfig("clustergram-" + save_name)
 
 # %% [markdown]
 # # SKmeans o LSE
@@ -797,6 +686,7 @@ for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
         "Cluster": cluster,
         "Embed": embed,
         "Method": f"{cluster} o {embed}",
+        "Score": skmeans.inertia_,
     }
     mb_ari = sub_ari(known_inds, mb_labels, pred_labels)
     mb_ari_dict = base_dict.copy()
@@ -816,8 +706,11 @@ for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
     full_ari_dict["Metric"] = "Full ARI"
     out_dicts.append(full_ari_dict)
 
+    save_name = f"k{k}-{cluster}-{embed}-right-4-color-PTR-raw"
+
     # Plot embedding
     pairplot(latent, labels=pred_labels, title=run_name)
+    stashfig("latent-" + save_name)
 
     # Plot everything else
     prob_df = get_sbm_prob(sum_adj, pred_labels)
@@ -829,15 +722,26 @@ for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
     )
     plt.suptitle(run_name, fontsize=40)
 
+    stashfig("clustergram-" + save_name)
+
 # %% [markdown]
 # # Summary
 
 out_df = pd.DataFrame.from_dict(out_dicts)
 
+plt.figure()
 fg = sns.FacetGrid(
     data=out_df, row="Metric", col="Method", margin_titles=True, height=6
 )
 fg.map(sns.lineplot, "K", "ARI")
+plt.suptitle("ARI metrics", fontsize=40, y=1.03, verticalalignment="top")
+stashfig("overall-ARI")
 
 
-# %%
+plt.figure()
+fg = sns.FacetGrid(
+    data=out_df, col="Method", margin_titles=True, height=6, sharey=False
+)
+fg.map(sns.lineplot, "K", "Score")
+plt.suptitle("Unsupervised score metrics", fontsize=40, y=1.05, verticalalignment="top")
+stashfig("overall-score")

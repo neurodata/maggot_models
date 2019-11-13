@@ -1,15 +1,14 @@
 import json
-from pathlib import Path
+import os
 import pickle
 from operator import itemgetter
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-from graspy.simulations import p_from_latent, sample_edges, sbm
-
 from graspy.models import SBMEstimator
+from graspy.simulations import p_from_latent, sample_edges, sbm
 
 
 def hardy_weinberg(theta):
@@ -367,9 +366,28 @@ def get_simple(graph):
     return simple_classes
 
 
-def savefig(name, fmt="pdf", pathname="./maggot_models/notebooks/outs", **kws):
+def savefig(
+    name,
+    fmt="pdf",
+    foldername=None,
+    pathname="./maggot_models/notebooks/outs",
+    bbox_inches="tight",
+    pad_inches=0.5,
+    **kws,
+):
     path = Path(pathname)
-    plt.savefig(path / str(name + "." + fmt), fmt=fmt, facecolor="w", **kws)
+    if foldername is not None:
+        path = path / foldername
+        if not os.path.isdir(path):
+            os.mkdir(path)
+    plt.savefig(
+        path / str(name + "." + fmt),
+        fmt=fmt,
+        facecolor="w",
+        bbox_inches=bbox_inches,
+        pad_inches=pad_inches,
+        **kws,
+    )
 
 
 def relabel(labels):
