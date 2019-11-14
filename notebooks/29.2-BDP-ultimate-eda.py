@@ -435,6 +435,7 @@ def probplot(
     vmin=0,
     vmax=None,
     ax=None,
+    font_scale=1,
 ):
     sbm = SBMEstimator(directed=True, loops=True)
     sbm.fit(binarize(adj), y=labels)
@@ -465,7 +466,7 @@ def probplot(
 
     ax.set_title(title, pad=30, fontsize=30)
 
-    sns.set_context("talk", font_scale=1)
+    sns.set_context("talk", font_scale=font_scale)
 
     heatmap_kws = dict(
         cbar_kws=cbar_kws, annot=True, square=True, cmap=cmap, vmin=vmin, vmax=vmax
@@ -474,7 +475,8 @@ def probplot(
         heatmap_kws["norm"] = log_norm
     if ax is not None:
         heatmap_kws["ax"] = ax
-
+    ax.tick_params(axis="both", which="major", labelsize=30)
+    # ax.tick_params(axis="both", which="minor", labelsize=8)
     ax = sns.heatmap(prob_df, **heatmap_kws)
 
     ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
@@ -601,6 +603,7 @@ def multi_probplot(
     vmins=None,
     vmaxs=None,
     ax=None,
+    font_scale=1,
 ):
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize)
     ax = ax.ravel()
@@ -625,13 +628,14 @@ def multi_probplot(
             vmin=vmins[i],
             vmax=vmaxs[i],
             ax=ax[i],
+            font_scale=font_scale,
         )
         dfs.append(prob_df)
 
     return ax, dfs
 
 
-cmaps = ["Purples", "Greens", "Oranges", "RdPu"]
+cmaps = ["Purples", "Greens", "Blues", "Oranges"]
 titles = GRAPH_TYPE_LABELS
 figsize = (30, 30)
 multi_probplot(
@@ -641,6 +645,7 @@ multi_probplot(
     titles=titles,
     vmins=[0, 0, 0, 0],
     figsize=figsize,
+    font_scale=1.5,
 )
 stashfig("multiprob-side")
 multi_probplot(

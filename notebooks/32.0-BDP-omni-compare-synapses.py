@@ -208,14 +208,6 @@ def ase_concatenate(adjs, n_components):
     return latent
 
 
-def degree(adjs, *args):
-    deg_mat = np.zeros((n_verts, 2 * N_GRAPH_TYPES))
-    for i, g in enumerate(adjs):
-        deg_mat[:, i] = g.sum(axis=0)
-        deg_mat[:, i + N_GRAPH_TYPES] = g.sum(axis=1)
-    return deg_mat
-
-
 def get_sbm_prob(adj, labels):
     sbm = SBMEstimator(directed=True, loops=True)
     sbm.fit(binarize(adj), y=labels)
@@ -231,7 +223,14 @@ def get_sbm_prob(adj, labels):
 
 
 def probplot(
-    prob_df, ax=None, title=None, log_scale=False, cmap="Purples", vmin=None, vmax=None
+    prob_df,
+    ax=None,
+    title=None,
+    log_scale=False,
+    cmap="Purples",
+    vmin=None,
+    vmax=None,
+    figsize=(10, 10),
 ):
     cbar_kws = {"fraction": 0.08, "shrink": 0.8, "pad": 0.03}
 
@@ -371,7 +370,7 @@ def clustergram(
 
 def get_block_edgesums(adj, pred_labels, sort_blocks):
     block_vert_inds, block_inds, block_inv = _get_block_indices(pred_labels)
-    block_sums = _calculate_block_edgesum(sum_adj, block_inds, block_vert_inds)
+    block_sums = _calculate_block_edgesum(adj, block_inds, block_vert_inds)
     sort_blocks = prob_df.columns.values
     block_sums = block_sums[np.ix_(sort_blocks, sort_blocks)]
     block_sum_df = pd.DataFrame(data=block_sums, columns=sort_blocks, index=sort_blocks)
@@ -397,351 +396,38 @@ adj, class_labels, side_labels = load_everything(
     "G", version=BRAIN_VERSION, return_class=True, return_side=True
 )
 
-right_inds = np.where(side_labels == " mw right")[0]
-adj = adj[np.ix_(right_inds, right_inds)]
-degrees = adj.sum(axis=0) + adj.sum(axis=1)
-sort_inds = np.argsort(degrees)[::-1]
-class_labels = class_labels[right_inds]  # need to do right inds, then sort_inds
-class_labels = class_labels[sort_inds]
-
-
-# Remap the names
-name_map = {
-    "CN": "Unk",
-    "DANs": "MBIN",
-    "KCs": "KC",
-    "LHN": "Unk",
-    "LHN; CN": "Unk",
-    "MBINs": "MBIN",
-    "MBON": "MBON",
-    "MBON; CN": "MBON",
-    "OANs": "MBIN",
-    "ORN mPNs": "PN",
-    "ORN uPNs": "PN",
-    "tPNs": "PN",
-    "vPNs": "PN",
-    "Unidentified": "Unk",
-    "Other": "Unk",
-}
-simple_class_labels = np.array(itemgetter(*class_labels)(name_map))
-
-name_map = {
-    "CN": "Other",
-    "DANs": "MB",
-    "KCs": "MB",
-    "LHN": "Other",
-    "LHN; CN": "Other",
-    "MBINs": "MB",
-    "MBON": "MB",
-    "MBON; CN": "MB",
-    "OANs": "MB",
-    "ORN mPNs": "PN",
-    "ORN uPNs": "PN",
-    "tPNs": "PN",
-    "vPNs": "PN",
-    "Unidentified": "Other",
-    "Other": "Other",
-}
-mb_labels = np.array(itemgetter(*class_labels)(name_map))
-
-known_inds = np.where(np.logical_or(mb_labels == "MB", mb_labels == "PN"))[0]
-
-
-# Now load all 4 colors
 color_adjs = []
 for t in GRAPH_TYPES:
     adj = load_everything(t)
-    adj = adj[np.ix_(right_inds, right_inds)]
-    adj = adj[np.ix_(sort_inds, sort_inds)]
     color_adjs.append(adj)
 
-sum_adj = np.array(color_adjs).sum(axis=0)
+sum_adj = np.sum(color_adjs, axis=0)
+
+embed_adjs = [color_adjs[0], sum_adj]
+embed_adjs = [pass_to_ranks(g) for g in embed_adjs]
+
+embed = OmnibusEmbed(n_components=4)
+latents = embed.fit_transform(embed_adjs)
+latents = np.concatenate(latents, axis=-1)
+n_verts = sum_adj.shape[0]
+indicator = n_verts * ["AtD"] + n_verts * ["Sum"]
+plot_latents = np.concatenate(latents, axis=0)
+pairplot(plot_latents, labels=indicator)
+plot_class_labels = np.concatenate((class_labels, class_labels))
+#%%
+pairplot(plot_latents, plot_class_labels, palette="tab20")
+
+#%%
+diffs = np.linalg.norm(latents[0] - latents[1], axis=1)
+plt.figure(figsize=(20, 10))
+sns.set_palette("tab20")
+sns.set_context("talk", font_scale=1.25)
+uni_classes = np.unique(class_labels)
+for i, name in enumerate(uni_classes):
+    inds = np.where(class_labels == name)[0]
+    class_diffs = diffs[inds]
+    sns.distplot(class_diffs, label=name, kde=False, norm_hist=True)
+plt.legend()
 
 
-# Print some stats
-n_verts = adj.shape[0]
-print("Right Brain")
-print()
-print(f"Number of vertices: {n_verts}")
-print()
-for g, name in zip(color_adjs, GRAPH_TYPES):
-    print(name)
-    print(f"Number of edges: {np.count_nonzero(g)}")
-    print(f"Number of synapses: {int(g.sum())}")
-    median_in_degree = np.median(np.count_nonzero(g, axis=0))
-    median_out_degree = np.median(np.count_nonzero(g, axis=1))
-    print(f"Median node in degree: {median_in_degree}")
-    print(f"Median node out degree: {median_out_degree}")
-    print()
-
-
-# Plot the adjacency matrix for the summed graph
-sns.set_context("talk", font_scale=1)
-
-plt.figure(figsize=(5, 5))
-ax = heatmap(
-    sum_adj,
-    inner_hier_labels=simple_class_labels,
-    transform="simple-all",
-    hier_label_fontsize=10,
-    sort_nodes=False,
-    cbar=False,
-    title="Right Brain (summed 4 channels)",
-    title_pad=90,
-    font_scale=1.7,
-)
-annotate_arrow(ax, (0.135, 0.88))
-stashfig("right_brain_sum")
-
-# Plot the adjacency matrix for the 4-color graphs
-fig, ax = plt.subplots(2, 2, figsize=(20, 20))
-ax = ax.ravel()
-for i, g in enumerate(color_adjs):
-    heatmap(
-        binarize(g),
-        inner_hier_labels=simple_class_labels,
-        # transform="si",
-        hier_label_fontsize=10,
-        sort_nodes=False,
-        ax=ax[i],
-        cbar=False,
-        title=GRAPH_TYPE_LABELS[i],
-        title_pad=70,
-        font_scale=1.7,
-    )
-
-plt.suptitle("Right Brain (4 channels)", fontsize=45, x=0.525, y=1.02)
-plt.tight_layout()
-annotate_arrow(ax[0])
-stashfig("right_brain_4_color")
-
-# %% [markdown]
-# # Run clustering using OMNI on whole 4-color graph
-
-n_components = 4
-gmm_params = {"n_init": N_INIT, "covariance_type": "all"}
-out_dicts = []
-
-
-embed = "OMNI"
-cluster = "GMM"
-graph = sum_adj
-
-omni_latent = omni(color_adjs, n_components)
-
-latent = omni_latent
-pairplot(latent, labels=simple_class_labels, title=embed)
-
-for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
-    run_name = f"k = {k}, {cluster}, {embed}, right hemisphere (4-color), PTR, raw"
-    print(run_name)
-    print()
-
-    # Cluster
-    gmm = GaussianCluster(min_components=k, max_components=k, **gmm_params)
-    gmm.fit(latent)
-    pred_labels = gmm.predict(latent)
-
-    # ARI
-    base_dict = {
-        "K": k,
-        "Cluster": cluster,
-        "Embed": embed,
-        "Method": f"{cluster} o {embed}",
-        "Score": gmm.model_.score(latent),
-    }
-    mb_ari = sub_ari(known_inds, mb_labels, pred_labels)
-    mb_ari_dict = base_dict.copy()
-    mb_ari_dict["ARI"] = mb_ari
-    mb_ari_dict["Metric"] = "MB ARI"
-    out_dicts.append(mb_ari_dict)
-
-    simple_ari = sub_ari(known_inds, simple_class_labels, pred_labels)
-    simple_ari_dict = base_dict.copy()
-    simple_ari_dict["ARI"] = simple_ari
-    simple_ari_dict["Metric"] = "Simple ARI"
-    out_dicts.append(simple_ari_dict)
-
-    full_ari = adjusted_rand_score(class_labels, pred_labels)
-    full_ari_dict = base_dict.copy()
-    full_ari_dict["ARI"] = full_ari
-    full_ari_dict["Metric"] = "Full ARI"
-    out_dicts.append(full_ari_dict)
-
-    save_name = f"k{k}-{cluster}-{embed}-right-4-color-PTR-raw"
-
-    # Plot embedding
-    pairplot(latent, labels=pred_labels, title=run_name)
-    stashfig("latent-" + save_name)
-
-    # Plot everything else
-    prob_df = get_sbm_prob(sum_adj, pred_labels)
-
-    block_sum_df = get_block_edgesums(sum_adj, pred_labels, prob_df.columns.values)
-
-    clustergram(
-        sum_adj, latent, prob_df, block_sum_df, simple_class_labels, pred_labels
-    )
-    plt.suptitle(run_name, fontsize=40)
-
-    stashfig("clustergram-" + save_name)
-
-# %% [markdown]
-# # Run clustering using LSE on the sum graph
-
-embed = "LSE"
-cluster = "GMM"
-graph = sum_adj
-
-lse_latent = lse(sum_adj, 4, regularizer=None)
-
-
-latent = lse_latent
-pairplot(latent, labels=simple_class_labels, title=embed)
-
-for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
-    run_name = f"k = {k}, {cluster}, {embed}, right hemisphere (sum), PTR, raw"
-    print(run_name)
-    print()
-
-    # Cluster
-    gmm = GaussianCluster(min_components=k, max_components=k, **gmm_params)
-    gmm.fit(latent)
-    pred_labels = gmm.predict(latent)
-
-    # ARI
-    base_dict = {
-        "K": k,
-        "Cluster": cluster,
-        "Embed": embed,
-        "Method": f"{cluster} o {embed}",
-        "Score": gmm.model_.score(latent),
-    }
-    mb_ari = sub_ari(known_inds, mb_labels, pred_labels)
-    mb_ari_dict = base_dict.copy()
-    mb_ari_dict["ARI"] = mb_ari
-    mb_ari_dict["Metric"] = "MB ARI"
-    out_dicts.append(mb_ari_dict)
-
-    simple_ari = sub_ari(known_inds, simple_class_labels, pred_labels)
-    simple_ari_dict = base_dict.copy()
-    simple_ari_dict["ARI"] = simple_ari
-    simple_ari_dict["Metric"] = "Simple ARI"
-    out_dicts.append(simple_ari_dict)
-
-    full_ari = adjusted_rand_score(class_labels, pred_labels)
-    full_ari_dict = base_dict.copy()
-    full_ari_dict["ARI"] = full_ari
-    full_ari_dict["Metric"] = "Full ARI"
-    out_dicts.append(full_ari_dict)
-
-    save_name = f"k{k}-{cluster}-{embed}-right-4-color-PTR-raw"
-
-    # Plot embedding
-    pairplot(latent, labels=pred_labels, title=run_name)
-    stashfig("latent-" + save_name)
-
-    # Plot everything else
-    prob_df = get_sbm_prob(sum_adj, pred_labels)
-
-    block_sum_df = get_block_edgesums(sum_adj, pred_labels, prob_df.columns.values)
-
-    clustergram(
-        sum_adj, latent, prob_df, block_sum_df, simple_class_labels, pred_labels
-    )
-    plt.suptitle(run_name, fontsize=40)
-
-    stashfig("clustergram-" + save_name)
-
-# %% [markdown]
-# # SKmeans o LSE
-embed = "LSE"
-cluster = "SKmeans"
-
-skmeans_params = {"n_init": N_INIT}
-
-
-graph = sum_adj
-
-lse_latent = lse(sum_adj, 4, regularizer=None)
-
-latent = lse_latent
-pairplot(latent, labels=simple_class_labels, title=embed)
-
-for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
-    run_name = f"k = {k}, {cluster}, {embed}, right hemisphere (sum), PTR, raw"
-    print(run_name)
-    print()
-
-    # Cluster
-    # gmm = GaussianCluster(min_components=k, max_components=k, **gmm_params)
-    # gmm.fit(latent)
-    skmeans = SphericalKMeans(n_clusters=k, **skmeans_params)
-    skmeans.fit(latent)
-    pred_labels = skmeans.predict(latent)
-
-    # ARI
-    base_dict = {
-        "K": k,
-        "Cluster": cluster,
-        "Embed": embed,
-        "Method": f"{cluster} o {embed}",
-        "Score": skmeans.inertia_,
-    }
-    mb_ari = sub_ari(known_inds, mb_labels, pred_labels)
-    mb_ari_dict = base_dict.copy()
-    mb_ari_dict["ARI"] = mb_ari
-    mb_ari_dict["Metric"] = "MB ARI"
-    out_dicts.append(mb_ari_dict)
-
-    simple_ari = sub_ari(known_inds, simple_class_labels, pred_labels)
-    simple_ari_dict = base_dict.copy()
-    simple_ari_dict["ARI"] = simple_ari
-    simple_ari_dict["Metric"] = "Simple ARI"
-    out_dicts.append(simple_ari_dict)
-
-    full_ari = adjusted_rand_score(class_labels, pred_labels)
-    full_ari_dict = base_dict.copy()
-    full_ari_dict["ARI"] = full_ari
-    full_ari_dict["Metric"] = "Full ARI"
-    out_dicts.append(full_ari_dict)
-
-    save_name = f"k{k}-{cluster}-{embed}-right-4-color-PTR-raw"
-
-    # Plot embedding
-    pairplot(latent, labels=pred_labels, title=run_name)
-    stashfig("latent-" + save_name)
-
-    # Plot everything else
-    prob_df = get_sbm_prob(sum_adj, pred_labels)
-
-    block_sum_df = get_block_edgesums(sum_adj, pred_labels, prob_df.columns.values)
-
-    clustergram(
-        sum_adj, latent, prob_df, block_sum_df, simple_class_labels, pred_labels
-    )
-    plt.suptitle(run_name, fontsize=40)
-
-    stashfig("clustergram-" + save_name)
-
-# %% [markdown]
-# # Summary
-
-out_df = pd.DataFrame.from_dict(out_dicts)
-
-plt.figure()
-fg = sns.FacetGrid(
-    data=out_df, row="Metric", col="Method", margin_titles=True, height=6
-)
-fg.map(sns.lineplot, "K", "ARI")
-plt.suptitle("ARI metrics", fontsize=40, y=1.03, verticalalignment="top")
-stashfig("overall-ARI")
-
-
-plt.figure()
-fg = sns.FacetGrid(
-    data=out_df, col="Method", margin_titles=True, height=6, sharey=False
-)
-fg.map(sns.lineplot, x="K", y="Score")
-plt.suptitle("Unsupervised score metrics", fontsize=40, y=1.05, verticalalignment="top")
-stashfig("overall-score")
+# %%
