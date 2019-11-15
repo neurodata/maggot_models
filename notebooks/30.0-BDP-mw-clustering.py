@@ -40,7 +40,7 @@ from sklearn.metrics import adjusted_rand_score
 from spherecluster import SphericalKMeans
 
 from src.data import load_everything
-from src.utils import savefig
+from src.utils import savefig, export_skeleton_json
 from src.visualization import sankey
 
 FNAME = os.path.basename(__file__)[:-3]
@@ -59,8 +59,8 @@ SAVEFIGS = False
 DEFAULT_FMT = "png"
 DEFUALT_DPI = 150
 
-MAX_CLUSTERS = 10
-MIN_CLUSTERS = 2
+MAX_CLUSTERS = 6
+MIN_CLUSTERS = 6
 N_INIT = 1
 PTR = True
 
@@ -393,8 +393,8 @@ sns.set_context("talk", font_scale=1)
 
 # %% [markdown]
 # # Load the data
-adj, class_labels, side_labels = load_everything(
-    "G", version=BRAIN_VERSION, return_class=True, return_side=True
+adj, class_labels, side_labels, skeleton_labels = load_everything(
+    "G", version=BRAIN_VERSION, return_class=True, return_side=True, return_ids=True
 )
 
 right_inds = np.where(side_labels == " mw right")[0]
@@ -593,8 +593,12 @@ embed = "LSE"
 cluster = "GMM"
 graph = sum_adj
 
-lse_latent = lse(sum_adj, 4, regularizer=None)
+###
+N_INIT = 200
+gmm_params = {"n_init": N_INIT, "covariance_type": "all"}
+###
 
+lse_latent = lse(sum_adj, 4, regularizer=None)
 
 latent = lse_latent
 pairplot(latent, labels=simple_class_labels, title=embed)
@@ -745,3 +749,12 @@ fg = sns.FacetGrid(
 fg.map(sns.lineplot, x="K", y="Score")
 plt.suptitle("Unsupervised score metrics", fontsize=40, y=1.05, verticalalignment="top")
 stashfig("overall-score")
+
+# %% [markdown]
+# # Try exporting as JSON for CATMAID
+
+out_path = "./maggot_models/notebooks/outs/30.0-BDP-mw-clustering/test_json.json"
+export_skeleton_json(out_path, skeleton_labels, pred_labels, "deep")
+
+
+# %%

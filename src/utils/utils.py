@@ -7,6 +7,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from graspy.models import SBMEstimator
 from graspy.simulations import p_from_latent, sample_edges, sbm
 
@@ -427,3 +428,39 @@ def unique_by_size(data):
     unique_data = unique_data[sort_inds]
     counts = counts[sort_inds]
     return unique_data, counts
+
+
+def export_skeleton_json(path, ids, colors, palette=None):
+    """ Take a list of skeleton ids and output as json file for catmaid
+    
+    Parameters
+    ----------
+    path : str
+        location to save output
+    ids : list or array
+        skeleton ids
+    colors : list or array
+        either a hexadecimal color for each skeleton or a label for each skeleton to be 
+        colored by palette
+    palette : str or None, optional
+        if not None, this is a palette specification to use to color skeletons
+    """
+    if palette is not None:
+        uni_labels = np.unique(colors)
+        n_labels = len(uni_labels)
+        pal = sns.color_palette(palette, n_colors=n_labels)
+        pal = pal.as_hex()
+        colormap = dict(zip(uni_labels, pal))
+        colors = list(itemgetter(*colors)(colormap))
+    opacs = len(ids) * [1]
+    spec_list = [
+        {"skeleton_id": int(i), "color": c, "opacity": o}
+        for i, c, o in zip(ids, colors, opacs)
+    ]
+    print(json.dumps(spec_list))
+    with open(path, "w") as fout:
+        json.dump(spec_list, fout)
+    if palette is not None:
+        return spec_list, colormap
+    else:
+        return spec_list

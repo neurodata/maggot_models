@@ -23,5 +23,6 @@ from .utils import (
     savefig,
     relabel,
     unique_by_size,
+    export_skeleton_json,
 )
 
