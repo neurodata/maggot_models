@@ -457,7 +457,6 @@ def export_skeleton_json(path, ids, colors, palette=None):
         {"skeleton_id": int(i), "color": c, "opacity": o}
         for i, c, o in zip(ids, colors, opacs)
     ]
-    print(json.dumps(spec_list))
     with open(path, "w") as fout:
         json.dump(spec_list, fout)
     if palette is not None:
