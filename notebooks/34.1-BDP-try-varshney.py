@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from graspy.embed import LaplacianSpectralEmbed
-from graspy.plot import heatmap
+from graspy.plot import heatmap, pairplot
 from graspy.simulations import sbm
 from graspy.utils import get_lcc
 
@@ -43,6 +43,8 @@ def signal_flow(A, n_components=5, return_evals=False):
     z = L_pinv @ b
 
     D_root = np.diag(np.diag(D) ** (-1 / 2))
+    D_root[np.isnan(D_root)] = 0
+    D_root[np.isinf(D_root)] = 0
     Q = D_root @ L @ D_root
     evals, evecs = np.linalg.eig(Q)
     inds = np.argsort(evals)
@@ -227,6 +229,12 @@ plt.title("Laplacian scree plot")
 plt.xlabel("Eigenvalue")
 plt.ylabel("Magnitude")
 
+plt.figure(figsize=(10, 5))
+sns.distplot(scatter_df["Signal flow"])
+plt.ylabel("Frequency")
+plt.title(r"A $\to$ D")
+
+
 plt.figure(figsize=(15, 15))
 plt.title(r"A $\to$ D")
 sns.scatterplot(
@@ -293,6 +301,18 @@ plt.legend(bbox_to_anchor=(1.03, 1), loc=2, borderaxespad=0.0)
 plt.show()
 
 # %% [markdown]
+# # Look at why the second laplacian eigenvector looks so sparse
+in_degree = np.sum(adj, axis=0)
+out_degree = np.sum(adj, axis=1)
+plt.figure()
+sns.scatterplot(scatter_df["Lap-2"], in_degree)
+plt.ylabel("In degree")
+plt.figure()
+sns.scatterplot(scatter_df["Lap-2"], out_degree)
+plt.ylabel("Out degree")
+plt.show()
+
+# %% [markdown]
 # # Now, do the same but for the sum of A $\rightarrow$ D and A $\rightarrow$ A
 
 adj_aa = load_everything("Gaa", version=GRAPH_VERSION)
@@ -300,9 +320,9 @@ adj_aa = adj_aa[np.ix_(inds, inds)]
 adj = adj + adj_aa
 
 # Compute signal flow
-scatter_df, evals = signal_flow(adj, return_evals=True)
-scatter_df["Class"] = class_labels
-scatter_df["Side"] = side_labels
+aa_scatter_df, evals = signal_flow(adj, return_evals=True)
+aa_scatter_df["Class"] = class_labels
+aa_scatter_df["Side"] = side_labels
 
 # Plot
 plt.figure(figsize=(10, 5))
@@ -311,12 +331,17 @@ plt.title("Laplacian scree plot")
 plt.xlabel("Eigenvalue")
 plt.ylabel("Magnitude")
 
+plt.figure(figsize=(10, 5))
+sns.distplot(aa_scatter_df["Signal flow"])
+plt.ylabel("Frequency")
+plt.title(r"A $\to$ D + A $\to$ A")
+
 plt.figure(figsize=(15, 15))
 plt.title(r"A $\to$ D + A $\to$ A")
 sns.scatterplot(
     x="Lap-2",
     y="Signal flow",
-    data=scatter_df,
+    data=aa_scatter_df,
     hue="Class",
     style="Side",
     markers=[">", "<"],
@@ -332,7 +357,7 @@ plt.title(r"A $\to$ D + A $\to$ A")
 sns.scatterplot(
     x="Lap-3",
     y="Signal flow",
-    data=scatter_df,
+    data=aa_scatter_df,
     hue="Class",
     style="Side",
     markers=[">", "<"],
@@ -348,7 +373,7 @@ plt.title(r"A $\to$ D + A $\to$ A")
 sns.scatterplot(
     x="Lap-4",
     y="Signal flow",
-    data=scatter_df,
+    data=aa_scatter_df,
     hue="Class",
     style="Side",
     markers=[">", "<"],
@@ -364,7 +389,7 @@ plt.title(r"A $\to$ D + A $\to$ A")
 sns.scatterplot(
     x="Lap-5",
     y="Signal flow",
-    data=scatter_df,
+    data=aa_scatter_df,
     hue="Class",
     style="Side",
     markers=[">", "<"],
@@ -375,3 +400,42 @@ sns.scatterplot(
 )
 plt.legend(bbox_to_anchor=(1.03, 1), loc=2, borderaxespad=0.0)
 plt.show()
+
+# %% [markdown]
+# ## Now plot the signal flow metric from A $\to$ D vs from A $\to$ D + A $\to$ A
+# Would it be worth looking at the cells which move the most? I.e. the cells furthest
+# away from y=x
+aa_signal = aa_scatter_df["Signal flow"].values
+ad_signal = scatter_df["Signal flow"].values
+
+plt.figure(figsize=(10, 10))
+sns.scatterplot(ad_signal, aa_signal)
+plt.xlabel(r"A $\to$ D signal flow")
+plt.ylabel(r"A $\to$ D + A $\to$ A signal flow")
+plt.show()
+
+plt.figure(figsize=(10, 5))
+sns.distplot(aa_signal - ad_signal)
+plt.xlabel(r"(A $\to$ D + A $\to$ A signal flow) - (A $\to$ D signal flow)")
+plt.ylabel("Frequency")
+plt.show()
+
+
+# %% [markdown]
+# # Look at the different 4-color combinations, compute signal flow on each separately
+# Plot the distributions of signal flow for the 4-colors against each other
+GRAPH_TYPES = ["Gad", "Gaa", "Gdd", "Gda"]
+
+signal_flows = []
+for g in GRAPH_TYPES:
+    adj = load_everything(g, version=GRAPH_VERSION)
+    adj = adj[np.ix_(inds, inds)]
+    scatter_df = signal_flow(adj)
+    sf = scatter_df["Signal flow"]
+    signal_flows.append(sf)
+
+
+signal_flows = np.array(signal_flows).T
+pairplot(signal_flows, col_names=GRAPH_TYPES, height=4)
+plt.show()
+
