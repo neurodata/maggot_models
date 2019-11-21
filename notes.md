@@ -76,7 +76,7 @@ help AC a lot in short term:
 - what is the diameter of the graph? expectation: 10 for A->D.
 
 - feedback?
-- are there hubs? is it a powerlaw?
+- are there hubs? is it a powerlaw?w
     - powerlaw degree distribution?
 - we can also compare to c. elegans!
     - cool, scott's?
