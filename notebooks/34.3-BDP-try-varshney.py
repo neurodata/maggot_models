@@ -22,7 +22,7 @@ from src.utils import savefig
 
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
-SAVEFIGS = True
+SAVEFIGS = False
 DEFAULT_FMT = "png"
 DEFUALT_DPI = 150
 

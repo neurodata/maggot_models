@@ -36,7 +36,7 @@
 
 -----
 
-- how is larval different from adult??
+- how is larval dataset different from adult dataset??
     - does this mean we will have the adult data?
 
 - cross hemispheric differences

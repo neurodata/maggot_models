@@ -117,11 +117,12 @@ GRAPH_VERSION = "mb_2019-09-23"
 # Sort the graph appropriately first
 graph_type = "G"
 
-G_adj, class_labels, side_labels, id_labels = load_everything(
+G_adj, class_labels, side_labels, id_labels, pair_labels = load_everything(
     graph_type,
     return_class=True,
     return_side=True,
     return_ids=True,
+    return_names=True,
     version=GRAPH_VERSION,
 )
 
@@ -174,6 +175,8 @@ for graph_type in GRAPH_TYPES:
 
 x_names = id_labels[x]
 y_names = id_labels[y]
+x_pair_names = pair_labels[x]
+y_pair_names = pair_labels[y]
 x_cell_type = sort_labels[x]
 y_cell_type = sort_labels[y]
 
@@ -201,13 +204,21 @@ pal = all_palettes["Set1"][4]
 colormap = dict(zip(GRAPH_TYPES, pal))
 colors = np.array(itemgetter(*edge_type)(colormap))
 
-scatter_tooltips = [("from", "@from"), ("to", "@to"), ("weight", "@weight")]
+scatter_tooltips = [
+    ("from", "@from"),
+    ("to", "@to"),
+    ("from_pair", "@from_pair"),
+    ("to_pair", "@to_pair"),
+    ("weight", "@weight"),
+]
 scatter_data = {
     "x": x,
     "y": y,
     "weight": weights,
     "from": y_names,
     "to": x_names,
+    "from_pair": y_pair_names,
+    "to_pair": x_pair_names,
     "radius": WEIGHT_SCALE * weights + 0.5,
     "colors": colors,
     "label": edge_type,
@@ -278,6 +289,12 @@ for b in borders:
 
 # scatter_fig.add_layout(legend, "right")
 show(scatter_fig)
+
+from bokeh.resources import CDN
+
+html = file_html(scatter_fig, CDN, "mb_adj")
+with open("mb_adj.html", "w") as f:
+    f.write(html)
 #%%
 ##
 
