@@ -39,6 +39,8 @@ SAVEFIGS = True
 DEFAULT_FMT = "png"
 DEFUALT_DPI = 150
 
+SAVESKELS = True
+
 MIN_CLUSTERS = 2
 MAX_CLUSTERS = 12
 N_INIT = 200
@@ -52,6 +54,13 @@ np.random.seed(23409857)
 def stashfig(name, **kws):
     if SAVEFIGS:
         savefig(name, foldername=FNAME, fmt=DEFAULT_FMT, dpi=DEFUALT_DPI, **kws)
+
+
+def stashskel(name, ids, colors, palette=None, **kws):
+    if SAVESKELS:
+        export_skeleton_json(
+            name, ids, colors, palette=palette, foldername=FNAME, **kws
+        )
 
 
 def annotate_arrow(ax, coords=(0.061, 0.93)):
@@ -527,28 +536,46 @@ for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
     plt.suptitle(run_name, fontsize=40)
     stashfig("clustergram-" + save_name)
 
+    # output skeletons
+    stashskel(save_name, skeleton_labels, pred_labels, palette="tab10", multiout=True)
+    stashskel(save_name, skeleton_labels, pred_labels, palette="tab10", multiout=False)
+
+# %% [markdown]
+# # Save skeletons
+
+
+# get the ids corresponding to the 4 PN types
+# save the corresponding skeles
+
+# pn_types = ["mPN", "uPN", "tPN", "vPN"]
+
+# for t in pn_types:
+#     type_inds = np.where(simple_class_labels == t)[0]
+#     skels = skeleton_labels[type_inds]
+#     stashskel(t, skels, np.ones(len(skels), dtype=str), palette="deep")
+
 
 # %% [markdown]
 # # Summary
 
-out_df = pd.DataFrame.from_dict(out_dicts)
+# out_df = pd.DataFrame.from_dict(out_dicts)
 
-plt.figure()
-fg = sns.FacetGrid(
-    data=out_df, row="Metric", col="Method", margin_titles=True, height=6
-)
-fg.map(sns.lineplot, "K", "ARI")
-plt.suptitle("ARI metrics", fontsize=40, y=1.03, verticalalignment="top")
-stashfig("overall-ARI")
+# plt.figure()
+# fg = sns.FacetGrid(
+#     data=out_df, row="Metric", col="Method", margin_titles=True, height=6
+# )
+# fg.map(sns.lineplot, "K", "ARI")
+# plt.suptitle("ARI metrics", fontsize=40, y=1.03, verticalalignment="top")
+# stashfig("overall-ARI")
 
 
-plt.figure()
-fg = sns.FacetGrid(
-    data=out_df, col="Method", margin_titles=True, height=6, sharey=False
-)
-fg.map(sns.lineplot, x="K", y="Score")
-plt.suptitle("Unsupervised score metrics", fontsize=40, y=1.05, verticalalignment="top")
-stashfig("overall-score")
+# plt.figure()
+# fg = sns.FacetGrid(
+#     data=out_df, col="Method", margin_titles=True, height=6, sharey=False
+# )
+# fg.map(sns.lineplot, x="K", y="Score")
+# plt.suptitle("Unsupervised score metrics", fontsize=40, y=1.05, verticalalignment="top")
+# stashfig("overall-score")
 
 # # %% [markdown]
 # # # Try exporting as JSON for CATMAID

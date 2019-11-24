@@ -430,13 +430,21 @@ def unique_by_size(data):
     return unique_data, counts
 
 
-def export_skeleton_json(path, ids, colors, palette=None):
+def export_skeleton_json(
+    name,
+    ids,
+    colors,
+    palette="tab10",
+    foldername=None,
+    pathname="./maggot_models/notebooks/outs",
+    multiout=False,
+):
     """ Take a list of skeleton ids and output as json file for catmaid
     
     Parameters
     ----------
-    path : str
-        location to save output
+    name : str
+        filename to save output
     ids : list or array
         skeleton ids
     colors : list or array
@@ -445,20 +453,45 @@ def export_skeleton_json(path, ids, colors, palette=None):
     palette : str or None, optional
         if not None, this is a palette specification to use to color skeletons
     """
+    og_colors = colors.copy()
+    uni_labels = np.unique(colors)
+    n_labels = len(uni_labels)
+
     if palette is not None:
-        uni_labels = np.unique(colors)
-        n_labels = len(uni_labels)
         pal = sns.color_palette(palette, n_colors=n_labels)
         pal = pal.as_hex()
         colormap = dict(zip(uni_labels, pal))
-        colors = list(itemgetter(*colors)(colormap))
-    opacs = len(ids) * [1]
-    spec_list = [
-        {"skeleton_id": int(i), "color": c, "opacity": o}
-        for i, c, o in zip(ids, colors, opacs)
-    ]
-    with open(path, "w") as fout:
-        json.dump(spec_list, fout)
+        colors = np.array(itemgetter(*colors)(colormap))
+
+    opacs = np.array(len(ids) * [1])
+
+    path = Path(pathname)
+    if foldername is not None:
+        path = path / foldername
+        if not os.path.isdir(path):
+            os.mkdir(path)
+
+    if multiout:
+        for l in uni_labels:
+            filename = path / str(name + "_" + str(l) + ".json")
+
+            inds = np.where(og_colors == l)[0]
+
+            spec_list = [
+                {"skeleton_id": int(i), "color": str(c), "opacity": float(o)}
+                for i, c, o in zip(ids[inds], colors[inds], opacs[inds])
+            ]
+            with open(filename, "w") as fout:
+                json.dump(spec_list, fout)
+    else:
+        spec_list = [
+            {"skeleton_id": int(i), "color": str(c), "opacity": float(o)}
+            for i, c, o in zip(ids, colors, opacs)
+        ]
+        filename = path / str(name + ".json")
+        with open(filename, "w") as fout:
+            json.dump(spec_list, fout)
+
     if palette is not None:
         return spec_list, colormap
     else:
