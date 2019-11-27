@@ -74,12 +74,17 @@ filler = total_synapses / len(upper_triu_inds[0])
 upper_triu_template = np.zeros_like(A)
 upper_triu_template[upper_triu_inds] = filler
 
-faq = FastApproximateQAP(init_shuffle=True)
-pred_sort_inds = faq.fit_predict(upper_triu_template, A)[::-1]
+shuffle_inds = np.random.permutation(A.shape[0])
+
+faq = FastApproximateQAP(shuffle_input=False, n_init=20, init_method="rand")
+B = A[np.ix_(shuffle_inds, shuffle_inds)]
+pred_sort_inds = faq.fit_predict(upper_triu_template, B)
 
 heatmap(upper_triu_template)
-heatmap(A[np.ix_(pred_sort_inds, pred_sort_inds)])
-plt.show()
+P = np.zeros(A.shape)
+P[range(A.shape[0]), pred_sort_inds] = 1
+
+heatmap(P @ B @ P.T)
 # %% [markdown]
 # ## Now, look at the output for this signal flow metric on the A $\rightarrow$ D graph
 # Here I am just using labels for MB and PNs, as well as indicating side with the
@@ -123,10 +128,14 @@ filler = total_synapses / len(upper_triu_inds[0])
 upper_triu_template = np.zeros_like(adj)
 upper_triu_template[upper_triu_inds] = filler
 
-faq = FastApproximateQAP(init_shuffle=True, max_iter=1)
-pred_sort_inds = faq.fit_predict(upper_triu_template, adj)[::-1]
+shuffle_inds = np.random.permutation(adj.shape[0])
+B = adj[np.ix_(shuffle_inds, shuffle_inds)]
 
+faq = FastApproximateQAP(shuffle_input=False, max_iter=1, init_method="rand")
+pred_sort_inds = faq.fit_predict(upper_triu_template, B)
+
+P = np.zeros(B.shape)
+P[range(B.shape[0]), pred_sort_inds] = 1
 heatmap(upper_triu_template)
-heatmap(adj[np.ix_(pred_sort_inds, pred_sort_inds)])
-plt.show()
+heatmap(P @ B @ P.T)
 
