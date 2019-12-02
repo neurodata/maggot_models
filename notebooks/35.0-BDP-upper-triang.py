@@ -239,6 +239,7 @@ plt.tight_layout()
 stashfig("multisort-heatmap")
 plt.show()
 
+
 #%%
 scatter_df = pd.concat(dfs)
 
@@ -289,6 +290,75 @@ fg.map(sns.distplot, "Metric", bins=np.linspace(0, 1, 30), kde=True)
 fg.set(yticks=[], yticklabels=[])
 stashfig("Ut-match-vs-signal-flow")
 
+# %% [markdown]
+# # Try on real data
+
+print("Trying on real data")
+
+
+def unshuffle(shuffle_inds, perm_inds):
+    pred_inds = np.empty_like(shuffle_inds)
+    pred_inds[shuffle_inds[perm_inds]] = range(len(shuffle_inds))
+    return pred_inds
+
+
+GRAPH_VERSION = "2019-09-18-v2"
+adj, class_labels, side_labels = load_everything(
+    "Gad", GRAPH_VERSION, return_class=True, return_side=True
+)
+
+adj, inds = get_lcc(adj, return_inds=True)
+class_labels = class_labels[inds]
+side_labels = side_labels[inds]
+
+adj = adj[:1000, :1000]
+
+n_verts = adj.shape[0]
+
+name_map = {" mw right": "R", " mw left": "L"}
+side_labels = np.array(itemgetter(*side_labels)(name_map))
+
+name_map = {
+    "CN": "Unk",
+    "DANs": "MBIN",
+    "KCs": "KC",
+    "LHN": "Unk",
+    "LHN; CN": "Unk",
+    "MBINs": "MBIN",
+    "MBON": "MBON",
+    "MBON; CN": "MBON",
+    "OANs": "MBIN",
+    "ORN mPNs": "mPN",
+    "ORN uPNs": "uPN",
+    "tPNs": "tPN",
+    "vPNs": "vPN",
+    "Unidentified": "Unk",
+    "Other": "Unk",
+}
+class_labels = np.array(itemgetter(*class_labels)(name_map))
+
+template = get_template_mat(adj)
+
+shuffle_inds = np.random.permutation(n_verts)
+
+shuffle_adj = adj[np.ix_(shuffle_inds, shuffle_inds)]
+
+n_init = 1
+faq = FastApproximateQAP(
+    max_iter=30,
+    eps=0.0001,
+    init_method="rand",
+    n_init=100,
+    shuffle_input=False,
+    maximize=True,
+)
+faq.fit(template, shuffle_adj)
+
+shuffle_perm_inds = faq.perm_inds_
+perm_inds = unshuffle(shuffle_inds, shuffle_perm_inds)
+
+heatmap(adj[np.ix_(perm_inds, perm_inds)], figsize=(20, 20))
+stashfig("unshuffled_real_heatmap")
 
 #%% junk beware
 # # %%
