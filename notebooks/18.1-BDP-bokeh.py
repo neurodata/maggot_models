@@ -122,7 +122,7 @@ G_adj, class_labels, side_labels, id_labels, pair_labels = load_everything(
     return_class=True,
     return_side=True,
     return_ids=True,
-    return_names=True,
+    return_pair=True,
     version=GRAPH_VERSION,
 )
 
@@ -156,6 +156,7 @@ sort_inds = _sort_inds(G_adj, sort_labels, side_labels, True)
 G_adj = _sort_graph(G_adj, sort_labels, side_labels, True)
 sort_labels = sort_labels[sort_inds]
 id_labels = id_labels[sort_inds]
+pair_labels = pair_labels[sort_inds]
 
 # Turn the graph into points
 

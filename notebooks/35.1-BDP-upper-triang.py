@@ -175,7 +175,7 @@ faq = FastApproximateQAP(
     max_iter=30,
     eps=0.0001,
     init_method="rand",
-    n_init=100,
+    n_init=1,
     shuffle_input=False,
     maximize=True,
 )

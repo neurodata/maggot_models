@@ -86,6 +86,7 @@ def load_everything(
     return_side=False,
     return_df=False,
     return_ids=False,
+    return_pair=False,
 ):
 
     """Function to load an adjacency matrix and optionally return some associated 
@@ -136,6 +137,9 @@ def load_everything(
         outs.append(df_adj)
     if return_ids:
         outs.append(df_ids)
+    if return_pair:
+        pair_labels = meta_to_array(graph, "Pair")
+        outs.append(pair_labels)
     if len(outs) > 1:
         outs = tuple(outs)
         return outs
