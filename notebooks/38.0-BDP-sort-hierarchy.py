@@ -5,10 +5,12 @@ from operator import itemgetter
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 from graspy.plot import gridplot, heatmap, pairplot
-from graspy.utils import binarize, get_lcc
+from graspy.simulations import sbm
+from graspy.utils import binarize, get_lcc, is_fully_connected
 from src.data import load_everything
 from src.hierarchy import normalized_laplacian, signal_flow
 from src.utils import savefig
@@ -61,6 +63,9 @@ sort_inds = np.argsort(z)[::-1]
 gridplot([adj[np.ix_(sort_inds, sort_inds)]], height=20)
 stashfig("gridplot-sf-sorted")
 
+# %% [markdown]
+# # Repeat
+
 
 # %% [markdown]
 # # Look at graph laplacians
@@ -98,4 +103,133 @@ plt.scatter(evec2_norm, degree)
 
 plt.figure(figsize=(10, 6))
 plt.scatter(evec2_unnorm, degree)
+
+
+# %% [markdown]
+# #
+graph_types = ["Gad", "Gaa", "Gdd", "Gda"]
+graph_type_labels = [r"A $\to$ D", r"A $\to$ A", r"D $\to$ D", r"D $\to$ A"]
+
+GRAPH_VERSION = "2019-09-18-v2"
+sns.set_context("talk", font_scale=1)
+
+
+def gridmap(A, ax=None, legend=False, sizes=(10, 70)):
+    if ax is None:
+        _, ax = plt.subplots(1, 1, figsize=(20, 20))
+    n_verts = A.shape[0]
+    inds = np.nonzero(A)
+    edges = A[inds]
+    scatter_df = pd.DataFrame()
+    scatter_df["Weight"] = edges
+    scatter_df["x"] = inds[1]
+    scatter_df["y"] = inds[0]
+    ax = sns.scatterplot(
+        data=scatter_df,
+        x="x",
+        y="y",
+        size="Weight",
+        legend=legend,
+        sizes=sizes,
+        ax=ax,
+        linewidth=0.3,
+    )
+    ax.axis("equal")
+    ax.set_xlim((0, n_verts))
+    ax.set_ylim((n_verts, 0))
+    ax.axis("off")
+    return ax
+
+
+for g, name in zip(graph_types, graph_type_labels):
+    adj = load_everything(g, GRAPH_VERSION)
+    adj, inds = get_lcc(adj, return_inds=True)
+    print(is_fully_connected(adj))
+    n_verts = adj.shape[0]
+
+    fig, axs = plt.subplots(1, 2, figsize=(20, 10))
+
+    # shuffle original adj just to avoid sorting spandrels
+    perm_inds = np.random.permutation(n_verts)
+    adj = adj[np.ix_(perm_inds, perm_inds)]
+
+    # compare to a fake network with same weights
+    fake_adj = adj.copy().ravel()
+    np.random.shuffle(fake_adj)
+    fake_adj = fake_adj.reshape((n_verts, n_verts))
+
+    z = signal_flow(fake_adj)
+    sort_inds = np.argsort(z)[::-1]
+    print(is_fully_connected(fake_adj))
+    # gridplot([fake_adj[np.ix_(sort_inds, sort_inds)]], height=20)
+    gridmap(fake_adj[np.ix_(sort_inds, sort_inds)], ax=axs[0])
+    axs[0].set_title("Shuffled edges")
+    # stashfig("gridplot-sf-sorted-fake")
+
+    z = signal_flow(adj)
+    sort_inds = np.argsort(z)[::-1]
+
+    gridmap(adj[np.ix_(sort_inds, sort_inds)], ax=axs[1])
+    axs[1].set_title("True edges")
+
+    fig.suptitle(f"{name} ({n_verts})", fontsize=40, y=1.02)
+    plt.tight_layout()
+    stashfig(f"{g}-gridplot-sf-sorted")
+
+
+# %% [markdown]
+# # null simulation
+
+
+def get_feedforward_B(low_p, diag_p, feedforward_p, n_blocks=5):
+    B = np.zeros((n_blocks, n_blocks))
+    B += low_p
+    B -= np.diag(np.diag(B))
+    B -= np.diag(np.diag(B, k=1), k=1)
+    B += np.diag(diag_p * np.ones(n_blocks))
+    B += np.diag(feedforward_p * np.ones(n_blocks - 1), k=1)
+    return B
+
+
+def n_to_labels(n):
+    n_cumsum = n.cumsum()
+    labels = np.zeros(n.sum(), dtype=np.int64)
+    for i in range(1, len(n)):
+        labels[n_cumsum[i - 1] : n_cumsum[i]] = i
+    return labels
+
+
+low_p = 0.01
+diag_p = 0.1
+feedforward_p = 0.2
+community_sizes = np.array(5 * [50])
+block_probs = get_feedforward_B(low_p, diag_p, feedforward_p)
+A = sbm(community_sizes, block_probs, directed=True, loops=False)
+n_verts = A.shape[0]
+
+perm_inds = np.random.permutation(n_verts)
+A_perm = A[np.ix_(perm_inds, perm_inds)]
+heatmap(A, cbar=False, title="Feedforward SBM")
+stashfig("ffSBM")
+heatmap(A_perm, cbar=False, title="Feedforward SBM, shuffled")
+stashfig("ffSBM-shuffle")
+z = signal_flow(A)
+sort_inds = np.argsort(z)[::-1]
+heatmap(
+    A[np.ix_(sort_inds, sort_inds)],
+    cbar=False,
+    title="Feedforward SBM, sorted by signal flow",
+)
+stashfig("ffSBM-sf")
+A_fake = A.copy().ravel()
+np.random.shuffle(A_fake)
+A_fake = A_fake.reshape((n_verts, n_verts))
+z = signal_flow(A_fake)
+sort_inds = np.argsort(z)[::-1]
+heatmap(
+    A_fake[np.ix_(sort_inds, sort_inds)],
+    cbar=False,
+    title="Random network, sorted by signal flow",
+)
+stashfig("random-sf")
 

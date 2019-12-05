@@ -583,5 +583,3 @@ for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
 # out_path = "./maggot_models/notebooks/outs/30.0-BDP-mw-clustering/test_json.json"
 # export_skeleton_json(out_path, skeleton_labels, pred_labels, "deep")
 
-
-# %%
