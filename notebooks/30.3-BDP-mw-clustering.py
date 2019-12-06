@@ -1,27 +1,29 @@
 # %% [markdown]
 # # Imports
+import json
 import math
 import os
 from operator import itemgetter
 from pathlib import Path
-import json
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from graspy.cluster import GaussianCluster
-from graspy.embed import AdjacencySpectralEmbed, OmnibusEmbed
-from graspy.models import SBMEstimator
-from graspy.plot import heatmap, pairplot
-from graspy.utils import binarize, cartprod, pass_to_ranks
+from joblib import Parallel, delayed
 from joblib.parallel import Parallel, delayed
 from matplotlib.colors import LogNorm
 from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score
 from spherecluster import SphericalKMeans
 
+from graspy.cluster import GaussianCluster
+from graspy.embed import AdjacencySpectralEmbed, OmnibusEmbed
+from graspy.models import SBMEstimator
+from graspy.plot import heatmap, pairplot
+from graspy.utils import binarize, cartprod, get_lcc, pass_to_ranks
 from src.data import load_everything
-from src.utils import savefig, export_skeleton_json
+from src.utils import export_skeleton_json, savefig
 from src.visualization import sankey
 
 FNAME = os.path.basename(__file__)[:-3]
@@ -42,9 +44,10 @@ DEFUALT_DPI = 150
 
 SAVESKELS = True
 
+N_JOBS = -2
 MIN_CLUSTERS = 2
 MAX_CLUSTERS = 4
-N_INIT = 1  # 200
+N_INIT = 200
 PTR = True
 
 np.random.seed(23409857)
@@ -402,7 +405,6 @@ sns.set_context("talk", font_scale=1)
 # %% [markdown]
 # # Load the data
 
-from graspy.utils import get_lcc
 
 adj, class_labels, side_labels, skeleton_labels = load_everything(
     "Gad", version=BRAIN_VERSION, return_class=True, return_side=True, return_ids=True
@@ -498,8 +500,12 @@ lse_latent = lse(adj, 4, regularizer=None)
 latent = lse_latent
 pairplot(latent, labels=simple_class_labels, title=embed)
 
+k_list = list(range(MIN_CLUSTERS, MAX_CLUSTERS))
+n_runs = len(k_list)
 
-for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
+
+def cluster(k, seed):
+    np.random.seed(seed)
     run_name = f"k = {k}, {cluster}, {embed}, right hemisphere (A to D), PTR, raw"
     print(run_name)
     print()
@@ -574,3 +580,6 @@ for k in range(MIN_CLUSTERS, MAX_CLUSTERS + 1):
         save_name, skeleton_labels, pred_labels, palette="viridis", multiout=False
     )
 
+
+seeds = np.random.randint(1e8, size=n_runs)
+p = Parallel(n_jobs=N_JOBS)(delayed(cluster)(k, seed for k, seed in zip(k_list, seeds))
