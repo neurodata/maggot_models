@@ -460,6 +460,7 @@ def export_skeleton_json(
     if palette is not None:
         pal = sns.color_palette(palette, n_colors=n_labels)
         pal = pal.as_hex()
+        uni_labels = [int(i) for i in uni_labels]
         colormap = dict(zip(uni_labels, pal))
         colors = np.array(itemgetter(*colors)(colormap))
 
@@ -493,6 +494,9 @@ def export_skeleton_json(
             json.dump(spec_list, fout)
 
     if palette is not None:
-        return spec_list, colormap
+        print("here")
+        print(colormap)
+        print(pal)
+        return (spec_list, colormap, pal)
     else:
         return spec_list
