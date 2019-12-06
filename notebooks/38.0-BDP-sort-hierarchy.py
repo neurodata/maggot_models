@@ -141,10 +141,39 @@ def gridmap(A, ax=None, legend=False, sizes=(10, 70)):
     return ax
 
 
+def compute_triu_prop(A, return_edges=False):
+    sum_triu_edges = np.sum(np.triu(A, k=1))
+    sum_tril_edges = np.sum(np.tril(A, k=-1))
+    triu_prop = sum_triu_edges / (sum_triu_edges + sum_tril_edges)
+    if return_edges:
+        return triu_prop, sum_triu_edges, sum_tril_edges
+    else:
+        return triu_prop
+
+
+def shuffle_edges(A):
+    fake_A = A.copy().ravel()
+    np.random.shuffle(Aj)
+    A = A.reshape((n_verts, n_verts))
+    return A
+
+
+def signal_flow_sort(A, return_inds=False):
+    nodes_signal_flow = signal_flow(A)
+    sort_inds = np.argsort(nodes_signal_flow)[::-1]
+    sorted_A = A[np.ix_(sort_inds, sort_inds)]
+    if return_inds:
+        return A, sort_inds
+    else:
+        return sorted_A
+
+
+shuffled_triu_props = []
+true_triu_props = []
+
 for g, name in zip(graph_types, graph_type_labels):
     adj = load_everything(g, GRAPH_VERSION)
     adj, inds = get_lcc(adj, return_inds=True)
-    print(is_fully_connected(adj))
     n_verts = adj.shape[0]
 
     fig, axs = plt.subplots(1, 2, figsize=(20, 10))
@@ -154,29 +183,52 @@ for g, name in zip(graph_types, graph_type_labels):
     adj = adj[np.ix_(perm_inds, perm_inds)]
 
     # compare to a fake network with same weights
-    fake_adj = adj.copy().ravel()
-    np.random.shuffle(fake_adj)
-    fake_adj = fake_adj.reshape((n_verts, n_verts))
+    fake_adj = shuffle_edges(adj)
+    fake_adj = signal_flow_sort(fake_adj)
+    fake_triu_prop = compute_triu_prop(fake_adj)
 
-    z = signal_flow(fake_adj)
-    sort_inds = np.argsort(z)[::-1]
-    print(is_fully_connected(fake_adj))
-    # gridplot([fake_adj[np.ix_(sort_inds, sort_inds)]], height=20)
-    gridmap(fake_adj[np.ix_(sort_inds, sort_inds)], ax=axs[0])
+    shuffled_triu_props.append(fake_triu_prop)
+    # print(f"{g} shuffled graph sorted upper triangle synapses: {fake_sum_triu_edges}")
+    # print(f"{g} shuffled graph sorted upper triange synapses: {fake_sum_tril_edges}")
+    print(f"{g} shuffled graph sorted proportion in upper triangle: {fake_triu_prop}")
+
+    gridmap(fake_adj, ax=axs[0])
     axs[0].set_title("Shuffled edges")
-    # stashfig("gridplot-sf-sorted-fake")
 
     z = signal_flow(adj)
     sort_inds = np.argsort(z)[::-1]
+    adj = adj[np.ix_(sort_inds, sort_inds)]
 
-    gridmap(adj[np.ix_(sort_inds, sort_inds)], ax=axs[1])
+    true_triu_prop = compute_triu_prop(adj)
+    true_triu_props.append(true_triu_prop)
+    # print(f"Is {g} graph fully connected: {is_fully_connected(adj)}")
+    # print(f"{g} graph sorted upper triangle synapses: {sum_triu_edges}")
+    # print(f"{g} graph sorted upper triange synapses: {sum_tril_edges}")
+    print(f"{g} graph sorted proportion in upper triangle: {true_triu_prop}")
+
+    gridmap(adj, ax=axs[1])
     axs[1].set_title("True edges")
 
     fig.suptitle(f"{name} ({n_verts})", fontsize=40, y=1.02)
     plt.tight_layout()
     stashfig(f"{g}-gridplot-sf-sorted")
+    print()
 
+#%%
+prop_df = pd.DataFrame()
+prop_df["Proportion"] = np.array(shuffled_triu_props + true_triu_props)
+prop_df["Type"] = np.array(4 * ["Shuffled"] + 4 * ["True"])
+prop_df["Graph"] = np.array(graph_type_labels + graph_type_labels)
 
+ax = sns.pointplot(
+    data=prop_df, x="Graph", y="Proportion", hue="Type", ci=None, join=False
+)
+ax.set_ylim((0.4, 1.05))
+ax.axhline(0.5, linestyle="--")
+ax.set_ylabel("Proportion upper triangular")
+ax.legend(bbox_to_anchor=(1.0, 1), loc=2, borderaxespad=0.0)
+ax.set_title("")
+# sns.pointplot()
 # %% [markdown]
 # # null simulation
 
