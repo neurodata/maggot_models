@@ -17,7 +17,7 @@ from src.utils import savefig
 
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
-SAVEFIGS = False
+SAVEFIGS = True
 DEFAULT_FMT = "png"
 DEFUALT_DPI = 150
 
@@ -40,69 +40,6 @@ adj, inds = get_lcc(adj, return_inds=True)
 class_labels = class_labels[inds]
 side_labels = side_labels[inds]
 n_verts = adj.shape[0]
-
-# %% [markdown]
-# # Sort shuffled AD graph on signal flow
-fake_adj = adj.copy()
-np.random.shuffle(fake_adj.ravel())
-fake_adj = fake_adj.reshape((n_verts, n_verts))
-
-z = signal_flow(fake_adj)
-sort_inds = np.argsort(z)[::-1]
-
-gridplot([fake_adj[np.ix_(sort_inds, sort_inds)]], height=20)
-stashfig("gridplot-sf-sorted-fake")
-
-
-# %% [markdown]
-# # Sort true AD graph on signal flow
-
-z = signal_flow(adj)
-sort_inds = np.argsort(z)[::-1]
-
-gridplot([adj[np.ix_(sort_inds, sort_inds)]], height=20)
-stashfig("gridplot-sf-sorted")
-
-# %% [markdown]
-# # Repeat
-
-
-# %% [markdown]
-# # Look at graph laplacians
-
-evecs, evals = normalized_laplacian(
-    adj, n_components=5, return_evals=True, normalize_evecs=True
-)
-
-
-scatter_mat = np.concatenate((z[:, np.newaxis], evecs), axis=1)
-pairplot(scatter_mat, labels=class_labels, palette="tab20")
-
-# %% [markdown]
-# # Examine the 2nd eigenvector
-degree = ((adj + adj.T) / 2).sum(axis=1)
-
-evecs, evals = normalized_laplacian(
-    adj, n_components=2, return_evals=True, normalize_evecs=True
-)
-evec2_norm = evecs[:, 1]
-
-evecs, evals = normalized_laplacian(
-    adj, n_components=2, return_evals=True, normalize_evecs=False
-)
-evec2_unnorm = evecs[:, 1]
-
-plt.figure(figsize=(10, 6))
-plt.plot(evec2_norm)
-
-plt.figure(figsize=(10, 6))
-plt.plot(evec2_unnorm)
-
-plt.figure(figsize=(10, 6))
-plt.scatter(evec2_norm, degree)
-
-plt.figure(figsize=(10, 6))
-plt.scatter(evec2_unnorm, degree)
 
 
 # %% [markdown]
@@ -153,23 +90,25 @@ def compute_triu_prop(A, return_edges=False):
 
 def shuffle_edges(A):
     fake_A = A.copy().ravel()
-    np.random.shuffle(Aj)
-    A = A.reshape((n_verts, n_verts))
-    return A
+    np.random.shuffle(fake_A)
+    fake_A = fake_A.reshape((n_verts, n_verts))
+    return fake_A
 
 
 def signal_flow_sort(A, return_inds=False):
+    A = A.copy()
     nodes_signal_flow = signal_flow(A)
     sort_inds = np.argsort(nodes_signal_flow)[::-1]
     sorted_A = A[np.ix_(sort_inds, sort_inds)]
     if return_inds:
-        return A, sort_inds
+        return sorted_A, sort_inds
     else:
         return sorted_A
 
 
-shuffled_triu_props = []
-true_triu_props = []
+shuffled_triu_outs = []
+true_triu_outs = []
+n_shuffles = 20
 
 for g, name in zip(graph_types, graph_type_labels):
     adj = load_everything(g, GRAPH_VERSION)
@@ -183,14 +122,15 @@ for g, name in zip(graph_types, graph_type_labels):
     adj = adj[np.ix_(perm_inds, perm_inds)]
 
     # compare to a fake network with same weights
-    fake_adj = shuffle_edges(adj)
-    fake_adj = signal_flow_sort(fake_adj)
-    fake_triu_prop = compute_triu_prop(fake_adj)
-
-    shuffled_triu_props.append(fake_triu_prop)
-    # print(f"{g} shuffled graph sorted upper triangle synapses: {fake_sum_triu_edges}")
-    # print(f"{g} shuffled graph sorted upper triange synapses: {fake_sum_tril_edges}")
-    print(f"{g} shuffled graph sorted proportion in upper triangle: {fake_triu_prop}")
+    for i in range(n_shuffles):
+        fake_adj = shuffle_edges(adj)
+        fake_adj = signal_flow_sort(fake_adj)
+        fake_triu_prop = compute_triu_prop(fake_adj)
+        out_dict = {"Proportion": fake_triu_prop, "Graph": name, "Type": "Shuffled"}
+        shuffled_triu_outs.append(out_dict)
+        print(
+            f"{g} shuffled graph sorted proportion in upper triangle: {fake_triu_prop}"
+        )
 
     gridmap(fake_adj, ax=axs[0])
     axs[0].set_title("Shuffled edges")
@@ -200,10 +140,9 @@ for g, name in zip(graph_types, graph_type_labels):
     adj = adj[np.ix_(sort_inds, sort_inds)]
 
     true_triu_prop = compute_triu_prop(adj)
-    true_triu_props.append(true_triu_prop)
-    # print(f"Is {g} graph fully connected: {is_fully_connected(adj)}")
-    # print(f"{g} graph sorted upper triangle synapses: {sum_triu_edges}")
-    # print(f"{g} graph sorted upper triange synapses: {sum_tril_edges}")
+
+    out_dict = {"Proportion": true_triu_prop, "Graph": name, "Type": "True"}
+    true_triu_outs.append(out_dict)
     print(f"{g} graph sorted proportion in upper triangle: {true_triu_prop}")
 
     gridmap(adj, ax=axs[1])
@@ -214,6 +153,42 @@ for g, name in zip(graph_types, graph_type_labels):
     stashfig(f"{g}-gridplot-sf-sorted")
     print()
 
+#%%
+
+shuffle_df = pd.DataFrame(shuffled_triu_outs)
+true_df = pd.DataFrame(true_triu_outs)
+fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+ax = sns.stripplot(
+    data=shuffle_df,
+    x="Graph",
+    y="Proportion",
+    linewidth=1,
+    alpha=0.4,
+    jitter=0.3,
+    size=5,
+    ax=ax,
+)
+# ax = sns.violinplot(data=shuffle_df, x="Graph", y="Proportion", ax=ax)
+
+ax = sns.stripplot(
+    data=true_df,
+    x="Graph",
+    y="Proportion",
+    marker="_",
+    linewidth=2,
+    s=90,
+    ax=ax,
+    label="True",
+    jitter=False,
+)
+
+shuffle_marker = plt.scatter([], [], marker=".", c="k", label="Shuffled")
+true_marker = plt.scatter([], [], marker="_", linewidth=3, s=400, c="k", label="True")
+ax.legend(handles=[shuffle_marker, true_marker])
+ax.set_ylabel("Proportion synapses in upper triangle")
+ax.yaxis.set_major_locator(plt.MaxNLocator(4))
+ax.set_title("Signal flow graph sorting", fontsize=25, pad=15)
+stashfig("sf-proportions")
 #%%
 prop_df = pd.DataFrame()
 prop_df["Proportion"] = np.array(shuffled_triu_props + true_triu_props)
@@ -285,3 +260,44 @@ heatmap(
 )
 stashfig("random-sf")
 
+
+# %% [markdown]
+# # Repeat
+
+
+# %% [markdown]
+# # Look at graph laplacians
+
+# evecs, evals = normalized_laplacian(
+#     adj, n_components=5, return_evals=True, normalize_evecs=True
+# )
+
+
+# scatter_mat = np.concatenate((z[:, np.newaxis], evecs), axis=1)
+# pairplot(scatter_mat, labels=class_labels, palette="tab20")
+
+# %% [markdown]
+# # # Examine the 2nd eigenvector
+# degree = ((adj + adj.T) / 2).sum(axis=1)
+
+# evecs, evals = normalized_laplacian(
+#     adj, n_components=2, return_evals=True, normalize_evecs=True
+# )
+# evec2_norm = evecs[:, 1]
+
+# evecs, evals = normalized_laplacian(
+#     adj, n_components=2, return_evals=True, normalize_evecs=False
+# )
+# evec2_unnorm = evecs[:, 1]
+
+# plt.figure(figsize=(10, 6))
+# plt.plot(evec2_norm)
+
+# plt.figure(figsize=(10, 6))
+# plt.plot(evec2_unnorm)
+
+# plt.figure(figsize=(10, 6))
+# plt.scatter(evec2_norm, degree)
+
+# plt.figure(figsize=(10, 6))
+# plt.scatter(evec2_unnorm, degree)
