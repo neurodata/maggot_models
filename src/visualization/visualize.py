@@ -1,3 +1,4 @@
+import math
 from collections import defaultdict
 
 import matplotlib
@@ -5,11 +6,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from graspy.embed import select_dimension, selectSVD
+from matplotlib.colors import LogNorm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.cluster.hierarchy import dendrogram, linkage
 from sklearn.utils import check_array, check_consistent_length
 
+from graspy.embed import select_dimension, selectSVD
+from graspy.models import SBMEstimator
+from graspy.plot import heatmap
+from graspy.utils import binarize, cartprod
 from src.utils import savefig
 
 
@@ -701,7 +706,7 @@ def sankey(
                 ys_u = np.convolve(ys_u, 0.05 * np.ones(20), mode="valid")
                 ys_u = np.convolve(ys_u, 0.05 * np.ones(20), mode="valid")
 
-                # Update bottom edges at each label so next strip starts at the right place
+                # Update bottom edges at each label, next strip starts at right place
                 leftWidths[leftLabel]["bottom"] += ns_l[leftLabel][rightLabel]
                 rightWidths[rightLabel]["bottom"] += ns_r[leftLabel][rightLabel]
                 ax.fill_between(
@@ -763,4 +768,195 @@ def hierplot(
     dendrogram(linkage_mat, ax=ax_y, orientation="left", **dendrogram_kws)
     ax_y.axis("off")
     ax_y.invert_yaxis()
+    return ax
+
+
+def get_sbm_prob(adj, labels):
+    sbm = SBMEstimator(directed=True, loops=True)
+    sbm.fit(binarize(adj), y=labels)
+    data = sbm.block_p_
+    uni_labels, counts = np.unique(labels, return_counts=True)
+    sort_inds = np.argsort(counts)[::-1]
+    uni_labels = uni_labels[sort_inds]
+    data = data[np.ix_(sort_inds, sort_inds)]
+
+    prob_df = pd.DataFrame(columns=uni_labels, index=uni_labels, data=data)
+
+    return prob_df
+
+
+def probplot(
+    prob_df,
+    ax=None,
+    title=None,
+    log_scale=False,
+    cmap="Purples",
+    vmin=None,
+    vmax=None,
+    figsize=(10, 10),
+):
+    cbar_kws = {"fraction": 0.08, "shrink": 0.8, "pad": 0.03}
+
+    data = prob_df.values
+
+    if log_scale:
+        data = data + 0.001
+
+        log_norm = LogNorm(vmin=data.min().min(), vmax=data.max().max())
+        cbar_ticks = [
+            math.pow(10, i)
+            for i in range(
+                math.floor(math.log10(data.min().min())),
+                1 + math.ceil(math.log10(data.max().max())),
+            )
+        ]
+        cbar_kws["ticks"] = cbar_ticks
+
+    if ax is None:
+        _ = plt.figure(figsize=figsize)
+        ax = plt.gca()
+
+    ax.set_title(title, pad=30, fontsize=30)
+
+    sns.set_context("talk", font_scale=1)
+
+    heatmap_kws = dict(
+        cbar_kws=cbar_kws,
+        annot=True,
+        square=True,
+        cmap=cmap,
+        vmin=vmin,
+        vmax=vmax,
+        fmt=".0f",
+    )
+    if log_scale:
+        heatmap_kws["norm"] = log_norm
+    if ax is not None:
+        heatmap_kws["ax"] = ax
+
+    ax = sns.heatmap(prob_df, **heatmap_kws)
+
+    ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
+    return ax
+
+
+def _get_block_indices(y):
+    """
+    y is a length n_verts vector of labels
+    returns a length n_verts vector in the same order as the input
+    indicates which block each node is
+    """
+    block_labels, block_inv, block_sizes = np.unique(
+        y, return_inverse=True, return_counts=True
+    )
+
+    n_blocks = len(block_labels)
+    block_inds = range(n_blocks)
+
+    block_vert_inds = []
+    for i in block_inds:
+        # get the inds from the original graph
+        inds = np.where(block_inv == i)[0]
+        block_vert_inds.append(inds)
+    return block_vert_inds, block_inds, block_inv
+
+
+def _calculate_block_edgesum(graph, block_inds, block_vert_inds):
+    """
+    graph : input n x n graph 
+    block_inds : list of length n_communities
+    block_vert_inds : list of list, for each block index, gives every node in that block
+    return_counts : whether to calculate counts rather than proportions
+    """
+
+    n_blocks = len(block_inds)
+    block_pairs = cartprod(block_inds, block_inds)
+    block_p = np.zeros((n_blocks, n_blocks))
+
+    for p in block_pairs:
+        from_block = p[0]
+        to_block = p[1]
+        from_inds = block_vert_inds[from_block]
+        to_inds = block_vert_inds[to_block]
+        block = graph[from_inds, :][:, to_inds]
+        p = np.sum(block)
+        p = p / block.size
+        block_p[from_block, to_block] = p
+
+    return block_p
+
+
+def get_colors(true_labels, pred_labels):
+    color_dict = {}
+    classes = np.unique(true_labels)
+    unk_ind = np.where(classes == "Unk")[0]  # hacky but it looks nice!
+    purp_ind = 4
+    in_purp_class = classes[purp_ind]
+    classes[unk_ind] = in_purp_class
+    classes[purp_ind] = "Unk"
+    known_palette = sns.color_palette("tab10", n_colors=len(classes))
+    for i, true_label in enumerate(classes):
+        color = known_palette[i]
+        color_dict[true_label] = color
+
+    classes = np.unique(pred_labels)
+    known_palette = sns.color_palette("gray", n_colors=len(classes))
+    for i, pred_label in enumerate(classes):
+        color = known_palette[i]
+        color_dict[pred_label] = color
+    return color_dict
+
+
+def clustergram(
+    adj, true_labels, pred_labels, figsize=(20, 20), title=None,
+):
+    fig, ax = plt.subplots(2, 2, figsize=figsize)
+    ax = ax.ravel()
+    sns.set_context("talk", font_scale=2)
+    color_dict = get_colors(true_labels, pred_labels)
+    sankey(
+        ax[0], true_labels, pred_labels, aspect=20, fontsize=16, colorDict=color_dict
+    )
+    ax[0].axis("off")
+    ax[0].set_title("Known class sorting", fontsize=30, pad=45)
+
+    ax[1] = heatmap(
+        adj,
+        transform="simple-all",
+        inner_hier_labels=pred_labels,
+        cbar=False,
+        sort_nodes=True,
+        ax=ax[1],
+        cmap="PRGn_r",
+        hier_label_fontsize=16,
+    )
+    ax[1].set_title("Sorted heatmap", fontsize=30, pad=70)
+
+    prob_df = get_sbm_prob(adj, pred_labels)
+    block_sum_df = get_block_edgesums(adj, pred_labels, prob_df.columns.values)
+
+    probplot(100 * prob_df, ax=ax[2], title="Connection percentage")
+
+    probplot(block_sum_df, ax=ax[3], title="Average synapses")
+    plt.suptitle(title, fontsize=40)
+    return ax
+
+
+def get_block_edgesums(adj, pred_labels, sort_blocks):
+    block_vert_inds, block_inds, block_inv = _get_block_indices(pred_labels)
+    block_sums = _calculate_block_edgesum(adj, block_inds, block_vert_inds)
+    block_sums = block_sums[np.ix_(sort_blocks, sort_blocks)]
+    block_sum_df = pd.DataFrame(data=block_sums, columns=sort_blocks, index=sort_blocks)
+    return block_sum_df
+
+
+def palplot(k, cmap="viridis"):
+    pal = sns.color_palette(palette=cmap, n_colors=k)
+    fig, ax = plt.subplots(1, 1)
+    pal = np.array(pal)
+    pal = pal.reshape((k, 1, 3))
+    ax.imshow(pal)
+    ax.xaxis.set_major_locator(plt.NullLocator())
+    ax.yaxis.set_major_formatter(plt.FixedFormatter(np.arange(k, dtype=int)))
+    ax.yaxis.set_major_locator(plt.FixedLocator(np.arange(k)))
     return ax

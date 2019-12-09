@@ -3,6 +3,10 @@
 import json
 import math
 import os
+import warnings
+
+warnings.simplefilter("ignore", category=FutureWarning)
+
 from operator import itemgetter
 from pathlib import Path
 
@@ -26,6 +30,7 @@ from src.data import load_everything
 from src.utils import export_skeleton_json, savefig
 from src.visualization import sankey
 
+
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
 
@@ -46,7 +51,7 @@ SAVESKELS = True
 
 N_JOBS = -2
 MIN_CLUSTERS = 2
-MAX_CLUSTERS = 4
+MAX_CLUSTERS = 100
 N_INIT = 200
 PTR = True
 
@@ -371,7 +376,6 @@ def clustergram(
 def get_block_edgesums(adj, pred_labels, sort_blocks):
     block_vert_inds, block_inds, block_inv = _get_block_indices(pred_labels)
     block_sums = _calculate_block_edgesum(adj, block_inds, block_vert_inds)
-    sort_blocks = prob_df.columns.values
     block_sums = block_sums[np.ix_(sort_blocks, sort_blocks)]
     block_sum_df = pd.DataFrame(data=block_sums, columns=sort_blocks, index=sort_blocks)
     return block_sum_df
@@ -500,11 +504,11 @@ lse_latent = lse(adj, 4, regularizer=None)
 latent = lse_latent
 pairplot(latent, labels=simple_class_labels, title=embed)
 
-k_list = list(range(MIN_CLUSTERS, MAX_CLUSTERS))
+k_list = list(range(MIN_CLUSTERS, MAX_CLUSTERS + 1))
 n_runs = len(k_list)
 
 
-def cluster(k, seed):
+def cluster_func(k, seed):
     np.random.seed(seed)
     run_name = f"k = {k}, {cluster}, {embed}, right hemisphere (A to D), PTR, raw"
     print(run_name)
@@ -549,7 +553,6 @@ def cluster(k, seed):
 
     # Plot everything else
     prob_df = get_sbm_prob(adj, pred_labels)
-
     block_sum_df = get_block_edgesums(adj, pred_labels, prob_df.columns.values)
 
     clustergram(adj, latent, prob_df, block_sum_df, simple_class_labels, pred_labels)
@@ -572,7 +575,6 @@ def cluster(k, seed):
         / Path(FNAME)
         / str("colormap-" + save_name + ".json")
     )
-    print(colormap)
     with open(filename, "w") as fout:
         json.dump(colormap, fout)
 
@@ -582,4 +584,6 @@ def cluster(k, seed):
 
 
 seeds = np.random.randint(1e8, size=n_runs)
-p = Parallel(n_jobs=N_JOBS)(delayed(cluster)(k, seed for k, seed in zip(k_list, seeds))
+Parallel(n_jobs=N_JOBS, verbose=10)(
+    delayed(cluster_func)(k, seed) for k, seed in zip(k_list, seeds)
+)

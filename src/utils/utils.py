@@ -494,9 +494,6 @@ def export_skeleton_json(
             json.dump(spec_list, fout)
 
     if palette is not None:
-        print("here")
-        print(colormap)
-        print(pal)
         return (spec_list, colormap, pal)
     else:
         return spec_list

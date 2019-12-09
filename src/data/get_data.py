@@ -82,11 +82,9 @@ def load_networkx(graph_type, version="2019-09-18-v2"):
 def load_everything(
     graph_type,
     version="2019-09-18-v2",
-    return_class=False,
-    return_side=False,
+    return_keys=None,
     return_df=False,
     return_ids=False,
-    return_pair=False,
 ):
 
     """Function to load an adjacency matrix and optionally return some associated 
@@ -98,10 +96,6 @@ def load_everything(
         Which version of the graph to load
     version : str, optional
         Date/version descriptor for which dataset to use, by default "2019-09-18-v2"
-    return_class : bool, optional
-        Whether to return associated class labels, by default False
-    return_side : bool, optional
-        Whether to return associated hemisphere labels, by default False
     return_df : bool, optional
         Whether to return a Pandas DataFrame representation of the adjacency,
         by default False
@@ -127,19 +121,17 @@ def load_everything(
         raise ValueError("Networkx indexing is inconsistent with Pandas adjacency")
     adj = nx.to_pandas_adjacency(graph).values
     outs = [adj]
-    if return_class:
-        class_labels = meta_to_array(graph, "Class")
-        outs.append(class_labels)
-    if return_side:
-        side_labels = meta_to_array(graph, "Hemisphere")
-        outs.append(side_labels)
+
+    if return_keys is not None:
+        if not isinstance(return_keys, list):
+            return_keys = [return_keys]
+        for k in return_keys:
+            labels = meta_to_array(graph, k)
+            outs.append(labels)
     if return_df:
         outs.append(df_adj)
     if return_ids:
         outs.append(df_ids)
-    if return_pair:
-        pair_labels = meta_to_array(graph, "Pair")
-        outs.append(pair_labels)
     if len(outs) > 1:
         outs = tuple(outs)
         return outs
