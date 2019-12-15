@@ -13,6 +13,7 @@ import seaborn as sns
 from joblib import Parallel, delayed
 from joblib.parallel import Parallel, delayed
 from sklearn.metrics import adjusted_rand_score
+import networkx as nx
 
 from graspy.cluster import GaussianCluster, AutoGMMCluster
 from graspy.embed import AdjacencySpectralEmbed, OmnibusEmbed
@@ -22,6 +23,7 @@ from graspy.utils import binarize, cartprod, get_lcc, pass_to_ranks
 from src.data import load_everything
 from src.utils import export_skeleton_json, savefig
 from src.visualization import clustergram, palplot, sankey
+from src.hierarchy import signal_flow
 
 warnings.simplefilter("ignore", category=FutureWarning)
 
@@ -41,7 +43,7 @@ SAVEFIGS = True
 DEFAULT_FMT = "png"
 DEFUALT_DPI = 150
 
-SAVESKELS = True
+SAVESKELS = False
 
 MIN_CLUSTERS = 8
 MAX_CLUSTERS = 8
@@ -255,46 +257,6 @@ degrees = degrees[d_sort]
 plt.figure(figsize=(10, 5))
 sns.scatterplot(x=range(len(degrees)), y=degrees, s=30, linewidth=0)
 
-
-# Remap the names
-# name_map = {
-#     "CN": "Unk",
-#     "DANs": "MBIN",
-#     "KCs": "KC",
-#     "LHN": "Unk",
-#     "LHN; CN": "Unk",
-#     "MBINs": "MBIN",
-#     "MBON": "MBON",
-#     "MBON; CN": "MBON",
-#     "OANs": "MBIN",
-#     "ORN mPNs": "mPN",
-#     "ORN uPNs": "uPN",
-#     "tPNs": "tPN",
-#     "vPNs": "vPN",
-#     "Unidentified": "Unk",
-#     "Other": "Unk",
-# }
-# simple_class_labels = np.array(itemgetter(*class_labels)(name_map))
-
-# name_map = {
-#     "CN": "Other",
-#     "DANs": "MB",
-#     "KCs": "MB",
-#     "LHN": "Other",
-#     "LHN; CN": "Other",
-#     "MBINs": "MB",
-#     "MBON": "MB",
-#     "MBON; CN": "MB",
-#     "OANs": "MB",
-#     "ORN mPNs": "PN",
-#     "ORN uPNs": "PN",
-#     "tPNs": "PN",
-#     "vPNs": "PN",
-#     "Unidentified": "Other",
-#     "Other": "Other",
-# }
-# mb_labels = np.array(itemgetter(*class_labels)(name_map))
-
 known_inds = np.where(class_labels != "Unk")[0]
 
 
@@ -396,6 +358,12 @@ for k in k_list:
     clustergram(adj, class_labels, pred_labels)
     stashfig("clustergram-" + save_name)
 
+    # New plot
+    # - Compute signal flow
+    # - Get the centroid of each cluster and project to 1d
+    # - Alternatively, just take the first dimension
+    # - For each cluster plot as a node
+
     # output skeletons
     if SAVESKELS:
         _, colormap, pal = stashskel(
@@ -433,3 +401,85 @@ stashfig(f"metrics-{cluster}-{embed}-right-ad-PTR-raw")
 # - Color the cluster labels by what gets written to the JSON
 # - Plot the clusters as nodes in a small network
 
+# %% [markdown]
+# # try graph flow
+
+
+node_signal_flow = signal_flow(adj)
+mean_sf = np.zeros(k)
+for i in np.unique(pred_labels):
+    inds = np.where(pred_labels == i)[0]
+    mean_sf[i] = np.mean(node_signal_flow[inds])
+
+cluster_mean_latent = gmm.model_.means_[:, 0]
+block_probs = SBMEstimator().fit(bin_adj, y=pred_labels).block_p_
+block_prob_df = pd.DataFrame(data=block_probs, index=range(k), columns=range(k))
+block_g = nx.from_pandas_adjacency(block_prob_df, create_using=nx.DiGraph)
+plt.figure(figsize=(10, 10))
+# don't ever let em tell you you're too pythonic
+pos = dict(zip(range(k), zip(cluster_mean_latent, mean_sf)))
+# nx.draw_networkx_nodes(block_g, pos=pos)
+labels = nx.get_edge_attributes(block_g, "weight")
+# nx.draw_networkx_edge_labels(block_g, pos, edge_labels=labels)
+from matplotlib.cm import ScalarMappable
+import matplotlib as mpl
+
+norm = mpl.colors.LogNorm(vmin=0.01, vmax=0.1)
+
+sm = ScalarMappable(cmap="Reds", norm=norm)
+cmap = sm.to_rgba(np.array(list(labels.values())) + 0.01)
+nx.draw_networkx(
+    block_g,
+    pos,
+    edge_cmap="Reds",
+    edge_color=cmap,
+    connectionstyle="arc3,rad=0.2",
+    width=1.5,
+)
+
+# %% [markdown]
+# # signal flow marginals
+
+signal_flow_marginal(adj, pred_labels)
+
+# %% [markdown]
+# #
+
+
+def signal_flow_marginal(adj, labels, col_wrap=5, palette="tab20"):
+    sf = signal_flow(adj)
+    uni_labels = np.unique(labels)
+    medians = []
+    for i in uni_labels:
+        inds = np.where(labels == i)[0]
+        medians.append(np.median(sf[inds]))
+    sort_inds = np.argsort(medians)[::-1]
+    col_order = uni_labels[sort_inds]
+    plot_df = pd.DataFrame()
+    plot_df["Signal flow"] = sf
+    plot_df["Class"] = labels
+    fg = sns.FacetGrid(
+        plot_df,
+        col="Class",
+        aspect=1.5,
+        palette=palette,
+        col_order=col_order,
+        sharey=False,
+        col_wrap=col_wrap,
+        xlim=(-3, 3),
+    )
+    fg = fg.map(sns.distplot, "Signal flow")  # bins=np.linspace(-2.2, 2.2))
+    fg.set(yticks=[], yticklabels=[])
+    plt.tight_layout()
+    return fg
+
+
+signal_flow_marginal(adj, class_labels)
+stashfig("known-class-sf-marginal")
+
+# tomorrow
+# DEFINITELY
+# run with unsupervised metrics from k=2-50
+
+# IF TIME
+# run hgmm

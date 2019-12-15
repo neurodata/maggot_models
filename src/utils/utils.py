@@ -371,6 +371,7 @@ def savefig(
     name,
     fmt="pdf",
     foldername=None,
+    subfoldername="figs",
     pathname="./maggot_models/notebooks/outs",
     bbox_inches="tight",
     pad_inches=0.5,
@@ -381,6 +382,10 @@ def savefig(
         path = path / foldername
         if not os.path.isdir(path):
             os.mkdir(path)
+        if subfoldername is not None:
+            path = path / subfoldername
+            if not os.path.isdir(path):
+                os.mkdir(path)
     plt.savefig(
         path / str(name + "." + fmt),
         fmt=fmt,
@@ -436,6 +441,7 @@ def export_skeleton_json(
     colors,
     palette="tab10",
     foldername=None,
+    subfoldername="jsons",
     pathname="./maggot_models/notebooks/outs",
     multiout=False,
 ):
@@ -471,6 +477,10 @@ def export_skeleton_json(
         path = path / foldername
         if not os.path.isdir(path):
             os.mkdir(path)
+        if subfoldername is not None:
+            path = path / subfoldername
+            if not os.path.isdir(path):
+                os.mkdir(path)
 
     if multiout:
         for l in uni_labels:
