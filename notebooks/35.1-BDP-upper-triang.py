@@ -131,14 +131,12 @@ def unshuffle(shuffle_inds, perm_inds):
 
 GRAPH_VERSION = "2019-09-18-v2"
 adj, class_labels, side_labels = load_everything(
-    "Gad", GRAPH_VERSION, return_class=True, return_side=True
+    "Gad", GRAPH_VERSION, return_keys=["Class", "Hemisphere"]
 )
 
 adj, inds = get_lcc(adj, return_inds=True)
 class_labels = class_labels[inds]
 side_labels = side_labels[inds]
-
-adj = adj[:1000, :1000]
 
 n_verts = adj.shape[0]
 
@@ -166,27 +164,75 @@ class_labels = np.array(itemgetter(*class_labels)(name_map))
 
 template = get_template_mat(adj)
 
-shuffle_inds = np.random.permutation(n_verts)
+# shuffle_inds = np.random.permutation(n_verts)
 
-shuffle_adj = adj[np.ix_(shuffle_inds, shuffle_inds)]
+# shuffle_adj = adj[np.ix_(shuffle_inds, shuffle_inds)]
 
 n_init = 1
 faq = FastApproximateQAP(
     max_iter=30,
     eps=0.0001,
     init_method="rand",
-    n_init=1,
-    shuffle_input=False,
-    maximize=True,
+    n_init=n_init,
+    shuffle_input=True,
+    gmp=True,
 )
 start = timer()
-faq.fit(template, shuffle_adj)
+faq.fit(template, adj)
 end = timer()
 print(f"FAQ took {(end - start)/60.0} minutes")
 
-shuffle_perm_inds = faq.perm_inds_
-perm_inds = unshuffle(shuffle_inds, shuffle_perm_inds)
+perm_inds = faq.perm_inds_
+# perm_inds = unshuffle(shuffle_inds, shuffle_perm_inds)
+# %% [markdown]
+# #
+from graspy.plot import gridplot
 
-heatmap(adj[np.ix_(perm_inds, perm_inds)], figsize=(20, 20))
-stashfig("unshuffled_real_heatmap")
+gridplot([adj[np.ix_(perm_inds, perm_inds)]])
+stashfig("unshuffled-real-heatmap-faq")
+
+# %% [markdown]
+# #
+from src.hierarchy import signal_flow
+
+z = signal_flow(adj)
+sort_inds = np.argsort(z)[::-1]
+gridplot([adj[np.ix_(sort_inds, sort_inds)]])
+stashfig("unshuffled-real-heatmap-sf")
+
+
+# %% [markdown]
+# #
+
+# %% [markdown]
+# #
+
+
+def shuffle_edges(A):
+    n_verts = A.shape[0]
+    A_fake = A.copy().ravel()
+    np.random.shuffle(A_fake)
+    A_fake = A_fake.reshape((n_verts, n_verts))
+    return A_fake
+
+
+fake_adj = shuffle_edges(adj)
+n_init = 1
+faq = FastApproximateQAP(
+    max_iter=30,
+    eps=0.0001,
+    init_method="rand",
+    n_init=n_init,
+    shuffle_input=True,
+    gmp=True,
+)
+start = timer()
+faq.fit(template, fake_adj)
+end = timer()
+print(f"FAQ took {(end - start)/60.0} minutes")
+
+
+fake_perm_inds = faq.perm_inds_
+gridplot([fake_adj[np.ix_(perm_inds, perm_inds)]])
+stashfig("fake-heatmap-faq")
 

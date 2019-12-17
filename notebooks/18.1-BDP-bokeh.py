@@ -117,12 +117,10 @@ GRAPH_VERSION = "mb_2019-09-23"
 # Sort the graph appropriately first
 graph_type = "G"
 
-G_adj, class_labels, side_labels, id_labels, pair_labels = load_everything(
+G_adj, class_labels, side_labels, pair_labels, id_labels = load_everything(
     graph_type,
-    return_class=True,
-    return_side=True,
+    return_keys=["Class", "Hemisphere", "Pair"],
     return_ids=True,
-    return_pair=True,
     version=GRAPH_VERSION,
 )
 

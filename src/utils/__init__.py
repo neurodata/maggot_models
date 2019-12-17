@@ -24,5 +24,6 @@ from .utils import (
     relabel,
     unique_by_size,
     export_skeleton_json,
+    shuffle_edges,
 )
 

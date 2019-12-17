@@ -1,5 +1,5 @@
 import numpy as np
-import pandas as pd
+from graspy.utils import remove_loops
 
 
 def signal_flow(A, n_components=5, return_evals=False):
@@ -15,6 +15,8 @@ def signal_flow(A, n_components=5, return_evals=False):
     [type]
         [description]
     """
+    A = A.copy()
+    A = remove_loops(A)
     W = (A + A.T) / 2
 
     D = np.diag(np.sum(W, axis=1))

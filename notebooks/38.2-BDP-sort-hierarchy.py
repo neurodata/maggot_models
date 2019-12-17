@@ -213,3 +213,4 @@ z = signal_flow(B_hat)
 sort_inds = np.argsort(z)[::-1]
 plt.figure()
 sns.heatmap(B_hat[np.ix_(sort_inds, sort_inds)])
+

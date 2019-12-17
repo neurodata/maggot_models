@@ -507,3 +507,11 @@ def export_skeleton_json(
         return (spec_list, colormap, pal)
     else:
         return spec_list
+
+
+def shuffle_edges(A):
+    n_verts = A.shape[0]
+    A_fake = A.copy().ravel()
+    np.random.shuffle(A_fake)
+    A_fake = A_fake.reshape((n_verts, n_verts))
+    return A_fake
