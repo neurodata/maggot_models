@@ -960,3 +960,105 @@ def palplot(k, cmap="viridis"):
     ax.yaxis.set_major_formatter(plt.FixedFormatter(np.arange(k, dtype=int)))
     ax.yaxis.set_major_locator(plt.FixedLocator(np.arange(k)))
     return ax
+
+
+def stacked_barplot(
+    labels,
+    category,
+    category_order=None,
+    subcategory_order=None,
+    ax=None,
+    plot_proportions=False,
+    palette="tab10",
+    legend_ncol=5,
+    bar_height=0.7,
+    norm_bar_width=True,
+):
+    """
+    Parameters
+    ----------
+    results : dict
+        A mapping from question labels to a list of answers per category.
+        It is assumed all lists contain the same number of entries and that
+        it matches the length of *category_names*.
+    category_names : list of str
+        The category labels.
+    """
+
+    # Counts the nunmber of unique category within each category, plotting as bar plot
+    if category_order is None:
+        uni_labels = np.unique(labels)
+    else:
+        uni_labels = np.array(category_order)
+    if subcategory_order is None:
+        uni_class = np.unique(category)
+
+    counts_by_label = []
+    for label in uni_labels:
+        inds = np.where(labels == label)
+        subcat_in_cat = category[inds]
+        counts_by_class = []
+        for c in uni_class:
+            num_class_in_cluster = len(np.where(subcat_in_cat == c)[0])
+            counts_by_class.append(num_class_in_cluster)
+        counts_by_label.append(counts_by_class)
+    results = dict(zip(uni_labels, counts_by_label))
+    labels = list(results.keys())
+    data = np.array(list(results.values()))
+
+    # find the width of the bars
+    sums = data.sum(axis=1)
+    if norm_bar_width:
+        data = data / data.sum(axis=1)[:, np.newaxis]
+    data_cum = data.cumsum(axis=1)
+
+    category_colors = sns.color_palette(palette, n_colors=len(uni_class))
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(15, 10))
+    ax.invert_yaxis()
+    ax.xaxis.set_visible(False)
+    max_size = np.sum(data, axis=1).max()
+
+    # add just a little bit of space on either side of end of bars
+    horizontal_pad = 0.02
+    ax.set_xlim(0 - horizontal_pad * max_size, max_size * (1 + horizontal_pad))
+
+    new_labels = []
+    for i, l in enumerate(labels):
+        new_labels.append(str(labels[i]) + f" ({sums[i]})")
+    labels = np.array(new_labels)
+
+    ax.set_yticklabels(labels)
+
+    for i, (colname, color) in enumerate(zip(uni_class, category_colors)):
+        widths = data[:, i]
+        starts = data_cum[:, i] - widths
+        ax.barh(
+            labels, widths, left=starts, height=bar_height, label=colname, color=color
+        )
+
+        # this puts small proportion numbers above bar segments
+        # tries to offset them so they are readable
+        # doesn't work great
+        if plot_proportions:
+            xcenters = starts + widths / 2
+            r, g, b = color
+            text_color = "black"
+            for y, (x, c) in enumerate(zip(xcenters, widths)):
+                if c != 0:
+                    ax.text(
+                        x,
+                        y - bar_height / 2 - i % 2 * bar_height / 4,
+                        f"{c:.2f}",
+                        ha="center",
+                        va="bottom",
+                        color=text_color,
+                    )
+
+    # this places the legend outside of the axes and in the lower left corner
+    ax.legend(
+        ncol=legend_ncol, bbox_to_anchor=(0, 0), loc="upper left", fontsize="small"
+    )
+
+    return ax

@@ -2,7 +2,7 @@ import numpy as np
 from graspy.utils import remove_loops
 
 
-def signal_flow(A, n_components=5, return_evals=False):
+def signal_flow(A):
     """Implementation of the signal flow metric from Varshney et al 2011
     
     Parameters

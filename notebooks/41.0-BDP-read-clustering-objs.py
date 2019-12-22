@@ -132,5 +132,3 @@ nx.draw_networkx(
     width=1.5,
 )
 
-
-# %%

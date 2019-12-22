@@ -2,28 +2,31 @@
 # # try graph flow
 import json
 import os
+import pickle
 import warnings
 from operator import itemgetter
 from pathlib import Path
-import pickle
+
+import matplotlib.colors as colors
 import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from joblib import Parallel, delayed
 from joblib.parallel import Parallel, delayed
+from matplotlib.cm import ScalarMappable
 from sklearn.metrics import adjusted_rand_score
-import networkx as nx
 
-from graspy.cluster import GaussianCluster, AutoGMMCluster
+from graspy.cluster import AutoGMMCluster, GaussianCluster
 from graspy.embed import AdjacencySpectralEmbed, OmnibusEmbed
 from graspy.models import DCSBMEstimator, SBMEstimator
 from graspy.plot import heatmap, pairplot
-from graspy.utils import binarize, cartprod, get_lcc, pass_to_ranks
+from graspy.utils import binarize, cartprod, get_lcc, pass_to_ranks, remove_loops
 from src.data import load_everything
+from src.hierarchy import signal_flow
 from src.utils import export_skeleton_json, savefig
 from src.visualization import clustergram, palplot, sankey
-from src.hierarchy import signal_flow
 
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
@@ -33,12 +36,12 @@ GRAPH_TYPES = ["Gad", "Gaa", "Gdd", "Gda"]
 GRAPH_TYPE_LABELS = [r"A $\to$ D", r"A $\to$ A", r"D $\to$ D", r"D $\to$ A"]
 N_GRAPH_TYPES = len(GRAPH_TYPES)
 
-SAVEFIGS = True
+SAVEFIGS = False
 DEFAULT_FMT = "png"
 DEFUALT_DPI = 150
 
-SAVESKELS = True
-SAVEOBJS = True
+SAVESKELS = False
+SAVEOBJS = False
 
 
 def stashfig(name, **kws):
@@ -74,6 +77,34 @@ def signal_flow_marginal(adj, labels, col_wrap=5, palette="tab20"):
     return fg
 
 
+def weighted_signal_flow(A):
+    """Implementation of the signal flow metric from Varshney et al 2011
+    
+    Parameters
+    ----------
+    A : [type]
+        [description]
+    
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    A = A.copy()
+    A = remove_loops(A)
+    W = (A + A.T) / 2
+
+    D = np.diag(np.sum(W, axis=1))
+
+    L = D - W
+
+    b = np.sum(W * (A - A.T), axis=1)
+    L_pinv = np.linalg.pinv(L)
+    z = L_pinv @ b
+
+    return z
+
+
 # %% [markdown]
 # # Load data
 
@@ -96,8 +127,6 @@ stashfig("known-class-sf-marginal")
 # %% [markdown]
 # # Write out signal flow as color for jsons
 
-import matplotlib.colors as colors
-from matplotlib.cm import ScalarMappable
 
 norm = colors.Normalize(vmin=sf.min(), vmax=sf.max())
 sm = ScalarMappable(norm=norm, cmap="Reds")
