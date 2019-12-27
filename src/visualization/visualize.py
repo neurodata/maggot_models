@@ -961,6 +961,7 @@ def palplot(k, cmap="viridis"):
     ax.yaxis.set_major_locator(plt.FixedLocator(np.arange(k)))
     return ax
 
+import colorcet as cc
 
 def stacked_barplot(
     labels,
@@ -973,6 +974,9 @@ def stacked_barplot(
     legend_ncol=5,
     bar_height=0.7,
     norm_bar_width=True,
+    label_pos=None,
+    horizontal_pad=0.02, 
+    return_data=False
 ):
     """
     Parameters
@@ -1012,7 +1016,8 @@ def stacked_barplot(
         data = data / data.sum(axis=1)[:, np.newaxis]
     data_cum = data.cumsum(axis=1)
 
-    category_colors = sns.color_palette(palette, n_colors=len(uni_class))
+    subcategory_colors = sns.color_palette(palette, n_colors=len(uni_class))
+    # subcategory_colors = cc.glasbey_light
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(15, 10))
@@ -1021,7 +1026,6 @@ def stacked_barplot(
     max_size = np.sum(data, axis=1).max()
 
     # add just a little bit of space on either side of end of bars
-    horizontal_pad = 0.02
     ax.set_xlim(0 - horizontal_pad * max_size, max_size * (1 + horizontal_pad))
 
     new_labels = []
@@ -1031,11 +1035,17 @@ def stacked_barplot(
 
     ax.set_yticklabels(labels)
 
-    for i, (colname, color) in enumerate(zip(uni_class, category_colors)):
+    for i, (colname, color) in enumerate(zip(uni_class, subcategory_colors)):
         widths = data[:, i]
         starts = data_cum[:, i] - widths
+
+        if label_pos is None:
+            label_pos = labels
         ax.barh(
-            labels, widths, left=starts, height=bar_height, label=colname, color=color
+            label_pos,
+            widths,
+            tick_label=labels,
+            left=starts, height=bar_height, label=colname, color=color
         )
 
         # this puts small proportion numbers above bar segments
@@ -1060,5 +1070,7 @@ def stacked_barplot(
     ax.legend(
         ncol=legend_ncol, bbox_to_anchor=(0, 0), loc="upper left", fontsize="small"
     )
-
-    return ax
+    if return_data:
+        return ax, data, uni_class, subcategory_colors
+    else: 
+        return ax

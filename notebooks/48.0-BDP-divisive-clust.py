@@ -2,31 +2,35 @@
 # # Imports
 import json
 import os
+import pickle
 import warnings
 from operator import itemgetter
 from pathlib import Path
-import pickle
+
 import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from joblib import Parallel, delayed
 from joblib.parallel import Parallel, delayed
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from scipy.cluster.hierarchy import dendrogram
 from sklearn.metrics import adjusted_rand_score, silhouette_score
-import networkx as nx
 from spherecluster import SphericalKMeans
 
-from graspy.cluster import GaussianCluster, AutoGMMCluster
+from graspy.cluster import AutoGMMCluster, GaussianCluster
 from graspy.embed import AdjacencySpectralEmbed, OmnibusEmbed
 from graspy.models import DCSBMEstimator, SBMEstimator
 from graspy.plot import heatmap, pairplot
 from graspy.utils import binarize, cartprod, get_lcc, pass_to_ranks
+from src.cluster import DivisiveCluster
 from src.data import load_everything
-from src.utils import export_skeleton_json, savefig
-from src.visualization import clustergram, palplot, sankey
-from src.hierarchy import signal_flow
 from src.embed import lse
+from src.hierarchy import signal_flow
 from src.io import stashfig
+from src.utils import export_skeleton_json, savefig
+from src.visualization import clustergram, palplot, sankey, stacked_barplot
 
 warnings.simplefilter("ignore", category=FutureWarning)
 
@@ -50,7 +54,7 @@ MIN_CLUSTERS = 2
 MAX_CLUSTERS = 3
 N_INIT = 50
 PTR = True
-ONLY_RIGHT = True
+ONLY_RIGHT = False
 
 embed = "LSE"
 cluster = "AutoGMM"
@@ -153,115 +157,57 @@ sns.scatterplot(x=range(len(degrees)), y=degrees, s=30, linewidth=0)
 
 known_inds = np.where(class_labels != "Unk")[0]
 
-
 # %% [markdown]
 # #
-from graspy.cluster import PartitionalGaussianCluster
-
-# %% [markdown]
-# # Run clustering using LSE on the sum graph
-
 n_verts = adj.shape[0]
-
-
 latent = lse(adj, n_components, regularizer=None, ptr=PTR)
 pairplot(latent, labels=class_labels, title=embed)
 
 # %% [markdown]
 # #
 
-
-class PartitionCluster:
-    def __init__(self):
-        self.min_split_samples = 5
-
-    def fit(self, X, y=None):
-        n_samples = X.shape[0]
-
-        if n_samples > self.min_split_samples:
-            cluster = GaussianCluster(min_components=1, max_components=2, n_init=20)
-            cluster.fit(X)
-            self.model_ = cluster
-        else:
-            self.pred_labels_ = np.zeros(X.shape[0])
-            self.left_ = None
-            self.right_ = None
-            self.model_ = None
-            return self
-
-        # recurse
-        if cluster.n_components_ != 1:
-            pred_labels = cluster.predict(X)
-            self.pred_labels_ = pred_labels
-            indicator = pred_labels == 0
-            self.X_left_ = X[indicator, :]
-            self.X_right_ = X[~indicator, :]
-            split_left = PartitionCluster()
-            self.left_ = split_left.fit(self.X_left_)
-
-            split_right = PartitionCluster()
-            self.right_ = split_right.fit(self.X_right_)
-        else:
-            self.pred_labels_ = np.zeros(X.shape[0])
-            self.left_ = None
-            self.right_ = None
-            self.model_ = None
-        return self
-
-    def predict_sample(self, sample):
-        model = self.model_
-        if model is not None:
-            pred = model.predict([sample])[0]
-            if pred == 0:
-                next_pred = self.left_.predict_sample(sample)
-            if pred == 1:
-                next_pred = self.right_.predict_sample(sample)
-            total_pred = str(pred) + next_pred
-        else:
-            total_pred = ""
-        return total_pred
-
-    def predict(self, X):
-        predictions = []
-        for sample in X:
-            pred = self.predict_sample(sample)
-            predictions.append(pred)
-        return np.array(predictions)
-
-
-pgmm = PartitionCluster()
-pgmm.fit(latent)
-pred_labels = pgmm.predict(latent)
-
-from src.visualization import stacked_barplot
-
-stacked_barplot(pred_labels, class_labels)
-
+dc = DivisiveCluster(n_init=200)
+dc.fit(latent)
+dc.print_tree()
+linkage, labels = dc.build_linkage()
+pred_labels = dc.predict(latent)
 
 # %% [markdown]
 # #
 
-uni_labels = np.unique(pred_labels)
-# consider only the longest strings:
 
-label_lens = []
-for l in uni_labels:
-    str_len = len(l)
-    label_lens.append(str_len)
-label_lens = np.array(label_lens)
-max_len = max(label_lens)
-print(max_len)
+fig = plt.figure(figsize=(12, 12))
+gs = plt.GridSpec(1, 2, figure=fig, width_ratios=[0.1, 0.9], wspace=0)
+ax0 = fig.add_subplot(gs[0])
 
-max_inds = np.where(label_lens == max_len)
-temp_labels = uni_labels[max_inds]
+dendr_data = dendrogram(
+    linkage,
+    orientation="left",
+    labels=labels,
+    color_threshold=0,
+    above_threshold_color="k",
+    ax=ax0,
+)
+ax0.axis("off")
 
-dist_mat = np.zeros((len(uni_labels), 4))
+ticks = ax0.get_yticks()
 
-# consider only temp_labels
-# find the ones that are pairs
-temp_labels = []
-for l in temp_labels:
-    temp_str = l[:-2]
-    print(temp_str)
-    temp_labels = []
-    
+leaf_names = np.array(dendr_data["ivl"])[::-1]
+ax1 = fig.add_subplot(gs[1], sharey=ax0)
+ax1 = stacked_barplot(
+    pred_labels,
+    class_labels,
+    label_pos=ticks,
+    category_order=leaf_names,
+    ax=ax1,
+    bar_height=5,
+    horizontal_pad=0,
+    palette="tab20",
+    norm_bar_width=True,
+)
+ax1.set_frame_on(False)
+ax1.yaxis.tick_right()
+plt.title(
+    r"Divisive hierarchical clustering, GraspyGMM, LSE, PTR, Full Brain, A $\to$ D"
+)
+stashfig("hierarchy-bars")
