@@ -21,11 +21,13 @@ graph_types = ["axon-axon", "axon-dendrite", "dendrite-axon", "dendrite-dendrite
 
 meta_data_file = "brain_meta-data"
 
-class_data_folder = base_path / "neuron-groups/2019-12-9"
+data_date_groups = "2019-12-18"
+
+class_data_folder = base_path / f"neuron-groups/{data_date_groups}"
 
 input_counts_file = "input_counts"
 
-output_path = Path("maggot_models/data/processed/2019-12-09")
+output_path = Path(f"maggot_models/data/processed/{data_date_groups}")
 
 meta_data_path = data_path / data_date / (meta_data_file + ".csv")
 meta_data_df = pd.read_csv(meta_data_path, index_col=0)
@@ -44,11 +46,18 @@ def extract_ids(lod):
 
 # append new cell type classes
 group_files = listdir(class_data_folder)
+group_files.remove("usplit-2019-12-20.json")  # add these back in later
+group_files.remove("LNp-2019-12-20.json")
+# group_files.remove("LNp-2019-12-20.json")
+# group_files.remove("LNp-2019-12-20.json")
+
 names = []
 group_map = {}
 subgroup_map = {}
 for f in group_files:
     name = f.replace("-2019-12-9.json", "")
+    name = name.replace("-2019-12-18.json", "")
+    name = name.replace("-2019-12-20.json", "")
     names.append(name)
 
     with open(class_data_folder / f, "r") as json_file:
@@ -72,7 +81,7 @@ for name, ids in group_map.items():
             if meta_data_df.loc[i, "Class 1"] == "":
                 meta_data_df.loc[i, "Class 1"] += name
             else:
-                meta_data_df.loc[i, "Class 1"] += "; " + name
+                meta_data_df.loc[i, "Class 1"] += "/" + name
         except KeyError:
             print(f"Skeleton ID {i} not in graph")
             num_missing += 1
@@ -89,7 +98,7 @@ for name, ids in subgroup_map.items():
             if meta_data_df.loc[i, "Class 2"] == "":
                 meta_data_df.loc[i, "Class 2"] += name
             else:
-                meta_data_df.loc[i, "Class 2"] += "; " + name
+                meta_data_df.loc[i, "Class 2"] += "/" + name
         except KeyError:
             print(f"Skeleton ID {i} not in graph")
             num_missing += 1
@@ -105,21 +114,30 @@ class_labels = meta_data_df["Class 1"].values
 name_map = {
     "": "Unk",
     "APL": "APL",
-    "FANs": "FAN",
-    "FB2Ns": "FB2N",
-    "FBNs": "FBN",
-    "FFNs": "FFN",
-    "MBINs": "MBIN",
-    "MBONs": "MBON",
-    "dSEZ": "dSEZ",
-    "dSEZ; FFNs": "dSEZ; FFNs",
-    "dVNC": "dVNC",
-    "mPNs": "mPN",
-    "mPNs; FFNs": "mPN; FFN",
-    "tPNs": "tPN",
-    "uPNs": "uPN",
-    "vPNs": "vPNs",
+    "FAN": "FAN",
+    "FB2N": "FB2N",
+    "FBN": "FBN",
+    "FFN": "FFN",
     "KC": "KC",
+    "MBIN": "MBIN",
+    "MBON": "MBON",
+    "O_IPC": "O_IPC",
+    "O_ITP": "O_ITP",
+    "O_ITP/O_dSEZ": "O_ITP/dSEZ",
+    "O_dSEZ": "O_dSEZ",
+    "dSEZ": "dSEZ",
+    "O_dSEZ/FB2N": "O_dSEZ/FB2N",
+    "O_dSEZ/FFN": "O_dSEZ/FFN",
+    "O_dSEZ/O_CA-LP": "O_dSEZ/CA-LP",
+    "O_dVNC": "O_dVNC",
+    "bLN": "bLN",
+    "cLN": "cLN",
+    "mPN": "mPN",
+    "mPN/FFN": "mPN/FFN",
+    "pLN": "pLN",
+    "tPN": "tPN",
+    "uPN": "uPN",
+    "vPN": "vPN",
 }
 class_labels = np.array(itemgetter(*class_labels)(name_map))
 meta_data_df["Class 1"] = class_labels
@@ -127,7 +145,15 @@ meta_data_df["Class 1"] = class_labels
 print(np.unique(meta_data_df["Class 2"]))
 
 class_labels = meta_data_df["Class 2"].values
-name_map = {"": "", "DANs": "DAN", "OANs": "OAN", "multimodal": "m", "olfactory": "o"}
+name_map = {
+    "": "",
+    "DAN": "DAN",
+    "OAN": "OAN",
+    "multimodal": "m",
+    "olfactory": "o",
+    "Duet": "D",
+    "Trio": "T",
+}
 class_labels = np.array(itemgetter(*class_labels)(name_map))
 meta_data_df["Class 2"] = class_labels
 
