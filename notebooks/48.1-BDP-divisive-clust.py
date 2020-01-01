@@ -28,8 +28,8 @@ from src.cluster import DivisiveCluster
 from src.data import load_everything
 from src.embed import lse
 from src.hierarchy import signal_flow
-from src.io import stashfig
-from src.utils import export_skeleton_json, savefig
+from src.io import savefig
+from src.utils import export_skeleton_json
 from src.visualization import clustergram, palplot, sankey, stacked_barplot
 
 warnings.simplefilter("ignore", category=FutureWarning)
@@ -68,6 +68,10 @@ elif cluster == "SKMeans":
     gmm_params = {"n_init": N_INIT}
 
 np.random.seed(23409857)
+
+
+def stashfig(name, **kws):
+    savefig(name, foldername=FNAME, save_on=SAVEFIGS, **kws)
 
 
 def stashskel(name, ids, colors, palette=None, **kws):

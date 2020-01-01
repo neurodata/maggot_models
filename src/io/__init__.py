@@ -1,1 +1,1 @@
-from .io import stashfig
+from .io import savefig

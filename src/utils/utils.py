@@ -8,8 +8,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+
 from graspy.models import SBMEstimator
 from graspy.simulations import p_from_latent, sample_edges, sbm
+from graspy.utils import binarize
 
 
 def hardy_weinberg(theta):
@@ -515,3 +517,19 @@ def shuffle_edges(A):
     np.random.shuffle(A_fake)
     A_fake = A_fake.reshape((n_verts, n_verts))
     return A_fake
+
+
+def get_sbm_prob(adj, labels):
+    uni_labels, counts = np.unique(labels, return_counts=True)
+    label_map = dict(uni_labels, range(len(uni_labels)))
+    y = np.array(itemgetter(*labels)(label_map))
+    sbm = SBMEstimator(directed=True, loops=True)
+    sbm.fit(binarize(adj), y=y)
+    data = sbm.block_p_
+    sort_inds = np.argsort(counts)[::-1]
+    uni_labels = uni_labels[sort_inds]
+    data = data[np.ix_(sort_inds, sort_inds)]
+
+    prob_df = pd.DataFrame(columns=uni_labels, index=uni_labels, data=data)
+
+    return prob_df

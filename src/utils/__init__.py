@@ -25,5 +25,6 @@ from .utils import (
     unique_by_size,
     export_skeleton_json,
     shuffle_edges,
+    get_sbm_prob,
 )
 

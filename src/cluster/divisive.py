@@ -30,6 +30,7 @@ class DivisiveCluster(NodeMixin):
     def fit(self, X, y=None):
         n_samples = X.shape[0]
         self.n_samples_ = n_samples
+        self.cum_dist_ = 0
         if n_samples > self.min_split_samples:
             if self.cluster_method == "graspy-gmm":
                 cluster = GaussianCluster(
@@ -48,12 +49,23 @@ class DivisiveCluster(NodeMixin):
             pred_labels = cluster.predict(X)
             self.pred_labels_ = pred_labels
             self.model_ = cluster
+            if hasattr(cluster, "bic_"):
+                bics = cluster.bic_
+                self.bics_ = bics
+                bic_ratio = bics.loc[2].min() / bics.loc[1].min()
+                self.bic_ratio_ = bic_ratio
             if cluster.n_components_ != 1:
                 indicator = pred_labels == 0
                 self.X_children_ = (X[indicator, :], X[~indicator, :])
                 children = []
                 for i, X_child in enumerate(self.X_children_):
-                    child = DivisiveCluster(name=self.name + str(i), parent=self)
+                    child = DivisiveCluster(
+                        name=self.name + str(i),
+                        parent=self,
+                        min_split_samples=self.min_split_samples,
+                        n_init=self.n_init,
+                        cluster_method=self.cluster_method,
+                    )
                     child = child.fit(X_child)
                     children.append(child)
                 self.children = children
@@ -109,12 +121,19 @@ class DivisiveCluster(NodeMixin):
             preds[~indicator] = right_preds
         return preds
 
-    def print_tree(self):
+    def print_tree(self, print_val="n_samples"):
         for pre, _, node in RenderTree(self):
-            treestr = "%s%s (%s)" % (pre, node.name, node.n_samples_)
+            if print_val == "n_samples":
+                to_print = node.n_samples_
+            elif print_val == "bic_ratio":
+                if hasattr(node, "bic_ratio_"):
+                    to_print = node.bic_ratio_
+                else:
+                    to_print = None
+            treestr = "%s%s (%s)" % (pre, node.name, to_print)
             print(treestr.ljust(8))
 
-    def build_linkage(self):
+    def build_linkage(self, bic_distance=False):
         # get a tuple of node at each level
         levels = []
         for group in LevelOrderGroupIter(self):
@@ -162,8 +181,17 @@ class DivisiveCluster(NodeMixin):
                 parent_node._ind = link_count + num_leaves
                 link_count += 1
 
+                if not bic_distance:
+                    distance = g + 1  # equal height for all links
+                else:
+                    # self.cum_dist_ += (left_node.cum_dist_ + right_node.cum_dist_) / 2
+                    # self.cum_dist_ += parent_node.bic_ratio_ - 1
+                    # distance = self.cum_dist_
+                    distance = parent_node.bic_ratio_ - 1
+
                 # add a row to the linkage matrix
-                linkages.append([left_node._ind, right_node._ind, g + 1, n_clusters])
+                linkages.append([left_node._ind, right_node._ind, distance, n_clusters])
+
         labels = np.array(labels)
         linkages = np.array(linkages, dtype=np.double)
         return (linkages, labels)  # needs to be a double for scipy

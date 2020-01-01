@@ -1,6 +1,8 @@
 import math
 from collections import defaultdict
+from operator import itemgetter
 
+import colorcet as cc
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +17,7 @@ from graspy.embed import select_dimension, selectSVD
 from graspy.models import SBMEstimator
 from graspy.plot import heatmap
 from graspy.utils import binarize, cartprod
-from src.utils import savefig
+from src.utils import savefig, get_sbm_prob
 
 
 def _sort_inds(graph, inner_labels, outer_labels, sort_nodes):
@@ -771,18 +773,7 @@ def hierplot(
     return ax
 
 
-def get_sbm_prob(adj, labels):
-    sbm = SBMEstimator(directed=True, loops=True)
-    sbm.fit(binarize(adj), y=labels)
-    data = sbm.block_p_
-    uni_labels, counts = np.unique(labels, return_counts=True)
-    sort_inds = np.argsort(counts)[::-1]
-    uni_labels = uni_labels[sort_inds]
-    data = data[np.ix_(sort_inds, sort_inds)]
 
-    prob_df = pd.DataFrame(columns=uni_labels, index=uni_labels, data=data)
-
-    return prob_df
 
 
 def probplot(
@@ -908,12 +899,13 @@ def get_colors(true_labels, pred_labels):
 
 
 def clustergram(
-    adj, true_labels, pred_labels, figsize=(20, 20), title=None,
+    adj, true_labels, pred_labels, figsize=(20, 20), title=None, color_dict=None,
 ):
     fig, ax = plt.subplots(2, 2, figsize=figsize)
     ax = ax.ravel()
     sns.set_context("talk", font_scale=2)
-    color_dict = get_colors(true_labels, pred_labels)
+    if color_dict is None:
+        color_dict = get_colors(true_labels, pred_labels)
     sankey(
         ax[0], true_labels, pred_labels, aspect=20, fontsize=16, colorDict=color_dict
     )
@@ -961,11 +953,11 @@ def palplot(k, cmap="viridis"):
     ax.yaxis.set_major_locator(plt.FixedLocator(np.arange(k)))
     return ax
 
-import colorcet as cc
+
 
 def stacked_barplot(
-    labels,
     category,
+    subcategory,
     category_order=None,
     subcategory_order=None,
     ax=None,
@@ -976,7 +968,8 @@ def stacked_barplot(
     norm_bar_width=True,
     label_pos=None,
     horizontal_pad=0.02, 
-    return_data=False
+    return_data=False, 
+    color_dict=None,
 ):
     """
     Parameters
@@ -991,39 +984,48 @@ def stacked_barplot(
 
     # Counts the nunmber of unique category within each category, plotting as bar plot
     if category_order is None:
-        uni_labels = np.unique(labels)
+        uni_cat = np.unique(category)
     else:
-        uni_labels = np.array(category_order)
+        uni_cat = np.array(category_order)
     if subcategory_order is None:
-        uni_class = np.unique(category)
+        uni_subcat = np.unique(subcategory)
 
     counts_by_label = []
-    for label in uni_labels:
-        inds = np.where(labels == label)
-        subcat_in_cat = category[inds]
+    for label in uni_cat:
+        inds = np.where(category == label)
+        subcat_in_cat = subcategory[inds]
         counts_by_class = []
-        for c in uni_class:
+        for c in uni_subcat:
             num_class_in_cluster = len(np.where(subcat_in_cat == c)[0])
             counts_by_class.append(num_class_in_cluster)
         counts_by_label.append(counts_by_class)
-    results = dict(zip(uni_labels, counts_by_label))
+    results = dict(zip(uni_cat, counts_by_label))
     labels = list(results.keys())
     data = np.array(list(results.values()))
 
     # find the width of the bars
     sums = data.sum(axis=1)
     if norm_bar_width:
-        data = data / data.sum(axis=1)[:, np.newaxis]
-    data_cum = data.cumsum(axis=1)
+        norm_data = data / data.sum(axis=1)[:, np.newaxis]
+    else: 
+        norm_data = data.copy()
+    data_cum = norm_data.cumsum(axis=1)
 
-    subcategory_colors = sns.color_palette(palette, n_colors=len(uni_class))
-    # subcategory_colors = cc.glasbey_light
+    if color_dict is not None: 
+        subcategory_colors = []
+        for sc in uni_subcat: 
+            subcategory_colors.append(color_dict[sc])
+    else: 
+        if isinstance(palette, str):
+            subcategory_colors = sns.color_palette(palette, n_colors=len(uni_subcat))
+        else: 
+            subcategory_colors = palette
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(15, 10))
     ax.invert_yaxis()
     ax.xaxis.set_visible(False)
-    max_size = np.sum(data, axis=1).max()
+    max_size = np.sum(norm_data, axis=1).max()
 
     # add just a little bit of space on either side of end of bars
     ax.set_xlim(0 - horizontal_pad * max_size, max_size * (1 + horizontal_pad))
@@ -1035,8 +1037,8 @@ def stacked_barplot(
 
     ax.set_yticklabels(labels)
 
-    for i, (colname, color) in enumerate(zip(uni_class, subcategory_colors)):
-        widths = data[:, i]
+    for i, (colname, color) in enumerate(zip(uni_subcat, subcategory_colors)):
+        widths = norm_data[:, i]
         starts = data_cum[:, i] - widths
 
         if label_pos is None:
@@ -1071,6 +1073,6 @@ def stacked_barplot(
         ncol=legend_ncol, bbox_to_anchor=(0, 0), loc="upper left", fontsize="small"
     )
     if return_data:
-        return ax, data, uni_class, subcategory_colors
+        return ax, data, uni_subcat, subcategory_colors
     else: 
         return ax
