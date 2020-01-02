@@ -81,7 +81,7 @@ for name, ids in group_map.items():
             if meta_data_df.loc[i, "Class 1"] == "":
                 meta_data_df.loc[i, "Class 1"] += name
             else:
-                meta_data_df.loc[i, "Class 1"] += "/" + name
+                meta_data_df.loc[i, "Class 1"] += ";" + name
         except KeyError:
             print(f"Skeleton ID {i} not in graph")
             num_missing += 1
@@ -98,7 +98,7 @@ for name, ids in subgroup_map.items():
             if meta_data_df.loc[i, "Class 2"] == "":
                 meta_data_df.loc[i, "Class 2"] += name
             else:
-                meta_data_df.loc[i, "Class 2"] += "/" + name
+                meta_data_df.loc[i, "Class 2"] += ";" + name
         except KeyError:
             print(f"Skeleton ID {i} not in graph")
             num_missing += 1
@@ -123,17 +123,17 @@ name_map = {
     "MBON": "MBON",
     "O_IPC": "O_IPC",
     "O_ITP": "O_ITP",
-    "O_ITP/O_dSEZ": "O_ITP/dSEZ",
+    "O_ITP;O_dSEZ": "O_ITP;dSEZ",
     "O_dSEZ": "O_dSEZ",
     "dSEZ": "dSEZ",
-    "O_dSEZ/FB2N": "O_dSEZ/FB2N",
-    "O_dSEZ/FFN": "O_dSEZ/FFN",
-    "O_dSEZ/O_CA-LP": "O_dSEZ/CA-LP",
+    "O_dSEZ;FB2N": "O_dSEZ;FB2N",
+    "O_dSEZ;FFN": "O_dSEZ;FFN",
+    "O_dSEZ;O_CA-LP": "O_dSEZ;CA-LP",
     "O_dVNC": "O_dVNC",
     "bLN": "bLN",
     "cLN": "cLN",
     "mPN": "mPN",
-    "mPN/FFN": "mPN/FFN",
+    "mPN;FFN": "mPN;FFN",
     "pLN": "pLN",
     "tPN": "tPN",
     "uPN": "uPN",

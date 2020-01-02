@@ -1,1 +1,1 @@
-from .io import savefig
+from .io import savefig, saveobj, saveskels

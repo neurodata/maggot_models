@@ -521,7 +521,7 @@ def shuffle_edges(A):
 
 def get_sbm_prob(adj, labels):
     uni_labels, counts = np.unique(labels, return_counts=True)
-    label_map = dict(uni_labels, range(len(uni_labels)))
+    label_map = dict(zip(uni_labels, range(len(uni_labels))))
     y = np.array(itemgetter(*labels)(label_map))
     sbm = SBMEstimator(directed=True, loops=True)
     sbm.fit(binarize(adj), y=y)
@@ -533,3 +533,30 @@ def get_sbm_prob(adj, labels):
     prob_df = pd.DataFrame(columns=uni_labels, index=uni_labels, data=data)
 
     return prob_df
+
+
+from graspy.utils import cartprod
+
+
+def get_block_counts(adj, labels):
+    uni_labels, counts = np.unique(labels, return_counts=True)
+    uni_ints = range(len(uni_labels))
+    label_map = dict(zip(uni_labels, uni_ints))
+    int_labels = np.array(itemgetter(*uni_labels)(label_map))
+
+    n_blocks = len(uni_labels)
+    block_pairs = cartprod(int_labels, int_labels)
+    block_counts = np.zeros((n_blocks, n_blocks))
+
+    for p in block_pairs:
+        from_block = p[0]
+        to_block = p[1]
+        from_inds = block_vert_inds[from_block]
+        to_inds = block_vert_inds[to_block]
+        block = graph[from_inds, :][:, to_inds]
+        if return_counts:
+            p = np.count_nonzero(block)
+        else:
+            p = _calculate_p(block)
+        block_p[from_block, to_block] = p
+    return block_p

@@ -237,13 +237,6 @@ def bartreeplot(
             prop = prop_data[i, j]
             if prop > 0:
                 if inverse_memberships:
-                    # if show_props:
-                    #     # find the size of the cluster, multiply by prop to get count
-                    #     # get size of known cluster, divide to get proportion
-                    #     cluster_name = leaf_names[i]
-                    #     ind = np.where(uni_pred_labels == cluster_name)[0][0]
-                    #     cluster_size = uni_pred_counts[ind]
-                    #     prop = cluster_size * prop
                     prop = prop / uni_class_counts[j]
                     name = f"{colname} ({prop:3.0%})"
                 else:
@@ -303,7 +296,8 @@ known_inds = np.where(class_labels != "Unk")[0]
 n_verts = adj.shape[0]
 latent = lse(adj, N_COMPONENTS, regularizer=None, ptr=PTR)
 # pairplot(latent, labels=class_labels, title=embed)
-print(f"ZG chose dimension {latent.shape[1] // 2} + {latent.shape[1] // 2}")
+latent_dim = latent.shape[1] // 2
+print(f"ZG chose dimension {latent_dim} + {latent_dim}")
 # %% [markdown]
 # # Fitting divisive cluster model
 start = timer()
@@ -346,7 +340,8 @@ pred_color_dict = get_color_dict(pred_labels, pal=cc.glasbey_warm)
 all_color_dict = {**class_color_dict, **pred_color_dict}
 
 title = (
-    f"Divisive hierarchical clustering, {cluster_type}, {embed_type}, {ptr_type},"
+    f"Divisive hierarchical clustering,"
+    + f" {cluster_type}, {embed_type} ({latent_dim} + {latent_dim}), {ptr_type},"
     + f" {brain_type}, {graph_type}"
 )
 name_base = f"-{cluster_type}-{embed_type}-{ptr_type}-{brain_type}-{graph_type}"
@@ -396,6 +391,15 @@ bartreeplot(
     color_dict=class_color_dict,
 )
 stashfig("bartree-props-inv" + name_base)
+bartreeplot(
+    dc,
+    class_labels,
+    show_props=False,
+    inverse_memberships=True,
+    title=title,
+    color_dict=class_color_dict,
+)
+stashfig("bartree-counts-inv" + name_base)
 
 # %% [markdown]
 # #

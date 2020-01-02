@@ -1,6 +1,6 @@
 import numpy as np
 from graspy.embed import AdjacencySpectralEmbed, LaplacianSpectralEmbed, OmnibusEmbed
-from graspy.utils import pass_to_ranks
+from graspy.utils import pass_to_ranks, get_lcc
 
 
 def ase(adj, n_components, ptr=True):
@@ -96,10 +96,13 @@ def lse(adj, n_components, regularizer=None, ptr=True):
     if ptr:
         adj = pass_to_ranks(adj)
     lap = to_laplace(adj, form="R-DAD")
-    ase = AdjacencySpectralEmbed(n_components=n_components)
+    ase = AdjacencySpectralEmbed(n_components=n_components, diag_aug=False)
     latent = ase.fit_transform(lap)
+    # latent = LaplacianSpectralEmbed(
+    #     form="R-DAD", n_components=n_components, regularizer=regularizer
+    # )
     latent = np.concatenate(latent, axis=-1)
-    return latent
+    return latent, lap
 
 
 def omni(adjs, n_components, ptr=True):
@@ -123,3 +126,26 @@ def ase_concatenate(adjs, n_components, ptr=True):
         graph_latents.append(latent)
     latent = np.concatenate(graph_latents, axis=-1)
     return latent
+
+
+def preprocess_graph(adj, class_labels, skeleton_labels):
+    # sort by number of synapses
+    degrees = adj.sum(axis=0) + adj.sum(axis=1)
+    sort_inds = np.argsort(degrees)[::-1]
+    adj = adj[np.ix_(sort_inds, sort_inds)]
+    class_labels = class_labels[sort_inds]
+    skeleton_labels = skeleton_labels[sort_inds]
+
+    # remove disconnected nodes
+    adj, lcc_inds = get_lcc(adj, return_inds=True)
+    class_labels = class_labels[lcc_inds]
+    skeleton_labels = skeleton_labels[lcc_inds]
+
+    # remove pendants
+    degrees = np.count_nonzero(adj, axis=0) + np.count_nonzero(adj, axis=1)
+    not_pendant_mask = degrees != 1
+    not_pendant_inds = np.array(range(len(degrees)))[not_pendant_mask]
+    adj = adj[np.ix_(not_pendant_inds, not_pendant_inds)]
+    class_labels = class_labels[not_pendant_inds]
+    skeleton_labels = skeleton_labels[not_pendant_inds]
+    return adj, class_labels, skeleton_labels

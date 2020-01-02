@@ -277,9 +277,9 @@ def screeplot(
     context="talk",
     font_scale=1,
     figsize=(10, 5),
-    cumulative=True,
-    show_first=None,
-    n_elbows=2,
+    cumulative=False,
+    show_first=40,
+    n_elbows=4,
 ):
     r"""
     Plots the distribution of singular values for a matrix, either showing the 
@@ -773,9 +773,6 @@ def hierplot(
     return ax
 
 
-
-
-
 def probplot(
     prob_df,
     ax=None,
@@ -877,7 +874,7 @@ def _calculate_block_edgesum(graph, block_inds, block_vert_inds):
     return block_p
 
 
-def get_colors(true_labels, pred_labels):
+def get_colors_hacky(true_labels, pred_labels):
     color_dict = {}
     classes = np.unique(true_labels)
     unk_ind = np.where(classes == "Unk")[0]  # hacky but it looks nice!
@@ -905,7 +902,7 @@ def clustergram(
     ax = ax.ravel()
     sns.set_context("talk", font_scale=2)
     if color_dict is None:
-        color_dict = get_colors(true_labels, pred_labels)
+        color_dict = get_colors_hacky(true_labels, pred_labels)
     sankey(
         ax[0], true_labels, pred_labels, aspect=20, fontsize=16, colorDict=color_dict
     )
@@ -1076,3 +1073,152 @@ def stacked_barplot(
         return ax, data, uni_subcat, subcategory_colors
     else: 
         return ax
+
+
+def bartreeplot(
+    dc,
+    class_labels,
+    pred_labels,
+    show_props=True,
+    print_props=True,
+    text_pad=0.01,
+    inverse_memberships=True,
+    figsize=(24, 23),
+    title=None,
+    palette=cc.glasbey_light,
+    color_dict=None,
+):
+    # gather necessary info from model
+    linkage, labels = dc.build_linkage(bic_distance=False)  # hackily built like scipy's
+    uni_class_labels, uni_class_counts = np.unique(class_labels, return_counts=True)
+    uni_pred_labels, uni_pred_counts = np.unique(pred_labels, return_counts=True)
+
+    # set up the figure
+    fig = plt.figure(figsize=figsize)
+    r = fig.canvas.get_renderer()
+    gs0 = plt.GridSpec(1, 2, figure=fig, width_ratios=[0.2, 0.8], wspace=0)
+    gs1 = plt.GridSpec(1, 1, figure=fig, width_ratios=[0.2], wspace=0.1)
+
+    # title the plot
+    plt.suptitle(title, y=0.92, fontsize=30, x=0.5)
+
+    # plot the dendrogram
+    ax0 = fig.add_subplot(gs0[0])
+
+    dendr_data = dendrogram(
+        linkage,
+        orientation="left",
+        labels=labels,
+        color_threshold=0,
+        above_threshold_color="k",
+        ax=ax0,
+    )
+    ax0.axis("off")
+    ax0.set_title("Dendrogram", loc="left")
+
+    # get the ticks from the dendrogram to apply to the bar plot
+    ticks = ax0.get_yticks()
+
+    # plot the barplot (and ticks to the right of them)
+    leaf_names = np.array(dendr_data["ivl"])[::-1]
+    ax1 = fig.add_subplot(gs0[1], sharey=ax0)
+    ax1, prop_data, uni_class, subcategory_colors = stacked_barplot(
+        pred_labels,
+        class_labels,
+        label_pos=ticks,
+        category_order=leaf_names,
+        ax=ax1,
+        bar_height=5,
+        horizontal_pad=0,
+        palette=palette,
+        norm_bar_width=show_props,
+        return_data=True,
+        color_dict=color_dict,
+    )
+    ax1.set_frame_on(False)
+    ax1.yaxis.tick_right()
+
+    if show_props:
+        ax1_title = "Cluster proportion of known cell types"
+    else:
+        ax1_title = "Cluster counts by known cell types"
+
+    ax1_title = ax1.set_title(ax1_title, loc="left")
+    transformer = ax1.transData.inverted()
+    bbox = ax1_title.get_window_extent(renderer=r)
+    bbox_points = bbox.get_points()
+    out_points = transformer.transform(bbox_points)
+    xlim = ax1.get_xlim()
+    ax1.text(
+        xlim[1], out_points[0][1], "Cluster name (size)", verticalalignment="bottom"
+    )
+
+    # plot the cluster compositions as text to the right of the bars
+    gs0.update(right=0.4)
+    ax2 = fig.add_subplot(gs1[0], sharey=ax0)
+    ax2.axis("off")
+    gs1.update(left=0.48)
+
+    text_kws = {
+        "verticalalignment": "center",
+        "horizontalalignment": "left",
+        "fontsize": 12,
+        "alpha": 1,
+        "weight": "bold",
+    }
+
+    ax2.set_xlim((0, 1))
+    transformer = ax2.transData.inverted()
+
+    cluster_sizes = prop_data.sum(axis=1)
+    for i, y in enumerate(ticks):
+        x = 0
+        for j, (colname, color) in enumerate(zip(uni_class, subcategory_colors)):
+            prop = prop_data[i, j]
+            if prop > 0:
+                if inverse_memberships:
+                    prop = prop / uni_class_counts[j]
+                    name = f"{colname} ({prop:3.0%})"
+                else:
+                    if print_props:
+                        name = f"{colname} ({prop / cluster_sizes[i]:3.0%})"
+                    else:
+                        name = f"{colname} ({prop})"
+                text = ax2.text(x, y, name, color=color, **text_kws)
+                bbox = text.get_window_extent(renderer=r)
+                bbox_points = bbox.get_points()
+                out_points = transformer.transform(bbox_points)
+                width = out_points[1][0] - out_points[0][0]
+                x += width + text_pad
+
+    # deal with title for the last plot column based on options
+    if inverse_memberships:
+        ax2_title = "Known cell type (percentage of cell type in cluster)"
+    else:
+        if print_props:
+            ax2_title = "Known cell type (percentage of cluster)"
+        else:
+            ax2_title = "Known cell type (count in cluster)"
+    ax2.set_title(ax2_title, loc="left")
+    axs = (ax0, ax1, ax2)
+    return fig, axs, leaf_names
+
+
+def get_colors(labels, pal=cc.glasbey_light, to_int=False, color_dict=None):
+    uni_labels = np.unique(labels)
+    if to_int:
+        uni_labels = [int(i) for i in uni_labels]
+    if color_dict is None:
+        color_dict = get_color_dict(labels, pal=pal, to_int=to_int)
+    colors = np.array(itemgetter(*labels)(color_dict))
+    return colors
+
+
+def get_color_dict(labels, pal="tab10", to_int=False):
+    uni_labels = np.unique(labels)
+    if to_int:
+        uni_labels = [int(i) for i in uni_labels]
+    if isinstance(pal, str):
+        pal = sns.color_palette(pal, n_colors=len(uni_labels))
+    color_dict = dict(zip(uni_labels, pal))
+    return color_dict
