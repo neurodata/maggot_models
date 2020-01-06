@@ -11,25 +11,29 @@ import numpy as np
 from graspy.plot import gridplot
 from src.data import load_networkx
 
+# File locations
 base_path = Path("./maggot_models/data/raw/Maggot-Brain-Connectome/")
 
 data_path = base_path / "4-color-matrices_Brain"
 
-data_date = "2019-09-18-v2"  # this is for the graph, not the annotations
+data_date_graphs = "2019-09-18-v2"  # this is for the graph, not the annotations
 
 graph_types = ["axon-axon", "axon-dendrite", "dendrite-axon", "dendrite-dendrite"]
 
 meta_data_file = "brain_meta-data"
 
-data_date_groups = "2019-12-18"
+data_date_groups = "2019-12-18"  # this is for the annotations
 
 class_data_folder = base_path / f"neuron-groups/{data_date_groups}"
 
 input_counts_file = "input_counts"
 
+pair_file = base_path / "pairs/knownpairsatround5.csv"
+
 output_path = Path(f"maggot_models/data/processed/{data_date_groups}")
 
-meta_data_path = data_path / data_date / (meta_data_file + ".csv")
+# read the old metadata just to look at it and get the old classes
+meta_data_path = data_path / data_date_graphs / (meta_data_file + ".csv")
 meta_data_df = pd.read_csv(meta_data_path, index_col=0)
 
 meta_data_df["Old Class"] = meta_data_df["Class"]
@@ -48,13 +52,12 @@ def extract_ids(lod):
 group_files = listdir(class_data_folder)
 group_files.remove("usplit-2019-12-20.json")  # add these back in later
 group_files.remove("LNp-2019-12-20.json")
-# group_files.remove("LNp-2019-12-20.json")
-# group_files.remove("LNp-2019-12-20.json")
 
 names = []
 group_map = {}
 subgroup_map = {}
 for f in group_files:
+    # remove end of filenames
     name = f.replace("-2019-12-9.json", "")
     name = name.replace("-2019-12-18.json", "")
     name = name.replace("-2019-12-20.json", "")
@@ -91,7 +94,6 @@ print()
 meta_data_df.head()
 
 meta_data_df["Class 2"] = ""
-num_missing = 0
 for name, ids in subgroup_map.items():
     for i in ids:
         try:
@@ -102,9 +104,6 @@ for name, ids in subgroup_map.items():
         except KeyError:
             print(f"Skeleton ID {i} not in graph")
             num_missing += 1
-print()
-print(f"{num_missing} skeleton IDs missing from graph")
-print()
 meta_data_df.head()
 
 # Do some name remapping
@@ -170,6 +169,29 @@ name_map = {" mw right": "R", " mw left": "L"}
 side_labels = np.array(itemgetter(*side_labels)(name_map))
 meta_data_df["Hemisphere"] = side_labels
 
+
+#%%
+
+# add the pairs
+pair_df = pd.read_csv(pair_file, index_col=0)
+pair_df.head()
+
+pair_ids = np.concatenate((pair_df["leftid"].values, pair_df["rightid"].values))
+meta_ids = meta_data_df.index.values
+in_meta_ids = np.isin(pair_ids, meta_ids)
+drop_ids = pair_ids[~in_meta_ids]
+
+
+left_to_right_df = pair_df.set_index("leftid")
+left_to_right_df.drop(drop_ids, axis=0, errors="ignore", inplace=True)
+right_to_left_df = pair_df.set_index("rightid")
+right_to_left_df.drop(drop_ids, axis=0, errors="ignore", inplace=True)
+right_to_left_df.head()
+
+meta_data_df["Pair"] = -1
+meta_data_df.loc[left_to_right_df.index, "Pair"] = left_to_right_df["rightid"]
+meta_data_df.loc[right_to_left_df.index, "Pair"] = right_to_left_df["leftid"]
+
 #%% show that there are some duplicated
 all_labeled_ids = []
 for name, vals in group_map.items():
@@ -182,7 +204,7 @@ labels, counts = np.unique(all_labeled_ids, return_counts=True)
 meta_data_dict = meta_data_df.to_dict(orient="index")
 print(meta_data_df.head())
 
-input_counts_path = data_path / data_date / (input_counts_file + ".csv")
+input_counts_path = data_path / data_date_graphs / (input_counts_file + ".csv")
 input_counts_df = pd.read_csv(input_counts_path, index_col=0)
 cols = input_counts_df.columns.values
 cols = [str(c).strip(" ") for c in cols]
@@ -207,7 +229,7 @@ nx_graphs_raw = {}
 df_graphs_raw = {}
 for graph_type in graph_types:
     print(graph_type)
-    edgelist_path = data_path / data_date / (graph_type + ".csv")
+    edgelist_path = data_path / data_date_graphs / (graph_type + ".csv")
     adj = pd.read_csv(edgelist_path, index_col=0)
     graph = df_to_nx(adj, meta_data_dict)
     nx_graphs_raw[graph_type] = graph

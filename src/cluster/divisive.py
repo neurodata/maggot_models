@@ -116,6 +116,7 @@ class DivisiveCluster(NodeMixin):
             elif np.can_cast(right_preds.dtype, left_preds.dtype):
                 preds = np.zeros(X.shape[0], dtype=left_preds.dtype)
             else:
+                print(left_preds.dtype, right_preds.dtype)
                 raise ValueError("Cannot cast strings to proper size")
             preds[indicator] = left_preds
             preds[~indicator] = right_preds

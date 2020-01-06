@@ -26,5 +26,6 @@ from .utils import (
     export_skeleton_json,
     shuffle_edges,
     get_sbm_prob,
+    get_blockmodel_df,
 )
 

@@ -31,6 +31,7 @@ def savefig(
     bbox_inches="tight",
     pad_inches=0.5,
     save_on=True,
+    transparent=False,
     **kws,
 ):
     if save_on:
@@ -40,6 +41,7 @@ def savefig(
             savename,
             fmt=fmt,
             facecolor="w",
+            transparent=transparent,
             bbox_inches=bbox_inches,
             pad_inches=pad_inches,
             dpi=dpi,

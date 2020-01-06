@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import networkx as nx
 
 from src.cluster import DivisiveCluster
 from src.data import load_everything
@@ -26,6 +27,8 @@ warnings.simplefilter("ignore", category=FutureWarning)
 
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
+
+print(nx.__version__)
 
 
 # %% [markdown]
@@ -133,19 +136,29 @@ screeplot(
 print(f"ZG chose dimension {latent_dim} + {latent_dim}")
 # %% [markdown]
 # # Fitting divisive cluster model with GraspyGMM
-start = timer()
-dc = DivisiveCluster(n_init=N_INIT, cluster_method=CLUSTER_METHOD)
-dc.fit(latent)
-end = end = timer()
-print()
-print(f"DivisiveCluster took {(end - start)/60.0} minutes to fit")
-print()
+name_base = f"-{cluster_type}-{embed_type}-{ptr_type}-{brain_type_short}-{GRAPH_TYPE}"
+
+base = f"maggot_models/notebooks/outs/{FNAME}/objs/"
+filename = base + "dc" + name_base + ".pickle"
+if os.path.isfile(filename):
+    print("Attempting to load file")
+    with open(filename, "rb") as f:
+        dc = pickle.load(f)
+    print(f"Loaded file from {filename}")
+else:
+    print("Fitting DivisiveCluster model")
+    start = timer()
+    dc = DivisiveCluster(n_init=N_INIT, cluster_method=CLUSTER_METHOD)
+    dc.fit(latent)
+    end = end = timer()
+    print()
+    print(f"DivisiveCluster took {(end - start)/60.0} minutes to fit")
+    print()
 dc.print_tree(print_val="bic_ratio")
 pred_labels = dc.predict(latent)
 
 # %% [markdown]
 # # Plotting and saving divisive cluster hierarchy results for GraspyGMM
-name_base = f"-{cluster_type}-{embed_type}-{ptr_type}-{brain_type_short}-{GRAPH_TYPE}"
 
 stashobj(dc, "dc" + name_base)
 
@@ -493,9 +506,9 @@ block_count_df = pd.DataFrame(
 # int_labels = np.array(itemgetter(*uni_pred_labels)(label_map))
 # synapse_counts = _calculate_block_counts(adj, uni_ints, pred_labels)
 
-block_df = block_count_df
-block_adj = block_counts
-block_labels = block_labels
+block_df = sbm_prob
+block_adj = sbm_prob.values
+block_labels = sbm_prob.index.values
 sym_adj = symmetrize(block_adj)
 lse_embed = LaplacianSpectralEmbed(form="DAD", n_components=1)
 latent = lse_embed.fit_transform(sym_adj)
@@ -512,9 +525,9 @@ uni_pred_labels, pred_counts = np.unique(pred_labels, return_counts=True)
 size_map = dict(zip(uni_pred_labels, pred_counts))
 node_sizes = np.array(itemgetter(*block_labels)(size_map))
 node_sizes *= 4
-norm = mpl.colors.Normalize(vmin=100, vmax=block_counts.max())
+norm = mpl.colors.Normalize(vmin=0.1, vmax=block_adj.max())
 sm = ScalarMappable(cmap="Blues", norm=norm)
-cmap = sm.to_rgba(np.array(list(weights.values()), dtype="float64"))
+cmap = sm.to_rgba(np.array(list(weights.values())))
 # cmap = mpl.colors.LinearSegmentedColormap("Blues", block_counts.ravel()).to_rgba(
 #     np.array(list(labels.values()))
 # )
@@ -527,6 +540,8 @@ node_collection = nx.draw_networkx_nodes(
     node_size=node_sizes,
     with_labels=False,
 )
+n_squared = len(node_sizes) ** 2
+node_collection.set_zorder(n_squared)
 
 arrow_collection = nx.draw_networkx_edges(
     block_g,
@@ -542,7 +557,7 @@ for (key, val), size in zip(pos.items(), node_sizes):
     new_val = (val[0] + boost, val[1])
     pos[key] = new_val
 
-nx.draw_networkx_labels(
+text_items = nx.draw_networkx_labels(
     block_g,
     pos,
     edge_color=cmap,
@@ -550,6 +565,9 @@ nx.draw_networkx_labels(
     node_size=node_sizes,
     width=1.5,
 )
+for _, t in text_items.items():
+    t.set_zorder(n_squared + 1)
+
 ax.axis("off")
 stashfig("synapse-count-drawing" + name_base)
 

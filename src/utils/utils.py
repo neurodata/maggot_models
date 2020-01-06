@@ -538,15 +538,41 @@ def get_sbm_prob(adj, labels):
 from graspy.utils import cartprod
 
 
-def get_block_counts(adj, labels):
-    uni_labels, counts = np.unique(labels, return_counts=True)
-    uni_ints = range(len(uni_labels))
-    label_map = dict(zip(uni_labels, uni_ints))
-    int_labels = np.array(itemgetter(*uni_labels)(label_map))
+def _get_block_indices(y):
+    """
+    y is a length n_verts vector of labels
 
-    n_blocks = len(uni_labels)
-    block_pairs = cartprod(int_labels, int_labels)
-    block_counts = np.zeros((n_blocks, n_blocks))
+    returns a length n_verts vector in the same order as the input
+    indicates which block each node is
+    """
+    block_labels, block_inv, block_sizes = np.unique(
+        y, return_inverse=True, return_counts=True
+    )
+
+    n_blocks = len(block_labels)
+    block_inds = range(n_blocks)
+
+    block_vert_inds = []
+    for i in block_inds:
+        # get the inds from the original graph
+        inds = np.where(block_inv == i)[0]
+        block_vert_inds.append(inds)
+    return block_vert_inds, block_inds, block_inv
+
+
+def _calculate_block_p(
+    graph, block_inds, block_vert_inds, return_counts=False, use_weights=False
+):
+    """
+    graph : input n x n graph 
+    block_inds : list of length n_communities
+    block_vert_inds : list of list, for each block index, gives every node in that block
+    return_counts : whether to calculate counts rather than proportions
+    """
+
+    n_blocks = len(block_inds)
+    block_pairs = cartprod(block_inds, block_inds)
+    block_p = np.zeros((n_blocks, n_blocks))
 
     for p in block_pairs:
         from_block = p[0]
@@ -554,9 +580,38 @@ def get_block_counts(adj, labels):
         from_inds = block_vert_inds[from_block]
         to_inds = block_vert_inds[to_block]
         block = graph[from_inds, :][:, to_inds]
-        if return_counts:
-            p = np.count_nonzero(block)
-        else:
-            p = _calculate_p(block)
+        p = _calculate_p(block, use_weights=use_weights, return_counts=return_counts)
         block_p[from_block, to_block] = p
     return block_p
+
+
+def _calculate_p(block, use_weights=False, return_counts=False):
+    if use_weights:
+        n_edges = np.sum(block)
+    else:
+        n_edges = np.count_nonzero(block)
+    if return_counts:
+        p = n_edges
+    else:
+        p = n_edges / block.size
+    return p
+
+
+def get_blockmodel_df(graph, labels, return_counts=False, use_weights=False):
+    uni_labels, counts = np.unique(labels, return_counts=True)
+    label_map = dict(zip(uni_labels, range(len(uni_labels))))
+    y = np.array(itemgetter(*labels)(label_map))
+
+    block_vert_inds, block_inds, block_inv = _get_block_indices(y)
+
+    block_p = _calculate_block_p(
+        graph,
+        block_inds,
+        block_vert_inds,
+        return_counts=return_counts,
+        use_weights=use_weights,
+    )
+
+    prob_df = pd.DataFrame(columns=uni_labels, index=uni_labels, data=block_p)
+
+    return prob_df

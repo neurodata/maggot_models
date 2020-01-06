@@ -128,13 +128,18 @@ def ase_concatenate(adjs, n_components, ptr=True):
     return latent
 
 
-def preprocess_graph(adj, class_labels, skeleton_labels):
+def preprocess_graph(adj, *args):
     # sort by number of synapses
     degrees = adj.sum(axis=0) + adj.sum(axis=1)
     sort_inds = np.argsort(degrees)[::-1]
     adj = adj[np.ix_(sort_inds, sort_inds)]
-    class_labels = class_labels[sort_inds]
-    skeleton_labels = skeleton_labels[sort_inds]
+    # class_labels = class_labels[sort_inds]
+    # skeleton_labels = skeleton_labels[sort_inds]
+    returns = [adj]
+    for a in args:
+        new_a = a[sort_inds]
+        returns.append(new_a)
+    return returns
 
     # remove disconnected nodes
     adj, lcc_inds = get_lcc(adj, return_inds=True)
