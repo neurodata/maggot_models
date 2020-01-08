@@ -32,12 +32,17 @@ pair_file = base_path / "pairs/knownpairsatround5.csv"
 
 output_path = Path(f"maggot_models/data/processed/{data_date_groups}")
 
-# read the old metadata just to look at it and get the old classes
-meta_data_path = data_path / data_date_graphs / (meta_data_file + ".csv")
-meta_data_df = pd.read_csv(meta_data_path, index_col=0)
 
-meta_data_df["Old Class"] = meta_data_df["Class"]
-meta_data_df.drop("Class", inplace=True, axis=1)
+def df_to_nx(df, meta_data_dict):
+    c = df.columns.values
+    c = c.astype(int)
+    r = df.index.values
+    df.columns = c
+    if not (c == r).all():
+        raise ValueError("Mismatching df indexing")
+    graph = nx.from_pandas_adjacency(df, create_using=nx.DiGraph())
+    nx.set_node_attributes(graph, meta_data_dict)
+    return graph
 
 
 def extract_ids(lod):
@@ -46,6 +51,17 @@ def extract_ids(lod):
         skel_id = d["skeleton_id"]
         out_list.append(skel_id)
     return out_list
+
+
+# Begin main script
+
+# read the old metadata just to look at it and get the old classes
+# also need it for the KC labels right now
+meta_data_path = data_path / data_date_graphs / (meta_data_file + ".csv")
+meta_data_df = pd.read_csv(meta_data_path, index_col=0)
+
+meta_data_df["Old Class"] = meta_data_df["Class"]
+meta_data_df.drop("Class", inplace=True, axis=1)
 
 
 # append new cell type classes
@@ -156,7 +172,7 @@ name_map = {
 class_labels = np.array(itemgetter(*class_labels)(name_map))
 meta_data_df["Class 2"] = class_labels
 
-
+# Merge class (put class 1 and class 2 together as a column)
 meta_data_df["Merge Class"] = ""
 for i in meta_data_df.index.values:
     merge_class = meta_data_df.loc[i, "Class 1"]
@@ -170,9 +186,7 @@ side_labels = np.array(itemgetter(*side_labels)(name_map))
 meta_data_df["Hemisphere"] = side_labels
 
 
-#%%
-
-# add the pairs
+# Pairs (NOTE this file has some issues where some ids are repeated in multiple pairs)
 pair_df = pd.read_csv(pair_file, index_col=0)
 pair_df.head()
 
@@ -192,6 +206,33 @@ meta_data_df["Pair"] = -1
 meta_data_df.loc[left_to_right_df.index, "Pair"] = left_to_right_df["rightid"]
 meta_data_df.loc[right_to_left_df.index, "Pair"] = right_to_left_df["leftid"]
 
+# LNs
+f = "LNp-2019-12-20.json"
+with open(class_data_folder / f, "r") as json_file:
+    temp_dict = json.load(json_file)
+    ids = extract_ids(temp_dict)
+
+meta_data_df["LN"] = False
+for i in ids:
+    try:
+        meta_data_df.loc[i, "LN"] = True
+    except KeyError:
+        print(f"Skeleton ID {i} not in graph")
+
+# Unsplittable
+f = "usplit-2019-12-20.json"
+with open(class_data_folder / f, "r") as json_file:
+    temp_dict = json.load(json_file)
+    ids = extract_ids(temp_dict)
+
+meta_data_df["USplit"] = False
+for i in ids:
+    try:
+        meta_data_df.loc[i, "USplit"] = True
+    except KeyError:
+        print(f"Skeleton ID {i} not in graph")
+
+
 #%% show that there are some duplicated
 all_labeled_ids = []
 for name, vals in group_map.items():
@@ -210,18 +251,6 @@ cols = input_counts_df.columns.values
 cols = [str(c).strip(" ") for c in cols]
 input_counts_df.columns = cols
 print(input_counts_df.head())
-
-
-def df_to_nx(df, meta_data_dict):
-    c = df.columns.values
-    c = c.astype(int)
-    r = df.index.values
-    df.columns = c
-    if not (c == r).all():
-        raise ValueError("Mismatching df indexing")
-    graph = nx.from_pandas_adjacency(df, create_using=nx.DiGraph())
-    nx.set_node_attributes(graph, meta_data_dict)
-    return graph
 
 
 #%% Import the raw graphs

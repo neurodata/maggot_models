@@ -4,6 +4,7 @@ import pandas as pd
 from pathlib import Path
 import networkx as nx
 from src.utils import meta_to_array
+from src.graph import MetaGraph
 import numpy as np
 
 
@@ -77,6 +78,12 @@ def load_networkx(graph_type, version="2019-09-18-v2"):
     file_path = data_path / (graph_type + ".graphml")
     graph = nx.read_graphml(file_path)
     return graph
+
+
+def load_metagraph(graph_type, version="2019-12-18"):
+    g = load_networkx(graph_type, version)
+    mg = MetaGraph(g)
+    return mg
 
 
 def load_everything(

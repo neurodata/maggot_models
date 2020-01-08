@@ -1222,3 +1222,30 @@ def get_color_dict(labels, pal="tab10", to_int=False):
         pal = sns.color_palette(pal, n_colors=len(uni_labels))
     color_dict = dict(zip(uni_labels, pal))
     return color_dict
+
+
+def gridmap(A, ax=None, legend=False, sizes=(10, 70)):
+    if ax is None:
+        _, ax = plt.subplots(1, 1, figsize=(20, 20))
+    n_verts = A.shape[0]
+    inds = np.nonzero(A)
+    edges = A[inds]
+    scatter_df = pd.DataFrame()
+    scatter_df["Weight"] = edges
+    scatter_df["x"] = inds[1]
+    scatter_df["y"] = inds[0]
+    ax = sns.scatterplot(
+        data=scatter_df,
+        x="x",
+        y="y",
+        size="Weight",
+        legend=legend,
+        sizes=sizes,
+        ax=ax,
+        linewidth=0.3,
+    )
+    ax.axis("equal")
+    ax.set_xlim((0, n_verts))
+    ax.set_ylim((n_verts, 0))
+    ax.axis("off")
+    return ax

@@ -43,6 +43,9 @@ class DivisiveCluster(NodeMixin):
                 cluster = AutoGMMCluster(
                     min_components=1, max_components=2, max_agglom_size=None
                 )
+            elif self.cluster_method == "vmm":
+                # cluster = VonMisesFisherMixture(n)
+                pass
             else:
                 raise ValueError(f"`cluster_method` must be one of {valid_methods}")
             cluster.fit(X)
@@ -54,7 +57,7 @@ class DivisiveCluster(NodeMixin):
                 self.bics_ = bics
                 bic_ratio = bics.loc[2].min() / bics.loc[1].min()
                 self.bic_ratio_ = bic_ratio
-            if cluster.n_components_ != 1:
+            if cluster.n_components_ != 1:  # recurse
                 indicator = pred_labels == 0
                 self.X_children_ = (X[indicator, :], X[~indicator, :])
                 children = []
@@ -110,6 +113,9 @@ class DivisiveCluster(NodeMixin):
             indicator = node_preds == 0
             left_preds = self.children[0].predict(X[indicator, :])
             right_preds = self.children[1].predict(X[~indicator, :])
+            # this is a hacky way of making sure arrays have sufficiently large string
+            # datatype to not lose information, without making any assumptions about
+            # number of splits ahead of time. Sure there is a better way.
             if np.can_cast(left_preds.dtype, right_preds.dtype):
                 # everything in left can be safely cast to right
                 preds = np.zeros(X.shape[0], dtype=right_preds.dtype)
@@ -152,7 +158,7 @@ class DivisiveCluster(NodeMixin):
         linkages = []
         labels = []
 
-        for g, group in enumerate(levels[::-1][:-1]):
+        for g, group in enumerate(levels[::-1][:-1]):  # reversed and skip the last
             for i in range(len(group) // 2):
                 # get partner nodes
                 left_node = group[2 * i]
@@ -185,6 +191,11 @@ class DivisiveCluster(NodeMixin):
                 if not bic_distance:
                     distance = g + 1  # equal height for all links
                 else:
+                    raise NotImplementedError()
+                    # tried to use BIC as linkage distance, but not monotonic.
+                    # would need to sort somehow by BIC ratios, but this may not be
+                    # possible while preserving splitting nature of the tree
+
                     # self.cum_dist_ += (left_node.cum_dist_ + right_node.cum_dist_) / 2
                     # self.cum_dist_ += parent_node.bic_ratio_ - 1
                     # distance = self.cum_dist_
@@ -194,5 +205,6 @@ class DivisiveCluster(NodeMixin):
                 linkages.append([left_node._ind, right_node._ind, distance, n_clusters])
 
         labels = np.array(labels)
-        linkages = np.array(linkages, dtype=np.double)
-        return (linkages, labels)  # needs to be a double for scipy
+        linkages = np.array(linkages, dtype=np.double)  # needs to be a double for scipy
+        return (linkages, labels)
+

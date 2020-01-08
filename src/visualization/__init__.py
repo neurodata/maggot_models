@@ -13,5 +13,6 @@ from .visualize import (
     get_sbm_prob,
     _get_block_indices,
     _calculate_block_edgesum,
+    gridmap,
 )
 from .stack_seaborn import countplot, freqplot

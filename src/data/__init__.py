@@ -6,4 +6,5 @@ from .get_data import (
     load_june,
     load_networkx,
     load_everything,
+    load_metagraph,
 )
