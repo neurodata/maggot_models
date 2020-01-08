@@ -27,5 +27,6 @@ from .utils import (
     shuffle_edges,
     get_sbm_prob,
     get_blockmodel_df,
+    invert_permutation,
 )
 

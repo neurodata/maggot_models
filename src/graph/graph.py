@@ -82,12 +82,11 @@ class MetaGraph:
         # update nx
         # update adjacency matrix
         # update metadataframe
-        lcc = get_lcc(self.g)
-        self.g = lcc
-        adj, meta = _nx_to_numpy_pandas(lcc)
-        self.adj = adj
-        self.meta = meta
-        self.n_verts = adj.shape[0]
+        lcc, inds = get_lcc(self.adj, return_inds=True)
+        self.adj = lcc
+        self.meta = self.meta.iloc[inds, :]
+        self.g = _numpy_pandas_to_nx(self.adj, self.meta)
+        self.n_verts = self.adj.shape[0]
         return self
 
     def calculate_degrees(self):
