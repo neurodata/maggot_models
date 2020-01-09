@@ -235,7 +235,7 @@ for dim1 in range(n_components):
 
 # make the proper parts of the graph equal to the left/right averages
 preface = "sym-max-"
-mg = load_metagraph("Gadn", version=BRAIN_VERSION)
+mg = load_metagraph("Gad", version=BRAIN_VERSION)
 mg, n_pairs = pair_augment(mg)
 adj = mg.adj
 left_left_adj = adj[:n_pairs, :n_pairs]
@@ -243,6 +243,16 @@ left_right_adj = adj[:n_pairs, n_pairs : 2 * n_pairs]
 right_right_adj = adj[n_pairs : 2 * n_pairs, n_pairs : 2 * n_pairs]
 right_left_adj = adj[n_pairs : 2 * n_pairs, :n_pairs]
 
+graphs = [left_left_adj, right_right_adj, left_right_adj, right_left_adj]
+names = ["LL", "RR", "LR", "RL"]
+for g, n in zip(graphs, names):
+    print(n)
+    print(f"Synapses: {g.sum()}")
+    print(f"Edges: {np.count_nonzero(g)}")
+    print(f"Sparsity: {np.count_nonzero(g) / g.size}")
+    print()
+# %% [markdown]
+# #
 # take the average of left and right. this could also be max
 # average
 # sym_ipsi_adj = (left_left_adj + right_right_adj) / 2
@@ -300,6 +310,9 @@ for dim1 in range(n_components):
         ax.xaxis.set_major_locator(plt.FixedLocator([0]))
         ax.yaxis.set_major_locator(plt.FixedLocator([0]))
         stashfig(preface + f"lines-dim{dim1}-vs-dim{dim2}")
+
+# %% [markdown]
+# #
 
 
 # %% [markdown]
@@ -451,4 +464,29 @@ side_labels = mg["Hemisphere"]
 
 from sklearn.metrics import adjusted_rand_score
 
-adjusted_rand_score(left_pred_labels[:n_pairs], right_pred_labels[:n_pairs])
+print(adjusted_rand_score(left_pred_labels[:n_pairs], right_pred_labels[:n_pairs]))
+
+stashobj(left_dc, "left_dc")
+stashobj(right_dc, "right_dc")
+
+# %% [markdown]
+# # Now try to just fix a K, do GMM
+
+cluster = GaussianCluster
+N_INIT = 200
+aris = []
+for k in range(2, 12):
+    gc = cluster(
+        min_components=k, max_components=k, covariance_type="all", n_init=N_INIT
+    )
+    left_pred_labels = gc.fit_predict(left_latent)
+    right_pred_labels = gc.fit_predict(right_latent)
+    ari = adjusted_rand_score(left_pred_labels[:n_pairs], right_pred_labels[:n_pairs])
+    print(ari)
+    aris.append(ari)
+    print(gc.model_.covariance_type)
+
+# %% [markdown]
+# #
+plt.plot(aris)
+
