@@ -102,7 +102,7 @@ def lse(adj, n_components, regularizer=None, ptr=True):
     #     form="R-DAD", n_components=n_components, regularizer=regularizer
     # )
     latent = np.concatenate(latent, axis=-1)
-    return latent, lap
+    return latent
 
 
 def omni(adjs, n_components, ptr=True):

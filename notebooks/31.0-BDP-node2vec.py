@@ -18,36 +18,54 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score
 from spherecluster import SphericalKMeans
 
-from src.data import load_everything, load_networkx
+from src.data import load_everything, load_networkx, load_metagraph
 from src.utils import savefig, meta_to_array
 from src.visualization import sankey
 
 from node2vec import Node2Vec
+import colorcet as cc
 
 #%%
-MB_VERSION = "mb_2019-09-23"
 BRAIN_VERSION = "2019-09-18-v2"
-GRAPH_TYPES = ["Gad", "Gaa", "Gdd", "Gda"]
-GRAPH_TYPE_LABELS = [r"A $\to$ D", r"A $\to$ A", r"D $\to$ D", r"D $\to$ A"]
-N_GRAPH_TYPES = len(GRAPH_TYPES)
 
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
 
-adj, class_labels, side_labels = load_everything(
-    "G", version=BRAIN_VERSION, return_class=True, return_side=True
-)
+# %% [markdown]
+# #
 
-graph = load_networkx("G", BRAIN_VERSION)
+mg = load_metagraph("Gadn")
+mg.make_lcc()
+graph = mg.g
 node2vec = Node2Vec(
-    graph, dimensions=6, workers=12, p=0.5, q=0.5, walk_length=100, num_walks=20
+    graph, dimensions=8, workers=12, p=2, q=0.5, walk_length=32, num_walks=1024
 )
-
-
 model = node2vec.fit(window=20, min_count=1, batch_words=4)
-vecs = [model.wv.get_vector(n) for n in graph.node()]
-
+nodedata_list = list(graph.nodes(data=True))
+vecs = [model.wv.get_vector(str(n)) for n, _ in nodedata_list]
 embedding = np.array(vecs)
+class_labels = [d["Merge Class"] for _, d in nodedata_list]
+# %% [markdown]
+# #
+n_unique = len(np.unique(class_labels))
 
-pairplot(embedding, labels=meta_to_array(graph, "Class"), palette="tab20")
+pairplot(embedding, labels=class_labels, palette=cc.glasbey_light[:n_unique])
+
+# %% [markdown]
+# #
+plot_df = pd.DataFrame(data=embedding)
+plot_df["Label"] = class_labels
+n_components = 6
+for i in range(n_components):
+    for j in range(i + 1, n_components):
+        fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+        sns.scatterplot(
+            data=plot_df,
+            x=i,
+            y=j,
+            hue="Label",
+            palette=cc.glasbey_light[:n_unique],
+            s=20,
+            ax=ax,
+        )
 
