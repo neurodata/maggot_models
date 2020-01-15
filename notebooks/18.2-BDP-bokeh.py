@@ -114,36 +114,16 @@ def adj_to_points(adj):
 
 #%%
 GRAPH_TYPES = ["Gad", "Gaa", "Gdd", "Gda"]
-GRAPH_VERSION = "mb_2019-09-23"
+GRAPH_VERSION = "2020-01-14"
 # Sort the graph appropriately first
 graph_type = "G"
 
 G_adj, class_labels, side_labels, pair_labels, id_labels = load_everything(
     graph_type,
-    return_keys=["Class", "Hemisphere", "Pair"],
+    return_keys=["Merge Class", "Hemisphere", "Pair"],
     return_ids=True,
     version=GRAPH_VERSION,
 )
-
-name_map = {
-    "APL": "APL",
-    "Gustatory PN": "PN",
-    "KC 1 claw": "KC",
-    "KC 2 claw": "KC",
-    "KC 3 claw": "KC",
-    "KC 4 claw": "KC",
-    "KC 5 claw": "KC",
-    "KC 6 claw": "KC",
-    "KC young": "KC",
-    "MBIN": "MBIN",
-    "MBON": "MBON",
-    "ORN mPN": "PN",
-    "ORN uPN": "PN",
-    "Unknown PN": "PN",
-    "tPN": "PN",
-    "vPN": "PN",
-}
-class_labels = np.array(itemgetter(*class_labels)(name_map))
 
 side_class_labels = []
 for s, c in zip(side_labels, class_labels):
@@ -272,8 +252,6 @@ scatter_fig.add_layout(legend, "right")
 scatter_fig.xgrid.visible = False
 scatter_fig.ygrid.visible = False
 
-#
-
 
 span_kws = dict(line_color="black", line_dash="dashed", line_width=0.5)
 
@@ -284,16 +262,16 @@ for b in borders:
     scatter_fig.add_layout(s)
 
 
-# legend = Legend(items=edge_type, location=(0, -60))
-# legend.click_policy = "mute"
+legend = Legend(items=edge_type, location=(0, -60))
+legend.click_policy = "mute"
 
-# scatter_fig.add_layout(legend, "right")
+scatter_fig.add_layout(legend, "right")
 show(scatter_fig)
 
 from bokeh.resources import CDN
 
 html = file_html(scatter_fig, CDN, "mb_adj")
-with open("mb_adj.html", "w") as f:
+with open("full_new_adj.html", "w") as f:
     f.write(html)
 #%%
 ##

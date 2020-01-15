@@ -2,8 +2,12 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 from graspy.utils import is_almost_symmetric, get_lcc
+from pathlib import Path
+from itertools import islice
 
 # helper functions
+
+base_path = Path("maggot_models/data/raw/Maggot-Brain-Connectome")
 
 
 def _nx_to_numpy_pandas(g):
@@ -32,6 +36,15 @@ def _numpy_pandas_to_nx(adj, meta):
         values = dict(zip(index, col_vals))
         nx.set_node_attributes(g, values, name=c)
     return g
+
+
+def _verify(source, target, n_checks):
+    edgelist = list(source.edges)
+    for i in range(n_checks):
+        edge_ind = np.random.choice(len(edgelist))
+        edge = edgelist[edge_ind]
+        if not target.has_edge(*edge):
+            ValueError(f"Edge {edge} missing in target graph")
 
 
 class MetaGraph:
@@ -125,3 +138,11 @@ class MetaGraph:
             self.meta[n] = val
         else:
             raise NotImplementedError()
+
+    def verify(self, n_checks=1000, version="2019-12-18", graph_type="G"):
+        from src.data import load_networkx
+
+        raw_g = load_networkx(graph_type, version)
+        _verify(self.g, raw_g, n_checks)
+        _verify(raw_g, self.g, n_checks)
+

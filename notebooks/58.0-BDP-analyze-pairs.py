@@ -38,7 +38,14 @@ from src.visualization import bartreeplot, get_color_dict, get_colors, sankey, s
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
 
-SAVESKELS = False
+SAVESKELS = True
+SAVEFIGS = True
+
+sns.set_context("talk")
+
+
+def stashfig(name, **kws):
+    savefig(name, foldername=FNAME, save_on=SAVEFIGS, **kws)
 
 
 def stashskel(name, ids, labels, colors=None, palette=None, **kws):
@@ -78,7 +85,7 @@ def get_edges(adj):
     return all_edges
 
 
-mg = load_metagraph("G", version="2019-12-18")
+mg = load_metagraph("Gn", version="2019-12-18")
 base_path = Path("maggot_models/data/raw/Maggot-Brain-Connectome/")
 pair_df = pd.read_csv(base_path / "pairs/bp-pairs-2020-01-13.csv")
 all_cells_file = base_path / "neuron-groups/all-neurons-2020-1-13.json"
@@ -147,19 +154,21 @@ assert (side_labels[:n_pairs] == "L").all()
 assert (side_labels[n_pairs : 2 * n_pairs] == "R").all()
 
 # %% [markdown]
+# #
+mg.verify()
+
+# %% [markdown]
 # # do the correlation thingy
 adj = mg.adj.copy()
 
-threshold = 0.01
+threshold = 0
 
 left_left_adj = adj[:n_pairs, :n_pairs]
 left_right_adj = adj[:n_pairs, n_pairs : 2 * n_pairs]
 right_right_adj = adj[n_pairs : 2 * n_pairs, n_pairs : 2 * n_pairs]
 right_left_adj = adj[n_pairs : 2 * n_pairs, :n_pairs]
 
-# Extract left edges
-
-
+# Extract edges
 ll_edges = get_edges(left_left_adj)
 lr_edges = get_edges(left_right_adj)
 rr_edges = get_edges(right_right_adj)
@@ -171,10 +180,29 @@ for i in range(n_pairs):
     right_edge_vec = np.concatenate((rr_edges[i], rl_edges[i]))
     both_edges = np.stack((left_edge_vec, right_edge_vec), axis=-1)
     avg_edges = np.mean(both_edges, axis=-1)
-    inds = np.where(avg_edges > threshold)[0]
+    # inds = np.where(avg_edges > threshold)[0]
+
+    # check that left and right edge both have
+    inds = np.where(
+        np.logical_and(left_edge_vec > threshold, right_edge_vec > threshold)
+    )[0]
     if len(inds) > 0:
-        R = np.corrcoef(left_edge_vec[inds], right_edge_vec[inds])
+        left_edge_vec = left_edge_vec[inds]
+        # left_edge_vec[left_edge_vec > 0] = 1
+        right_edge_vec = right_edge_vec[inds]
+        # print(left_edge_vec)
+        # print(right_edge_vec)
+        # right_edge_vec[right_edge_vec > 0] = 1
+        R = np.corrcoef(left_edge_vec, right_edge_vec)
         corr = R[0, 1]
+        # print(corr)
+        # print()
+        if i < 40:
+            plt.figure()
+            plt.scatter(left_edge_vec, right_edge_vec)
+            plt.title(corr)
+            plt.axis("square")
+        # corr = np.count_nonzero(left_edge_vec - right_edge_vec) / len(left_edge_vec)
     else:
         corr = 0
     if np.isnan(corr):
@@ -206,12 +234,70 @@ truth_pair_corrs = pair_corrs[known_inds]
 
 sns.set_context("talk")
 plt.figure(figsize=(10, 5))
-sns.distplot(new_pair_corrs[new_pair_corrs > 0], label="New pairs")
-sns.distplot(truth_pair_corrs[truth_pair_corrs > 0], label="Ground truth")
+sns.distplot(new_pair_corrs, label="New pairs")
+sns.distplot(truth_pair_corrs, label="Ground truth")
 plt.legend()
 plt.title(threshold)
+stashfig(f"both-t{threshold}-corr-nodewise")
 
+out_pair_df = pd.DataFrame()
+out_pair_df
 
+# %% Look at correlation vs degree
+deg_df = mg.calculate_degrees()
+plot_df = pd.DataFrame()
+total_degree = deg_df["Total degree"].values
+plot_df["Mean total degree"] = (
+    total_degree[:n_pairs] + total_degree[n_pairs : 2 * n_pairs]
+) / 2
+plot_df["Correlation"] = pair_corrs
+plt.figure(figsize=(10, 5))
+sns.scatterplot(data=plot_df, x="Mean total degree", y="Correlation")
+stashfig("corr-vs-degree")
+
+sns.jointplot(
+    data=plot_df, x="Mean total degree", y="Correlation", kind="hex", height=10
+)
+stashfig("corr-vs-degree-hex")
+
+# %% [markdown]
+# # Find the cells where correlation is < 0
+skeleton_labels = mg.meta.index.values[: 2 * n_pairs]
+side_labels = mg["Hemisphere"][: 2 * n_pairs]
+left_right_pairs = zip(
+    skeleton_labels[:n_pairs], skeleton_labels[n_pairs : 2 * n_pairs]
+)
+
+colors = []
+ids = []
+
+for i, (left, right) in enumerate(left_right_pairs):
+    if pair_corrs[i] < 0:
+        hex_color = "#%02X%02X%02X" % (r(), r(), r())
+        colors.append(hex_color)
+        colors.append(hex_color)
+        ids.append(left)
+        ids.append(right)
+
+stashskel("pairs-low-corr", ids, colors, colors=colors, palette=None)
+
+# %% [markdown]
+# # Look at number of disagreements vs degree
+prop_disagreements = []
+for i in range(n_pairs):
+    left_edge_vec = np.concatenate((ll_edges[i], lr_edges[i]))
+    right_edge_vec = np.concatenate((rr_edges[i], rl_edges[i]))
+    left_edge_vec[left_edge_vec > 0] = 1
+    right_edge_vec[right_edge_vec > 0] = 1
+    n_disagreement = np.count_nonzero(left_edge_vec - right_edge_vec)
+    prop_disagreement = n_disagreement / len(left_edge_vec)
+    prop_disagreements.append(prop_disagreement)
+prop_disagreements = np.array(prop_disagreements)
+plot_df["Prop. disagreements"] = prop_disagreements
+
+sns.jointplot(
+    data=plot_df, x="Mean total degree", y="Prop. disagreements", kind="hex", height=10
+)
 #%%
 pair_corrs = []
 for i in range(n_pairs):
