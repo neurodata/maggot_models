@@ -14,5 +14,7 @@ from .visualize import (
     _get_block_indices,
     _calculate_block_edgesum,
     gridmap,
+    remove_spines,
+    distplot,
 )
 from .stack_seaborn import countplot, freqplot

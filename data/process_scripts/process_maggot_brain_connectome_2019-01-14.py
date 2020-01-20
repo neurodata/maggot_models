@@ -30,7 +30,7 @@ right_file = "hemisphere-R-2020-1-14.json"
 
 input_counts_file = "input_counts"
 
-pair_file = base_path / "pairs/bp-pairs-2020-01-13.csv"
+pair_file = base_path / "pairs/bp-pairs-2020-01-13_continuedAdditions.csv"
 
 output_path = Path(f"maggot_models/data/processed/{data_date_groups}")
 
@@ -194,16 +194,20 @@ pair_ids = np.concatenate((pair_df["leftid"].values, pair_df["rightid"].values))
 meta_ids = meta_data_df.index.values
 in_meta_ids = np.isin(pair_ids, meta_ids)
 drop_ids = pair_ids[~in_meta_ids]
+pair_df = pair_df[~pair_df["leftid"].isin(drop_ids)]
+pair_df = pair_df[~pair_df["rightid"].isin(drop_ids)]
 
 left_to_right_df = pair_df.set_index("leftid")
-left_to_right_df.drop(drop_ids, axis=0, errors="ignore", inplace=True)
 right_to_left_df = pair_df.set_index("rightid")
-right_to_left_df.drop(drop_ids, axis=0, errors="ignore", inplace=True)
 right_to_left_df.head()
 
 meta_data_df["Pair"] = -1
+meta_data_df["Pair ID"] = -1
 meta_data_df.loc[left_to_right_df.index, "Pair"] = left_to_right_df["rightid"]
 meta_data_df.loc[right_to_left_df.index, "Pair"] = right_to_left_df["leftid"]
+
+meta_data_df.loc[left_to_right_df.index, "Pair ID"] = left_to_right_df["pair_id"]
+meta_data_df.loc[right_to_left_df.index, "Pair ID"] = right_to_left_df["pair_id"]
 
 
 #%%

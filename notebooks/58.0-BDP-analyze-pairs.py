@@ -88,7 +88,7 @@ def get_edges(adj):
 mg = load_metagraph("Gn", version="2019-12-18")
 base_path = Path("maggot_models/data/raw/Maggot-Brain-Connectome/")
 pair_df = pd.read_csv(base_path / "pairs/bp-pairs-2020-01-13.csv")
-all_cells_file = base_path / "neuron-groups/all-neurons-2020-1-13.json"
+all_cells_file = base_path / "neuron-groups/all-neurons-2020-01-13.json"
 
 skeleton_labels = mg.meta.index.values
 
@@ -102,6 +102,8 @@ with open(all_cells_file) as json_file:
     temp_dict = json.load(json_file)
     all_ids = extract_ids(temp_dict)
 
+mg = load_metagraph("Gn", version="2019-")
+all_ids = mg.meta.index.values
 
 for (left, right) in left_right_pairs:
     if left not in all_ids or right not in all_ids:

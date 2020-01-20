@@ -951,7 +951,6 @@ def palplot(k, cmap="viridis"):
     return ax
 
 
-
 def stacked_barplot(
     category,
     subcategory,
@@ -1248,4 +1247,54 @@ def gridmap(A, ax=None, legend=False, sizes=(10, 70)):
     ax.set_xlim((0, n_verts))
     ax.set_ylim((n_verts, 0))
     ax.axis("off")
+    return ax
+
+
+def remove_spines(ax, keep_corner=False):
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    if not keep_corner:
+        ax.spines["bottom"].set_visible(False)
+        ax.spines["left"].set_visible(False)
+
+
+def distplot(
+    data,
+    labels=None,
+    direction="out",
+    title="",
+    context="talk",
+    font_scale=1,
+    figsize=(10, 5),
+    palette="Set1",
+    xlabel="",
+    ylabel="Density",
+):
+
+    plt.figure(figsize=figsize)
+    ax = plt.gca()
+    palette = sns.color_palette(palette)
+    plt_kws = {"cumulative": True}
+    with sns.plotting_context(context=context, font_scale=font_scale):
+        if labels is not None:
+            categories, counts = np.unique(labels, return_counts=True)
+            for i, cat in enumerate(categories):
+                cat_data = data[np.where(labels == cat)]
+                if counts[i] > 1 and cat_data.min() != cat_data.max():
+                    x = np.sort(cat_data)
+                    y = np.arange(len(x)) / float(len(x))
+                    plt.plot(x, y, label=cat, color=palette[i])
+                else:
+                    ax.axvline(cat_data[0], label=cat, color=palette[i])
+            plt.legend()
+        else:
+            if data.min() != data.max():
+                sns.distplot(data, hist=False, kde_kws=plt_kws)
+            else:
+                ax.axvline(data[0])
+
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+
     return ax

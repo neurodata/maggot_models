@@ -1,4 +1,4 @@
-)# %% [markdown]
+# %% [markdown]
 # # Imports
 import os
 import pickle
@@ -8,6 +8,7 @@ from pathlib import Path
 from timeit import default_timer as timer
 
 import colorcet as cc
+import community as cm
 import matplotlib.colors as mplc
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -20,12 +21,19 @@ from graspy.embed import AdjacencySpectralEmbed, LaplacianSpectralEmbed
 from graspy.plot import gridplot, heatmap, pairplot
 from graspy.utils import symmetrize
 from src.cluster import DivisiveCluster
-from src.data import load_everything
+from src.data import load_everything, load_networkx
 from src.embed import lse, preprocess_graph
 from src.hierarchy import signal_flow
 from src.io import savefig, saveobj, saveskels
 from src.utils import get_blockmodel_df, get_sbm_prob
-from src.visualization import bartreeplot, get_color_dict, get_colors, sankey, screeplot
+from src.visualization import (
+    bartreeplot,
+    get_color_dict,
+    get_colors,
+    sankey,
+    screeplot,
+    stacked_barplot,
+)
 
 warnings.simplefilter("ignore", category=FutureWarning)
 
@@ -38,7 +46,7 @@ print(nx.__version__)
 
 # %% [markdown]
 # # Parameters
-BRAIN_VERSION = "2019-12-18"
+BRAIN_VERSION = "2020-01-14"
 
 SAVEFIGS = True
 SAVESKELS = False
@@ -101,30 +109,43 @@ def stashobj(obj, name, **kws):
     saveobj(obj, name, foldername=FNAME, save_on=SAVEOBJS, **kws)
 
 
-adj, class_labels, side_labels, pair_labels, skeleton_labels, = load_everything(
-    "Gadn",
-    version=BRAIN_VERSION,
-    return_keys=["Merge Class", "Hemisphere", "Pair"],
-    return_ids=True,
-)
+# adj, class_labels, side_labels, pair_labels, skeleton_labels, = load_everything(
+#     "Gadn",
+#     version=BRAIN_VERSION,
+#     return_keys=["Merge Class", "Hemisphere", "Pair"],
+#     return_ids=True,
+# )
 
-from src.data import load_networkx
 
-g = load_networkx("Gadn", version=BRAIN_VERSION)
-
-import community as cm
-from src.visualization import stacked_barplot
+g = load_networkx("Gn", version=BRAIN_VERSION)
 
 g_sym = nx.to_undirected(g)
 skeleton_labels = np.array(list(g_sym.nodes()))
+scales = [1]
+r = 1
+out_dict = cm.best_partition(g_sym, resolution=r)
+partition = np.array(itemgetter(*skeleton_labels.astype(str))(out_dict))
+adj = nx.to_numpy_array(g_sym, nodelist=skeleton_labels)
 
+part_unique, part_count = np.unique(partition, return_counts=True)
+for uni, count in zip(part_unique, part_count):
+    if count < 3:
+        inds = np.where(partition == uni)[0]
+    partition[inds] = -1
 
-for r in np.linspace(0.1, 10, 10):
-    out_dict = cm.best_partition(g_sym, resolution=r)
-    partition = np.array(itemgetter(*skeleton_labels.astype(str))(out_dict))
-    adj = nx.to_numpy_array(g_sym, nodelist=skeleton_labels)
-    gridplot([adj], inner_hier_labels=partition)
-    class_label_dict = nx.get_node_attributes(g_sym, "Merge Class")
-    class_labels = np.array(itemgetter(*skeleton_labels)(class_label_dict))
-    color_dict = dict(zip(np.unique(partition), cc.glasbey_light))
-    stacked_barplot(partition, class_labels)
+class_label_dict = nx.get_node_attributes(g_sym, "Class 1")
+class_labels = np.array(itemgetter(*skeleton_labels)(class_label_dict))
+part_color_dict = dict(zip(np.unique(partition), cc.glasbey_warm))
+true_color_dict = dict(zip(np.unique(class_labels), cc.glasbey_light))
+color_dict = {**part_color_dict, **true_color_dict}
+fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+stacked_barplot(
+    partition,
+    class_labels,
+    ax=ax,
+    color_dict=color_dict,
+    plot_proportions=False,
+    norm_bar_width=True,
+)
+stashfig("louvain-barplot")
+

@@ -115,6 +115,8 @@ class MetaGraph:
         degree_df["In degree"] = in_degree
         degree_df["Out degree"] = out_degree
         degree_df["Total degree"] = in_degree + out_degree
+        degree_df["ID"] = self.meta.index
+        degree_df = degree_df.set_index("ID")
         return degree_df
 
     def add_metadata(self, meta, name=None):
@@ -131,13 +133,13 @@ class MetaGraph:
         elif n in self.meta.index:
             return self.meta.loc[n]
         else:
-            raise NotImplementedError()
+            raise KeyError(f"Key {n} not present as index or column in MetaGraph")
 
     def __setitem__(self, n, val):
         if n in self.meta.columns:
             self.meta[n] = val
         else:
-            raise NotImplementedError()
+            raise KeyError(f"Key {n} not present as column in MetaGraph")
 
     def verify(self, n_checks=1000, version="2019-12-18", graph_type="G"):
         from src.data import load_networkx
@@ -145,4 +147,13 @@ class MetaGraph:
         raw_g = load_networkx(graph_type, version)
         _verify(self.g, raw_g, n_checks)
         _verify(raw_g, self.g, n_checks)
+
+    def sort_values(self, sortby, ascending=False):
+        self.meta["Original index"] = range(self.meta.shape[0])
+        self.meta.sort_values(
+            sortby, inplace=True, kind="mergesort", ascending=ascending
+        )
+        temp_inds = self.meta["Original index"]
+        self.adj = self.adj[np.ix_(temp_inds, temp_inds)]
+        return
 
