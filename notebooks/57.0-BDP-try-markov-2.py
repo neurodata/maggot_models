@@ -41,8 +41,8 @@ print(nx.__version__)
 
 # %% [markdown]
 # #
-BRAIN_VERSION = "2019-12-18"
-norm_mg = load_metagraph("Gn")
+BRAIN_VERSION = "2019-01-16"
+norm_mg = load_metagraph("Gad")
 norm_mg.make_lcc()
 adj = norm_mg.adj
 class_labels = norm_mg["Merge Class"]
@@ -218,5 +218,4 @@ full_response_mat = np.concatenate(response_mats, axis=-1)
 for i in range(full_response_mat.shape[1]):
     plt.figure()
     plt.plot(full_response_mat[:, i])
-
 

@@ -103,79 +103,68 @@ mg = load_metagraph(graph_type, version=BRAIN_VERSION)
 
 g = mg.g
 meta = mg.meta
-edgelist_df = nx.to_pandas_edgelist(g)
-i = 0
+edgelist_df = mg.to_edgelist()
 
-
-def source_mapper(name):
-    return "source " + name
-
-
-def target_mapper(name):
-    return "target " + name
-
-
-new_rows = []
-for i in range(len(edgelist_df)):
-    source = int(edgelist_df.loc[i, "source"])
-    target = int(edgelist_df.loc[i, "target"])
-    source_meta = meta.loc[source]
-    target_meta = meta.loc[target]
-    source_meta = source_meta.rename(source_mapper)
-    target_meta = target_meta.rename(target_mapper)
-    row = pd.concat((edgelist_df.loc[i], source_meta, target_meta))
-    new_rows.append(row)
-
-edgelist_df = pd.DataFrame(new_rows)
-edgelist_df["edge pairs"] = list(
-    zip(edgelist_df["source Pair ID"], edgelist_df["target Pair ID"])
-)
-edgelist_df["is_ipsi"] = (
-    edgelist_df["source Hemisphere"] == edgelist_df["target Hemisphere"]
-)
-edgelist_df["edge pairs"] = list(zip(edgelist_df["edge pairs"], edgelist_df["is_ipsi"]))
-edgelist_df = edgelist_df.sort_values("edge pairs", ascending=False)
-
-edgelist_df = edgelist_df[edgelist_df["target Pair ID"] != -1]
-edgelist_df = edgelist_df[edgelist_df["source Pair ID"] != -1]
-uni_edge_pairs, uni_edge_counts = np.unique(
-    edgelist_df["edge pairs"], return_counts=True
-)
-# give each edge pair a unique tuple
-edge_pair_map = dict(zip(uni_edge_pairs, range(len(uni_edge_pairs))))
-edgelist_df["edge pair ID"] = itemgetter(*edgelist_df["edge pairs"])(edge_pair_map)
-# count how many times each potential edge pair happens
-edge_pair_count_map = dict(zip(uni_edge_pairs, uni_edge_counts))
-edgelist_df["edge pair counts"] = itemgetter(*edgelist_df["edge pairs"])(
-    edge_pair_count_map
-)
 max_pair_edge_df = edgelist_df.groupby("edge pair ID").max()
+edge_max_weight_map = dict(
+    zip(max_pair_edge_df.index.values, max_pair_edge_df["weight"])
+)
+edgelist_df["max_weight"] = itemgetter(*edgelist_df["edge pair ID"])(
+    edge_max_weight_map
+)
 
 # %% [markdown]
 # # Try thresholding in this new format
 props = []
-threshs = np.linspace(0, 0.3, 200)
+prop_edges = []
+prop_syns = []
+threshs = np.linspace(0, 0.3, 20)
 for threshold in threshs:
     thresh_df = max_pair_edge_df[max_pair_edge_df["weight"] > threshold]
-    trash_df = max_
     prop = len(thresh_df[thresh_df["edge pair counts"] == 2]) / len(thresh_df)
     props.append(prop)
+    prop_edges_left = (
+        thresh_df["edge pair counts"].sum() / max_pair_edge_df["edge pair counts"].sum()
+    )
+    prop_edges.append(prop_edges_left)
+    temp_df = edgelist_df[edgelist_df["max_weight"] > threshold]
+    p_syns = temp_df["weight"].sum() / edgelist_df["weight"].sum()
+    prop_syns.append(p_syns)
 # %% [markdown]
 # #
 
 plot_df = pd.DataFrame()
 plot_df["Threshold"] = threshs
 plot_df["P(mirror edge present)"] = props
+plot_df["Proportion of edges left"] = prop_edges
+plot_df["Proportion of synapses left"] = prop_syns
 
 fig, ax = plt.subplots(1, 1, figsize=(10, 5))
 
 sns.lineplot(data=plot_df, x="Threshold", y="P(mirror edge present)", ax=ax)
+ax_right = ax.twinx()
+sns.lineplot(
+    data=plot_df,
+    x="Threshold",
+    y="Proportion of synapses left",
+    ax=ax_right,
+    color="orange",
+)
+remove_spines(ax_right)
 remove_spines(ax)
 ax.set_ylim((0, 1))
+ax_right.set_ylim((0, 1))
 ax.set_title(f"{graph_type}")
-stashfig(f"thresh-sweep-{graph_type}-brain")
+stashfig(f"thresh-sweep-{graph_type}-brain-syns")
 
-
+# %% [markdown]
+# # Plot these against each other
+fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+sns.scatterplot(data=plot_df, x="P(mirror edge present)", y="Proportion of edges left")
+ax.set_xlim((0, 1.1))
+ax.set_ylim((0, 1.1))
+remove_spines(ax)
+stashfig(f"thresh-sweep-paired-{graph_type}-brain")
 # %% [markdown]
 # # Look at IOU
 threshold = 0.05
@@ -189,13 +178,20 @@ ious = []
 kept_pairs = []
 removed_pairs = []
 edge_dfs = []
-keep_cols = ["source", "target", "weight", "source Pair ID", "target Pair ID", "edge pair counts"]
+keep_cols = [
+    "source",
+    "target",
+    "weight",
+    "source Pair ID",
+    "target Pair ID",
+    "edge pair counts",
+]
 
 for pid in pair_ids:
     temp_df = thresh_df[
         (thresh_df["source Pair ID"] == pid) | (thresh_df["target Pair ID"] == pid)
     ]
-    
+
     if len(temp_df) > 0:
         iou = len(temp_df[temp_df["edge pair counts"] == 2]) / len(temp_df)
         ious.append(iou)
@@ -232,8 +228,8 @@ for i, pid in enumerate(kept_pairs):
     iou_df.loc[i, "Left ID"] = temp_df[temp_df["Hemisphere"] == "L"].index[0]
     iou_df.loc[i, "Right ID"] = temp_df[temp_df["Hemisphere"] == "R"].index[0]
 
-# %% [markdown] 
-# # 
+# %% [markdown]
+# #
 iou_df.sort_values("IOU Score", ascending=True, inplace=True)
 iou_df.index = range(len(iou_df))
 
@@ -259,8 +255,8 @@ left_id = 12121795
 pair_id = meta.loc[left_id, "Pair ID"]
 ind = np.where(kept_pairs == pair_id)[0][0]
 edge_dfs[ind]
-# %% [markdown] 
-# # 
+# %% [markdown]
+# #
 
 iou_df.sort_values("IOU Score", ascending=False, inplace=True)
 iou_df.index = range(len(iou_df))
@@ -281,11 +277,6 @@ for i in range(100):
     ids.append(right_id)
 
 stashskel("high-iou-sorted-pairs", ids, colors, colors=colors, palette=None)
-
-# %% [markdown] 
-# # 
-
-
 
 # %% [markdown]
 # #

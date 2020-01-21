@@ -104,7 +104,6 @@ mg = load_metagraph(graph_type, version=BRAIN_VERSION)
 g = mg.g
 meta = mg.meta
 edgelist_df = nx.to_pandas_edgelist(g)
-i = 0
 
 
 def source_mapper(name):
@@ -126,7 +125,6 @@ for i in range(len(edgelist_df)):
     row = pd.concat((edgelist_df.loc[i], source_meta, target_meta))
     new_rows.append(row)
 
-source_ids = edgelist_df
 
 edgelist_df = pd.DataFrame(new_rows)
 edgelist_df["edge pairs"] = list(
@@ -177,6 +175,8 @@ asym_df.index = asym_df.index.astype('int64')
 asym_df.fillna(0, inplace=True)
 asym_df["total_asym_edges"] = asym_df["source"] + asym_df["target"]
 n_asym_df.loc[asym_df.index, "n_asym_edges"] = asym_df["total_asym_edges"]
+n_asym_df.loc[asym_df.index, "n_asym_out_edges"] = asym_df["source"]
+n_asym_df.loc[asym_df.index, "n_asym_in_edges"] = asym_df["target"]
 n_asym_df.sort_values("n_asym_edges", inplace=True, ascending=False)
 asym_df.sort_values("total_asym_edges", inplace=True, ascending=False)
 n_asym_df.to_csv(path + "/asym_nodes_thresh_1_percent.csv")

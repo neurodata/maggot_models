@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from graspy.utils import is_almost_symmetric, get_lcc
 from pathlib import Path
-from itertools import islice
+from operator import itemgetter
 
 # helper functions
 
@@ -157,3 +157,58 @@ class MetaGraph:
         self.adj = self.adj[np.ix_(temp_inds, temp_inds)]
         return
 
+    def to_edgelist(self):
+        meta = self.meta
+        # extract edgelist from the graph
+        edgelist_df = nx.to_pandas_edgelist(self.g)
+        # get metadata for the nodes and rename them based on source/target
+        sources = edgelist_df["source"].values.astype("int64")
+        targets = edgelist_df["target"].values.astype("int64")
+        source_meta = meta.loc[sources]
+        source_meta.index = pd.RangeIndex(len(source_meta))
+        target_meta = meta.loc[targets]
+        target_meta.index = pd.RangeIndex(len(target_meta))
+        source_meta.rename(_source_mapper, axis=1, inplace=True)
+        target_meta.rename(_target_mapper, axis=1, inplace=True)
+        # append to the columns of edgelist
+        edgelist_df = pd.concat(
+            (edgelist_df, source_meta, target_meta), axis=1, ignore_index=False
+        )
+        # add column of which pairs are incident to each edges
+        edgelist_df["edge pairs"] = list(
+            zip(edgelist_df["source Pair ID"], edgelist_df["target Pair ID"])
+        )
+        # specify whether this is ipsilateral or contralateral
+        edgelist_df["is_ipsi"] = (
+            edgelist_df["source Hemisphere"] == edgelist_df["target Hemisphere"]
+        )
+        # now that we have specified side as well, max # here is 2 (one on each side)
+        edgelist_df["edge pairs"] = list(
+            zip(edgelist_df["edge pairs"], edgelist_df["is_ipsi"])
+        )
+        edgelist_df = edgelist_df.sort_values("edge pairs", ascending=False)
+        # remove edges incident to an unpaired node
+        edgelist_df = edgelist_df[edgelist_df["target Pair ID"] != -1]
+        edgelist_df = edgelist_df[edgelist_df["source Pair ID"] != -1]
+        uni_edge_pairs, uni_edge_counts = np.unique(
+            edgelist_df["edge pairs"], return_counts=True
+        )
+        # give each edge pair an ID
+        edge_pair_map = dict(zip(uni_edge_pairs, range(len(uni_edge_pairs))))
+        edgelist_df["edge pair ID"] = itemgetter(*edgelist_df["edge pairs"])(
+            edge_pair_map
+        )
+        # count how many times each potential edge pair happens
+        edge_pair_count_map = dict(zip(uni_edge_pairs, uni_edge_counts))
+        edgelist_df["edge pair counts"] = itemgetter(*edgelist_df["edge pairs"])(
+            edge_pair_count_map
+        )
+        return edgelist_df
+
+
+def _source_mapper(name):
+    return "source " + name
+
+
+def _target_mapper(name):
+    return "target " + name
