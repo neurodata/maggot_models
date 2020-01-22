@@ -157,7 +157,7 @@ class MetaGraph:
         self.adj = self.adj[np.ix_(temp_inds, temp_inds)]
         return
 
-    def to_edgelist(self):
+    def to_edgelist(self, remove_unpaired=False):
         meta = self.meta
         # extract edgelist from the graph
         edgelist_df = nx.to_pandas_edgelist(self.g)
@@ -188,8 +188,9 @@ class MetaGraph:
         )
         edgelist_df = edgelist_df.sort_values("edge pairs", ascending=False)
         # remove edges incident to an unpaired node
-        edgelist_df = edgelist_df[edgelist_df["target Pair ID"] != -1]
-        edgelist_df = edgelist_df[edgelist_df["source Pair ID"] != -1]
+        if remove_unpaired:
+            edgelist_df = edgelist_df[edgelist_df["target Pair ID"] != -1]
+            edgelist_df = edgelist_df[edgelist_df["source Pair ID"] != -1]
         uni_edge_pairs, uni_edge_counts = np.unique(
             edgelist_df["edge pairs"], return_counts=True
         )
