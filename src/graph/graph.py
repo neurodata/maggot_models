@@ -10,16 +10,16 @@ from operator import itemgetter
 base_path = Path("maggot_models/data/raw/Maggot-Brain-Connectome")
 
 
-def _nx_to_numpy_pandas(g):
+def _nx_to_numpy_pandas(g, weight="weight"):
     node_data = dict(g.nodes(data=True))
     meta = pd.DataFrame().from_dict(node_data, orient="index")
     meta.index = meta.index.values.astype(int)
     nx_ids = np.array(list(g.nodes()), dtype=int)
-    df_adj = nx.to_pandas_adjacency(g)
+    df_adj = nx.to_pandas_adjacency(g, weight=weight)
     df_ids = df_adj.index.values.astype(int)
     if not np.array_equal(nx_ids, df_ids):
         raise ValueError("Networkx indexing is inconsistent with Pandas adjacency")
-    adj = nx.to_pandas_adjacency(g).values
+    adj = nx.to_pandas_adjacency(g, weight=weight).values
     return adj, meta
 
 
@@ -49,13 +49,14 @@ def _verify(source, target, n_checks):
 
 class MetaGraph:
     # init using a nx graph or an adjacency and metadata
-    def __init__(self, graph, meta=None):
+    def __init__(self, graph, meta=None, weight="weight"):
         if isinstance(graph, (nx.Graph, nx.DiGraph)):
             graph = graph.copy()
             self.g = graph
-            adj, meta = _nx_to_numpy_pandas(graph)
+            adj, meta = _nx_to_numpy_pandas(graph, weight=weight)
             self.adj = adj
             self.meta = meta
+            self.weight = weight
         elif isinstance(graph, (np.ndarray)) and isinstance(meta, (pd.DataFrame)):
             graph = graph.copy()
             meta = meta.copy()
@@ -69,7 +70,7 @@ class MetaGraph:
 
     def _update_from_nx(self, g):
         self.g = g
-        adj, meta = _nx_to_numpy_pandas(g)
+        adj, meta = _nx_to_numpy_pandas(g, weight=self.weight)
         self.adj = adj
         self.meta = meta
         self.n_verts = adj.shape[0]

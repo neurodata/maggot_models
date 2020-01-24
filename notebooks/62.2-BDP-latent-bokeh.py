@@ -148,7 +148,7 @@ print(FNAME)
 BRAIN_VERSION = "2020-01-21"
 
 
-loadfile = "65.0-BDP-graph-contraction"
+loadfile = "66.0-BDP-procrustean-thresholds"
 df = pd.read_csv(f"maggot_models/notebooks/outs/{loadfile}/latent.csv")
 
 x = "dim 0"

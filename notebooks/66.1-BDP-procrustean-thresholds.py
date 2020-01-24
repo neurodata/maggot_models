@@ -109,161 +109,36 @@ def compute_neighbors_at_k(X, left_inds, right_inds, k_max=10):
     return neighbors_at_k
 
 
-# %% [markdown]
-# # For now, do not do any kind of max symmetrize stuff
-graph_type = "Gad"
-use_spl = False
-embed = "lse"
-remove_pdiff = True
-plus_c = True
-
-mg = load_metagraph(graph_type, BRAIN_VERSION)
-keep_inds = np.where(~mg["is_pdiff"])[0]
-mg = mg.reindex(keep_inds)
-
-n_original_verts = mg.n_verts
-mg = mg.make_lcc()
-edgelist_df = mg.to_edgelist()
-edgelist_df["source"] = edgelist_df["source"].astype("int64")
-edgelist_df["target"] = edgelist_df["target"].astype("int64")
-max_pair_edges = edgelist_df.groupby("edge pair ID", sort=False)["weight"].max()
-edge_max_weight_map = dict(zip(max_pair_edges.index.values, max_pair_edges.values))
-edgelist_df["max_weight"] = itemgetter(*edgelist_df["edge pair ID"])(
-    edge_max_weight_map
-)
-temp_df = edgelist_df[edgelist_df["edge pair ID"] == 0]
-edgelist_df.loc[temp_df.index, "max_weight"] = temp_df["weight"]
-
-rows = []
-neigh_probs = []
-thresholds = np.linspace(0, 7, 8)
-for threshold in thresholds:
-    thresh_df = edgelist_df[edgelist_df["max_weight"] > threshold]
-    nodelist = list(mg.g.nodes())
-    nodelist = [int(i) for i in nodelist]
-    thresh_g = nx.from_pandas_edgelist(
-        thresh_df, edge_attr=True, create_using=nx.DiGraph
-    )
-    nx.set_node_attributes(thresh_g, mg.meta.to_dict(orient="index"))
-    thresh_g = get_lcc(thresh_g)
-    n_verts = len(thresh_g)
-
-    n_missing = 0
-    for n, data in thresh_g.nodes(data=True):
-        pair = data["Pair"]
-        pair_id = data["Pair ID"]
-        if pair != -1:
-            if pair not in thresh_g:
-                thresh_g.node[n]["Pair"] = -1
-                thresh_g.node[n]["Pair ID"] = -1
-                n_missing += 1
-
-    mg = MetaGraph(thresh_g)
-    meta = mg.meta
+def get_paired_inds(meta):
+    meta = meta.copy()
     meta["Original index"] = range(len(meta))
     left_paired_df = meta[(meta["Pair"] != -1) & (meta["Hemisphere"] == "L")]
     left_paired_inds = left_paired_df["Original index"].values
     pairs = left_paired_df["Pair"]
     right_paired_inds = meta.loc[pairs, "Original index"].values
-    left_inds = meta[meta["Hemisphere"] == "L"]["Original index"].values
-    right_inds = meta[meta["Hemisphere"] == "R"]["Original index"].values
 
-    adj = mg.adj.copy()
-    colsums = np.sum(adj, axis=0)
-    colsums[colsums == 0] = 1
-    adj = adj / colsums[np.newaxis, :]
-    print(np.sum(adj, axis=0))
-    adj = pass_to_ranks(adj)
-    if use_spl:
-        adj = graph_shortest_path(adj)
-    if plus_c:
-        adj += 1 * np.min(adj)
-    # latent = LaplacianSpectralEmbed(form="R-DAD", n_components=None).fit_transform(adj)
-    # latent = np.concatenate(latent, axis=-1)
+    return left_paired_inds, right_paired_inds
 
-    if embed == "lse":
-        latent = lse(adj, None, ptr=False)
-    elif embed == "ase":
-        latent = ase(adj, None, ptr=False)
+
+def procrustes_match(latent, meta):
+    left_inds = np.where(meta["Hemisphere"] == "L")
+    left_paired_inds, right_paired_inds = get_paired_inds(meta)
 
     left_paired_latent = latent[left_paired_inds]
     right_paired_latent = latent[right_paired_inds]
+
     R, scalar = orthogonal_procrustes(left_paired_latent, right_paired_latent)
-
-    n_components = latent.shape[1]
-
     diff = np.linalg.norm(left_paired_latent @ R - right_paired_latent, ord="fro")
 
     rot_latent = latent
     rot_latent[left_inds] = latent[left_inds] @ R
+    return rot_latent, diff
 
-    plot_df = pd.DataFrame(data=rot_latent)
-    plot_df["Class"] = mg["Class 1"]
-    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-    sns.scatterplot(x=0, y=1, data=plot_df, hue="Class", legend=False, ax=ax)
-    ax.set_title(f"Residual F. norm = {diff}, threshold = {threshold}")
-
-    temp_neigh_probs = compute_neighbors_at_k(
-        rot_latent, left_paired_inds, right_paired_inds, k_max=10
-    )
-
-    neigh_probs.append(temp_neigh_probs)
-
-    row = {
-        "threshold": threshold,
-        "Residual F-norm": diff,
-        "n_verts": n_verts,
-        "Norm. Resid. F-norm": diff / n_verts,
-    }
-    rows.append(row)
-
-
-neigh_mat = np.array(neigh_probs)
-res_df = pd.DataFrame(rows)
-for i in range(1, 11):
-    res_df[i] = neigh_mat[:, i - 1]
-
-title = f"{graph_type}, SPL = {use_spl}, Embed = {embed}, + C = {plus_c}"
-base_save = f"-{graph_type}-spl{use_spl}-e{embed}-pc{plus_c}"
-
-fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-sns.scatterplot(x="threshold", y="Residual F-norm", data=res_df, legend=False, ax=ax)
-ax.set_title(title)
-stashfig("threshold-vs-f-norm" + base_save)
-
-fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-sns.scatterplot(
-    x="threshold", y="Norm. Resid. F-norm", data=res_df, legend=False, ax=ax
-)
-ax.set_ylim((0, res_df["Norm. Resid. F-norm"].max() * 1.05))
-ax.set_title(title)
-stashfig(f"threshold-vs-norm-f-norm" + base_save)
-
-fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-sns.scatterplot(x="threshold", y="n_verts", data=res_df, legend=False, ax=ax)
-ax.set_title(title)
-stashfig(f"threshold-vs-n-verts" + base_save)
-
-knn_df = pd.melt(
-    res_df.drop(["Residual F-norm", "n_verts", "Norm. Resid. F-norm"], axis=1),
-    id_vars=["threshold"],
-    var_name="K",
-    value_name="P(Pair w/in KNN)",
-)
-fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-sns.lineplot(
-    x="threshold",
-    y="P(Pair w/in KNN)",
-    data=knn_df,
-    hue="K",
-    palette=sns.color_palette("Reds", knn_df["K"].nunique()),
-)
-plt.legend(bbox_to_anchor=(1.08, 1), loc=2, borderaxespad=0.0)
-ax.set_title(title)
-stashfig(f"threshold-vs-knn" + base_save)
 
 # %% [markdown]
 # #
+
+
 graph_type = "Gad"
 use_spl = False
 embed = "lse"
@@ -271,31 +146,40 @@ remove_pdiff = True
 plus_c = True
 
 mg = load_metagraph(graph_type, BRAIN_VERSION)
-keep_inds = np.where(~mg["is_pdiff"])[0]
-mg = mg.reindex(keep_inds)
-n_original_verts = mg.n_verts
-mg = mg.make_lcc()
-edgelist_df = mg.to_edgelist()
-edgelist_df.rename(columns={"weight": "syn_weight"}, inplace=True)
-edgelist_df["norm_weight"] = (
-    edgelist_df["syn_weight"] / edgelist_df["target dendrite_input"]
-)
 
-max_pair_edges = edgelist_df.groupby("edge pair ID", sort=False)["syn_weight"].max()
-edge_max_weight_map = dict(zip(max_pair_edges.index.values, max_pair_edges.values))
-edgelist_df["max_syn_weight"] = itemgetter(*edgelist_df["edge pair ID"])(
-    edge_max_weight_map
-)
-temp_df = edgelist_df[edgelist_df["edge pair ID"] == 0]
-edgelist_df.loc[temp_df.index, "max_syn_weight"] = temp_df["syn_weight"]
 
-max_pair_edges = edgelist_df.groupby("edge pair ID", sort=False)["norm_weight"].max()
-edge_max_weight_map = dict(zip(max_pair_edges.index.values, max_pair_edges.values))
-edgelist_df["max_norm_weight"] = itemgetter(*edgelist_df["edge pair ID"])(
-    edge_max_weight_map
-)
-temp_df = edgelist_df[edgelist_df["edge pair ID"] == 0]
-edgelist_df.loc[temp_df.index, "max_norm_weight"] = temp_df["norm_weight"]
+def preprocess(mg, remove_pdiff=True):
+    n_original_verts = mg.n_verts
+
+    if remove_pdiff:
+        keep_inds = np.where(~mg["is_pdiff"])[0]
+        mg = mg.reindex(keep_inds)
+        print(f"Removed {n_original_verts - len(mg.meta)} partially differentiated")
+
+    mg = mg.make_lcc()
+    edgelist_df = mg.to_edgelist()
+    edgelist_df.rename(columns={"weight": "syn_weight"}, inplace=True)
+    edgelist_df["norm_weight"] = (
+        edgelist_df["syn_weight"] / edgelist_df["target dendrite_input"]
+    )
+
+    max_pair_edges = edgelist_df.groupby("edge pair ID", sort=False)["syn_weight"].max()
+    edge_max_weight_map = dict(zip(max_pair_edges.index.values, max_pair_edges.values))
+    edgelist_df["max_syn_weight"] = itemgetter(*edgelist_df["edge pair ID"])(
+        edge_max_weight_map
+    )
+    temp_df = edgelist_df[edgelist_df["edge pair ID"] == 0]
+    edgelist_df.loc[temp_df.index, "max_syn_weight"] = temp_df["syn_weight"]
+
+    max_pair_edges = edgelist_df.groupby("edge pair ID", sort=False)[
+        "norm_weight"
+    ].max()
+    edge_max_weight_map = dict(zip(max_pair_edges.index.values, max_pair_edges.values))
+    edgelist_df["max_norm_weight"] = itemgetter(*edgelist_df["edge pair ID"])(
+        edge_max_weight_map
+    )
+    temp_df = edgelist_df[edgelist_df["edge pair ID"] == 0]
+    edgelist_df.loc[temp_df.index, "max_norm_weight"] = temp_df["norm_weight"]
 
 
 rows = []
@@ -325,13 +209,6 @@ for threshold in thresholds:
 
     mg = MetaGraph(thresh_g, weight="max_norm_weight")
     meta = mg.meta
-    meta["Original index"] = range(len(meta))
-    left_paired_df = meta[(meta["Pair"] != -1) & (meta["Hemisphere"] == "L")]
-    left_paired_inds = left_paired_df["Original index"].values
-    pairs = left_paired_df["Pair"]
-    right_paired_inds = meta.loc[pairs, "Original index"].values
-    left_inds = meta[meta["Hemisphere"] == "L"]["Original index"].values
-    right_inds = meta[meta["Hemisphere"] == "R"]["Original index"].values
 
     adj = mg.adj.copy()
     colsums = np.sum(adj, axis=0)
@@ -348,16 +225,8 @@ for threshold in thresholds:
     elif embed == "ase":
         latent = ase(adj, None, ptr=False)
 
-    left_paired_latent = latent[left_paired_inds]
-    right_paired_latent = latent[right_paired_inds]
-    R, scalar = orthogonal_procrustes(left_paired_latent, right_paired_latent)
-
+    rot_latent, diff = procrustes_match(latent, meta)
     n_components = latent.shape[1]
-
-    diff = np.linalg.norm(left_paired_latent @ R - right_paired_latent, ord="fro")
-
-    rot_latent = latent
-    rot_latent[left_inds] = latent[left_inds] @ R
 
     plot_df = pd.DataFrame(data=rot_latent)
     plot_df["Class"] = mg["Class 1"]
@@ -365,6 +234,7 @@ for threshold in thresholds:
     sns.scatterplot(x=0, y=1, data=plot_df, hue="Class", legend=False, ax=ax)
     ax.set_title(f"Residual F. norm = {diff}, threshold = {threshold}")
 
+    left_paired_inds, right_paired_inds = get_paired_inds(latent, meta)
     temp_neigh_probs = compute_neighbors_at_k(
         rot_latent, left_paired_inds, right_paired_inds, k_max=10
     )
