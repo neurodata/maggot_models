@@ -183,7 +183,7 @@ right_latent = latent[n_pairs : 2 * n_pairs, :]
 R, scalar = orthogonal_procrustes(left_latent, right_latent)
 
 n_components = latent.shape[1]
-class_labels = sym_mg["Class 1"]
+class_labels = sym_mg["lineage"]
 n_unique = len(np.unique(class_labels))
 sym_mg.meta["Original index"] = range(len(sym_mg.meta))
 left_df = sym_mg.meta[sym_mg.meta["Hemisphere"] == "L"]
@@ -201,7 +201,7 @@ df.index.name = "Skeleton ID"
 x = "dim 0"
 y = "dim 1"
 
-color_by = "Class 1"
+color_by = "lineage"
 uni_color_classes = np.unique(df[color_by])
 colormap = dict(zip(uni_color_classes, cc.glasbey_light))
 colors = np.array(itemgetter(*df[color_by])(colormap))
@@ -238,49 +238,43 @@ def create_figure():
     scatter_fig.xgrid.visible = False
     scatter_fig.ygrid.visible = False
 
-    legend_it = []
-    for c in uni_color_classes:
-        temp_df = df[df[color_by] == c]
-        temp_source = ColumnDataSource(temp_df)
-        out = scatter_fig.circle(
-            x=x.value,
-            y=y.value,
-            source=temp_source,
-            alpha=0.6,
-            line_color=None,
-            fill_color="colors",
-            # legend_group=color_by,
-        )
-        legend_it.append((c, [out]))
-        # selected = Circle(fill_alpha=1)
-        # nonselected = Circle(fill_alpha=0.2)
-        # out.selection_glyph = selected
-        # out.nonselection_glyph = nonselected
+    # selected = Circle(fill_alpha=1)
+    # nonselected = Circle(fill_alpha=0.2)
+    # out.selection_glyph = selected
+    # out.nonselection_glyph = nonselected
 
     out = scatter_fig.circle(
         x=x.value,
         y=y.value,
         source=source,
-        alpha=0.1,
+        alpha=0.6,
         line_color=None,
         fill_color="colors",
-        # legend_group=color_by,
+        # legend
+        legend_group=color_by,
     )
+    # scatter_fig.legend.label_text_font_size = "5pt"
+    # # scatter_fig.legend.orientation = ""
+    # scatter_fig.legend.location = (0, 0)
+    # scatter_fig.legend.padding = 0
+    # scatter_fig.legend.margin = 0
+    scatter_fig.legend.location = (-1000, 0)
 
+    legend_it = scatter_fig.legend.items.copy()
     legend = Legend(items=legend_it[: len(legend_it) // 2], location=(0, 0))
-    legend.click_policy = "hide"
-    legend.label_text_font_size = "5pt"
-    legend.orientation = "horizontal"
+    legend.label_text_font_size = "6pt"
     legend.padding = 0
     legend.margin = 0
+    legend.orientation = "horizontal"
+
     legend2 = Legend(items=legend_it[len(legend_it) // 2 :], location=(0, 0))
-    legend2.click_policy = "hide"
     legend2.label_text_font_size = "6pt"
     legend2.orientation = "horizontal"
     legend2.padding = 0
     legend2.margin = 0
     scatter_fig.add_layout(legend, "below")
     scatter_fig.add_layout(legend2, "below")
+
     return scatter_fig
 
 
@@ -320,7 +314,6 @@ layout = row(left_col, right_col)
 
 curdoc().add_root(layout)
 curdoc().title = BRAIN_VERSION
-show(layout)
 # html = file_html(scatter_fig, CDN, "mb_adj")
 # with open("full_new_adj.html", "w") as f:
 #     f.write(html)

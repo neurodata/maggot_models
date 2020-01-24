@@ -217,17 +217,24 @@ meta_data_df.loc[right_to_left_df.index, "Pair ID"] = right_to_left_df["pair_id"
 lineage_df = pd.read_csv(lineage_file)
 lineage_df = lineage_df.set_index("skeleton_id")
 lineage_df = lineage_df.fillna("unk")
+
+
+def filter(string):
+    string = string.replace("akira", "")
+    string = string.replace("Lineage", "")
+    string = string.replace("*", "")
+    string = string.strip("_")
+    string = string.strip(" ")
+    string = string.replace("_r", "")
+    string = string.replace("_l", "")
+    return string
+
+
+lineages = lineage_df["lineage"]
+lineages = np.vectorize(filter)(lineages)
 meta_data_df["lineage"] = "unk"
-meta_data_df.loc[lineage_df.index, "lineage"] = lineage_df["lineage"]
-# meta_data_df = meta_data_df.fillna(-1)
+meta_data_df.loc[lineage_df.index, "lineage"] = lineages  # lineage_df["lineage"]
 nulls = meta_data_df[meta_data_df.isnull().any(axis=1)]
-print(nulls.isnull())
-# ASK MICHAEL ABOUT THIS TO VERiFY
-
-
-#%%
-meta_data_dict = meta_data_df.to_dict(orient="index")
-print(meta_data_df.head())
 
 input_counts_path = data_path / data_date_graphs / (input_counts_file + ".csv")
 input_counts_df = pd.read_csv(input_counts_path, index_col=0)
@@ -235,6 +242,15 @@ cols = input_counts_df.columns.values
 cols = [str(c).strip(" ") for c in cols]
 input_counts_df.columns = cols
 print(input_counts_df.head())
+
+meta_data_df.loc[input_counts_df.index, "dendrite_input"] = input_counts_df[
+    "dendrite_inputs"
+]
+meta_data_df.loc[input_counts_df.index, "axon_input"] = input_counts_df["axon_inputs"]
+
+print(meta_data_df.head())
+
+meta_data_dict = meta_data_df.to_dict(orient="index")
 
 
 #%% Import the raw graphs
@@ -255,6 +271,7 @@ df_graphs_norm = {}
 nx_graphs_norm = {}
 
 input_counts = input_counts_df["axon_inputs"].values
+
 input_counts[input_counts == 0] = 1
 for graph_type in ["axon-axon", "dendrite-axon"]:
     print(graph_type)

@@ -148,58 +148,16 @@ print(FNAME)
 BRAIN_VERSION = "2020-01-21"
 
 
-# %% [markdown]
-# #
-thresh = 2
-mg = load_metagraph("Gad", BRAIN_VERSION)
-mg.adj[mg.adj < thresh] = 0
-mg, n_pairs = pair_augment(mg)
-
-left_pair_ids = mg["Pair ID"][:n_pairs]
-right_pair_ids = mg["Pair ID"][n_pairs : 2 * n_pairs]
-print((left_pair_ids == right_pair_ids).all())
-
-sym_mg = max_symmetrize(mg, n_pairs)
-left_pair_ids = sym_mg["Pair ID"][:n_pairs]
-right_pair_ids = sym_mg["Pair ID"][n_pairs : 2 * n_pairs]
-print((left_pair_ids == right_pair_ids).all())
-
-sym_mg.make_lcc()
-n_pairs = sym_mg.meta["Pair ID"].nunique() - 1
-left_pair_ids = sym_mg["Pair ID"][:n_pairs]
-right_pair_ids = sym_mg["Pair ID"][n_pairs : 2 * n_pairs]
-print((left_pair_ids == right_pair_ids).all())
-
-uni_pair, counts = np.unique(sym_mg["Pair ID"], return_counts=True)
-print(np.min(counts))
-# %% [markdown]
-# #
-left_pair_ids = sym_mg["Pair ID"][:n_pairs]
-right_pair_ids = sym_mg["Pair ID"][n_pairs : 2 * n_pairs]
-
-latent = lse(sym_mg.adj, n_components=None)
-left_latent = latent[:n_pairs, :]
-right_latent = latent[n_pairs : 2 * n_pairs, :]
-R, scalar = orthogonal_procrustes(left_latent, right_latent)
-
-n_components = latent.shape[1]
-class_labels = sym_mg["Class 1"]
-n_unique = len(np.unique(class_labels))
-sym_mg.meta["Original index"] = range(len(sym_mg.meta))
-left_df = sym_mg.meta[sym_mg.meta["Hemisphere"] == "L"]
-left_inds = left_df["Original index"].values
-left_latent = latent[left_inds, :]
-left_latent = left_latent @ R
-latent[left_inds, :] = left_latent
-
-latent_cols = [f"dim {i}" for i in range(latent.shape[1])]
-latent_df = pd.DataFrame(data=latent, index=sym_mg.meta.index, columns=latent_cols)
-
-df = pd.concat((sym_mg.meta, latent_df), axis=1)
-df.index.name = "Skeleton ID"
+loadfile = "65.0-BDP-graph-contraction"
+df = pd.read_csv(f"maggot_models/notebooks/outs/{loadfile}/latent.csv")
 
 x = "dim 0"
 y = "dim 1"
+
+latent_cols = []
+for i in df.columns:
+    if "dim" in i:
+        latent_cols.append(i)
 
 color_by = "Class 1"
 uni_color_classes = np.unique(df[color_by])
@@ -238,49 +196,43 @@ def create_figure():
     scatter_fig.xgrid.visible = False
     scatter_fig.ygrid.visible = False
 
-    legend_it = []
-    for c in uni_color_classes:
-        temp_df = df[df[color_by] == c]
-        temp_source = ColumnDataSource(temp_df)
-        out = scatter_fig.circle(
-            x=x.value,
-            y=y.value,
-            source=temp_source,
-            alpha=0.6,
-            line_color=None,
-            fill_color="colors",
-            # legend_group=color_by,
-        )
-        legend_it.append((c, [out]))
-        # selected = Circle(fill_alpha=1)
-        # nonselected = Circle(fill_alpha=0.2)
-        # out.selection_glyph = selected
-        # out.nonselection_glyph = nonselected
+    # selected = Circle(fill_alpha=1)
+    # nonselected = Circle(fill_alpha=0.2)
+    # out.selection_glyph = selected
+    # out.nonselection_glyph = nonselected
 
     out = scatter_fig.circle(
         x=x.value,
         y=y.value,
         source=source,
-        alpha=0.1,
+        alpha=0.6,
         line_color=None,
         fill_color="colors",
-        # legend_group=color_by,
+        # legend
+        legend_group=color_by,
     )
+    # scatter_fig.legend.label_text_font_size = "5pt"
+    # # scatter_fig.legend.orientation = ""
+    # scatter_fig.legend.location = (0, 0)
+    # scatter_fig.legend.padding = 0
+    # scatter_fig.legend.margin = 0
+    scatter_fig.legend.location = (-1000, 0)
 
+    legend_it = scatter_fig.legend.items.copy()
     legend = Legend(items=legend_it[: len(legend_it) // 2], location=(0, 0))
-    legend.click_policy = "hide"
-    legend.label_text_font_size = "5pt"
-    legend.orientation = "horizontal"
+    legend.label_text_font_size = "6pt"
     legend.padding = 0
     legend.margin = 0
+    legend.orientation = "horizontal"
+
     legend2 = Legend(items=legend_it[len(legend_it) // 2 :], location=(0, 0))
-    legend2.click_policy = "hide"
     legend2.label_text_font_size = "6pt"
     legend2.orientation = "horizontal"
     legend2.padding = 0
     legend2.margin = 0
     scatter_fig.add_layout(legend, "below")
     scatter_fig.add_layout(legend2, "below")
+
     return scatter_fig
 
 
@@ -315,15 +267,8 @@ source.selected.on_change("indices", selection_change)
 controls = column(x, y, width=200)
 left_col = column(create_figure())
 right_col = column(row(controls), row(stats))
-# bottom_row = row(controls, stats)
 layout = row(left_col, right_col)
 
 curdoc().add_root(layout)
 curdoc().title = BRAIN_VERSION
-show(layout)
-# html = file_html(scatter_fig, CDN, "mb_adj")
-# with open("full_new_adj.html", "w") as f:
-#     f.write(html)
 
-
-# %%
