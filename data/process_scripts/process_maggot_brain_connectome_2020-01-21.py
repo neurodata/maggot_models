@@ -48,7 +48,7 @@ def df_to_nx(df, meta_data_dict):
     df.columns = c
     if not (c == r).all():
         raise ValueError("Mismatching df indexing")
-    graph = nx.from_pandas_adjacency(df, create_using=nx.DiGraph())
+    graph = nx.from_pandas_adjacency(df, create_using=nx.DiGraph)
     nx.set_node_attributes(graph, meta_data_dict)
     return graph
 

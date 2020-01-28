@@ -145,44 +145,7 @@ remove_pdiff = True
 plus_c = True
 
 mg = load_metagraph(graph_type, BRAIN_VERSION)
-g = load_networkx(graph_type, BRAIN_VERSION)
-source_bad = 3609202
-target_bad = 10934438
-source_ind = np.where(mg.meta.index == source_bad)[0]
-target_ind = np.where(mg.meta.index == target_bad)[0]
-print(mg.adj[source_ind, target_ind])
-try:
-    print(mg.g[source_bad])
-    mg.g[source_bad][target_bad]
-except KeyError:
-    print("Edge not present in mg.g")
 
-try:
-    print(g[source_bad])
-    g[source_bad][target_bad]
-except KeyError:
-    print("Edge not present in g")
-
-nodelist = np.array(list(g.nodes()))
-adj = nx.to_numpy_array(g, nodelist=nodelist)
-source_ind = np.where(nodelist == source_bad)[0]
-target_ind = np.where(nodelist == target_bad)[0]
-print(adj[source_ind, target_ind])
-
-# %% [markdown]
-# #
-
-perm_inds = list(range(len(mg.meta)))
-np.random.shuffle(perm_inds)
-
-edgelist_df = mg.to_edgelist()
-edgelist_df[edgelist_df["target dendrite_input"] == 0].head()
-# %% [markdown]
-# #
-meta = mg.meta
-print(meta.index)
-meta = meta.iloc[[0, 1, 2], :]
-print(meta.index)
 # %% [markdown]
 # #
 
@@ -196,7 +159,7 @@ def preprocess(mg, remove_pdiff=True):
     #     print(f"Removed {n_original_verts - len(mg.meta)} partially differentiated")
 
     mg = mg.make_lcc()
-    mg.verify(n_checks=100000, version=BRAIN_VERSION, graph_type="Gad")
+    mg.verify(n_checks=1000, version=BRAIN_VERSION, graph_type="Gad")
 
     edgelist_df = mg.to_edgelist()
     edgelist_df.rename(columns={"weight": "syn_weight"}, inplace=True)
@@ -224,10 +187,8 @@ def preprocess(mg, remove_pdiff=True):
     return edgelist_df
 
 
-# edgelist_df = preprocess(mg, remove_pdiff=True)
+edgelist_df = preprocess(mg, remove_pdiff=True)
 
-# %% [markdown]
-# #
 
 # %% [markdown]
 # #
@@ -235,8 +196,7 @@ rows = []
 neigh_probs = []
 thresholds = np.linspace(0, 6, 7)
 for threshold in thresholds:
-    thresh_df = edgelist_df[edgelist_df["max_norm_weight"] > 1]
-    # thresh_df = edgelist_df.copy()
+    thresh_df = edgelist_df[edgelist_df["max_norm_weight"] > 0.001]
     thresh_df = thresh_df[thresh_df["max_syn_weight"] > threshold]
     nodelist = list(mg.g.nodes())
     nodelist = [int(i) for i in nodelist]

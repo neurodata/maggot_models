@@ -19,8 +19,8 @@ meta.index = ["0", "1", "2", "3", "4"]
 print(meta)
 
 mg = MetaGraph(adj, meta)
-mg.make_lcc()
-# mg.reindex(np.array([4, 3, 1, 0]))
+# mg.make_lcc()
+mg.reindex(np.array([2, 3]))
 print(mg.meta)
 print(mg.adj)
 

@@ -76,7 +76,7 @@ def load_networkx(graph_type, version="2019-09-18-v2"):
     data_path = Path("maggot_models/data/processed")
     data_path = data_path / version
     file_path = data_path / (graph_type + ".graphml")
-    graph = nx.read_graphml(file_path)
+    graph = nx.read_graphml(file_path, node_type=int)
     return graph
 
 

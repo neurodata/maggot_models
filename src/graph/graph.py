@@ -13,13 +13,20 @@ base_path = Path("maggot_models/data/raw/Maggot-Brain-Connectome")
 def _nx_to_numpy_pandas(g, weight="weight"):
     node_data = dict(g.nodes(data=True))
     meta = pd.DataFrame().from_dict(node_data, orient="index")
-    meta.index = meta.index.values.astype(int)
-    nx_ids = np.array(list(g.nodes()), dtype=int)
-    df_adj = nx.to_pandas_adjacency(g, weight=weight)
-    df_ids = df_adj.index.values.astype(int)
-    if not np.array_equal(nx_ids, df_ids):
-        raise ValueError("Networkx indexing is inconsistent with Pandas adjacency")
-    adj = nx.to_pandas_adjacency(g, weight=weight).values
+    # nx_ids = list(node_data.keys())
+    # print(meta.index.values.astype(int))
+    # print(nx_ids)
+    # print()
+    # print(np.array_equal(nx_ids, meta.index.values))
+    # meta.index = meta.index.values.astype(int)
+    # nx_ids = np.array(list(g.nodes()))
+    df_adj = nx.to_pandas_adjacency(g, weight=weight, nodelist=meta.index)
+    # df_ids = df_adj.index.values
+    # if not np.array_equal(nx_ids, df_ids):
+    #     raise ValueError("Networkx indexing is inconsistent with Pandas adjacency")
+    # # adj = nx.to_pandas_adjacency(g, weight=weight).values
+    # adj = df_adj.
+    adj = df_adj.values
     return adj, meta
 
 
@@ -33,7 +40,7 @@ def _numpy_pandas_to_nx(adj, meta):
     g = nx.from_pandas_adjacency(adj_df, create_using=gtype)
     index = meta.index
     for c in meta.columns:
-        col_vals = meta[c]
+        col_vals = meta.loc[index, c]
         values = dict(zip(index, col_vals))
         nx.set_node_attributes(g, values, name=c)
     return g
@@ -84,17 +91,11 @@ class MetaGraph:
         self.n_verts = adj.shape[0]
 
     def reindex(self, perm_inds):
-        # adj = self.adj[np.ix_(perm_inds, perm_inds)]
-        # index = self.meta.index
-        # new_index = index[perm_inds]
-        # meta = self.meta.reindex(new_index)
-        # self._update_from_numpy_pandas(adj, meta)
-        self.adj = self.adj[np.ix_(perm_inds, perm_inds)]
-        # index = self.meta.index
-        # new_index = index[perm_inds]
-        # self.meta = self.meta.reindex(new_index)
+        adj = self.adj.copy()
+        adj = adj[np.ix_(perm_inds, perm_inds)]
+        self.adj = adj
         self.meta = self.meta.iloc[perm_inds, :]
-        self.g = _numpy_pandas_to_nx(self.adj, self.meta)
+        self.g = _numpy_pandas_to_nx(adj, self.meta)
         return self
 
     def prune(self):
@@ -180,7 +181,6 @@ class MetaGraph:
         meta = self.meta
         # extract edgelist from the graph
         edgelist_df = nx.to_pandas_edgelist(self.g)
-        print(edgelist_df)
         # get metadata for the nodes and rename them based on source/target
         sources = edgelist_df["source"].values.astype("int64")
         targets = edgelist_df["target"].values.astype("int64")
