@@ -97,9 +97,3 @@ match_df = pd.read_csv(filepath, index_col=0)
 match_df.rename(columns={"left.id": "left_id"}, inplace=True)
 print(match_df.head())
 
-
-# %% [markdown]
-# #
-
-#%%
-

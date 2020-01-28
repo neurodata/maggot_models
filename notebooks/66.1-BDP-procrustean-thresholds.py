@@ -92,7 +92,7 @@ def stashskel(name, ids, labels, colors=None, palette=None, **kws):
 
 
 def compute_neighbors_at_k(X, left_inds, right_inds, k_max=10):
-    nn = NearestNeighbors(radius=0, n_neighbors=k_max + 1, metric="cosine")
+    nn = NearestNeighbors(radius=0, n_neighbors=k_max + 1)  # metric="cosine")
     nn.fit(X)
     neigh_dist, neigh_inds = nn.kneighbors(X)
     is_neighbor_mat = np.zeros((X.shape[0], k_max), dtype=bool)
@@ -180,13 +180,17 @@ def preprocess(mg, remove_pdiff=True):
     )
     temp_df = edgelist_df[edgelist_df["edge pair ID"] == 0]
     edgelist_df.loc[temp_df.index, "max_norm_weight"] = temp_df["norm_weight"]
+    return edgelist_df
 
+
+edgelist_df = preprocess(mg, remove_pdiff=True)
 
 rows = []
 neigh_probs = []
-thresholds = np.linspace(0, 0.05, 10)
+thresholds = np.linspace(0, 0.1, 20)
 for threshold in thresholds:
     thresh_df = edgelist_df[edgelist_df["max_syn_weight"] > 1]
+    # thresh_df = edgelist_df.copy()
     thresh_df = thresh_df[thresh_df["max_norm_weight"] > threshold]
     nodelist = list(mg.g.nodes())
     nodelist = [int(i) for i in nodelist]
@@ -211,9 +215,9 @@ for threshold in thresholds:
     meta = mg.meta
 
     adj = mg.adj.copy()
-    colsums = np.sum(adj, axis=0)
-    colsums[colsums == 0] = 1
-    adj = adj / colsums[np.newaxis, :]
+    # colsums = np.sum(adj, axis=0)
+    # colsums[colsums == 0] = 1
+    # adj = adj / colsums[np.newaxis, :]
     adj = pass_to_ranks(adj)
     if use_spl:
         adj = graph_shortest_path(adj)
@@ -226,6 +230,7 @@ for threshold in thresholds:
         latent = ase(adj, None, ptr=False)
 
     rot_latent, diff = procrustes_match(latent, meta)
+    rot_latent = latent
     n_components = latent.shape[1]
 
     plot_df = pd.DataFrame(data=rot_latent)
@@ -234,7 +239,7 @@ for threshold in thresholds:
     sns.scatterplot(x=0, y=1, data=plot_df, hue="Class", legend=False, ax=ax)
     ax.set_title(f"Residual F. norm = {diff}, threshold = {threshold}")
 
-    left_paired_inds, right_paired_inds = get_paired_inds(latent, meta)
+    left_paired_inds, right_paired_inds = get_paired_inds(meta)
     temp_neigh_probs = compute_neighbors_at_k(
         rot_latent, left_paired_inds, right_paired_inds, k_max=10
     )
@@ -255,8 +260,8 @@ res_df = pd.DataFrame(rows)
 for i in range(1, 11):
     res_df[i] = neigh_mat[:, i - 1]
 
-title = f"{graph_type}, SPL = {use_spl}, Embed = {embed}, + C = {plus_c}"
-base_save = f"-{graph_type}-spl{use_spl}-e{embed}-pc{plus_c}"
+title = f"{graph_type}, SPL = {use_spl}, Embed = {embed}, + C = {plus_c}, norm weight thresh"
+base_save = f"-{graph_type}-spl{use_spl}-e{embed}-pc{plus_c}-nwt"
 
 fig, ax = plt.subplots(1, 1, figsize=(10, 5))
 sns.scatterplot(x="threshold", y="Residual F-norm", data=res_df, legend=False, ax=ax)
@@ -294,6 +299,8 @@ plt.legend(bbox_to_anchor=(1.08, 1), loc=2, borderaxespad=0.0)
 ax.set_title(title)
 stashfig(f"threshold-vs-knn" + base_save)
 
+
+# %%
 
 # %%
 latent_cols = [f"dim {i}" for i in range(latent.shape[1])]

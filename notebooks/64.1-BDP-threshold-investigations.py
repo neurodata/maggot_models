@@ -99,6 +99,8 @@ remove_inds = input_df[input_df[" dendrite_inputs"] < input_thresh].index
 
 graph_type = "Gadn"
 mg = load_metagraph(graph_type, version=BRAIN_VERSION)
+# pdiff_inds = np.where(mg["is_pdiff"])[0]
+
 g = mg.g
 meta = mg.meta
 edgelist_df = mg.to_edgelist(remove_unpaired=True)

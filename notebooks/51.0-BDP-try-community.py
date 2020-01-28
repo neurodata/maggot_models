@@ -46,7 +46,7 @@ print(nx.__version__)
 
 # %% [markdown]
 # # Parameters
-BRAIN_VERSION = "2020-01-14"
+BRAIN_VERSION = "2020-01-21"
 
 SAVEFIGS = True
 SAVESKELS = False
@@ -122,7 +122,7 @@ g = load_networkx("Gn", version=BRAIN_VERSION)
 g_sym = nx.to_undirected(g)
 skeleton_labels = np.array(list(g_sym.nodes()))
 scales = [1]
-r = 1
+r = 0.5
 out_dict = cm.best_partition(g_sym, resolution=r)
 partition = np.array(itemgetter(*skeleton_labels.astype(str))(out_dict))
 adj = nx.to_numpy_array(g_sym, nodelist=skeleton_labels)
@@ -131,7 +131,7 @@ part_unique, part_count = np.unique(partition, return_counts=True)
 for uni, count in zip(part_unique, part_count):
     if count < 3:
         inds = np.where(partition == uni)[0]
-    partition[inds] = -1
+        partition[inds] = -1
 
 class_label_dict = nx.get_node_attributes(g_sym, "Class 1")
 class_labels = np.array(itemgetter(*skeleton_labels)(class_label_dict))

@@ -28,6 +28,7 @@ def _numpy_pandas_to_nx(adj, meta):
         gtype = nx.Graph
     else:
         gtype = nx.DiGraph
+    print(len(meta.index))
     adj_df = pd.DataFrame(data=adj, index=meta.index.values, columns=meta.index.values)
     g = nx.from_pandas_adjacency(adj_df, create_using=gtype)
     index = meta.index
@@ -75,14 +76,25 @@ class MetaGraph:
         self.meta = meta
         self.n_verts = adj.shape[0]
 
-    def _update_from_numpy_pandas(self, adj, g):
-        pass
+    def _update_from_numpy_pandas(self, adj, meta):
+        self.adj = adj
+        self.meta = meta
+        g = _numpy_pandas_to_nx(adj, meta)
+        self.g = g
+        self.n_verts = adj.shape[0]
 
     def reindex(self, perm_inds):
+        # adj = self.adj[np.ix_(perm_inds, perm_inds)]
+        # index = self.meta.index
+        # new_index = index[perm_inds]
+        # meta = self.meta.reindex(new_index)
+        # self._update_from_numpy_pandas(adj, meta)
         self.adj = self.adj[np.ix_(perm_inds, perm_inds)]
-        index = self.meta.index
-        new_index = index[perm_inds]
-        self.meta = self.meta.reindex(new_index)
+        # index = self.meta.index
+        # new_index = index[perm_inds]
+        # self.meta = self.meta.reindex(new_index)
+        self.meta = self.meta.iloc[perm_inds, :]
+        self.g = _numpy_pandas_to_nx(self.adj, self.meta)
         return self
 
     def prune(self):
@@ -96,11 +108,17 @@ class MetaGraph:
         # update nx
         # update adjacency matrix
         # update metadataframe
+        print(len(self.adj))
         lcc, inds = get_lcc(self.adj, return_inds=True)
+        print(inds)
+        print(len(inds))
         self.adj = lcc
         self.meta = self.meta.iloc[inds, :]
         self.g = _numpy_pandas_to_nx(self.adj, self.meta)
         self.n_verts = self.adj.shape[0]
+        # lcc = get_lcc(self.g)
+        # self._update_from_nx(lcc)
+        # _nx_to_numpy_pandas(lcc, weight=self.weight)
         return self
 
     def calculate_degrees(self):
@@ -162,6 +180,7 @@ class MetaGraph:
         meta = self.meta
         # extract edgelist from the graph
         edgelist_df = nx.to_pandas_edgelist(self.g)
+        print(edgelist_df)
         # get metadata for the nodes and rename them based on source/target
         sources = edgelist_df["source"].values.astype("int64")
         targets = edgelist_df["target"].values.astype("int64")

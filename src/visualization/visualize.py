@@ -782,6 +782,7 @@ def probplot(
     vmin=None,
     vmax=None,
     figsize=(10, 10),
+    fmt='.0f'
 ):
     cbar_kws = {"fraction": 0.08, "shrink": 0.8, "pad": 0.03}
 
@@ -815,7 +816,7 @@ def probplot(
         cmap=cmap,
         vmin=vmin,
         vmax=vmax,
-        fmt=".0f",
+        fmt=fmt,
     )
     if log_scale:
         heatmap_kws["norm"] = log_norm
@@ -896,7 +897,7 @@ def get_colors_hacky(true_labels, pred_labels):
 
 
 def clustergram(
-    adj, true_labels, pred_labels, figsize=(20, 20), title=None, color_dict=None,
+    adj, true_labels, pred_labels, figsize=(20, 20), title=None, color_dict=None
 ):
     fig, ax = plt.subplots(2, 2, figsize=figsize)
     ax = ax.ravel()
@@ -939,14 +940,17 @@ def get_block_edgesums(adj, pred_labels, sort_blocks):
     return block_sum_df
 
 
-def palplot(k, cmap="viridis"):
+def palplot(k, cmap="viridis", figsize=(1,10), ax=None, start=0, stop=None):
     pal = sns.color_palette(palette=cmap, n_colors=k)
-    fig, ax = plt.subplots(1, 1)
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
     pal = np.array(pal)
     pal = pal.reshape((k, 1, 3))
     ax.imshow(pal)
     ax.xaxis.set_major_locator(plt.NullLocator())
-    ax.yaxis.set_major_formatter(plt.FixedFormatter(np.arange(k, dtype=int)))
+    if stop is None: 
+        stop = len(pal) + start
+    ax.yaxis.set_major_formatter(plt.FixedFormatter(np.arange(start, stop, dtype=int)))
     ax.yaxis.set_major_locator(plt.FixedLocator(np.arange(k)))
     return ax
 
@@ -963,8 +967,8 @@ def stacked_barplot(
     bar_height=0.7,
     norm_bar_width=True,
     label_pos=None,
-    horizontal_pad=0.02, 
-    return_data=False, 
+    horizontal_pad=0.02,
+    return_data=False,
     color_dict=None,
 ):
     """
@@ -1003,18 +1007,18 @@ def stacked_barplot(
     sums = data.sum(axis=1)
     if norm_bar_width:
         norm_data = data / data.sum(axis=1)[:, np.newaxis]
-    else: 
+    else:
         norm_data = data.copy()
     data_cum = norm_data.cumsum(axis=1)
 
-    if color_dict is not None: 
+    if color_dict is not None:
         subcategory_colors = []
-        for sc in uni_subcat: 
+        for sc in uni_subcat:
             subcategory_colors.append(color_dict[sc])
-    else: 
+    else:
         if isinstance(palette, str):
             subcategory_colors = sns.color_palette(palette, n_colors=len(uni_subcat))
-        else: 
+        else:
             subcategory_colors = palette
 
     if ax is None:
@@ -1043,7 +1047,10 @@ def stacked_barplot(
             label_pos,
             widths,
             tick_label=labels,
-            left=starts, height=bar_height, label=colname, color=color
+            left=starts,
+            height=bar_height,
+            label=colname,
+            color=color,
         )
 
         # this puts small proportion numbers above bar segments
@@ -1070,7 +1077,7 @@ def stacked_barplot(
     )
     if return_data:
         return ax, data, uni_subcat, subcategory_colors
-    else: 
+    else:
         return ax
 
 
@@ -1223,7 +1230,7 @@ def get_color_dict(labels, pal="tab10", to_int=False):
     return color_dict
 
 
-def gridmap(A, ax=None, legend=False, sizes=(10, 70)):
+def gridmap(A, ax=None, legend=False, sizes=(10, 70), spines=False, border=True, **kws):
     if ax is None:
         _, ax = plt.subplots(1, 1, figsize=(20, 20))
     n_verts = A.shape[0]
@@ -1242,11 +1249,29 @@ def gridmap(A, ax=None, legend=False, sizes=(10, 70)):
         sizes=sizes,
         ax=ax,
         linewidth=0.3,
+        **kws,
     )
-    ax.axis("equal")
+    ax.axis("square")
     ax.set_xlim((0, n_verts))
     ax.set_ylim((n_verts, 0))
-    ax.axis("off")
+    if not spines:
+        remove_spines(ax)
+    if border:
+        linestyle_kws = {
+            "linestyle": "--",
+            "alpha": 0.5,
+            "linewidth": 2,
+            "color": "grey",
+        }
+        ax.axvline(0, **linestyle_kws)
+        ax.axvline(n_verts, **linestyle_kws)
+        ax.axhline(0, **linestyle_kws)
+        ax.axhline(n_verts, **linestyle_kws)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_ylabel("")
+    ax.set_xlabel("")
+    # ax.axis("off")
     return ax
 
 
