@@ -13,19 +13,7 @@ base_path = Path("maggot_models/data/raw/Maggot-Brain-Connectome")
 def _nx_to_numpy_pandas(g, weight="weight"):
     node_data = dict(g.nodes(data=True))
     meta = pd.DataFrame().from_dict(node_data, orient="index")
-    # nx_ids = list(node_data.keys())
-    # print(meta.index.values.astype(int))
-    # print(nx_ids)
-    # print()
-    # print(np.array_equal(nx_ids, meta.index.values))
-    # meta.index = meta.index.values.astype(int)
-    # nx_ids = np.array(list(g.nodes()))
     df_adj = nx.to_pandas_adjacency(g, weight=weight, nodelist=meta.index)
-    # df_ids = df_adj.index.values
-    # if not np.array_equal(nx_ids, df_ids):
-    #     raise ValueError("Networkx indexing is inconsistent with Pandas adjacency")
-    # # adj = nx.to_pandas_adjacency(g, weight=weight).values
-    # adj = df_adj.
     adj = df_adj.values
     return adj, meta
 
@@ -35,7 +23,6 @@ def _numpy_pandas_to_nx(adj, meta):
         gtype = nx.Graph
     else:
         gtype = nx.DiGraph
-    print(len(meta.index))
     adj_df = pd.DataFrame(data=adj, index=meta.index.values, columns=meta.index.values)
     g = nx.from_pandas_adjacency(adj_df, create_using=gtype)
     index = meta.index
@@ -109,17 +96,11 @@ class MetaGraph:
         # update nx
         # update adjacency matrix
         # update metadataframe
-        print(len(self.adj))
         lcc, inds = get_lcc(self.adj, return_inds=True)
-        print(inds)
-        print(len(inds))
         self.adj = lcc
         self.meta = self.meta.iloc[inds, :]
         self.g = _numpy_pandas_to_nx(self.adj, self.meta)
         self.n_verts = self.adj.shape[0]
-        # lcc = get_lcc(self.g)
-        # self._update_from_nx(lcc)
-        # _nx_to_numpy_pandas(lcc, weight=self.weight)
         return self
 
     def calculate_degrees(self):

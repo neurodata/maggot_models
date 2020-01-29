@@ -40,13 +40,7 @@ from src.embed import ase, lse, preprocess_graph
 from src.graph import MetaGraph
 from src.hierarchy import signal_flow
 from src.io import savefig, saveobj, saveskels
-from src.utils import (
-    get_blockmodel_df,
-    get_sbm_prob,
-    invert_permutation,
-    meta_to_array,
-    savefig,
-)
+from src.utils import get_blockmodel_df, get_sbm_prob, invert_permutation, meta_to_array
 from src.visualization import (
     bartreeplot,
     get_color_dict,
@@ -116,19 +110,14 @@ for edgeweight in range(1, max_edge + 1):
 result_df = pd.DataFrame(rows)
 result_df = result_df[result_df["n_edges"] != 0]
 
-# %% [markdown]
-# #
 fig, axs = plt.subplots(2, 1, figsize=(10, 15), sharex=True)
 sns.scatterplot(x="weight", y="p_edge_mirrored", data=result_df, ax=axs[0])
 sns.scatterplot(x="weight", y="n_edges", data=result_df, ax=axs[1])
-sns.scatterplot(x="weight", y="n_edges_unmirrored", data=result_df, ax=axs[1])
+stashfig("linear-scale-edge-sym")
 
-
-fig, axs = plt.subplots(3, 1, figsize=(10, 15), sharex=True)
+fig, axs = plt.subplots(2, 1, figsize=(10, 15), sharex=True)
 sns.scatterplot(x="weight", y="p_edge_mirrored", data=result_df, ax=axs[0])
 axs[0].set_yscale("log")
 sns.scatterplot(x="weight", y="n_edges", data=result_df, ax=axs[1])
 axs[1].set_yscale("log")
-sns.scatterplot(x="weight", y="n_edges_unmirrored", data=result_df, ax=axs[2])
-axs[2].set_yscale("log")
-
+stashfig("log-scale-edge-sym")

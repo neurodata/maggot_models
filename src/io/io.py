@@ -39,7 +39,7 @@ def savefig(
         savename = path / str(name + "." + fmt)
         plt.savefig(
             savename,
-            fmt=fmt,
+            format=fmt,
             facecolor="w",
             transparent=transparent,
             bbox_inches=bbox_inches,

@@ -146,17 +146,14 @@ plus_c = True
 
 mg = load_metagraph(graph_type, BRAIN_VERSION)
 
-# %% [markdown]
-# #
-
 
 def preprocess(mg, remove_pdiff=True):
-    # n_original_verts = mg.n_verts
+    n_original_verts = mg.n_verts
 
-    # if remove_pdiff:
-    #     keep_inds = np.where(~mg["is_pdiff"])[0]
-    #     mg = mg.reindex(keep_inds)
-    #     print(f"Removed {n_original_verts - len(mg.meta)} partially differentiated")
+    if remove_pdiff:
+        keep_inds = np.where(~mg["is_pdiff"])[0]
+        mg = mg.reindex(keep_inds)
+        print(f"Removed {n_original_verts - len(mg.meta)} partially differentiated")
 
     mg = mg.make_lcc()
     mg.verify(n_checks=1000, version=BRAIN_VERSION, graph_type="Gad")
@@ -188,10 +185,8 @@ def preprocess(mg, remove_pdiff=True):
 
 
 edgelist_df = preprocess(mg, remove_pdiff=True)
+len(edgelist_df)
 
-
-# %% [markdown]
-# #
 rows = []
 neigh_probs = []
 thresholds = np.linspace(0, 6, 7)

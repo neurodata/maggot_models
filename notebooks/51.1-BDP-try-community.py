@@ -30,11 +30,13 @@ from src.visualization import (
     bartreeplot,
     get_color_dict,
     get_colors,
+    palplot,
     probplot,
     sankey,
     screeplot,
     stacked_barplot,
 )
+from src.graph import MetaGraph
 
 warnings.simplefilter("ignore", category=FutureWarning)
 
@@ -77,109 +79,9 @@ def stashobj(obj, name, **kws):
     saveobj(obj, name, foldername=FNAME, save_on=SAVEOBJS, **kws)
 
 
-graph_type = "G"
-mg = load_metagraph(graph_type, version=BRAIN_VERSION)
-print(len(mg.meta))
-mg = mg.make_lcc()
-print(len(mg.meta))
-not_pdiff = np.where(~mg["is_pdiff"])[0]
-mg = mg.reindex(not_pdiff)
-print(len(mg.meta))
-g_sym = nx.to_undirected(mg.g)
-
-
 # %% [markdown]
 # #
-skeleton_labels = np.array(list(g_sym.nodes()))
-scales = [1]
-r = 0.3
-out_dict = cm.best_partition(g_sym, resolution=r)
-partition = np.array(itemgetter(*skeleton_labels)(out_dict))
-adj = nx.to_numpy_array(g_sym, nodelist=skeleton_labels)
-
-part_unique, part_count = np.unique(partition, return_counts=True)
-for uni, count in zip(part_unique, part_count):
-    if count < 3:
-        inds = np.where(partition == uni)[0]
-        partition[inds] = -1
-
-basename = f"louvain-res{r}-{graph_type}-"
-
-# barplot by class label
-class_label_dict = nx.get_node_attributes(g_sym, "Class 1")
-class_labels = np.array(itemgetter(*skeleton_labels)(class_label_dict))
-part_color_dict = dict(zip(np.unique(partition), cc.glasbey_warm))
-true_color_dict = dict(zip(np.unique(class_labels), cc.glasbey_light))
-color_dict = {**part_color_dict, **true_color_dict}
 sns.set_context("talk")
-fig, ax = plt.subplots(1, 1, figsize=(20, 20))
-stacked_barplot(
-    partition,
-    class_labels,
-    ax=ax,
-    color_dict=color_dict,
-    plot_proportions=False,
-    norm_bar_width=True,
-)
-stashfig(basename + "barplot-class1")
-
-# barplot by merge class label (more detail)
-class_label_dict = nx.get_node_attributes(g_sym, "Merge Class")
-class_labels = np.array(itemgetter(*skeleton_labels)(class_label_dict))
-part_color_dict = dict(zip(np.unique(partition), cc.glasbey_warm))
-true_color_dict = dict(zip(np.unique(class_labels), cc.glasbey_light))
-color_dict = {**part_color_dict, **true_color_dict}
-fig, ax = plt.subplots(1, 1, figsize=(20, 20))
-stacked_barplot(
-    partition,
-    class_labels,
-    ax=ax,
-    color_dict=color_dict,
-    plot_proportions=False,
-    norm_bar_width=True,
-)
-stashfig(basename + "barplot-mergeclass")
-
-# sorted heatmap
-heatmap(
-    mg.adj,
-    transform="simple-nonzero",
-    figsize=(20, 20),
-    inner_hier_labels=partition,
-    hier_label_fontsize=10,
-)
-stashfig(basename + "heatmap")
-
-# block probabilities
-counts = False
-weights = False
-prob_df = get_blockmodel_df(
-    mg.adj, partition, return_counts=counts, use_weights=weights
-)
-probplot(
-    100 * prob_df,
-    fmt="2.0f",
-    figsize=(20, 20),
-    title=f"Louvain, res = {r}, counts = {counts}, weights = {weights}",
-)
-stashfig(basename + f"probplot-counts{counts}-weights{weights}")
-
-weights = True
-prob_df = get_blockmodel_df(
-    mg.adj, partition, return_counts=counts, use_weights=weights
-)
-
-probplot(
-    100 * prob_df,
-    fmt="2.0f",
-    figsize=(20, 20),
-    title=f"Louvain, res = {r}, counts = {counts}, weights = {weights}",
-)
-stashfig(basename + f"probplot-counts{counts}-weights{weights}")
-
-# %% [markdown]
-# # Play with colormapping
-from src.visualization import palplot
 
 fig, axs = plt.subplots(1, 4, figsize=(5, 10))
 n_per_col = 40
@@ -187,10 +89,6 @@ for i, ax in enumerate(axs):
     pal = cc.glasbey_light[i * n_per_col : (i + 1) * n_per_col]
     palplot(n_per_col, pal, figsize=(1, 10), ax=ax, start=i * n_per_col)
 stashfig("glasbey-colors")
-
-# %% [markdown]
-# #
-print(np.unique(class_labels))
 
 manual_cmap = {
     "KC": 0,
@@ -250,22 +148,99 @@ colors = np.array(cc.glasbey_light)[color_inds]
 palplot(len(colors), colors, ax=ax)
 ax.yaxis.set_major_formatter(plt.FixedFormatter(names))
 stashfig("named-cmap")
-# %% [markdown]
-# #
 
-class_label_dict = nx.get_node_attributes(g_sym, "Merge Class")
-class_labels = np.array(itemgetter(*skeleton_labels)(class_label_dict))
-part_color_dict = dict(zip(np.unique(partition), cc.glasbey_warm))
-true_color_dict = dict(zip(names, colors))
-color_dict = {**part_color_dict, **true_color_dict}
-fig, ax = plt.subplots(1, 1, figsize=(20, 20))
-stacked_barplot(
-    partition,
-    class_labels,
-    ax=ax,
-    color_dict=color_dict,
-    plot_proportions=False,
-    norm_bar_width=True,
-)
-stashfig(basename + "barplot-mergeclass")
+
+graph_type = "Gadn"
+thresh = 0.01
+r = 0.3
+
+for graph_type in ["Gadn", "Gad", "G"]:
+    if graph_type[-1] == "n":
+        threshs = [0.01, 0.02]
+    else:
+        threshs = [1, 2, 3]
+    for thresh in threshs:
+        for r in [0.3, 0.5, 0.7, 1]:
+            mg = load_metagraph(graph_type, version=BRAIN_VERSION)
+            edgelist = mg.to_edgelist()
+            edgelist = edgelist[edgelist["weight"] > thresh]
+            nodelist = list(mg.g.nodes())
+            thresh_g = nx.from_pandas_edgelist(
+                edgelist, edge_attr=True, create_using=nx.DiGraph
+            )
+            nx.set_node_attributes(thresh_g, mg.meta.to_dict(orient="index"))
+            mg = MetaGraph(thresh_g)
+            print(len(mg.meta))
+            mg = mg.make_lcc()
+            print(len(mg.meta))
+            not_pdiff = np.where(~mg["is_pdiff"])[0]
+            mg = mg.reindex(not_pdiff)
+            print(len(mg.meta))
+            g_sym = nx.to_undirected(mg.g)
+            skeleton_labels = np.array(list(g_sym.nodes()))
+            out_dict = cm.best_partition(g_sym, resolution=r)
+            partition = np.array(itemgetter(*skeleton_labels)(out_dict))
+            adj = nx.to_numpy_array(g_sym, nodelist=skeleton_labels)
+
+            part_unique, part_count = np.unique(partition, return_counts=True)
+            for uni, count in zip(part_unique, part_count):
+                if count < 3:
+                    inds = np.where(partition == uni)[0]
+                    partition[inds] = -1
+
+            basename = f"louvain-res{r}-t{thresh}-{graph_type}-"
+
+            # barplot by merge class label (more detail)
+            class_label_dict = nx.get_node_attributes(g_sym, "Merge Class")
+            class_labels = np.array(itemgetter(*skeleton_labels)(class_label_dict))
+            part_color_dict = dict(zip(np.unique(partition), cc.glasbey_warm))
+            true_color_dict = dict(zip(names, colors))
+            color_dict = {**part_color_dict, **true_color_dict}
+            fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+            stacked_barplot(
+                partition,
+                class_labels,
+                ax=ax,
+                color_dict=color_dict,
+                plot_proportions=False,
+                norm_bar_width=True,
+            )
+            stashfig(basename + "barplot-mergeclass")
+
+            # sorted heatmap
+            heatmap(
+                mg.adj,
+                transform="simple-nonzero",
+                figsize=(20, 20),
+                inner_hier_labels=partition,
+                hier_label_fontsize=10,
+            )
+            stashfig(basename + "heatmap")
+
+            # block probabilities
+            counts = False
+            weights = False
+            prob_df = get_blockmodel_df(
+                mg.adj, partition, return_counts=counts, use_weights=weights
+            )
+            probplot(
+                100 * prob_df,
+                fmt="2.0f",
+                figsize=(20, 20),
+                title=f"Louvain, res = {r}, counts = {counts}, weights = {weights}",
+            )
+            stashfig(basename + f"probplot-counts{counts}-weights{weights}")
+
+            weights = True
+            prob_df = get_blockmodel_df(
+                mg.adj, partition, return_counts=counts, use_weights=weights
+            )
+
+            probplot(
+                100 * prob_df,
+                fmt="2.0f",
+                figsize=(20, 20),
+                title=f"Louvain, res = {r}, counts = {counts}, weights = {weights}",
+            )
+            stashfig(basename + f"probplot-counts{counts}-weights{weights}")
 
