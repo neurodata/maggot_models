@@ -16,5 +16,6 @@ from .visualize import (
     gridmap,
     remove_spines,
     distplot,
+    draw_networkx_nice,
 )
 from .stack_seaborn import countplot, freqplot

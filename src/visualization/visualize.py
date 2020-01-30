@@ -4,10 +4,13 @@ from operator import itemgetter
 
 import colorcet as cc
 import matplotlib
+import matplotlib.colors as mplc
 import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.cm import ScalarMappable
 from matplotlib.colors import LogNorm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.cluster.hierarchy import dendrogram, linkage
@@ -17,7 +20,7 @@ from graspy.embed import select_dimension, selectSVD
 from graspy.models import SBMEstimator
 from graspy.plot import heatmap
 from graspy.utils import binarize, cartprod
-from src.utils import savefig, get_sbm_prob
+from src.utils import get_sbm_prob, savefig
 
 
 def _sort_inds(graph, inner_labels, outer_labels, sort_nodes):
@@ -1322,4 +1325,93 @@ def distplot(
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
 
+    return ax
+
+
+def draw_networkx_nice(
+    g,
+    x_pos,
+    y_pos,
+    sizes=None,
+    colors=None,
+    nodelist=None,
+    cmap="Blues",
+    ax=None,
+    x_boost=0,
+    y_boost=0,
+    draw_axes_arrows=False,
+    vmin=None,
+    vmax=None,
+    weight_scale=1,
+):
+    if nodelist is None:
+        nodelist = g.nodes()
+    weights = nx.get_edge_attributes(g, "weight")
+
+    x_attr_dict = nx.get_node_attributes(g, x_pos)
+    y_attr_dict = nx.get_node_attributes(g, y_pos)
+
+    pos = {}
+    label_pos = {}
+    for n in nodelist:
+        pos[n] = (x_attr_dict[n], y_attr_dict[n])
+        label_pos[n] = (x_attr_dict[n] + x_boost, y_attr_dict[n] + y_boost)
+
+    if sizes is not None:
+        size_attr_dict = nx.get_node_attributes(g, sizes)
+        node_size = []
+        for n in nodelist:
+            node_size.append(size_attr_dict[n])
+
+    if colors is not None:
+        color_attr_dict = nx.get_node_attributes(g, colors)
+        node_color = []
+        for n in nodelist:
+            node_color.append(color_attr_dict[n])
+
+    weight_array = np.array(list(weights.values()))
+    norm = LogNorm(vmin=vmin, vmax=vmax, clip=True)
+
+    # norm = mplc.Normalize(vmin=0, vmax=weight_array.max())
+    sm = ScalarMappable(cmap=cmap, norm=norm)
+    cmap = sm.to_rgba(weight_array)
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(30, 30), frameon=False)
+
+    node_collection = nx.draw_networkx_nodes(
+        g, pos, node_color=node_color, node_size=node_size, with_labels=False, ax=ax
+    )
+    n_squared = len(nodelist) ** 2  # maximum z-order so far
+    node_collection.set_zorder(n_squared)
+
+    edgelist = list(g.edges(data=True))
+    weights = []
+    for edge in edgelist:
+        weight = edge[2]["weight"]
+        weights.append(weight)
+    weights = np.array(weights)
+    
+    nx.draw_networkx_edges(
+        g,
+        pos,
+        edgelist=edgelist,
+        edge_color=cmap,
+        width=weight_scale*weights + 0.1,
+        # connectionstyle="arc3,rad=0.2",
+        arrows=True,
+        # width=1.5,
+        ax=ax,
+    )
+
+    text_items = nx.draw_networkx_labels(g, label_pos, ax=ax, font_size=20)
+
+    # make sure the labels are above all in z order
+    for _, t in text_items.items():
+        t.set_zorder(n_squared + 1)
+
+    ax.set_xlabel(x_pos)
+    ax.set_ylabel(y_pos)
+    # plt.box(False)
+    fig.set_facecolor("w")
     return ax
