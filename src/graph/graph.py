@@ -4,6 +4,7 @@ import pandas as pd
 from graspy.utils import is_almost_symmetric, get_lcc
 from pathlib import Path
 from operator import itemgetter
+from tqdm import tqdm
 
 # helper functions
 
@@ -33,7 +34,7 @@ def _numpy_pandas_to_nx(adj, meta):
     return g
 
 
-def _verify(source, target, n_checks):
+def _verify_networkx(source, target, n_checks):
     edgelist = list(source.edges)
     for i in range(n_checks):
         edge_ind = np.random.choice(len(edgelist))
@@ -142,12 +143,12 @@ class MetaGraph:
         else:
             raise KeyError(f"Key {n} not present as column in MetaGraph")
 
-    def verify(self, n_checks=1000, version="2019-12-18", graph_type="G"):
+    def verify_networkx(self, n_checks=1000, version="2019-12-18", graph_type="G"):
         from src.data import load_networkx
 
         raw_g = load_networkx(graph_type, version)
-        _verify(self.g, raw_g, n_checks)
-        _verify(raw_g, self.g, n_checks)
+        _verify_networkx(self.g, raw_g, n_checks)
+        _verify_networkx(raw_g, self.g, n_checks)
 
     def sort_values(self, sortby, ascending=False):
         self.meta["Original index"] = range(self.meta.shape[0])
@@ -156,7 +157,7 @@ class MetaGraph:
         )
         temp_inds = self.meta["Original index"]
         self.adj = self.adj[np.ix_(temp_inds, temp_inds)]
-        return
+        return self
 
     def to_edgelist(self, remove_unpaired=False):
         meta = self.meta
@@ -206,6 +207,45 @@ class MetaGraph:
             edge_pair_count_map
         )
         return edgelist_df
+
+    def __len__(self):
+        assert self.adj.shape[0] == len(self.g)
+        return self.adj.shape[0]
+
+    def verify(self, n_checks=1000, version="2020-01-29", graph_type="G"):
+        name_map = {
+            "Gaa": "axon-axon",
+            "Gad": "axon-dendrite",
+            "Gda": "dendrite-axon",
+            "Gdd": "dendrite-dendrite",
+            "Gaan": "axon-axon",
+            "Gadn": "axon-dendrite",
+            "Gdan": "dendrite-axon",
+            "Gddn": "dendrite-dendrite",
+        }
+        raw_path = Path(
+            "maggot_models/data/raw/Maggot-Brain-Connectome/4-color-matrices_Brain"
+        )
+        raw_path = raw_path / version
+        filename = name_map[graph_type]
+        raw_path = raw_path / str(filename + ".csv")
+        adj_df = pd.read_csv(raw_path, index_col=0, header=0)
+        adj_df.columns = adj_df.index
+        nonzero_inds = np.nonzero(self.adj)
+        choice_inds = np.random.choice(len(nonzero_inds[0]), size=n_checks)
+        index = self.meta.index
+        print(f"Verifying {n_checks} edges are present in original graph")
+        print()
+        for choice in tqdm(choice_inds):
+            row_ind = nonzero_inds[0][choice]
+            col_ind = nonzero_inds[1][choice]
+            row_id = index[row_ind]
+            col_id = index[col_ind]
+            if adj_df.loc[row_id, col_id] <= 0:
+                print(f"Row ID: {row_id}")
+                print(f"Column ID: {col_id}")
+                print()
+                raise ValueError(f"Edge from {row_id} to {col_id} does not exist")
 
 
 def _source_mapper(name):
