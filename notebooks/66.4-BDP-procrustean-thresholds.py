@@ -122,8 +122,9 @@ def get_paired_inds(meta):
 def procrustes_match(latent, meta, randomize=False):
     left_inds = np.where(meta["Hemisphere"] == "L")
     left_paired_inds, right_paired_inds = get_paired_inds(meta)
+    right_paired_inds = right_paired_inds.copy()
     if randomize:
-        right_paired_inds = np.random.shuffle(right_paired_inds)
+        np.random.shuffle(right_paired_inds)
 
     left_paired_latent = latent[left_paired_inds]
     right_paired_latent = latent[right_paired_inds]
@@ -131,9 +132,12 @@ def procrustes_match(latent, meta, randomize=False):
     R, scalar = orthogonal_procrustes(left_paired_latent, right_paired_latent)
     diff = np.linalg.norm(left_paired_latent @ R - right_paired_latent, ord="fro")
 
-    rot_latent = latent
+    rot_latent = latent.copy()
     rot_latent[left_inds] = latent[left_inds] @ R
-    return rot_latent, diff
+    if randomize:
+        return rot_latent, diff, right_paired_inds
+    else:
+        return rot_latent, diff
 
 
 def stable_rank(A):
@@ -159,13 +163,8 @@ def remove_missing_pairs(g):
 # %% [markdown]
 # #
 
-
 graph_type = "Gad"
-embed = "lse"
 remove_pdiff = True
-plus_c = True
-metric = "euclidean"
-
 mg = load_metagraph(graph_type, BRAIN_VERSION)
 print(f"{len(mg.to_edgelist())} original edges")
 
@@ -213,18 +212,30 @@ print(f"{len(edgelist_df)} edges after preprocessing")
 
 #%%
 
+plot_embed = False
+plot_n_verts = False
+plot_fnorms = False
+
+n_components = 100
+threshold_raw = True
+graph_weight_key = "norm_weight"
+embed = "lse"
+plus_c = True
+metric = "euclidean"
+
+
+if threshold_raw:
+    thresholds = np.linspace(0, 6, 7)
+    thresh_weight_key = "max_syn_weight"
+else:
+    thresholds = np.linspace(0, 0.05, 10)
+    thresh_weight_key = "max_norm_weight"
 
 rows = []
-neigh_probs = []
-n_components = 10
-
-thresholds = np.linspace(0, 6, 7)
-# thresholds = np.linspace(0, 0.05, 10)
+fake_rows = []
 for threshold in thresholds:
-
     # do the thresholding, process the output of that
-    # thresh_df = edgelist_df[edgelist_df["max_norm_weight"] > 0.001]
-    thresh_df = edgelist_df[edgelist_df["max_syn_weight"] > threshold].copy()
+    thresh_df = edgelist_df[edgelist_df[thresh_weight_key] > threshold].copy()
     thresh_g = nx.from_pandas_edgelist(
         thresh_df, edge_attr=True, create_using=nx.DiGraph
     )
@@ -232,7 +243,7 @@ for threshold in thresholds:
     thresh_g = get_lcc(thresh_g)
     n_verts = len(thresh_g)
     thresh_g = remove_missing_pairs(thresh_g)
-    thresh_mg = MetaGraph(thresh_g, weight="norm_weight")
+    thresh_mg = MetaGraph(thresh_g, weight=graph_weight_key)
     meta = thresh_mg.meta
     adj = thresh_mg.adj.copy()
     print(f"Adjacency matrix is {adj.shape}")
@@ -240,54 +251,60 @@ for threshold in thresholds:
     # preprocess the graph and do the embedding
     adj = pass_to_ranks(adj)
     if plus_c:
-        adj += np.min(adj)
+        adj += np.min(adj[adj != 0])
 
     if embed == "lse":
         latent = lse(adj, n_components, ptr=False)
     elif embed == "ase":
         latent = ase(adj, n_components, ptr=False)
     print(f"Latent matrix is {latent.shape}")
+
     rot_latent, diff = procrustes_match(latent, meta)
-    rand_rot_latent, rand_digg = procrustes_match(latent, meta, randomize=True)
 
     # plot the embedding, first 2 dims only
-    plot_df = pd.DataFrame(data=rot_latent)
-    plot_df["Class"] = thresh_mg["Class 1"]
-    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-    sns.scatterplot(x=0, y=1, data=plot_df, hue="Class", legend=False, ax=ax)
-    ax.set_title(f"Residual F. norm = {diff}, threshold = {threshold}")
+    if plot_embed:
+        plot_df = pd.DataFrame(data=rot_latent)
+        plot_df["Class"] = thresh_mg["Class 1"]
+        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+        sns.scatterplot(x=0, y=1, data=plot_df, hue="Class", legend=False, ax=ax)
+        ax.set_title(f"Residual F. norm = {diff}, threshold = {threshold}")
 
     # calculate KNN
     left_paired_inds, right_paired_inds = get_paired_inds(meta)
-    temp_neigh_probs = compute_neighbors_at_k(
+    neigh_probs = compute_neighbors_at_k(
         rot_latent, left_paired_inds, right_paired_inds, k_max=10, metric=metric
     )
-
-    neigh_probs.append(temp_neigh_probs)
-
     row = {
         "threshold": threshold,
         "Residual F-norm": diff,
         "n_verts": n_verts,
         "Norm. Resid. F-norm": diff / n_verts,
     }
-    for i in temp_neigh_probs:
-        row[""]
+    for i, p in enumerate(neigh_probs):
+        row[i + 1] = p
     rows.append(row)
 
+    # do KNN experiment for random pairs
+    rand_rot_latent, rand_diff, rand_right_inds = procrustes_match(
+        latent, meta, randomize=True
+    )
+    neigh_probs = compute_neighbors_at_k(
+        rand_rot_latent, left_paired_inds, rand_right_inds, k_max=10, metric=metric
+    )
+    fake_row = row.copy()
+    for i, p in enumerate(neigh_probs):
+        fake_row[i + 1] = p
+    fake_rows.append(fake_row)
 
-neigh_mat = np.array(neigh_probs)
 res_df = pd.DataFrame(rows)
-for i in range(1, 11):
-    res_df[i] = neigh_mat[:, i - 1]
+fake_res_df = pd.DataFrame(fake_rows)
 
 title = (
-    f"{graph_type}, n_components = {n_components}, Embed = {embed},"
-    + f" + C = {plus_c}, norm weight thresh"
+    f"{graph_type}, n_comp.={n_components}, embed={embed},"
+    + f" +C={plus_c}, metric={metric}, graph_weight={graph_weight_key}"
 )
 base_save = f"-{graph_type}-e{embed}-pc{plus_c}-nwt"
 
-plot_fnorms = False
 if plot_fnorms:
     fig, ax = plt.subplots(1, 1, figsize=(10, 5))
     sns.scatterplot(
@@ -304,7 +321,6 @@ if plot_fnorms:
     ax.set_title(title)
     stashfig(f"threshold-vs-norm-f-norm" + base_save)
 
-plot_n_verts = False
 if plot_n_verts:
     fig, ax = plt.subplots(1, 1, figsize=(10, 5))
     sns.scatterplot(x="threshold", y="n_verts", data=res_df, legend=False, ax=ax)
@@ -317,6 +333,12 @@ knn_df = pd.melt(
     var_name="K",
     value_name="P(Pair w/in KNN)",
 )
+fake_knn_df = pd.melt(
+    fake_res_df.drop(["Residual F-norm", "n_verts", "Norm. Resid. F-norm"], axis=1),
+    id_vars=["threshold"],
+    var_name="K",
+    value_name="P(Pair w/in KNN)",
+)
 fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 sns.lineplot(
     x="threshold",
@@ -325,8 +347,16 @@ sns.lineplot(
     hue="K",
     palette=sns.color_palette("Reds", knn_df["K"].nunique()),
 )
+sns.lineplot(
+    x="threshold",
+    y="P(Pair w/in KNN)",
+    data=fake_knn_df,
+    hue="K",
+    palette=sns.color_palette("Blues", knn_df["K"].nunique()),
+)
 plt.legend(bbox_to_anchor=(1.08, 1), loc=2, borderaxespad=0.0)
 ax.set_title(title)
+remove_spines(ax, keep_corner=True)
 stashfig(f"threshold-vs-knn" + base_save)
 
 
