@@ -785,7 +785,7 @@ def probplot(
     vmin=None,
     vmax=None,
     figsize=(10, 10),
-    fmt='.0f'
+    fmt=".0f",
 ):
     cbar_kws = {"fraction": 0.08, "shrink": 0.8, "pad": 0.03}
 
@@ -943,7 +943,7 @@ def get_block_edgesums(adj, pred_labels, sort_blocks):
     return block_sum_df
 
 
-def palplot(k, cmap="viridis", figsize=(1,10), ax=None, start=0, stop=None):
+def palplot(k, cmap="viridis", figsize=(1, 10), ax=None, start=0, stop=None):
     pal = sns.color_palette(palette=cmap, n_colors=k)
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
@@ -951,7 +951,7 @@ def palplot(k, cmap="viridis", figsize=(1,10), ax=None, start=0, stop=None):
     pal = pal.reshape((k, 1, 3))
     ax.imshow(pal)
     ax.xaxis.set_major_locator(plt.NullLocator())
-    if stop is None: 
+    if stop is None:
         stop = len(pal) + start
     ax.yaxis.set_major_formatter(plt.FixedFormatter(np.arange(start, stop, dtype=int)))
     ax.yaxis.set_major_locator(plt.FixedLocator(np.arange(k)))
@@ -1026,6 +1026,7 @@ def stacked_barplot(
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(15, 10))
+    ax.set_ylim(-1, len(labels))
     ax.invert_yaxis()
     ax.xaxis.set_visible(False)
     max_size = np.sum(norm_data, axis=1).max()
@@ -1082,6 +1083,132 @@ def stacked_barplot(
         return ax, data, uni_subcat, subcategory_colors
     else:
         return ax
+
+
+def barplot_text(
+    category,
+    subcategory,
+    category_order=None,
+    subcategory_order=None,
+    ax=None,
+    plot_proportions=False,
+    legend_ncol=5,
+    bar_height=0.7,
+    norm_bar_width=True,
+    label_pos=None,
+    horizontal_pad=0.02,
+    return_data=False,
+    show_props=True,
+    print_props=True,
+    text_pad=0.01,
+    inverse_memberships=True,
+    figsize=(24, 23),
+    title=None,
+    palette=cc.glasbey_light,
+    color_dict=None,
+):
+    uni_class_labels, uni_class_counts = np.unique(subcategory, return_counts=True)
+    uni_pred_labels, uni_pred_counts = np.unique(category, return_counts=True)
+
+    # set up the figure
+    fig, axs = plt.subplots(
+        1, 2, figsize=figsize, sharey=True, gridspec_kw={"wspace": 0.01}
+    )
+    r = fig.canvas.get_renderer()
+
+    # title the plot
+    plt.suptitle(title, y=0.92, fontsize=30, x=0.5)
+
+    # plot the barplot (and ticks to the right of them)
+    ax = axs[0]
+    ax, prop_data, uni_class, subcategory_colors = stacked_barplot(
+        category,
+        subcategory,
+        category_order=category_order,
+        subcategory_order=subcategory_order,
+        ax=ax,
+        plot_proportions=plot_proportions,
+        palette=palette,
+        legend_ncol=legend_ncol,
+        bar_height=0.9,
+        norm_bar_width=norm_bar_width,
+        label_pos=label_pos,
+        horizontal_pad=0,
+        return_data=True,
+        color_dict=color_dict,
+    )
+    ax.set_frame_on(False)
+
+    if show_props:
+        ax1_title = "Cluster proportion of known cell types"
+    else:
+        ax1_title = "Cluster counts by known cell types"
+
+    ax1_title = ax.set_title(ax1_title, pad=0)
+    transformer = ax.transData.inverted()
+    bbox = ax1_title.get_window_extent(renderer=r)
+    bbox_points = bbox.get_points()
+    out_points = transformer.transform(bbox_points)
+    xlim = ax.get_xlim()
+    ax.text(
+        xlim[0],
+        out_points[0][1],
+        "Cluster name (size)",
+        verticalalignment="bottom",
+        horizontalalignment="right",
+    )
+    ticks = ax.get_yticks()
+
+    # plot the cluster compositions as text to the right of the bars
+    # gs0.update(right=0.4)
+    # ax2 = fig.add_subplot(gs1[0], sharey=ax0)
+    ax = axs[1]
+    ax.axis("off")
+    # gs1.update(left=0.48)
+
+    text_kws = {
+        "verticalalignment": "center",
+        "horizontalalignment": "left",
+        "fontsize": 12,
+        "alpha": 1,
+        "weight": "bold",
+    }
+
+    ax.set_xlim((0, 1))
+    transformer = ax.transData.inverted()
+
+    cluster_sizes = prop_data.sum(axis=1)
+    for i, y in enumerate(ticks):
+        x = 0
+        for j, (colname, color) in enumerate(zip(uni_class, subcategory_colors)):
+            prop = prop_data[i, j]
+            if prop > 0:
+                if inverse_memberships:
+                    prop = prop / uni_class_counts[j]
+                    name = f"{colname} ({prop:3.0%})"
+                else:
+                    if print_props:
+                        name = f"{colname} ({prop / cluster_sizes[i]:3.0%})"
+                    else:
+                        name = f"{colname} ({prop})"
+                text = ax.text(x, y, name, color=color, **text_kws)
+                bbox = text.get_window_extent(renderer=r)
+                bbox_points = bbox.get_points()
+                out_points = transformer.transform(bbox_points)
+                width = out_points[1][0] - out_points[0][0]
+                x += width + text_pad
+
+    # deal with title for the last plot column based on options
+    if inverse_memberships:
+        ax2_title = "Known cell type (percentage of cell type in cluster)"
+    else:
+        if print_props:
+            ax2_title = "Known cell type (percentage of cluster)"
+        else:
+            ax2_title = "Known cell type (count in cluster)"
+    ax.set_title(ax2_title, loc="left", pad=-100)
+    # axs = (ax0, ax1, ax2)
+    return fig, axs
 
 
 def bartreeplot(
@@ -1391,7 +1518,7 @@ def draw_networkx_nice(
         weight = edge[2]["weight"]
         weights.append(weight)
     weights = np.array(weights)
-    
+
     nx.draw_networkx_edges(
         g,
         pos,

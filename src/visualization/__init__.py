@@ -17,5 +17,6 @@ from .visualize import (
     remove_spines,
     distplot,
     draw_networkx_nice,
+    barplot_text,
 )
 from .stack_seaborn import countplot, freqplot
