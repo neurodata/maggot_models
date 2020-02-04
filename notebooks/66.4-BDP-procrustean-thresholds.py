@@ -216,11 +216,11 @@ plot_embed = False
 plot_n_verts = False
 plot_fnorms = False
 
-n_components = 100
+n_components = 1000
 threshold_raw = True
-graph_weight_key = "norm_weight"
-embed = "lse"
-plus_c = True
+graph_weight_key = "max_syn_weight"
+embed = "ase"
+plus_c = False
 metric = "euclidean"
 
 
@@ -303,7 +303,10 @@ title = (
     f"{graph_type}, n_comp.={n_components}, embed={embed},"
     + f" +C={plus_c}, metric={metric}, graph_weight={graph_weight_key}"
 )
-base_save = f"-{graph_type}-e{embed}-pc{plus_c}-nwt"
+base_save = (
+    f"-{graph_type}-ncomp{n_components}-e{embed}-pc{plus_c}-m{metric}"
+    + f"-w{graph_weight_key}"
+)
 
 if plot_fnorms:
     fig, ax = plt.subplots(1, 1, figsize=(10, 5))
