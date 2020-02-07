@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.metrics import adjusted_rand_score
-
+from graspy.utils import get_lcc
 from graspy.cluster import AutoGMMCluster, GaussianCluster
 from graspy.embed import AdjacencySpectralEmbed, LaplacianSpectralEmbed
 from graspy.plot import gridplot, heatmap, pairplot
@@ -47,9 +47,15 @@ def stashfig(name, **kws):
     savefig(name, foldername=FNAME, save_on=SAVEFIGS, **kws)
 
 
-graph_type = "G"
+threshold_raw = False
+ptr = True
+n_components = 3
+if threshold_raw:
+    graph_type = "G"
+else:
+    graph_type = "Gn"
+
 remove_pdiff = True
-input_thresh = 100
 
 mg = load_metagraph(graph_type, BRAIN_VERSION)
 n_original_verts = len(mg)
@@ -66,17 +72,10 @@ mg.meta["Original index"] = range(len(mg.meta))
 subset_inds = mg.meta[mg.meta["Hemisphere"] == "L"]["Original index"]
 mg.reindex(subset_inds)
 mg.make_lcc()
+
 # mg.verify(10000, graph_type=graph_type)
 
-
-latent = ase(mg.adj, 3, ptr=True)
-
-cluster = GaussianCluster(
-    min_components=2, max_components=10, covariance_type="all", n_init=100
-)
-
-pred_labels = cluster.fit_predict(latent)
-true_labels = mg["Class 1"]
+class_labels = mg["Class 1"].copy()
 class_map = {
     "KC": "KC",
     "MBIN": "MBIN",
@@ -87,9 +86,38 @@ class_map = {
     "vPN": "PN",
     "mPN; FFN": "PN",
 }
-true_labels = np.array(itemgetter(*true_labels)(class_map))
+class_labels = np.array(itemgetter(*class_labels)(class_map))
 
-pairplot(latent, labels=pred_labels)
-pairplot(latent, labels=true_labels)
 
-print(adjusted_rand_score(true_labels, pred_labels))
+if threshold_raw:
+    thresholds = np.linspace(0, 4, 5)
+else:
+    thresholds = np.linspace(0, 0.05, num=5)
+
+rows = []
+for threshold in thresholds:
+    adj = mg.adj.copy()
+    adj[adj <= threshold] = 0
+    adj, inds = get_lcc(adj, return_inds=True)
+    true_labels = class_labels[inds]
+    latent = ase(adj, n_components, ptr=ptr)
+
+    # cluster = GaussianCluster(
+    #     min_components=2, max_components=10, covariance_type="all", n_init=100
+    # )
+    cluster = AutoGMMCluster(min_components=2, max_components=10)
+
+    pred_labels = cluster.fit_predict(latent)
+
+    ari = adjusted_rand_score(true_labels, pred_labels)
+
+    row = {"ARI": ari, "Threshold": threshold}
+    rows.append(row)
+
+result_df = pd.DataFrame(rows)
+
+fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+sns.lineplot(data=result_df, x="Threshold", y="ARI", ax=ax)
+remove_spines(ax, keep_corner=True)
+ax.set_title(f"Mushroom Body, n_components={n_components}")
+stashfig(f"mb-nc{n_components}-tr{threshold_raw}")

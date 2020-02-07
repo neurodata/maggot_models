@@ -22,6 +22,8 @@ from graspy.plot import heatmap
 from graspy.utils import binarize, cartprod
 from src.utils import get_sbm_prob, savefig
 
+from .manual_colors import CLASS_COLOR_DICT
+
 
 def _sort_inds(graph, inner_labels, outer_labels, sort_nodes):
     sort_df = pd.DataFrame(columns=("inner_labels", "outer_labels"))
@@ -973,6 +975,7 @@ def stacked_barplot(
     horizontal_pad=0.02,
     return_data=False,
     color_dict=None,
+    hatch_dict=None,
 ):
     """
     Parameters
@@ -992,6 +995,8 @@ def stacked_barplot(
         uni_cat = np.array(category_order)
     if subcategory_order is None:
         uni_subcat = np.unique(subcategory)
+    if color_dict == "class":
+        color_dict = CLASS_COLOR_DICT
 
     counts_by_label = []
     for label in uni_cat:
@@ -1003,8 +1008,20 @@ def stacked_barplot(
             counts_by_class.append(num_class_in_cluster)
         counts_by_label.append(counts_by_class)
     results = dict(zip(uni_cat, counts_by_label))
-    labels = list(results.keys())
+    # labels = np.array(list(results.keys()))
+
     data = np.array(list(results.values()))
+
+    # order things sensibly
+    if category_order is None:
+        simdata = data / data.sum(axis=0)[np.newaxis, :]  # normalize counts per class
+        # maybe the cos dist is redundant here
+        Z = linkage(simdata, method="average", metric="cosine")
+        R = dendrogram(Z, truncate_mode=None, get_leaves=True, no_plot=True)
+        order = R["leaves"]
+        uni_cat = uni_cat[order]
+        data = data[order, :]
+    labels = uni_cat
 
     # find the width of the bars
     sums = data.sum(axis=1)
@@ -1023,6 +1040,9 @@ def stacked_barplot(
             subcategory_colors = sns.color_palette(palette, n_colors=len(uni_subcat))
         else:
             subcategory_colors = palette
+
+    if hatch_dict is None:
+        hatch_dict = dict(zip(uni_subcat, len(uni_subcat) * [""]))
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(15, 10))
@@ -1047,6 +1067,12 @@ def stacked_barplot(
 
         if label_pos is None:
             label_pos = labels
+
+        hatch = hatch_dict[colname]
+        if hatch != "":
+            alpha = 0.5
+        else:
+            alpha = 1
         ax.barh(
             label_pos,
             widths,
@@ -1055,6 +1081,8 @@ def stacked_barplot(
             height=bar_height,
             label=colname,
             color=color,
+            hatch=hatch,
+            alpha=alpha,
         )
 
         # this puts small proportion numbers above bar segments
@@ -1106,6 +1134,7 @@ def barplot_text(
     title=None,
     palette=cc.glasbey_light,
     color_dict=None,
+    hatch_dict=None,
 ):
     uni_class_labels, uni_class_counts = np.unique(subcategory, return_counts=True)
     uni_pred_labels, uni_pred_counts = np.unique(category, return_counts=True)
@@ -1136,10 +1165,11 @@ def barplot_text(
         horizontal_pad=0,
         return_data=True,
         color_dict=color_dict,
+        hatch_dict=hatch_dict,
     )
     ax.set_frame_on(False)
 
-    if show_props:
+    if norm_bar_width:
         ax1_title = "Cluster proportion of known cell types"
     else:
         ax1_title = "Cluster counts by known cell types"

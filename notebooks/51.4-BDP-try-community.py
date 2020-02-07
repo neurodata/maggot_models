@@ -285,13 +285,13 @@ for graph_type in graph_types:
             # barplot by merge class label (more detail)
             class_label_dict = nx.get_node_attributes(g_sym, "Merge Class")
             class_labels = np.array(itemgetter(*skeleton_labels)(class_label_dict))
-            part_color_dict = dict(zip(np.unique(partition), cc.glasbey_warm))
-            true_color_dict = dict(zip(names, colors))
-            color_dict = {**part_color_dict, **true_color_dict}
+            # part_color_dict = dict(zip(np.unique(partition), cc.glasbey_warm))
+            # true_color_dict = dict(zip(names, colors))
+            # color_dict = {**part_color_dict, **true_color_dict}
             fig, axs = barplot_text(
                 partition,
                 class_labels,
-                color_dict=color_dict,
+                # color_dict=color_dict,
                 plot_proportions=False,
                 norm_bar_width=True,
                 category_order=sort_partition_sf.index.values,

@@ -44,7 +44,6 @@ def _verify_networkx(source, target, n_checks):
 
 
 class MetaGraph:
-    # init using a nx graph or an adjacency and metadata
     def __init__(self, graph, meta=None, weight="weight"):
         if isinstance(graph, (nx.Graph, nx.DiGraph)):
             graph = graph.copy()
@@ -190,22 +189,38 @@ class MetaGraph:
         )
         edgelist_df = edgelist_df.sort_values("edge pairs", ascending=False)
         # remove edges incident to an unpaired node
+
         if remove_unpaired:
             edgelist_df = edgelist_df[edgelist_df["target Pair ID"] != -1]
             edgelist_df = edgelist_df[edgelist_df["source Pair ID"] != -1]
+
         uni_edge_pairs, uni_edge_counts = np.unique(
             edgelist_df["edge pairs"], return_counts=True
         )
+
         # give each edge pair an ID
         edge_pair_map = dict(zip(uni_edge_pairs, range(len(uni_edge_pairs))))
         edgelist_df["edge pair ID"] = itemgetter(*edgelist_df["edge pairs"])(
             edge_pair_map
         )
+
+        # edgelist_df[edgelist_df["target Pair ID"] == -1]["edge pair ID"] = -1
+        # edgelist_df[edgelist_df["source Pair ID"] == -1]["edge pair ID"] = -1
+
         # count how many times each potential edge pair happens
         edge_pair_count_map = dict(zip(uni_edge_pairs, uni_edge_counts))
         edgelist_df["edge pair counts"] = itemgetter(*edgelist_df["edge pairs"])(
             edge_pair_count_map
         )
+
+        inds = np.where(
+            np.logical_or(
+                edgelist_df["target Pair ID"] == -1, edgelist_df["source Pair ID"] == -1
+            )
+        )
+        inds = edgelist_df.index[inds]
+        edgelist_df.loc[inds, ["edge pair ID", "edge pair counts"]] = -1
+
         return edgelist_df
 
     def __len__(self):

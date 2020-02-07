@@ -371,7 +371,7 @@ def get_simple(graph):
 
 def savefig(
     name,
-    fmt="pdf",
+    fmt="png",
     foldername=None,
     subfoldername="figs",
     pathname="./maggot_models/notebooks/outs",

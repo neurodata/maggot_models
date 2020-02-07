@@ -20,3 +20,4 @@ from .visualize import (
     barplot_text,
 )
 from .stack_seaborn import countplot, freqplot
+from .manual_colors import CLASS_COLOR_DICT, CLASS_IND_DICT

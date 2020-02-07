@@ -39,13 +39,7 @@ from src.embed import ase, lse, preprocess_graph
 from src.graph import MetaGraph
 from src.hierarchy import signal_flow
 from src.io import savefig, saveobj, saveskels
-from src.utils import (
-    get_blockmodel_df,
-    get_sbm_prob,
-    invert_permutation,
-    meta_to_array,
-    savefig,
-)
+from src.utils import get_blockmodel_df, get_sbm_prob, invert_permutation, meta_to_array
 from src.visualization import (
     bartreeplot,
     get_color_dict,
@@ -156,7 +150,7 @@ def remove_missing_pairs(g):
                 g.node[n]["Pair"] = -1
                 g.node[n]["Pair ID"] = -1
                 n_missing += 1
-    print(f"Removed {n_missing} missing pairs")
+    # print(f"Removed {n_missing} missing pairs")
     return g
 
 
@@ -216,13 +210,12 @@ plot_embed = False
 plot_n_verts = False
 plot_fnorms = False
 
-n_components = 1000
-threshold_raw = True
-graph_weight_key = "max_syn_weight"
+n_components = 100
+threshold_raw = False
+graph_weight_key = "norm_weight"
 embed = "ase"
 plus_c = False
-metric = "euclidean"
-
+metric = "cosine"
 
 if threshold_raw:
     thresholds = np.linspace(0, 6, 7)
@@ -253,6 +246,9 @@ for threshold in thresholds:
     if plus_c:
         adj += np.min(adj[adj != 0])
 
+    sr = stable_rank(adj)
+    screeplot(adj, title=f"{graph_type}, threshold = {threshold}, stable rank = {sr}")
+
     if embed == "lse":
         latent = lse(adj, n_components, ptr=False)
     elif embed == "ase":
@@ -279,6 +275,7 @@ for threshold in thresholds:
         "Residual F-norm": diff,
         "n_verts": n_verts,
         "Norm. Resid. F-norm": diff / n_verts,
+        "Stable rank": sr,
     }
     for i, p in enumerate(neigh_probs):
         row[i + 1] = p
@@ -331,13 +328,17 @@ if plot_n_verts:
     stashfig(f"threshold-vs-n-verts" + base_save)
 
 knn_df = pd.melt(
-    res_df.drop(["Residual F-norm", "n_verts", "Norm. Resid. F-norm"], axis=1),
+    res_df.drop(
+        ["Residual F-norm", "n_verts", "Norm. Resid. F-norm", "Stable rank"], axis=1
+    ),
     id_vars=["threshold"],
     var_name="K",
     value_name="P(Pair w/in KNN)",
 )
 fake_knn_df = pd.melt(
-    fake_res_df.drop(["Residual F-norm", "n_verts", "Norm. Resid. F-norm"], axis=1),
+    fake_res_df.drop(
+        ["Residual F-norm", "n_verts", "Norm. Resid. F-norm", "Stable rank"], axis=1
+    ),
     id_vars=["threshold"],
     var_name="K",
     value_name="P(Pair w/in KNN)",
@@ -362,11 +363,3 @@ ax.set_title(title)
 remove_spines(ax, keep_corner=True)
 stashfig(f"threshold-vs-knn" + base_save)
 
-
-# %%
-latent_cols = [f"dim {i}" for i in range(latent.shape[1])]
-latent_df = pd.DataFrame(data=latent, index=mg.meta.index, columns=latent_cols)
-latent_df = pd.concat((mg.meta, latent_df), axis=1)
-latent_df.index.name = "Skeleton ID"
-out_file = f"maggot_models/notebooks/outs/{FNAME}/latent.csv"
-latent_df.to_csv(out_file)
