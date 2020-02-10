@@ -15,7 +15,9 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from joblib import Parallel, delayed
 from matplotlib.cm import ScalarMappable
+from sklearn.model_selection import ParameterGrid
 
 from graspy.embed import AdjacencySpectralEmbed, LaplacianSpectralEmbed
 from graspy.plot import gridplot, heatmap, pairplot
@@ -28,6 +30,9 @@ from src.hierarchy import signal_flow
 from src.io import savefig, saveobj, saveskels
 from src.utils import get_blockmodel_df, get_sbm_prob
 from src.visualization import (
+    CLASS_COLOR_DICT,
+    CLASS_IND_DICT,
+    barplot_text,
     bartreeplot,
     draw_networkx_nice,
     get_color_dict,
@@ -37,9 +42,6 @@ from src.visualization import (
     sankey,
     screeplot,
     stacked_barplot,
-    barplot_text,
-    CLASS_COLOR_DICT,
-    CLASS_IND_DICT,
 )
 
 warnings.simplefilter("ignore", category=FutureWarning)
@@ -146,7 +148,7 @@ def to_minigraph(
     return g
 
 
-def adjust_partition(partition):
+def adjust_partition(partition, class_labels):
     adjusted_partition = partition.copy().astype(str)
     sens_classes = [
         "sens-AN",
@@ -173,155 +175,176 @@ def add_max_weight(df):
     return df
 
 
-mg = load_metagraph("G", BRAIN_VERSION)
+def edgelist_to_mg(edgelist, meta):
+    g = nx.from_pandas_edgelist(edgelist, edge_attr=True, create_using=nx.DiGraph)
+    nx.set_node_attributes(g, meta.to_dict(orient="index"))
+    mg = MetaGraph(g)
+    return mg
+
+
+def run_louvain(g_sym, res, skeleton_labels):
+    out_dict = cm.best_partition(g_sym, resolution=res)
+    partition = np.array(itemgetter(*skeleton_labels)(out_dict))
+    part_unique, part_count = np.unique(partition, return_counts=True)
+    for uni, count in zip(part_unique, part_count):
+        if count < 3:
+            inds = np.where(partition == uni)[0]
+            partition[inds] = -1
+    return partition
+
+
+def augment_classes(skeleton_labels, class_labels, lineage_labels, fill_unk=True):
+    if fill_unk:
+        classlin_labels = class_labels.copy()
+        fill_inds = np.where(class_labels == "unk")[0]
+        classlin_labels[fill_inds] = lineage_labels[fill_inds]
+        used_inds = np.array(list(CLASS_IND_DICT.values()))
+        unused_inds = np.setdiff1d(range(len(cc.glasbey_light)), used_inds)
+        lineage_color_dict = dict(
+            zip(np.unique(lineage_labels), np.array(cc.glasbey_light)[unused_inds])
+        )
+        color_dict = {**CLASS_COLOR_DICT, **lineage_color_dict}
+        hatch_dict = {}
+        for key, val in color_dict.items():
+            if key[0] == "~":
+                hatch_dict[key] = "//"
+            else:
+                hatch_dict[key] = ""
+    else:
+        color_dict = "class"
+        hatch_dict = None
+    return classlin_labels, color_dict, hatch_dict
+
+
+def run_experiment(graph_type=None, thresh=None, res=None):
+    # load and preprocess the data
+    mg = load_metagraph(graph_type, version=BRAIN_VERSION)
+    edgelist = mg.to_edgelist()
+    edgelist = add_max_weight(edgelist)
+    edgelist = edgelist[edgelist["max_weight"] > thresh]
+    mg = edgelist_to_mg(edgelist, mg.meta)
+    mg = mg.make_lcc()
+    mg = mg.remove_pdiff()
+    g_sym = nx.to_undirected(mg.g)
+    skeleton_labels = np.array(list(g_sym.nodes()))
+    partition = run_louvain(g_sym, res, skeleton_labels)
+
+    # compute signal flow for sorting purposes
+    mg.meta["signal_flow"] = signal_flow(mg.adj)
+    mg.meta["partition"] = partition
+    partition_sf = mg.meta.groupby("partition")["signal_flow"].median()
+    sort_partition_sf = partition_sf.sort_values(ascending=False)
+
+    # common names
+    basename = f"louvain-res{res}-t{thresh}-{graph_type}-"
+    title = f"Louvain, {graph_type}, res = {res}, thresh = {thresh}"
+
+    # get out some metadata
+    class_label_dict = nx.get_node_attributes(g_sym, "Merge Class")
+    class_labels = np.array(itemgetter(*skeleton_labels)(class_label_dict))
+    lineage_label_dict = nx.get_node_attributes(g_sym, "lineage")
+    lineage_labels = np.array(itemgetter(*skeleton_labels)(lineage_label_dict))
+    lineage_labels = np.vectorize(lambda x: "~" + x)(lineage_labels)
+    classlin_labels, color_dict, hatch_dict = augment_classes(
+        skeleton_labels, class_labels, lineage_labels
+    )
+
+    # barplot by merge class and lineage
+    fig, axs = barplot_text(
+        partition,
+        classlin_labels,
+        color_dict=color_dict,
+        plot_proportions=False,
+        norm_bar_width=True,
+        figsize=(24, 18),
+        title=title,
+        hatch_dict=hatch_dict,
+    )
+    stashfig(basename + "barplot-mergeclasslin-props")
+    fig, axs = barplot_text(
+        partition,
+        class_labels,
+        color_dict=color_dict,
+        plot_proportions=False,
+        norm_bar_width=True,
+        figsize=(24, 18),
+        title=title,
+        hatch_dict=None,
+    )
+    stashfig(basename + "barplot-mergeclass-props")
+    fig, axs = barplot_text(
+        partition,
+        class_labels,
+        color_dict=color_dict,
+        plot_proportions=False,
+        norm_bar_width=False,
+        figsize=(24, 18),
+        title=title,
+        hatch_dict=None,
+    )
+    stashfig(basename + "barplot-mergeclass-counts")
+    fig, axs = barplot_text(
+        partition,
+        lineage_labels,
+        color_dict=None,
+        plot_proportions=False,
+        norm_bar_width=True,
+        figsize=(24, 18),
+        title=title,
+    )
+    stashfig(basename + "barplot-lineage-props")
+
+    # sorted heatmap
+    heatmap(
+        mg.adj,
+        transform="simple-nonzero",
+        figsize=(20, 20),
+        inner_hier_labels=partition,
+        hier_label_fontsize=10,
+        title=title,
+        title_pad=80,
+    )
+    stashfig(basename + "heatmap")
+
+    # block probability matrices
+    counts = False
+    weights = False
+    prob_df = get_blockmodel_df(
+        mg.adj, partition, return_counts=counts, use_weights=weights
+    )
+    prob_df = prob_df.reindex(sort_partition_sf.index, axis=0)
+    prob_df = prob_df.reindex(sort_partition_sf.index, axis=1)
+    ax = probplot(
+        100 * prob_df,
+        fmt="2.0f",
+        figsize=(20, 20),
+        title=f"Louvain, res = {res}, counts = {counts}, weights = {weights}",
+    )
+    ax.set_ylabel(r"Median signal flow $\to$", fontsize=28)
+    stashfig(basename + f"probplot-counts{counts}-weights{weights}")
+
+    # plot minigraph with layout
+    adjusted_partition = adjust_partition(partition, class_labels)
+    minigraph = to_minigraph(
+        mg.adj, adjusted_partition, use_counts=True, size_scaler=10
+    )
+    draw_networkx_nice(
+        minigraph,
+        "Spring-x",
+        "Signal Flow",
+        sizes="Size",
+        colors="Color",
+        cmap="Greys",
+        vmin=100,
+        weight_scale=0.001,
+    )
+    stashfig(basename + "sbm-drawn-network")
 
 
 # %% [markdown]
 # #
 
-graph_types = ["Gad"]  # ["Gadn", "Gad", "G"]
-n_threshs = [0.01, 0.02]
-r_threshs = [1]  # [1, 2, 3]
-resolutons = [0.3]  # [0.3, 0.5, 0.7, 1]
+param_grid = {"graph_type": ["Gad"], "thresh": [1, 3], "res": [0.2, 0.3]}
+params = list(ParameterGrid(param_grid))
 
-for graph_type in graph_types:
-    if graph_type[-1] == "n":
-        threshs = n_threshs
-    else:
-        threshs = r_threshs
-    for thresh in threshs:
-        for r in resolutons:
-            mg = load_metagraph(graph_type, version=BRAIN_VERSION)
-            edgelist = mg.to_edgelist()
-            edgelist = add_max_weight(edgelist)
-            edgelist = edgelist[edgelist["max_weight"] > thresh]
-            nodelist = list(mg.g.nodes())
-            thresh_g = nx.from_pandas_edgelist(
-                edgelist, edge_attr=True, create_using=nx.DiGraph
-            )
-            nx.set_node_attributes(thresh_g, mg.meta.to_dict(orient="index"))
-            mg = MetaGraph(thresh_g)
-            print(len(mg.meta))
-            mg = mg.make_lcc()
-            print(len(mg.meta))
-            not_pdiff = np.where(~mg["is_pdiff"])[0]
-            mg = mg.reindex(not_pdiff)
-            print(len(mg.meta))
-            g_sym = nx.to_undirected(mg.g)
-            skeleton_labels = np.array(list(g_sym.nodes()))
-            out_dict = cm.best_partition(g_sym, resolution=r)
-            partition = np.array(itemgetter(*skeleton_labels)(out_dict))
-            adj = nx.to_numpy_array(g_sym, nodelist=skeleton_labels)
-
-            part_unique, part_count = np.unique(partition, return_counts=True)
-            for uni, count in zip(part_unique, part_count):
-                if count < 3:
-                    inds = np.where(partition == uni)[0]
-                    partition[inds] = -1
-
-            mg.meta["signal_flow"] = signal_flow(mg.adj)
-            mg.meta["partition"] = partition
-            partition_sf = mg.meta.groupby("partition")["signal_flow"].median()
-            sort_partition_sf = partition_sf.sort_values(ascending=False)
-
-            basename = f"louvain-res{r}-t{thresh}-{graph_type}-"
-            title = f"Louvain, {graph_type}, res = {r}, thresh = {thresh}"
-
-            # barplot by merge class label (more detail)
-            class_label_dict = nx.get_node_attributes(g_sym, "Merge Class")
-            class_labels = np.array(itemgetter(*skeleton_labels)(class_label_dict))
-            lineage_label_dict = nx.get_node_attributes(g_sym, "lineage")
-            lineage_labels = np.array(itemgetter(*skeleton_labels)(lineage_label_dict))
-            lineage_labels = np.vectorize(lambda x: "u" + x)(lineage_labels)
-            fill_unk = True
-            if fill_unk:
-                fill_inds = np.where(class_labels == "unk")[0]
-                class_labels[fill_inds] = lineage_labels[fill_inds]
-                used_inds = np.array(list(CLASS_IND_DICT.values()))
-                unused_inds = np.setdiff1d(range(len(cc.glasbey_light)), used_inds)
-                lineage_color_dict = dict(
-                    zip(
-                        np.unique(lineage_labels),
-                        np.array(cc.glasbey_light)[unused_inds],
-                    )
-                )
-                color_dict = {**CLASS_COLOR_DICT, **lineage_color_dict}
-                hatch_dict = {}
-                for key, val in color_dict.items():
-                    if key[0] == "u":
-                        hatch_dict[key] = "//"
-                    else:
-                        hatch_dict[key] = ""
-            else:
-                color_dict = "class"
-
-            fig, axs = barplot_text(
-                partition,
-                class_labels,
-                color_dict=color_dict,
-                plot_proportions=False,
-                norm_bar_width=True,
-                figsize=(24, 18),
-                title=title,
-                hatch_dict=hatch_dict,
-            )
-            stashfig(basename + "barplot-mergeclass")
-
-            fig, axs = barplot_text(
-                partition,
-                lineage_labels,
-                color_dict=None,
-                plot_proportions=False,
-                norm_bar_width=True,
-                figsize=(24, 18),
-                title=title,
-            )
-            stashfig(basename + "barplot-lineage")
-
-            # sorted heatmap
-            heatmap(
-                mg.adj,
-                transform="simple-nonzero",
-                figsize=(20, 20),
-                inner_hier_labels=partition,
-                hier_label_fontsize=10,
-                title=title,
-                title_pad=80,
-            )
-            stashfig(basename + "heatmap")
-
-            # block probabilities
-            counts = False
-            weights = False
-            prob_df = get_blockmodel_df(
-                mg.adj, partition, return_counts=counts, use_weights=weights
-            )
-            prob_df = prob_df.reindex(sort_partition_sf.index, axis=0)
-            prob_df = prob_df.reindex(sort_partition_sf.index, axis=1)
-
-            ax = probplot(
-                100 * prob_df,
-                fmt="2.0f",
-                figsize=(20, 20),
-                title=f"Louvain, res = {r}, counts = {counts}, weights = {weights}",
-            )
-            ax.set_ylabel(r"Median signal flow $\to$", fontsize=28)
-
-            stashfig(basename + f"probplot-counts{counts}-weights{weights}")
-
-            adjusted_partition = adjust_partition(partition)
-            minigraph = to_minigraph(
-                mg.adj, adjusted_partition, use_counts=True, size_scaler=10
-            )
-            draw_networkx_nice(
-                minigraph,
-                "Spring-x",
-                "Signal Flow",
-                sizes="Size",
-                colors="Color",
-                cmap="Greys",
-                vmin=100,
-                weight_scale=0.001,
-            )
-            stashfig(basename + "sbm-drawn-network")
-
+Parallel(n_jobs=-2)(delayed(run_experiment)(**p) for p in params)

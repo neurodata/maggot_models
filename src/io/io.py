@@ -135,3 +135,18 @@ def saveskels(
             return (spec_list, colormap, pal)
         else:
             return spec_list
+
+
+def savecsv(
+    df,
+    name,
+    foldername=None,
+    subfoldername="csvs",
+    pathname="./maggot_models/notebooks/outs",
+    save_on=True,
+):
+    if save_on:
+        path = _handle_dirs(pathname, foldername, subfoldername)
+        savename = path / str(name + ".csv")
+        df.to_csv(savename)
+        print(f"Saved DataFrame to {savename}")

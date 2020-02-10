@@ -2,58 +2,139 @@
 # #
 import os
 
+import colorcet as cc
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
+import urllib.request
 from graph_tool import load_graph
 from graph_tool.inference import minimize_blockmodel_dl
-from graph_tool.draw import graph_draw
-
-from scipy.cluster.hierarchy import dendrogram, linkage
+from joblib import Parallel, delayed
+from random_word import RandomWords
+from sklearn.model_selection import ParameterGrid
 
 from src.data import load_metagraph
 from src.graph import MetaGraph
-from src.io import savefig
-from src.visualization import barplot_text
+from src.io import savecsv, savefig
+from src.utils import get_blockmodel_df
+from src.visualization import (
+    CLASS_COLOR_DICT,
+    CLASS_IND_DICT,
+    barplot_text,
+    probplot,
+    remove_spines,
+    stacked_barplot,
+)
 
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
 
-# mpl.use("TkAgg")
+
+def random_names(n_names=1, space=False):
+    # modified from
+    # https://stackoverflow.com/questions/18834636/random-word-generator-python
+    word_url = (
+        "http://svnweb.freebsd.org/csrg/share/dict/words?view=co&content-type"
+        + "=text/plain"
+    )
+    response = None
+    n_attempts = 0
+    while response is None:
+        if n_attempts > 100:
+            raise Exception("this random word shit broke")
+        try:
+            response = urllib.request.urlopen(word_url, timeout=1)
+        except:
+            n_attempts += 1
+            pass
+
+    if space:
+        base_char = " "
+    else:
+        base_char = ""
+
+    long_txt = None
+    n_attempts = 0
+    while long_txt is None:
+        if n_attempts > 100:
+            raise Exception("this random word shit broke 2")
+        try:
+            long_txt = response.read().decode()
+        except:
+            n_attempts += 1
+            pass
+
+    words = long_txt.splitlines()
+    upper_words = [word for word in words if word[0].isupper()]
+    name_words = [word for word in upper_words if not word.isupper()]
+    names = []
+    for i in range(n_names):
+
+        rand_name = base_char.join(
+            [name_words[np.random.randint(0, len(name_words))] for i in range(2)]
+        )
+        names.append(rand_name)
+    return np.array(names)
+
+
+def get_random_word():
+    r = RandomWords()
+    n_attempts = 0
+    word = None
+    while word is None:
+        if n_attempts > 1000:
+            raise Exception("this random word shit broke")
+        try:
+            word = r.get_random_word(includePartOfSpeech="noun")
+        except:
+            n_attempts += 1
+            pass
+    return word
 
 
 def stashfig(name, **kws):
     savefig(name, foldername=FNAME, save_on=True, **kws)
+    plt.close()
 
 
-graph_type = "Gad"
-version = "2020-01-29"
-mg = load_metagraph(graph_type, version=version)
-temp_loc = f"maggot_models/data/interim/{graph_type}.graphml"
+def stashcsv(df, name, **kws):
+    savecsv(df, name, foldername=FNAME, save_on=True, **kws)
 
-thresholds = np.arange(3, 4, 1)
 
-for threshold in thresholds:
-    # simple threshold
-    adj = mg.adj.copy()
-    adj[adj <= 0] = 0.0
-    meta = mg.meta.copy()
-    meta = pd.DataFrame(mg.meta[" neuron_name"])
+def augment_classes(skeleton_labels, class_labels, lineage_labels, fill_unk=True):
+    if fill_unk:
+        classlin_labels = class_labels.copy()
+        fill_inds = np.where(class_labels == "unk")[0]
+        classlin_labels[fill_inds] = lineage_labels[fill_inds]
+        used_inds = np.array(list(CLASS_IND_DICT.values()))
+        unused_inds = np.setdiff1d(range(len(cc.glasbey_light)), used_inds)
+        lineage_color_dict = dict(
+            zip(np.unique(lineage_labels), np.array(cc.glasbey_light)[unused_inds])
+        )
+        color_dict = {**CLASS_COLOR_DICT, **lineage_color_dict}
+        hatch_dict = {}
+        for key, val in color_dict.items():
+            if key[0] == "~":
+                hatch_dict[key] = "//"
+            else:
+                hatch_dict[key] = ""
+    else:
+        color_dict = "class"
+        hatch_dict = None
+    return classlin_labels, color_dict, hatch_dict
 
-    mg = MetaGraph(adj, meta)
 
+def run_minimize_blockmodel(mg, temp_loc):
     # save to temp
     nx.write_graphml(mg.g, temp_loc)
-
     # load into graph-tool from temp
     g = load_graph(temp_loc, fmt="graphml")
     total_degrees = g.get_total_degrees(g.get_vertices())
     remove_verts = np.where(total_degrees == 0)[0]
     g.remove_vertex(remove_verts)
-    props = g.vertex_properties
-    min_state = minimize_blockmodel_dl(g, verbose=True)
+    min_state = minimize_blockmodel_dl(g, verbose=False)
 
     blocks = list(min_state.get_blocks())
     verts = g.get_vertices()
@@ -62,84 +143,161 @@ for threshold in thresholds:
 
     for v, b in zip(verts, blocks):
         cell_id = int(g.vertex_properties["_graphml_vertex_id"][v])
-        block_map[cell_id] = b
+        block_map[cell_id] = int(b)
 
     block_series = pd.Series(block_map)
     block_series.name = "block_label"
+    return block_series
 
-    mg = load_metagraph(graph_type, version=version)
+
+VERSION = "2020-01-29"
+BLIND = True
+
+# parameters
+# TODO weights
+# TODO sym thresh or not
+
+
+def run_experiment(seed=None, graph_type=None, threshold=None, param_key=None):
+    np.random.seed(seed)
+    if BLIND:
+        temp_param_key = param_key.replace(" ", "")  # don't want spaces in filenames
+        savename = f"{temp_param_key}-cell-types-"
+        title = param_key
+    else:
+        savename = f"{graph_type}-t{threshold}-cell-types"
+        title = f"{graph_type}, threshold = {threshold}"
+
+    mg = load_metagraph(graph_type, version=VERSION)
+
+    # simple threshold
+    # TODO they will want symmetric threshold...
+    # TODO maybe make that a parameter
+    adj = mg.adj.copy()
+    adj[adj <= threshold] = 0
+    meta = mg.meta.copy()
+    meta = pd.DataFrame(mg.meta["neuron_name"])
+    mg = MetaGraph(adj, meta)
+
+    # run the graphtool code
+    temp_loc = f"maggot_models/data/interim/temp-{param_key}.graphml"
+    block_series = run_minimize_blockmodel(mg, temp_loc)
+
+    # manage the output
+    mg = load_metagraph(graph_type, version=VERSION)
     mg.meta = pd.concat((mg.meta, block_series), axis=1)
     mg.meta["Original index"] = range(len(mg.meta))
     keep_inds = mg.meta[~mg.meta["block_label"].isna()]["Original index"].values
     mg.reindex(keep_inds)
-    mg.verify(10000, graph_type=graph_type, version=version)
+    if graph_type != "G":
+        mg.verify(10000, graph_type=graph_type, version=VERSION)
 
-    category = mg["block_label"]
-    subcategory = mg["Merge Class"]
-    uni_cat = np.unique(category)
-    uni_subcat = np.unique(subcategory)
-
-    counts_by_label = []
-    for label in uni_cat:
-        inds = np.where(category == label)
-        subcat_in_cat = subcategory[inds]
-        counts_by_class = []
-        for c in uni_subcat:
-            num_class_in_cluster = len(np.where(subcat_in_cat == c)[0])
-            counts_by_class.append(num_class_in_cluster)
-        counts_by_label.append(counts_by_class)
-    results = dict(zip(uni_cat, counts_by_label))
-    labels = list(results.keys())
-    data = np.array(list(results.values()))
-
-    data = data / data.sum(axis=0)[np.newaxis, :]  # normalize counts per class
-
-    # maybe the cos dist is redundant here
-    Z = linkage(data, method="average", metric="cosine", optimal_ordering=True)
-
-    R = dendrogram(Z, truncate_mode=None, get_leaves=True, no_plot=True)
-
-    savename = f"{graph_type}-mcmc-t{threshold}-counts"
-    title = f"{graph_type}, threshold = {hash(str(threshold))}"
-
-    barplot_text(
-        mg["block_label"],
-        mg["Merge Class"],
-        category_order=R["leaves"],
-        norm_bar_width=False,
-        title=title,
+    # deal with class labels
+    lineage_labels = mg.meta["lineage"].values
+    lineage_labels = np.vectorize(lambda x: "~" + x)(lineage_labels)
+    class_labels = mg["Merge Class"]
+    skeleton_labels = mg.meta.index.values
+    classlin_labels, color_dict, hatch_dict = augment_classes(
+        skeleton_labels, class_labels, lineage_labels
     )
-    stashfig(savename)
+    block_label = mg["block_label"].astype(int)
 
-    barplot_text(
-        mg["block_label"],
-        mg["Merge Class"],
-        category_order=R["leaves"],
+    # barplot with unknown class labels merged in, proportions
+    _, _, order = barplot_text(
+        block_label,
+        classlin_labels,
         norm_bar_width=True,
+        color_dict=color_dict,
+        hatch_dict=hatch_dict,
         title=title,
+        figsize=(24, 18),
+        return_order=True,
     )
-    stashfig(savename)
+    stashfig(savename + "barplot-mergeclasslin-props")
+    category_order = np.unique(block_label)[order]
+
+    # barplot with regular class labels
+    barplot_text(
+        block_label,
+        class_labels,
+        norm_bar_width=True,
+        color_dict=color_dict,
+        hatch_dict=hatch_dict,
+        title=title,
+        figsize=(24, 18),
+        category_order=category_order,
+    )
+    stashfig(savename + "barplot-mergeclass-props")
+
+    # barplot with unknown class labels merged in, counts
+    barplot_text(
+        block_label,
+        classlin_labels,
+        norm_bar_width=False,
+        color_dict=color_dict,
+        hatch_dict=hatch_dict,
+        title=title,
+        figsize=(24, 18),
+        return_order=True,
+        category_order=category_order,
+    )
+    stashfig(savename + "barplot-mergeclasslin-counts")
+
+    # barplot of hemisphere membership
+    fig, ax = plt.subplots(1, 1, figsize=(10, 20))
+    stacked_barplot(
+        block_label,
+        mg["Hemisphere"],
+        norm_bar_width=True,
+        category_order=category_order,
+        ax=ax,
+    )
+    remove_spines(ax)
+    stashfig(savename + "barplot-hemisphere")
+
+    # plot block probability matrix
+    counts = False
+    weights = False
+    prob_df = get_blockmodel_df(
+        mg.adj, block_label, return_counts=counts, use_weights=weights
+    )
+    prob_df = prob_df.reindex(order, axis=0)
+    prob_df = prob_df.reindex(order, axis=1)
+    ax = probplot(
+        100 * prob_df, fmt="2.0f", figsize=(20, 20), title=title, font_scale=0.4
+    )
+    stashfig(savename + "probplot")
+    block_series.name = param_key
+    return block_series
+
+
+np.random.seed(8888)
+n_replicates = 3
+param_grid = {"graph_type": ["Gad"], "threshold": [0, 1, 2]}
+params = list(ParameterGrid(param_grid))
+seeds = np.random.randint(1e8, size=len(params))
+param_keys = random_names(len(seeds))
+
+# for i, p in enumerate(params):
+#     p["seed"] = seeds[i]
+#     p["param_key"] = param_keys[i]
+# print(params)
+
+rep_params = []
+for i, seed in enumerate(seeds):
+    p = params[i % len(params)].copy()
+    p["seed"] = seed
+    p["param_key"] = param_keys[i]
 
 # %% [markdown]
 # #
-
-from graph_tool.draw import fruchterman_reingold_layout, arf_layout, radial_tree_layout
-
-# graph_draw(g)
-
-# pos = radial_tree_layout(g)
-
-# min_state.draw(pos=pos)
+outs = Parallel(n_jobs=-2, verbose=10)(delayed(run_experiment)(**p) for p in rep_params)
 
 # %% [markdown]
 # #
+block_df = pd.concat(outs, axis=1, ignore_index=False)
+block_df.rename(columns={block_df.columns[0]: "skeleton_id"}, inplace=True)
+stashcsv(block_df, "block-labels")
+param_df = pd.DataFrame(params)
+stashcsv(param_df, "parameters")
 
-from graph_tool.inference import minimize_nested_blockmodel_dl
-
-min_state = minimize_nested_blockmodel_dl(g, verbose=True)
-
-# %% [markdown]
-# #
-# from graph_tool.draw import draw_hierarchy
-
-min_state.draw()

@@ -91,6 +91,7 @@ def append_class(df, id, col, name):
 # # Begin main script
 
 meta_data_df = pd.read_csv(skeleton_data_file, delimiter=",", usecols=range(2))
+meta_data_df.rename(lambda x: x.strip(" "), axis=1, inplace=True)
 meta_data_df.head()
 
 meta_data_df.set_index("skeleton_id", inplace=True)
@@ -236,6 +237,23 @@ meta_data_df.loc[right_to_left_df.index, "Pair"] = right_to_left_df["leftid"]
 
 meta_data_df.loc[left_to_right_df.index, "Pair ID"] = left_to_right_df["pair_id"]
 meta_data_df.loc[right_to_left_df.index, "Pair ID"] = right_to_left_df["pair_id"]
+
+#%% Fix places where L/R labels are not the same
+print()
+for i in range(len(meta_data_df)):
+    my_id = meta_data_df.index[i]
+    my_class = meta_data_df.loc[my_id, "Class 1"]
+    partner_id = meta_data_df.loc[my_id, "Pair"]
+    if partner_id != -1:
+        partner_class = meta_data_df.loc[partner_id, "Class 1"]
+        if partner_class != "unk" and my_class == "unk":
+            print(f"{my_id} had asymmetric class label, fixed")
+            meta_data_df.loc[my_id, "Class 1"] = partner_class
+        elif (partner_class != my_class) and (partner_class != "unk"):
+            print(
+                f"{meta_data_df.index[i]} and partner {partner_id} have different labels"
+            )
+print()
 
 #%% lineagees
 lineage_df = pd.read_csv(lineage_file)

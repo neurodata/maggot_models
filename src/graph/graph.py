@@ -262,6 +262,10 @@ class MetaGraph:
                 print()
                 raise ValueError(f"Edge from {row_id} to {col_id} does not exist")
 
+    def remove_pdiff(self):
+        not_pdiff = np.where(~self.meta["is_pdiff"])[0]
+        return self.reindex(not_pdiff)
+
 
 def _source_mapper(name):
     return "source " + name

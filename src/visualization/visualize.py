@@ -788,6 +788,7 @@ def probplot(
     vmax=None,
     figsize=(10, 10),
     fmt=".0f",
+    font_scale=1,
 ):
     cbar_kws = {"fraction": 0.08, "shrink": 0.8, "pad": 0.03}
 
@@ -812,7 +813,7 @@ def probplot(
 
     ax.set_title(title, pad=30, fontsize=30)
 
-    sns.set_context("talk", font_scale=1)
+    sns.set_context("talk", font_scale=font_scale)
 
     heatmap_kws = dict(
         cbar_kws=cbar_kws,
@@ -902,11 +903,17 @@ def get_colors_hacky(true_labels, pred_labels):
 
 
 def clustergram(
-    adj, true_labels, pred_labels, figsize=(20, 20), title=None, color_dict=None
+    adj,
+    true_labels,
+    pred_labels,
+    figsize=(20, 20),
+    title=None,
+    color_dict=None,
+    font_scale=1,
 ):
     fig, ax = plt.subplots(2, 2, figsize=figsize)
     ax = ax.ravel()
-    sns.set_context("talk", font_scale=2)
+    sns.set_context("talk", font_scale=font_scale)
     if color_dict is None:
         color_dict = get_colors_hacky(true_labels, pred_labels)
     sankey(
@@ -968,7 +975,7 @@ def stacked_barplot(
     ax=None,
     plot_proportions=False,
     palette="tab10",
-    legend_ncol=5,
+    legend_ncol=6,
     bar_height=0.7,
     norm_bar_width=True,
     label_pos=None,
@@ -976,6 +983,7 @@ def stacked_barplot(
     return_data=False,
     color_dict=None,
     hatch_dict=None,
+    return_order=False,
 ):
     """
     Parameters
@@ -998,6 +1006,8 @@ def stacked_barplot(
     if color_dict == "class":
         color_dict = CLASS_COLOR_DICT
 
+    # TODO this could be one line in pandas
+    # TODO or use sklearn confusion matrix?
     counts_by_label = []
     for label in uni_cat:
         inds = np.where(category == label)
@@ -1008,8 +1018,6 @@ def stacked_barplot(
             counts_by_class.append(num_class_in_cluster)
         counts_by_label.append(counts_by_class)
     results = dict(zip(uni_cat, counts_by_label))
-    # labels = np.array(list(results.keys()))
-
     data = np.array(list(results.values()))
 
     # order things sensibly
@@ -1021,6 +1029,8 @@ def stacked_barplot(
         order = R["leaves"]
         uni_cat = uni_cat[order]
         data = data[order, :]
+    else:
+        order = category_order
     labels = uni_cat
 
     # find the width of the bars
@@ -1070,7 +1080,7 @@ def stacked_barplot(
 
         hatch = hatch_dict[colname]
         if hatch != "":
-            alpha = 0.5
+            alpha = 0.3
         else:
             alpha = 1
         ax.barh(
@@ -1108,7 +1118,7 @@ def stacked_barplot(
         ncol=legend_ncol, bbox_to_anchor=(0, 0), loc="upper left", fontsize="small"
     )
     if return_data:
-        return ax, data, uni_subcat, subcategory_colors
+        return ax, data, uni_subcat, subcategory_colors, order
     else:
         return ax
 
@@ -1120,7 +1130,7 @@ def barplot_text(
     subcategory_order=None,
     ax=None,
     plot_proportions=False,
-    legend_ncol=5,
+    legend_ncol=6,
     bar_height=0.7,
     norm_bar_width=True,
     label_pos=None,
@@ -1130,11 +1140,12 @@ def barplot_text(
     print_props=True,
     text_pad=0.01,
     inverse_memberships=True,
-    figsize=(24, 23),
+    figsize=(24, 24),
     title=None,
     palette=cc.glasbey_light,
     color_dict=None,
     hatch_dict=None,
+    **kws,
 ):
     uni_class_labels, uni_class_counts = np.unique(subcategory, return_counts=True)
     uni_pred_labels, uni_pred_counts = np.unique(category, return_counts=True)
@@ -1150,7 +1161,7 @@ def barplot_text(
 
     # plot the barplot (and ticks to the right of them)
     ax = axs[0]
-    ax, prop_data, uni_class, subcategory_colors = stacked_barplot(
+    ax, prop_data, uni_class, subcategory_colors, order = stacked_barplot(
         category,
         subcategory,
         category_order=category_order,
@@ -1166,6 +1177,7 @@ def barplot_text(
         return_data=True,
         color_dict=color_dict,
         hatch_dict=hatch_dict,
+        **kws,
     )
     ax.set_frame_on(False)
 
@@ -1237,8 +1249,7 @@ def barplot_text(
         else:
             ax2_title = "Known cell type (count in cluster)"
     ax.set_title(ax2_title, loc="left", pad=-100)
-    # axs = (ax0, ax1, ax2)
-    return fig, axs
+    return fig, axs, order
 
 
 def bartreeplot(
