@@ -273,22 +273,19 @@ def run_experiment(seed=None, graph_type=None, threshold=None, param_key=None):
 
 np.random.seed(8888)
 n_replicates = 3
-param_grid = {"graph_type": ["Gad"], "threshold": [0, 1, 2]}
+param_grid = {"graph_type": ["Gad"], "threshold": [0, 1, 2, 3, 4]}
 params = list(ParameterGrid(param_grid))
-seeds = np.random.randint(1e8, size=len(params))
+seeds = np.random.randint(1e8, size=n_replicates * len(params))
 param_keys = random_names(len(seeds))
-
-# for i, p in enumerate(params):
-#     p["seed"] = seeds[i]
-#     p["param_key"] = param_keys[i]
-# print(params)
 
 rep_params = []
 for i, seed in enumerate(seeds):
     p = params[i % len(params)].copy()
     p["seed"] = seed
     p["param_key"] = param_keys[i]
+    rep_params.append(p)
 
+print(rep_params)
 # %% [markdown]
 # #
 outs = Parallel(n_jobs=-2, verbose=10)(delayed(run_experiment)(**p) for p in rep_params)
@@ -296,8 +293,7 @@ outs = Parallel(n_jobs=-2, verbose=10)(delayed(run_experiment)(**p) for p in rep
 # %% [markdown]
 # #
 block_df = pd.concat(outs, axis=1, ignore_index=False)
-block_df.rename(columns={block_df.columns[0]: "skeleton_id"}, inplace=True)
 stashcsv(block_df, "block-labels")
-param_df = pd.DataFrame(params)
+param_df = pd.DataFrame(rep_params)
 stashcsv(param_df, "parameters")
 

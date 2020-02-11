@@ -1145,6 +1145,7 @@ def barplot_text(
     palette=cc.glasbey_light,
     color_dict=None,
     hatch_dict=None,
+    return_order=False,
     **kws,
 ):
     uni_class_labels, uni_class_counts = np.unique(subcategory, return_counts=True)
@@ -1249,7 +1250,10 @@ def barplot_text(
         else:
             ax2_title = "Known cell type (count in cluster)"
     ax.set_title(ax2_title, loc="left", pad=-100)
-    return fig, axs, order
+    if return_order:
+        return fig, axs, order
+    else:
+        return fig, axs
 
 
 def bartreeplot(

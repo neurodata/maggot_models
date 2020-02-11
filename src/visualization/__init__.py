@@ -21,3 +21,4 @@ from .visualize import (
 )
 from .stack_seaborn import countplot, freqplot
 from .manual_colors import CLASS_COLOR_DICT, CLASS_IND_DICT
+from .names import NAMES, random_names
