@@ -267,6 +267,59 @@ class MetaGraph:
         return self.reindex(not_pdiff)
 
 
+def add_max_weight(df):
+    """Input is an edgelist with `edge pair ID`s
+
+    Uses the 'weight' column
+    
+    Parameters
+    ----------
+    df : [type]
+        [description]
+    
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    max_pair_edges = df.groupby("edge pair ID", sort=False)["weight"].max()
+    # HACK think there is a better way to do this with pandas .map()
+    edge_max_weight_map = dict(zip(max_pair_edges.index.values, max_pair_edges.values))
+    df["max_weight"] = itemgetter(*df["edge pair ID"])(edge_max_weight_map)
+    # need to make sure the unpaired edges don't get a huge max weight
+    asym_inds = df[df["edge pair ID"] == -1].index
+    df.loc[asym_inds, "max_weight"] = df.loc[asym_inds, "weight"]
+    return df
+
+
+def edgelist_to_mg(edgelist, meta):
+    g = nx.from_pandas_edgelist(edgelist, edge_attr=True, create_using=nx.DiGraph)
+    nx.set_node_attributes(g, meta.to_dict(orient="index"))
+    mg = MetaGraph(g)
+    return mg
+
+
+def preprocess(mg, threshold=0, sym_threshold=True, remove_pdiff=True, binarize=False):
+    edgelist = mg.to_edgelist()
+    if sym_threshold:
+        # note that this just doesn't remove asymmetric edges
+        # another option would be to actually max the edges into mirror images
+        edgelist = add_max_weight(edgelist)
+        edgelist = edgelist[edgelist["max_weight"] > threshold]
+    else:
+        edgelist = edgelist[edgelist["weight"] > threshold]
+    mg = edgelist_to_mg(edgelist, mg.meta)
+    mg = mg.make_lcc()
+    if remove_pdiff:
+        mg = mg.remove_pdiff()
+    if binarize:
+        # HACK there must be a better way in nx?
+        adj = mg.adj
+        adj[adj > 0] = 1
+        mg = MetaGraph(adj, mg.meta)
+    return mg
+
+
 def _source_mapper(name):
     return "source " + name
 

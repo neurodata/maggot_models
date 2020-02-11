@@ -197,7 +197,7 @@ def run_louvain(g_sym, res, skeleton_labels):
     return partition, modularity
 
 
-def augment_classes(skeleton_labels, class_labels, lineage_labels, fill_unk=True):
+def augment_classes(class_labels, lineage_labels, fill_unk=True):
     if fill_unk:
         classlin_labels = class_labels.copy()
         fill_inds = np.where(class_labels == "unk")[0]
@@ -256,13 +256,13 @@ def run_experiment(
     lineage_labels = np.array(itemgetter(*skeleton_labels)(lineage_label_dict))
     lineage_labels = np.vectorize(lambda x: "~" + x)(lineage_labels)
     classlin_labels, color_dict, hatch_dict = augment_classes(
-        skeleton_labels, class_labels, lineage_labels
+        class_labels, lineage_labels
     )
 
     # TODO sort all of these the same way
     # TODO then sort all of them by proportion of sensory/motor
     # barplot by merge class and lineage
-    fig, axs = barplot_text(
+    _, _, order = barplot_text(
         partition,
         classlin_labels,
         color_dict=color_dict,
@@ -271,8 +271,11 @@ def run_experiment(
         figsize=(24, 18),
         title=title,
         hatch_dict=hatch_dict,
+        return_order=True,
     )
     stashfig(basename + "barplot-mergeclasslin-props")
+    category_order = np.unique(partition)[order]
+
     fig, axs = barplot_text(
         partition,
         class_labels,
@@ -282,6 +285,7 @@ def run_experiment(
         figsize=(24, 18),
         title=title,
         hatch_dict=None,
+        category_order=category_order,
     )
     stashfig(basename + "barplot-mergeclass-props")
     fig, axs = barplot_text(
@@ -293,34 +297,31 @@ def run_experiment(
         figsize=(24, 18),
         title=title,
         hatch_dict=None,
+        category_order=category_order,
     )
     stashfig(basename + "barplot-mergeclass-counts")
 
     # sorted heatmap # TODO replace with gridmap
-    heatmap(
-        mg.adj,
-        transform="simple-nonzero",
-        figsize=(20, 20),
-        inner_hier_labels=partition,
-        hier_label_fontsize=10,
-        title=title,
-        title_pad=80,
-    )
-    stashfig(basename + "heatmap")
+    # heatmap(
+    #     mg.adj,
+    #     transform="simple-nonzero",
+    #     figsize=(20, 20),
+    #     inner_hier_labels=partition,
+    #     hier_label_fontsize=10,
+    #     title=title,
+    #     title_pad=80,
+    # )
+    # stashfig(basename + "heatmap")
 
     # block probability matrices
-    # TODO sort this the same as the above
     counts = False
     weights = False
     prob_df = get_blockmodel_df(
         mg.adj, partition, return_counts=counts, use_weights=weights
     )
-    # prob_df = prob_df.reindex(sort_partition_sf.index, axis=0)
-    # prob_df = prob_df.reindex(sort_partition_sf.index, axis=1)
-    ax = probplot(
-        100 * prob_df, fmt="2.0f", figsize=(20, 20), title=title, font_scale=0.7
-    )
-    ax.set_ylabel(r"Median signal flow $\to$", fontsize=28)  # TODO remove
+    prob_df = prob_df.reindex(category_order, axis=0)
+    prob_df = prob_df.reindex(category_order, axis=1)
+    probplot(100 * prob_df, fmt="2.0f", figsize=(20, 20), title=title, font_scale=0.7)
     stashfig(basename + f"probplot-counts{counts}-weights{weights}")
 
     # plot minigraph with layout

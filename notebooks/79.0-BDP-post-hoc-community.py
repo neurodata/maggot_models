@@ -31,12 +31,14 @@ from src.visualization import (
     remove_spines,
     stacked_barplot,
 )
+import matplotlib as mpl
+
+mpl.rcParams["axes.spines.right"] = False
+mpl.rcParams["axes.spines.top"] = False
 
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
 BRAIN_VERSION = "2020-01-29"
-
-print(sns.__version__)
 
 
 def stashfig(name, **kws):
@@ -102,7 +104,7 @@ stashfig("ari-heatmap")
 param_file = base_dir / run_dir / "csvs" / "parameters.csv"
 param_df = pd.read_csv(param_file, index_col=0)
 param_df.set_index("param_key", inplace=True)
-param_groupby = param_df.groupby(["graph_type", "threshold"])
+param_groupby = param_df.groupby(["graph_type", "threshold", "res", "binarize"])
 param_df["Parameters"] = -1
 for i, (key, val) in enumerate(param_groupby.indices.items()):
     param_df.iloc[val, param_df.columns.get_loc("Parameters")] = i
@@ -110,38 +112,47 @@ for i, (key, val) in enumerate(param_groupby.indices.items()):
 
 sns.set_context("talk", font_scale=1)
 
-lut = dict(zip(param_df["Parameters"].unique(), sns.color_palette("deep")))
+lut = dict(zip(param_df["Parameters"].unique(), cc.glasbey_light))
 row_colors = param_df["Parameters"].map(lut)
 clustergrid = sns.clustermap(
     ari_df,
     cmap="Reds",
     method="single",
-    annot=True,
     vmin=None,
     figsize=(20, 20),
     row_colors=row_colors,
     col_colors=row_colors,
-    dendrogram_ratio=0.1,
-    cbar_pos=None,
+    dendrogram_ratio=0.2,
 )
 clustergrid.fig.suptitle("ARI", y=1.02)
 stashfig("ari-clustermap")
 
 # %% [markdown]
-# # evaluate modularity
+# # Look at modularity over all of the parameters
 
-
-from community import modularity
-
-for c in block_df.columns:
-    partition = block_df[c]
-    params = param_df.loc[c]
-    mg = load_metagraph(params["graph_type"], version=BRAIN_VERSION)
-    edgelist = mg.to_edgelist()
-    edgelist = add_max_weight(edgelist)
-    edgelist = edgelist[edgelist["max_weight"] > params["threshold"]]
-    mg = edgelist_to_mg(edgelist, mg.meta)
-    mg = mg.make_lcc()
-    mg = mg.remove_pdiff()
-    g_sym = nx.to_undirected(mg.g)
-    modularity(partition, g)
+mean_modularities = param_df.groupby("Parameters")["modularity"].mean()
+order = mean_modularities.sort_values(ascending=False).index
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+sns.stripplot(data=param_df, x="Parameters", y="modularity", ax=ax, order=order)
+ax.set_xlabel("Parameter set")
+stashfig("mod-by-parameters")
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+sns.stripplot(data=param_df, x="threshold", y="modularity", ax=ax)
+stashfig("mod-by-threshold")
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+sns.stripplot(data=param_df, x="binarize", y="modularity", ax=ax)
+stashfig("mod-by-binarize")
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+sns.stripplot(data=param_df, x="res", y="modularity", ax=ax)
+stashfig("mod-by-res")
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+sns.stripplot(
+    data=param_df,
+    x="threshold",
+    y="modularity",
+    ax=ax,
+    hue="Parameters",
+    palette=cc.glasbey_light,
+)
+ax.legend([])
+stashfig("mod-by-threshold-colored")

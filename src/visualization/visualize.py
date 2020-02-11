@@ -1006,8 +1006,7 @@ def stacked_barplot(
     if color_dict == "class":
         color_dict = CLASS_COLOR_DICT
 
-    # TODO this could be one line in pandas
-    # TODO or use sklearn confusion matrix?
+    # HACK this could be one line in pandas
     counts_by_label = []
     for label in uni_cat:
         inds = np.where(category == label)

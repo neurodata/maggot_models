@@ -61,7 +61,7 @@ def compute_mse(estimator, graph):
     Matters whether the estimator is directed
     """
     rss = compute_rss(estimator, graph)
-    if not estimator.directed:  # TODO double check that this is right
+    if not estimator.directed:  # REVIEW double check that this is right
         size = graph.shape[0] * (graph.shape[0] - 1) / 2
     else:
         size = graph.size - graph.shape[0]
