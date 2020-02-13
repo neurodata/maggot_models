@@ -292,14 +292,21 @@ def add_max_weight(df):
     return df
 
 
-def edgelist_to_mg(edgelist, meta):
+def edgelist_to_mg(edgelist, meta, weight="weight"):
     g = nx.from_pandas_edgelist(edgelist, edge_attr=True, create_using=nx.DiGraph)
     nx.set_node_attributes(g, meta.to_dict(orient="index"))
-    mg = MetaGraph(g)
+    mg = MetaGraph(g, weight=weight)
     return mg
 
 
-def preprocess(mg, threshold=0, sym_threshold=True, remove_pdiff=True, binarize=False):
+def preprocess(
+    mg,
+    threshold=0,
+    sym_threshold=True,
+    remove_pdiff=True,
+    binarize=False,
+    weight="weight",
+):
     edgelist = mg.to_edgelist()
     if sym_threshold:
         # note that this just doesn't remove asymmetric edges
@@ -308,10 +315,10 @@ def preprocess(mg, threshold=0, sym_threshold=True, remove_pdiff=True, binarize=
         edgelist = edgelist[edgelist["max_weight"] > threshold]
     else:
         edgelist = edgelist[edgelist["weight"] > threshold]
-    mg = edgelist_to_mg(edgelist, mg.meta)
-    mg = mg.make_lcc()
+    mg = edgelist_to_mg(edgelist, mg.meta, weight=weight)
     if remove_pdiff:
-        mg = mg.remove_pdiff()
+        mg = mg.remove_pdiff()  # FIXME need a way to deal with pairs
+    mg = mg.make_lcc()
     if binarize:
         # HACK there must be a better way in nx?
         adj = mg.adj

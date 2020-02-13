@@ -30,6 +30,7 @@ from src.visualization import (
     sankey,
     screeplot,
 )
+from src.block import run_minimize_blockmodel
 
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
@@ -45,7 +46,7 @@ def stashfig(name, **kws):
     savefig(name, foldername=FNAME, save_on=SAVEFIGS, **kws)
 
 
-threshold_raw = False
+threshold_raw = True
 ptr = True
 n_components = 3
 if threshold_raw:
@@ -96,26 +97,51 @@ rows = []
 for threshold in thresholds:
     adj = mg.adj.copy()
     adj[adj <= threshold] = 0
-    adj, inds = get_lcc(adj, return_inds=True)
-    true_labels = class_labels[inds]
-    latent = ase(adj, n_components, ptr=ptr)
+    mg = MetaGraph(adj, mg.meta)
+    mg.make_lcc()
 
+    # do the spectral shit
+    class_labels = mg["Class 1"]
+    true_labels = np.array(itemgetter(*class_labels)(class_map))
+
+    heatmap(
+        mg.adj,
+        transform="simple-all",
+        title=f"MB, threshold={threshold}",
+        inner_hier_labels=true_labels,
+        hier_label_fontsize=10,
+        sort_nodes=True,
+    )
+
+    latent = ase(mg.adj, n_components, ptr=ptr)
     # cluster = GaussianCluster(
     #     min_components=2, max_components=10, covariance_type="all", n_init=100
     # )
+
     cluster = AutoGMMCluster(min_components=2, max_components=10)
-
     pred_labels = cluster.fit_predict(latent)
-
     ari = adjusted_rand_score(true_labels, pred_labels)
-
-    row = {"ARI": ari, "Threshold": threshold}
+    row = {"ARI": ari, "Threshold": threshold, "Method": "GMMoASE"}
     rows.append(row)
 
+    # do the MCMC
+    block_series = run_minimize_blockmodel(mg, weight_model="discrete-poisson")
+    ari = adjusted_rand_score(true_labels, block_series.values)
+    row = {"ARI": ari, "Threshold": threshold, "Method": "GT-dp"}
+    rows.append(row)
+
+    # do the MCMC
+    block_series = run_minimize_blockmodel(mg, weight_model=None)
+    ari = adjusted_rand_score(true_labels, block_series.values)
+    row = {"ARI": ari, "Threshold": threshold, "Method": "GT-None"}
+    rows.append(row)
+# %% [markdown]
+# #
 result_df = pd.DataFrame(rows)
 
 fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-sns.lineplot(data=result_df, x="Threshold", y="ARI", ax=ax)
+sns.lineplot(data=result_df, x="Threshold", y="ARI", ax=ax, hue="Method")
 remove_spines(ax, keep_corner=True)
 ax.set_title(f"Mushroom Body, n_components={n_components}")
 stashfig(f"mb-nc{n_components}-tr{threshold_raw}")
+

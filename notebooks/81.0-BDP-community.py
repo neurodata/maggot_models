@@ -259,7 +259,6 @@ def run_experiment(
         class_labels, lineage_labels
     )
 
-    # TODO sort all of these the same way
     # TODO then sort all of them by proportion of sensory/motor
     # barplot by merge class and lineage
     _, _, order = barplot_text(
@@ -301,19 +300,8 @@ def run_experiment(
     )
     stashfig(basename + "barplot-mergeclass-counts")
 
-    # sorted heatmap # TODO replace with gridmap
-    # heatmap(
-    #     mg.adj,
-    #     transform="simple-nonzero",
-    #     figsize=(20, 20),
-    #     inner_hier_labels=partition,
-    #     hier_label_fontsize=10,
-    #     title=title,
-    #     title_pad=80,
-    # )
-    # stashfig(basename + "heatmap")
+    # TODO add gridmap
 
-    # block probability matrices
     counts = False
     weights = False
     prob_df = get_blockmodel_df(
@@ -323,23 +311,6 @@ def run_experiment(
     prob_df = prob_df.reindex(category_order, axis=1)
     probplot(100 * prob_df, fmt="2.0f", figsize=(20, 20), title=title, font_scale=0.7)
     stashfig(basename + f"probplot-counts{counts}-weights{weights}")
-
-    # plot minigraph with layout
-    # adjusted_partition = adjust_partition(partition, class_labels)
-    # minigraph = to_minigraph(
-    #     mg.adj, adjusted_partition, use_counts=True, size_scaler=10
-    # )
-    # draw_networkx_nice(
-    #     minigraph,
-    #     "AdjEvec-0",
-    #     "Signal Flow",
-    #     sizes="Size",
-    #     colors="Color",
-    #     cmap="Greys",
-    #     vmin=100,
-    #     weight_scale=0.001,
-    # )
-    # stashfig(basename + "sbm-drawn-network")
 
     partition_series = pd.Series(partition, index=skeleton_labels)
     partition_series.name = param_key
