@@ -22,7 +22,7 @@ from src.block import run_minimize_blockmodel
 from src.data import load_metagraph
 from src.embed import ase, lse, preprocess_graph
 from src.graph import MetaGraph, preprocess
-from src.io import savefig, saveskels
+from src.io import savefig, saveskels, savecsv
 from src.visualization import remove_spines, screeplot
 
 FNAME = os.path.basename(__file__)[:-3]
@@ -30,7 +30,11 @@ print(FNAME)
 
 
 def stashfig(name, **kws):
-    savefig(name, foldername=FNAME, **kws)
+    savefig(name, foldername=FNAME, save_on=True, **kws)
+
+
+def stashcsv(df, name, **kws):
+    savecsv(df, name, foldername=FNAME, save_on=True, **kws)
 
 
 def pairwise_sparse_jaccard_distance(X, Y=None):
