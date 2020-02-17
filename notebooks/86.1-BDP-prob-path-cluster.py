@@ -56,7 +56,7 @@ print(f"Preprocessed graph {graph_type} with threshold={threshold}, weight={weig
 
 out_classes = ["O_dVNC"]
 sens_classes = ["sens"]
-cutoff = 7
+cutoff = 8
 
 print(f"Finding paths from {sens_classes} to {out_classes} of max length {cutoff}")
 
