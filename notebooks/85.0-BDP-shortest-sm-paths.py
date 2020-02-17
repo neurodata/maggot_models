@@ -18,7 +18,6 @@ from graspy.cluster import AutoGMMCluster, GaussianCluster
 from graspy.embed import AdjacencySpectralEmbed, ClassicalMDS, LaplacianSpectralEmbed
 from graspy.plot import gridplot, heatmap, pairplot
 from graspy.utils import get_lcc, symmetrize
-from src.block import run_minimize_blockmodel
 from src.data import load_metagraph
 from src.embed import ase, lse, preprocess_graph
 from src.graph import MetaGraph, preprocess
@@ -95,11 +94,13 @@ sparse_adj = nx.to_scipy_sparse_matrix(
 )
 
 print("Running Dijkstra's")
+# TODO need to also save the path order here
 dists, predecessors = dijkstra(sparse_adj, return_predecessors=True)
 
-mg.meta["idx"] = range(len(mg))
-from_inds = mg.meta[mg.meta["Class 1"].isin(sens_classes)]["idx"].values
-out_inds = mg.meta[mg.meta["Class 1"].isin(out_classes)]["idx"].values
+meta = mg.meta.copy()
+meta["idx"] = range(len(meta))
+from_inds = meta[meta["Class 1"].isin(sens_classes)]["idx"].values
+out_inds = meta[meta["Class 1"].isin(out_classes)]["idx"].values
 
 path_mat = lil_matrix((len(from_inds) * len(out_inds), len(mg)), dtype=bool)
 
@@ -114,13 +115,24 @@ for i, from_ind in enumerate(from_inds):
                 curr_ind = predecessors[from_ind, curr_ind]
 
 # if subsample paths
-# path_mat = path_mat[np.random.randint(path_mat.shape[0], size=10000)]
+path_mat = path_mat[np.random.randint(path_mat.shape[0], size=1000)]
 
 # remove not connected paths
 # seems crazy that this is possible
 row_sums = path_mat.sum(axis=1).A1
-path_mat = path_mat[row_sums != 0]
+row_mask = row_sums != 0
+path_mat = path_mat[row_mask]
 
+# remove nodes that are never visited
+col_sums = path_mat.sum(axis=0).A1
+col_mask = col_sums != 0
+path_mat = path_mat[:, col_mask]
+
+meta = meta.iloc[col_mask, :]
+
+
+# %% [markdown]
+# #
 
 path_mat = path_mat.tocsr()  # for fast mult
 
@@ -133,9 +145,12 @@ print("Embedding with MDS")
 cmds = ClassicalMDS(dissimilarity="precomputed")
 jaccard_embedding = cmds.fit_transform(pdist_sparse)
 
+# %% [markdown]
+# #
+
 print("Clustering embedding")
 agmm = AutoGMMCluster(
-    min_components=2, max_components=20, affinity="euclidean", linkage="average"
+    min_components=2, max_components=40, affinity="euclidean", linkage="single"
 )
 labels = agmm.fit_predict(jaccard_embedding)
 
@@ -154,6 +169,7 @@ for ul in uni_labels:
     mean_paths.append(mean_path)
 mean_paths = np.squeeze(np.array(mean_paths))
 
+# TODO remove sensory and motor indices from the matrix
 
 # %% [markdown]
 # #
@@ -178,3 +194,4 @@ clustergrid.fig.suptitle("Sensoritmotor path clusters (column-normalized)")
 clustergrid.ax_heatmap.set_ylabel("Path cluster")
 clustergrid.ax_heatmap.set_xlabel("Node")
 stashfig("smpath-clustermap-normalized")
+
