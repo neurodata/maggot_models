@@ -56,7 +56,7 @@ print(f"Preprocessed graph {graph_type} with threshold={threshold}, weight={weig
 
 out_classes = ["O_dVNC"]
 sens_classes = ["sens"]
-cutoff = 6
+cutoff = 8
 
 print(f"Finding paths from {sens_classes} to {out_classes} of max length {cutoff}")
 
@@ -106,9 +106,7 @@ def prob_path_search(from_ind):
     return path_probs
 
 
-outs = Parallel(n_jobs=-2, verbose=10)(
-    delayed(prob_path_search)(i) for i in from_inds[:10]
-)
+outs = Parallel(n_jobs=-2, verbose=10)(delayed(prob_path_search)(i) for i in from_inds)
 path_mat = np.concatenate(outs, axis=0)
 
 print(f"Computed {path_mat.shape[0]} pair path probabilities")
