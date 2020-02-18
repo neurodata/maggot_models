@@ -56,7 +56,7 @@ print(f"Preprocessed graph {graph_type} with threshold={threshold}, weight={weig
 
 out_classes = ["O_dVNC"]
 sens_classes = ["sens"]
-cutoff = 8
+cutoff = 6
 
 print(f"Finding paths from {sens_classes} to {out_classes} of max length {cutoff}")
 
@@ -83,6 +83,7 @@ for i in from_inds:
         path_labels.append([i, j])
 path_labels = np.array(path_labels)
 
+print(f"Computing {path_labels.shape[0]} path probabilities")
 #%%
 
 
@@ -118,3 +119,5 @@ stashcsv(path_df, f"prob-path-mat" + base)
 
 path_label_df = pd.DataFrame(data=path_labels)
 stashcsv(path_label_df, f"prob-path-labels" + base)
+
+stashcsv(meta, f"meta" + base)
