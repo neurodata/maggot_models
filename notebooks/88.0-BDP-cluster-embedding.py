@@ -70,23 +70,46 @@ def pairwise_sparse_jaccard_distance(X, Y=None):
 
 
 run_name = "86.1-BDP-prob-path-cluster"
+embed_name = "87.0-BDP-read-prob-paths"
 threshold = 1
 weight = "weight"
 graph_type = "Gad"
 cutoff = 8
 base = f"-c{cutoff}-t{threshold}-{graph_type}"
 
-
 base_path = Path(f"./maggot_models/notebooks/outs/{run_name}/csvs")
 meta = pd.read_csv(base_path / str("meta" + base + ".csv"), index_col=0)
-path_mat = pd.read_csv(base_path / str("prob-path-mat" + base + ".csv"), index_col=0)
+path_mat = pd.read_csv(
+    base_path / str("prob-path-mat" + base + ".csv"), index_col=0
+).values
 
-sparse_path = csr_matrix(path_mat.values)
+base_path = Path(f"./maggot_models/notebooks/outs/{embed_name}/csvs")
+embed_mat = pd.read_csv(base_path / str("euclid-mds-embed.csv"), index_col=0)
 
-euclid_dists = pairwise_distances(sparse_path, metric="euclidean")
+gmm = AutoGMMCluster(
+    min_components=10,
+    max_components=50,
+    affinity="all",
+    linkage="all",
+    covariance_type="all",
+    n_jobs=-2,
+    verbose=30,
+)
+labels = gmm.fit_predict(embed_mat.values)
 
-mds = ClassicalMDS(dissimilarity="precomputed")
-mds_embed = mds.fit_transform(euclid_dists)
-embed_df = pd.DataFrame(data=mds_embed)
+label_df = pd.DataFrame(data=labels)
+stashcsv(label_df, "labels")
 
-stashcsv(embed_df, "euclid-mds-embed")
+print("Finding mean paths")
+mean_paths = []
+uni_labels = np.unique(labels)
+for ul in uni_labels:
+    inds = np.where(labels == ul)[0]
+    paths = path_mat[inds, :]
+    mean_path = np.array(np.mean(paths, axis=0))
+    mean_paths.append(mean_path)
+mean_paths = np.squeeze(np.array(mean_paths))
+
+mean_path_df = pd.DataFrame(data=mean_paths, columns=meta.index.values)
+stashcsv(mean_path_df, "mean-paths")
+

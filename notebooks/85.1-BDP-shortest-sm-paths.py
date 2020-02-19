@@ -252,8 +252,6 @@ sort_meta = meta.sort_values(["class_rank", sort_class, "mean_rank"], inplace=Fa
 perm_inds = sort_meta.idx.values
 # path_mat = path_mat[:, perm_inds]
 
-#%%
-
 # data = path_mat.todense().astype(float)
 data = mean_paths.copy()
 data = np.log10(data)
