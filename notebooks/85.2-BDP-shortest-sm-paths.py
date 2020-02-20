@@ -105,33 +105,36 @@ out_inds = meta[meta["Class 1"].isin(out_classes)]["idx"].values
 path_mat = lil_matrix((len(from_inds) * len(out_inds), len(mg)), dtype=bool)
 order_mat = lil_matrix((len(from_inds) * len(out_inds), len(mg)), dtype=int)
 
-include_end = False
-include_start = False
+include_end = True
+include_start = True
 
+paths = []
+orders = []
+endpoints = []
 for i, from_ind in enumerate(from_inds):
     for j, out_ind in enumerate(out_inds):
-        # the below is ignoring the actual start and end node in the path, hopefully
-        if include_end:
-            curr_ind = out_ind
-        else:
-            curr_ind = predecessors[from_ind, out_ind]
-        order = 0
-        if curr_ind != -9999:  # key for no path in scipy
+        curr_ind = predecessors[from_ind, out_ind]
+        if curr_ind != -9999:
+            path = []
+            order = []
+            loc = 0
             while curr_ind != from_ind:
-                order += 1
-                path_mat[i * len(out_inds) + j, curr_ind] = True
-                order_mat[i * len(out_inds) + j, curr_ind] = -order
+                loc += 1
+                path.append(curr_ind)
+                order.append(loc)
                 curr_ind = predecessors[from_ind, curr_ind]
+            path.reverse()
+            if include_start:
+                path.insert(0, from_ind)
+                order.append(order[-1] + 1)
             if include_end:
-                path_mat[i * len(out_inds) + j, curr_ind] = True
-                order_mat[i * len(out_inds) + j, curr_ind] = -order
-                curr_ind = predecessors[from_ind, curr_ind]
-# %% [markdown]
-# #
-nonzero = order_mat.nonzero()
-for i 
-    
+                path.append(out_ind)
+                order.append(order[-1] + 1)
+            paths.append(path)
+            orders.append(order)
+            endpoints.append((from_ind, out_ind))
 
+order_mat = csr_matrix((orders, (range(len(paths), paths))))
 
 # %% [markdown]
 # #
