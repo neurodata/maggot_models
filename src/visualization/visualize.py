@@ -1018,7 +1018,6 @@ def stacked_barplot(
         counts_by_label.append(counts_by_class)
     results = dict(zip(uni_cat, counts_by_label))
     data = np.array(list(results.values()))
-    print(data.sum(axis=0))
 
     # order things sensibly
     if category_order is None:

@@ -111,7 +111,7 @@ currtime = time.time()
 
 n_sims = 1
 paths = []
-for f in from_inds:
+for f in from_inds[:1]:
     for i in range(n_sims):
         temp_paths = generate_random_cascade(
             f, probs, 0, stop_inds=out_inds, max_depth=20
