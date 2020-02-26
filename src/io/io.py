@@ -24,7 +24,7 @@ def _handle_dirs(pathname, foldername, subfoldername):
 def savefig(
     name,
     fmt="png",
-    dpi=150,
+    dpi=300,
     foldername=None,
     subfoldername="figs",
     pathname="./maggot_models/notebooks/outs",

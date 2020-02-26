@@ -21,7 +21,6 @@ from sklearn.model_selection import ParameterGrid
 from graspy.embed import AdjacencySpectralEmbed, LaplacianSpectralEmbed
 from graspy.plot import gridplot, heatmap, pairplot
 from graspy.utils import symmetrize
-from src.cluster import DivisiveCluster
 from src.data import load_everything, load_metagraph, load_networkx
 from src.embed import lse, preprocess_graph
 from src.graph import MetaGraph
@@ -43,8 +42,6 @@ from src.visualization import (
     stacked_barplot,
     random_names,
 )
-
-warnings.simplefilter("ignore", category=FutureWarning)
 
 
 FNAME = os.path.basename(__file__)[:-3]
@@ -320,11 +317,11 @@ def run_experiment(
 # %% [markdown]
 # #
 np.random.seed(888)
-n_replicates = 3
+n_replicates = 10
 param_grid = {
-    "graph_type": ["Gad"],
+    "graph_type": ["Gad", "G"],
     "threshold": [0, 1, 2, 3],
-    "res": [0.2, 0.3, 0.4],
+    "res": [0.2, 0.25, 0.3, 0.35, 0.4, 0.45],
     "binarize": [True, False],
 }
 params = list(ParameterGrid(param_grid))

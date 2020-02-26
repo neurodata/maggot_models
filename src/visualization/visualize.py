@@ -1018,6 +1018,7 @@ def stacked_barplot(
         counts_by_label.append(counts_by_class)
     results = dict(zip(uni_cat, counts_by_label))
     data = np.array(list(results.values()))
+    print(data.sum(axis=0))
 
     # order things sensibly
     if category_order is None:
@@ -1404,7 +1405,7 @@ def get_color_dict(labels, pal="tab10", to_int=False):
     return color_dict
 
 
-def gridmap(A, ax=None, legend=False, sizes=(10, 70), spines=False, border=True, **kws):
+def gridmap(A, ax=None, legend=False, sizes=(5, 10), spines=False, border=True, **kws):
     if ax is None:
         _, ax = plt.subplots(1, 1, figsize=(20, 20))
     n_verts = A.shape[0]
@@ -1422,19 +1423,19 @@ def gridmap(A, ax=None, legend=False, sizes=(10, 70), spines=False, border=True,
         legend=legend,
         sizes=sizes,
         ax=ax,
-        linewidth=0.3,
+        linewidth=0,
         **kws,
     )
-    ax.axis("square")
-    ax.set_xlim((0, n_verts))
-    ax.set_ylim((n_verts, 0))
+    # ax.axis("image")
+    ax.set_xlim((-1, n_verts + 1))
+    ax.set_ylim((n_verts + 1, -1))
     if not spines:
         remove_spines(ax)
     if border:
         linestyle_kws = {
             "linestyle": "--",
             "alpha": 0.5,
-            "linewidth": 2,
+            "linewidth": 0.5,
             "color": "grey",
         }
         ax.axvline(0, **linestyle_kws)
@@ -1514,6 +1515,8 @@ def draw_networkx_nice(
     vmin=None,
     vmax=None,
     weight_scale=1,
+    size_scale=1,
+    draw_labels=True,
 ):
     if nodelist is None:
         nodelist = g.nodes()
@@ -1532,7 +1535,7 @@ def draw_networkx_nice(
         size_attr_dict = nx.get_node_attributes(g, sizes)
         node_size = []
         for n in nodelist:
-            node_size.append(size_attr_dict[n])
+            node_size.append(size_scale * size_attr_dict[n])
 
     if colors is not None:
         color_attr_dict = nx.get_node_attributes(g, colors)
@@ -1575,14 +1578,15 @@ def draw_networkx_nice(
         ax=ax,
     )
 
-    text_items = nx.draw_networkx_labels(g, label_pos, ax=ax, font_size=20)
+    if draw_labels:
+        text_items = nx.draw_networkx_labels(g, label_pos, ax=ax, font_size=20)
 
-    # make sure the labels are above all in z order
-    for _, t in text_items.items():
-        t.set_zorder(n_squared + 1)
+        # make sure the labels are above all in z order
+        for _, t in text_items.items():
+            t.set_zorder(n_squared + 1)
 
     ax.set_xlabel(x_pos)
     ax.set_ylabel(y_pos)
     # plt.box(False)
-    fig.set_facecolor("w")
+    # fig.set_facecolor("w")
     return ax

@@ -102,50 +102,35 @@ meta["idx"] = range(len(meta))
 from_inds = meta[meta["Class 1"].isin(sens_classes)]["idx"].values
 out_inds = meta[meta["Class 1"].isin(out_classes)]["idx"].values
 
-path_mat = lil_matrix((len(from_inds) * len(out_inds), len(mg)), dtype=bool)
 order_mat = lil_matrix((len(from_inds) * len(out_inds), len(mg)), dtype=int)
-
-include_end = True
-include_start = True
 
 paths = []
 orders = []
 endpoints = []
 for i, from_ind in enumerate(from_inds):
     for j, out_ind in enumerate(out_inds):
-        curr_ind = predecessors[from_ind, out_ind]
-        if curr_ind != -9999:
-            path = []
-            order = []
-            loc = 0
+        if predecessors[from_ind, out_ind] != -9999:  # then a valid path exists
+            curr_ind = out_ind
+            path = [curr_ind]
+            order = [1]
+            loc = 1
             while curr_ind != from_ind:
                 loc += 1
+                curr_ind = predecessors[from_ind, curr_ind]
                 path.append(curr_ind)
                 order.append(loc)
-                curr_ind = predecessors[from_ind, curr_ind]
             path.reverse()
-            if include_start:
-                path.insert(0, from_ind)
-                order.append(order[-1] + 1)
-            if include_end:
-                path.append(out_ind)
-                order.append(order[-1] + 1)
             paths.append(path)
             orders.append(order)
             endpoints.append((from_ind, out_ind))
+            order_mat[i * len(out_inds) + j, path] = order
 
-order_mat = csr_matrix((orders, (range(len(paths), paths))))
-
-# %% [markdown]
-# #
-# mins = np.min(order_mat, axis=1)
-# order_mat[order_mat > 0] += mins[:, np.newaxis]
+path_mat = order_mat.astype(bool)
 
 # if subsample paths
-path_inds = np.random.randint(path_mat.shape[0], size=10000)
-path_mat = path_mat[path_inds]
-order_mat = order_mat[path_inds]
-
+# path_inds = np.random.randint(path_mat.shape[0], size=10000)
+# path_mat = path_mat[path_inds]
+# order_mat = order_mat[path_inds]
 
 # remove not connected paths
 # seems crazy that this is possible
@@ -154,13 +139,33 @@ row_mask = row_sums != 0
 path_mat = path_mat[row_mask]
 order_mat = order_mat[row_mask]
 
-# remove nodes that are never visited
-col_sums = path_mat.sum(axis=0).A1
-col_mask = col_sums != 0
-path_mat = path_mat[:, col_mask]
-order_mat = order_mat[:, col_mask]
+# %% [markdown]
+# # Calculate median visit order
 
-meta = meta.iloc[col_mask, :]
+nnz = order_mat.getnnz(axis=0)
+nnz[nnz == 0] = 1
+mean_rank = np.squeeze(np.array(order_mat.sum(axis=0) / nnz))
+
+sort_class = "Merge Class"
+meta["mean_rank"] = mean_rank
+class_rank = meta.groupby(sort_class)["mean_rank"].median()
+print(class_rank)
+class_rank = meta[sort_class].map(class_rank)
+class_rank.name = "class_rank"
+meta = pd.concat((meta, class_rank), ignore_index=False, axis=1)
+# %% [markdown]
+# #
+
+
+# %% [markdown]
+
+# remove nodes that are never visited
+# col_sums = path_mat.sum(axis=0).A1
+# col_mask = col_sums != 0
+# path_mat = path_mat[:, col_mask]
+# order_mat = order_mat[:, col_mask]
+
+# meta = meta.iloc[col_mask, :]
 
 
 # def metaheatmap(data, meta, sortby_classes=None, sortby_nodes=None, ascending=True):
