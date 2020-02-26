@@ -335,7 +335,6 @@ for i, seed in enumerate(seeds):
     p["param_key"] = param_keys[i]
     rep_params.append(p)
 
-print(rep_params)
 # %% [markdown]
 # #
 outs = Parallel(n_jobs=-2, verbose=10)(delayed(run_experiment)(**p) for p in rep_params)
