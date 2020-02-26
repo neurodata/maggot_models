@@ -114,13 +114,24 @@ paths = []
 for f in from_inds[:1]:
     for i in range(n_sims):
         temp_paths = generate_random_cascade(
-            f, probs, 0, stop_inds=out_inds, max_depth=20
+            f, probs, 0, stop_inds=out_inds, max_depth=15
         )
         paths += temp_paths
 
 print(len(paths))
 print(f"{time.time() - currtime} elapsed")
 
+# %% [markdown]
+# #
+lens = []
+n = 0
+for path in paths:
+    l = len(path)
+    lens.append(l)
+    if path[-3] in out_inds:
+        n += 1
+print(n / len(paths))
+sns.distplot(lens[:10000], kde=False)
 # %% [markdown]
 # #
 

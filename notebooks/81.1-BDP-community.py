@@ -52,7 +52,7 @@ print(FNAME)
 # # Parameters
 BRAIN_VERSION = "2020-01-29"
 BLIND = True
-SAVEFIGS = True
+SAVEFIGS = False
 SAVESKELS = False
 SAVEOBJS = True
 
@@ -246,71 +246,75 @@ def run_experiment(
     skeleton_labels = np.array(list(g_sym.nodes()))
     partition, modularity = run_louvain(g_sym, res, skeleton_labels)
 
-    # get out some metadata
-    class_label_dict = nx.get_node_attributes(g_sym, "Merge Class")
-    class_labels = np.array(itemgetter(*skeleton_labels)(class_label_dict))
-    lineage_label_dict = nx.get_node_attributes(g_sym, "lineage")
-    lineage_labels = np.array(itemgetter(*skeleton_labels)(lineage_label_dict))
-    lineage_labels = np.vectorize(lambda x: "~" + x)(lineage_labels)
-    classlin_labels, color_dict, hatch_dict = augment_classes(
-        class_labels, lineage_labels
-    )
-
-    # TODO then sort all of them by proportion of sensory/motor
-    # barplot by merge class and lineage
-    _, _, order = barplot_text(
-        partition,
-        classlin_labels,
-        color_dict=color_dict,
-        plot_proportions=False,
-        norm_bar_width=True,
-        figsize=(24, 18),
-        title=title,
-        hatch_dict=hatch_dict,
-        return_order=True,
-    )
-    stashfig(basename + "barplot-mergeclasslin-props")
-    category_order = np.unique(partition)[order]
-
-    fig, axs = barplot_text(
-        partition,
-        class_labels,
-        color_dict=color_dict,
-        plot_proportions=False,
-        norm_bar_width=True,
-        figsize=(24, 18),
-        title=title,
-        hatch_dict=None,
-        category_order=category_order,
-    )
-    stashfig(basename + "barplot-mergeclass-props")
-    fig, axs = barplot_text(
-        partition,
-        class_labels,
-        color_dict=color_dict,
-        plot_proportions=False,
-        norm_bar_width=False,
-        figsize=(24, 18),
-        title=title,
-        hatch_dict=None,
-        category_order=category_order,
-    )
-    stashfig(basename + "barplot-mergeclass-counts")
-
-    # TODO add gridmap
-
-    counts = False
-    weights = False
-    prob_df = get_blockmodel_df(
-        mg.adj, partition, return_counts=counts, use_weights=weights
-    )
-    prob_df = prob_df.reindex(category_order, axis=0)
-    prob_df = prob_df.reindex(category_order, axis=1)
-    probplot(100 * prob_df, fmt="2.0f", figsize=(20, 20), title=title, font_scale=0.7)
-    stashfig(basename + f"probplot-counts{counts}-weights{weights}")
-
     partition_series = pd.Series(partition, index=skeleton_labels)
     partition_series.name = param_key
+
+    if SAVEFIGS:
+        # get out some metadata
+        class_label_dict = nx.get_node_attributes(g_sym, "Merge Class")
+        class_labels = np.array(itemgetter(*skeleton_labels)(class_label_dict))
+        lineage_label_dict = nx.get_node_attributes(g_sym, "lineage")
+        lineage_labels = np.array(itemgetter(*skeleton_labels)(lineage_label_dict))
+        lineage_labels = np.vectorize(lambda x: "~" + x)(lineage_labels)
+        classlin_labels, color_dict, hatch_dict = augment_classes(
+            class_labels, lineage_labels
+        )
+
+        # TODO then sort all of them by proportion of sensory/motor
+        # barplot by merge class and lineage
+        _, _, order = barplot_text(
+            partition,
+            classlin_labels,
+            color_dict=color_dict,
+            plot_proportions=False,
+            norm_bar_width=True,
+            figsize=(24, 18),
+            title=title,
+            hatch_dict=hatch_dict,
+            return_order=True,
+        )
+        stashfig(basename + "barplot-mergeclasslin-props")
+        category_order = np.unique(partition)[order]
+
+        fig, axs = barplot_text(
+            partition,
+            class_labels,
+            color_dict=color_dict,
+            plot_proportions=False,
+            norm_bar_width=True,
+            figsize=(24, 18),
+            title=title,
+            hatch_dict=None,
+            category_order=category_order,
+        )
+        stashfig(basename + "barplot-mergeclass-props")
+        fig, axs = barplot_text(
+            partition,
+            class_labels,
+            color_dict=color_dict,
+            plot_proportions=False,
+            norm_bar_width=False,
+            figsize=(24, 18),
+            title=title,
+            hatch_dict=None,
+            category_order=category_order,
+        )
+        stashfig(basename + "barplot-mergeclass-counts")
+
+        # TODO add gridmap
+
+        counts = False
+        weights = False
+        prob_df = get_blockmodel_df(
+            mg.adj, partition, return_counts=counts, use_weights=weights
+        )
+        prob_df = prob_df.reindex(category_order, axis=0)
+        prob_df = prob_df.reindex(category_order, axis=1)
+        probplot(
+            100 * prob_df, fmt="2.0f", figsize=(20, 20), title=title, font_scale=0.7
+        )
+        stashfig(basename + f"probplot-counts{counts}-weights{weights}")
+
     return partition_series, modularity
 
 
