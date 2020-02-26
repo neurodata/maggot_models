@@ -14,6 +14,7 @@ import pandas as pd
 import seaborn as sns
 import textdistance
 from joblib import Parallel, delayed
+from matplotlib.colors import ListedColormap
 from scipy.cluster.hierarchy import dendrogram, fcluster, linkage
 from scipy.sparse import csr_matrix, lil_matrix
 from scipy.sparse.csgraph import dijkstra
@@ -24,20 +25,21 @@ from sklearn.metrics import adjusted_rand_score, pairwise_distances
 from graspy.cluster import AutoGMMCluster, GaussianCluster
 from graspy.embed import AdjacencySpectralEmbed, ClassicalMDS, LaplacianSpectralEmbed
 from graspy.plot import gridplot, heatmap, pairplot
-from graspy.utils import get_lcc, symmetrize
+from graspy.utils import get_lcc, pass_to_ranks, symmetrize
 from src.data import load_metagraph
 from src.embed import ase, lse, preprocess_graph
 from src.graph import MetaGraph, preprocess
 from src.io import savecsv, savefig, saveskels
+from src.traverse import generate_random_walks, to_markov_matrix
 from src.visualization import (
     CLASS_COLOR_DICT,
     barplot_text,
     draw_networkx_nice,
+    gridmap,
     remove_spines,
     screeplot,
     stacked_barplot,
 )
-from src.traverse import generate_random_walks, to_markov_matrix
 
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
@@ -56,9 +58,10 @@ def stashcsv(df, name, **kws):
 VERSION = "2020-01-29"
 print(f"Using version {VERSION}")
 
-graph_type = "G"
+graph_type = "Gad"
 threshold = 0
 weight = "weight"
+all_out = True
 mg = load_metagraph(graph_type, VERSION)
 mg = preprocess(
     mg,
@@ -71,15 +74,21 @@ mg = preprocess(
 print(f"Preprocessed graph {graph_type} with threshold={threshold}, weight={weight}")
 
 
-out_classes = ["O_dVNC"]
-#     "O_dSEZ",
-#     "O_IPC",
-#     "O_ITP",
-#     "O_dSEZ;FFN",
-#     "O_CA-LP",
-#     "O_dSEZ;FB2N",
-# ]
-sens_classes = ["sens-ORN"]
+if all_out:
+    out_classes = [
+        "O_dVNC",
+        "O_dSEZ",
+        "O_IPC",
+        "O_ITP",
+        "O_dSEZ;FFN",
+        "O_CA-LP",
+        "O_dSEZ;FB2N",
+    ]
+else:
+    out_classes = ["O_dVNC"]
+
+class_key = "Class 1"
+sens_classes = ["sens"]  # ["sens-ORN"]
 
 adj = nx.to_numpy_array(mg.g, weight=weight, nodelist=mg.meta.index.values)
 prob_mat = to_markov_matrix(adj)
@@ -89,7 +98,6 @@ g = mg.g.copy()
 meta["idx"] = range(len(meta))
 
 #%%
-class_key = "Merge Class"
 from_inds = meta[meta[class_key].isin(sens_classes)]["idx"].values
 out_inds = meta[meta[class_key].isin(out_classes)]["idx"].values
 
@@ -122,7 +130,7 @@ for path in sm_paths:
 
 
 # %% [markdown]
-# # Figure - median visit order
+# # Get median visit order
 meta["median_visit"] = -1
 meta["n_visits"] = 0
 
@@ -212,6 +220,7 @@ stashfig("rw-out-marginals")
 
 # %% [markdown]
 # # Figure - num to motor vs num to sensory
+sns.set_context("talk")
 std = 0.1
 
 visited_meta = meta[meta["n_visits"] > 0].copy()
@@ -251,7 +260,9 @@ ax.set_title(
     f"Random walk hops from {sens_classes} to {out_classes},\n graph={graph_type}, threshold={threshold}"
     + f", sym_threshold={True}, weight={weight}"
 )
-stashfig("hops")
+stashfig(
+    f"hops-{sens_classes}-allout{all_out}-{graph_type}-t{threshold}-sym_t{True}-w{weight}"
+)
 # %% [markdown]
 # # Plot the adjacency sorted like this
 sort_class = "Merge Class"
@@ -270,7 +281,6 @@ sort_meta = meta.sort_values(
 )
 perm_inds = sort_meta.idx.values
 
-from graspy.utils import pass_to_ranks
 
 data = mg.adj.copy()
 data = data[np.ix_(perm_inds, perm_inds)]
@@ -313,7 +323,6 @@ ax.set_yticks([])
 # %% [markdown]
 # #
 
-from src.visualization import gridmap, CLASS_COLOR_DICT
 
 # draw the plot, could be heatmap or gridmap here
 # fig, ax = plt.subplots(1, 1, figsize=(20, 20))
@@ -342,8 +351,6 @@ classes = sort_meta[sort_class].values
 class_colors = np.vectorize(CLASS_COLOR_DICT.get)(classes)
 gridmap(data, ax=ax, sizes=(0.5, 1))
 
-
-from matplotlib.colors import ListedColormap
 
 # make colormap
 uni_classes = np.unique(classes)
@@ -425,4 +432,3 @@ for t in first_inds:
 # plt.subplots_adjust(hspace=0, wspace=0)
 
 stashfig("sorted-adj", dpi=300)
-
