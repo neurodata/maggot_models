@@ -319,7 +319,7 @@ def preprocess(
 ):
     edgelist = mg.to_edgelist()
     if sym_threshold:
-        # note that this just doesn't remove asymmetric edges
+        # note that this just removes asymmetric edges
         # another option would be to actually max the edges into mirror images
         edgelist = add_max_weight(edgelist)
         edgelist = edgelist[edgelist["max_weight"] > threshold]
@@ -328,7 +328,7 @@ def preprocess(
     mg = edgelist_to_mg(edgelist, mg.meta, weight=weight)
     if remove_pdiff:
         mg = mg.remove_pdiff()  # FIXME need a way to deal with pairs
-    mg = mg.make_lcc()
+    mg = mg.make_lcc()  # FIXME need a way to deal with pairs
     if binarize:
         # HACK there must be a better way in nx?
         adj = mg.adj

@@ -23,7 +23,7 @@ from graspy.plot import gridplot, heatmap, pairplot
 from graspy.utils import symmetrize
 from src.data import load_everything, load_metagraph, load_networkx
 from src.embed import lse, preprocess_graph
-from src.graph import MetaGraph
+from src.graph import MetaGraph, preprocess
 from src.hierarchy import signal_flow
 from src.io import savefig, saveobj, saveskels, savecsv
 from src.utils import get_blockmodel_df, get_sbm_prob
@@ -50,7 +50,7 @@ print(FNAME)
 
 # %% [markdown]
 # # Parameters
-BRAIN_VERSION = "2020-01-29"
+BRAIN_VERSION = "2020-02-26"
 BLIND = True
 SAVEFIGS = False
 SAVESKELS = False
@@ -232,16 +232,13 @@ def run_experiment(
 
     # load and preprocess the data
     mg = load_metagraph(graph_type, version=BRAIN_VERSION)
-    edgelist = mg.to_edgelist()
-    edgelist = add_max_weight(edgelist)
-    edgelist = edgelist[edgelist["max_weight"] > threshold]
-    mg = edgelist_to_mg(edgelist, mg.meta)
-    mg = mg.make_lcc()
-    mg = mg.remove_pdiff()
-    if binarize:
-        adj = mg.adj
-        adj[adj > 0] = 1
-        mg = MetaGraph(adj, mg.meta)
+    preprocess(
+        mg,
+        threshold=threshold,
+        sym_threshold=True,
+        remove_pdiff=True,
+        binarize=binarize,
+    )
     g_sym = nx.to_undirected(mg.g)
     skeleton_labels = np.array(list(g_sym.nodes()))
     partition, modularity = run_louvain(g_sym, res, skeleton_labels)

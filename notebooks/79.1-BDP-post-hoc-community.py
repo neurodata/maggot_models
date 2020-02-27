@@ -180,3 +180,5 @@ sns.stripplot(
 ax.set_xlabel("Parameter set")
 stashfig("mod-by-parameters")
 
+# %% [markdown]
+# #
