@@ -242,16 +242,26 @@ class MetaGraph:
             "maggot_models/data/raw/Maggot-Brain-Connectome/4-color-matrices_Brain"
         )
         raw_path = raw_path / version
-        filename = name_map[graph_type]
-        raw_path = raw_path / str(filename + ".csv")
-        adj_df = pd.read_csv(raw_path, index_col=0, header=0)
-        adj_df.columns = adj_df.index
+        if graph_type == "G":
+            graph_types = ["Gaa", "Gad", "Gda", "Gdd"]
+        elif graph_type == "Gn":
+            graph_types = ["Gaan", "Gadn", "Gdan", "Gddn"]
+        else:
+            graph_types = [graph_type]
+        dfs = []
+        for g in graph_types:
+            filename = name_map[g]
+            graph_path = raw_path / str(filename + ".csv")
+            adj_df = pd.read_csv(graph_path, index_col=0, header=0)
+            adj_df.columns = adj_df.index
+            dfs.append(adj_df)
+        adj_df = sum(dfs)
+
         nonzero_inds = np.nonzero(self.adj)
         choice_inds = np.random.choice(len(nonzero_inds[0]), size=n_checks)
         index = self.meta.index
-        print(f"Verifying {n_checks} edges are present in original graph")
-        print()
-        for choice in tqdm(choice_inds):
+        print(f"\nVerifying {n_checks} edges are present in original graph\n")
+        for choice in choice_inds:
             row_ind = nonzero_inds[0][choice]
             col_ind = nonzero_inds[1][choice]
             row_id = index[row_ind]

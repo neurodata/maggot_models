@@ -140,6 +140,11 @@ path_mat = path_mat[row_mask]
 order_mat = order_mat[row_mask]
 
 # %% [markdown]
+# #
+sns.distplot(row_sums)
+
+
+# %% [markdown]
 # # Calculate median visit order
 
 nnz = order_mat.getnnz(axis=0)

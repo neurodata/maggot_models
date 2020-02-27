@@ -21,7 +21,7 @@ def stashfig(name, **kws):
         savefig(name, foldername=FNAME, **kws)
 
 
-brain_version = "2020-01-29"
+brain_version = "2020-02-26"
 
 graph_versions = ["G", "Gad", "Gaa", "Gdd", "Gda", "Gn", "Gadn", "Gaan", "Gddn", "Gdan"]
 
@@ -31,8 +31,8 @@ for graph_version in graph_versions:
     paired_inds = np.where(mg.meta["Pair ID"] != -1)[0]
     mg = mg.reindex(paired_inds)
     mg.sort_values(["Merge Class", "Pair ID", "Hemisphere"], ascending=True)
-    if graph_version not in ["G", "Gn"]:
-        mg.verify(n_checks=10000, graph_type=graph_version)
+    # if graph_version not in ["G", "Gn"]:
+    mg.verify(n_checks=10000, graph_type=graph_version, version=brain_version)
 
     # plot the sorted graph
     mg.meta["Index"] = range(len(mg))
@@ -67,4 +67,8 @@ for graph_version in graph_versions:
     out_path = Path(f"./maggot_models/data/interim/{brain_version}")
     adj_df = pd.DataFrame(data=mg.adj, index=mg.meta.index, columns=mg.meta.index)
     adj_df.to_csv(out_path / f"{graph_version}-pair-sorted.csv")
+
+
+# %%
+mg.meta
 

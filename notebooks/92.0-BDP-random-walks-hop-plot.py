@@ -58,7 +58,7 @@ def stashcsv(df, name, **kws):
 VERSION = "2020-01-29"
 print(f"Using version {VERSION}")
 
-graph_type = "Gad"
+graph_type = "G"
 threshold = 0
 weight = "weight"
 all_out = True
@@ -120,6 +120,14 @@ sm_paths, visit_orders = generate_random_walks(
 )
 
 print(f"{time.time() - t} elapsed seconds")
+
+
+n_with_loops = 0
+for path in sm_paths:
+    if len(np.unique(path)) < len(path):
+        n_with_loops += 1
+print(100 * (n_with_loops / len(sm_paths)))
+
 # %% [markdown]
 # #
 out_orders = {i: [] for i in range(n_verts)}

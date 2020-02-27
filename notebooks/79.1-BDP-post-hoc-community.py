@@ -74,23 +74,72 @@ run_names = block_df.columns.values
 n_runs = len(block_df.columns)
 block_pairs = cartprod(range(n_runs), range(n_runs))
 
+param_file = base_dir / run_dir / "csvs" / "parameters.csv"
+param_df = pd.read_csv(param_file, index_col=0)
+param_df.set_index("param_key", inplace=True)
+param_groupby = param_df.groupby(["graph_type", "threshold", "res", "binarize"])
+param_df["Parameters"] = -1
+for i, (key, val) in enumerate(param_groupby.indices.items()):
+    param_df.iloc[val, param_df.columns.get_loc("Parameters")] = i
+
+# %% [markdown]
+# # Look at modularity over all of the parameters
+sns.set_context("talk", font_scale=1)
+
+mean_modularities = param_df.groupby("Parameters")["modularity"].mean()
+order = mean_modularities.sort_values(ascending=False).index
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+sns.stripplot(
+    data=param_df, x="Parameters", y="modularity", ax=ax, order=order, jitter=0.4
+)
+ax.set_xlabel("Parameter set")
+stashfig("mod-by-parameters")
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+sns.stripplot(data=param_df, x="threshold", y="modularity", ax=ax, jitter=0.4)
+stashfig("mod-by-threshold")
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+sns.stripplot(data=param_df, x="binarize", y="modularity", ax=ax, jitter=0.4)
+stashfig("mod-by-binarize")
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+sns.stripplot(data=param_df, x="res", y="modularity", ax=ax, jitter=0.4)
+stashfig("mod-by-res")
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+sns.stripplot(
+    data=param_df,
+    x="threshold",
+    y="modularity",
+    ax=ax,
+    hue="Parameters",
+    palette=cc.glasbey_light,
+    jitter=0.45,
+)
+ax.legend([])
+stashfig("mod-by-threshold-colored")
+
+# %% [markdown]
+# #
+max_inds = param_df.groupby("Parameters")["modularity"].idxmax().values
+best_param_df = param_df.loc[max_inds]
+best_block_df = block_df[max_inds]
+n_runs = len(max_inds)
+block_pairs = cartprod(range(n_runs), range(n_runs))
 ari_mat = np.empty((n_runs, n_runs))
 for bp in block_pairs:
-    from_block_labels = block_df.iloc[:, bp[0]].values
-    to_block_labels = block_df.iloc[:, bp[1]].values
+    from_block_labels = best_block_df.iloc[:, bp[0]].values
+    to_block_labels = best_block_df.iloc[:, bp[1]].values
     mask = np.logical_and(~np.isnan(from_block_labels), ~np.isnan(to_block_labels))
     from_block_labels = from_block_labels[mask]
     to_block_labels = to_block_labels[mask]
     ari = adjusted_rand_score(from_block_labels, to_block_labels)
     ari_mat[bp[0], bp[1]] = ari
-ari_df = pd.DataFrame(data=ari_mat, index=run_names, columns=run_names)
+ari_df = pd.DataFrame(data=ari_mat, index=max_inds, columns=max_inds)
 
 sns.set_context("talk", font_scale=0.8)
 fig, ax = plt.subplots(1, 1, figsize=(20, 20))
 sns.heatmap(
     data=ari_df,
     cmap="Reds",
-    annot=True,
+    annot=False,
     square=True,
     ax=ax,
     cbar_kws=dict(shrink=0.7),
@@ -101,13 +150,6 @@ stashfig("ari-heatmap")
 
 # %% [markdown]
 # #
-param_file = base_dir / run_dir / "csvs" / "parameters.csv"
-param_df = pd.read_csv(param_file, index_col=0)
-param_df.set_index("param_key", inplace=True)
-param_groupby = param_df.groupby(["graph_type", "threshold", "res", "binarize"])
-param_df["Parameters"] = -1
-for i, (key, val) in enumerate(param_groupby.indices.items()):
-    param_df.iloc[val, param_df.columns.get_loc("Parameters")] = i
 
 
 sns.set_context("talk", font_scale=1)
@@ -116,7 +158,8 @@ lut = dict(zip(param_df["Parameters"].unique(), cc.glasbey_light))
 row_colors = param_df["Parameters"].map(lut)
 clustergrid = sns.clustermap(
     ari_df,
-    cmap="Reds",
+    cmap="RdBu_r",
+    center=0,
     method="single",
     vmin=None,
     figsize=(20, 20),
@@ -127,32 +170,13 @@ clustergrid = sns.clustermap(
 clustergrid.fig.suptitle("ARI", y=1.02)
 stashfig("ari-clustermap")
 
-# %% [markdown]
-# # Look at modularity over all of the parameters
 
-mean_modularities = param_df.groupby("Parameters")["modularity"].mean()
-order = mean_modularities.sort_values(ascending=False).index
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-sns.stripplot(data=param_df, x="Parameters", y="modularity", ax=ax, order=order)
-ax.set_xlabel("Parameter set")
-stashfig("mod-by-parameters")
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-sns.stripplot(data=param_df, x="threshold", y="modularity", ax=ax)
-stashfig("mod-by-threshold")
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-sns.stripplot(data=param_df, x="binarize", y="modularity", ax=ax)
-stashfig("mod-by-binarize")
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-sns.stripplot(data=param_df, x="res", y="modularity", ax=ax)
-stashfig("mod-by-res")
+# %% [markdown]
+# #
 fig, ax = plt.subplots(1, 1, figsize=(8, 4))
 sns.stripplot(
-    data=param_df,
-    x="threshold",
-    y="modularity",
-    ax=ax,
-    hue="Parameters",
-    palette=cc.glasbey_light,
+    data=best_param_df, x="Parameters", y="modularity", ax=ax, order=order, jitter=0.4
 )
-ax.legend([])
-stashfig("mod-by-threshold-colored")
+ax.set_xlabel("Parameter set")
+stashfig("mod-by-parameters")
+
