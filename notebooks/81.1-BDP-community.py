@@ -232,7 +232,7 @@ def run_experiment(
 
     # load and preprocess the data
     mg = load_metagraph(graph_type, version=BRAIN_VERSION)
-    preprocess(
+    mg = preprocess(
         mg,
         threshold=threshold,
         sym_threshold=True,

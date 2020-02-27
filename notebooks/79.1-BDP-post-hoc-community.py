@@ -20,7 +20,7 @@ from sklearn.model_selection import ParameterGrid
 from operator import itemgetter
 from graspy.utils import cartprod
 from src.data import load_metagraph
-from src.graph import MetaGraph
+from src.graph import MetaGraph, preprocess
 from src.io import savecsv, savefig
 from src.utils import get_blockmodel_df
 from src.visualization import (
@@ -182,3 +182,8 @@ stashfig("mod-by-parameters")
 
 # %% [markdown]
 # #
+for idx in best_param_df.index:
+    preprocess_params = dict(best_param_df.loc[idx, ["binarize", "threshold"]])
+    graph_type = best_param_df.loc[idx, "graph_type"]
+    mg = load_metagraph(graph_type, version=BRAIN_VERSION)
+    mg = preprocess(mg, sym_threshold=True, remove_pdiff=True, **preprocess_params)
