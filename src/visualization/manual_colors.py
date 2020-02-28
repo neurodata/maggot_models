@@ -1,6 +1,8 @@
 import colorcet as cc
 import numpy as np
 
+import matplotlib.pyplot as plt
+
 CLASS_IND_DICT = {
     "KC": 0,
     "KC-1claw": 28,
@@ -31,6 +33,7 @@ CLASS_IND_DICT = {
     "pLN": 57,
     "bLN-Duet": 216,
     "bLN-Trio": 8,
+    "keystone": 157,
     "cLN": 232,
     "FAN": 2,
     "FB2N": 21,
@@ -55,3 +58,36 @@ for key, val in CLASS_IND_DICT.items():
 
 colors = np.array(cc.glasbey_light)[color_inds]
 CLASS_COLOR_DICT = dict(zip(names, colors))
+
+
+def plot_colors():
+    from src.visualization import palplot
+
+    fig, axs = plt.subplots(1, 6, figsize=(6, 10))
+    n_per_col = 40
+    for i, ax in enumerate(axs):
+        pal = cc.glasbey_light[i * n_per_col : (i + 1) * n_per_col]
+        palplot(n_per_col, pal, figsize=(1, 10), ax=ax, start=i * n_per_col)
+    plt.show()
+
+
+def plot_class_colormap():
+    from src.visualization import palplot
+
+    names = []
+    color_inds = []
+
+    for key, val in CLASS_IND_DICT.items():
+        names.append(key)
+        color_inds.append(val)
+    print(color_inds)
+    fig, ax = plt.subplots(1, 1, figsize=(3, 15))
+    colors = np.array(cc.glasbey_light)[color_inds]
+    palplot(len(colors), colors, ax=ax)
+    ax.yaxis.set_major_formatter(plt.FixedFormatter(names))
+    plt.show()
+
+
+if __name__ == "__main__":
+    plot_colors()
+    plot_class_colormap()
