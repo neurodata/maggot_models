@@ -64,7 +64,7 @@ def compute_ari(idx, param_df, remove_non_mb=False):
     labels[right_mb_indicator.values] = 2
     pred_labels = best_block_df[idx]
     pred_labels = pred_labels[pred_labels.index.isin(mg.meta.index)]
-    assert np.array_equal(pred_labels.index, mg.meta.index)
+    assert np.array_equal(pred_labels.index, mg.meta.index), print(pred_labels, idx)
 
     if remove_non_mb:  # only consider ARI for clusters with some MB mass
         uni_pred = np.unique(pred_labels)
@@ -182,7 +182,7 @@ n_runs = len(max_inds)
 # %% [markdown]
 # # Compute ARI relative to MB
 
-aris = Parallel(n_jobs=-2, verbose=15)(
+aris = Parallel(n_jobs=-2, verbose=10)(
     delayed(compute_ari)(i, best_param_df) for i in best_param_df.index
 )
 best_param_df["MB-ARI"] = aris
