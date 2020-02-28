@@ -217,7 +217,7 @@ test_pairedness = outs[1]
 best_param_df["train_pairedness"] = train_pairedness
 best_param_df["test_pairedness"] = test_pairedness
 
-stashcsv("best_params")
+stashcsv(best_param_df, "best_params")
 
 # #%%
 # argsort_inds = np.argsort(aris)[::-1]
