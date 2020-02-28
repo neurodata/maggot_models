@@ -208,7 +208,7 @@ partitions = [best_block_df[idx] for idx in best_param_df.index]
 
 outs = Parallel(n_jobs=-2, verbose=10)(
     delayed(compute_pairedness)(i, mg.meta, rand_adjust=True, holdout=holdout_pairs)
-    for i in partitions[:2]
+    for i in partitions
 )
 
 outs = list(zip(*outs))
@@ -336,3 +336,6 @@ stashcsv("best_params")
 # fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 # sns.scatterplot(data=best_param_df, x="ARI-MB", y="Pairedness", ax=ax)
 # stashfig("pair-vs-ari")
+
+
+# %%
