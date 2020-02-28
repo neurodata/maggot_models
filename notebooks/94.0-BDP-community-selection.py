@@ -64,7 +64,7 @@ def compute_ari(idx, param_df, remove_non_mb=False):
     labels[right_mb_indicator.values] = 2
     pred_labels = best_block_df[idx]
     pred_labels = pred_labels[pred_labels.index.isin(mg.meta.index)]
-    assert np.array_equal(pred_labels.index, mg.meta.index), print(pred_labels, idx)
+    assert np.array_equal(pred_labels.index, mg.meta.index), print(idx)
 
     if remove_non_mb:  # only consider ARI for clusters with some MB mass
         uni_pred = np.unique(pred_labels)
@@ -72,7 +72,6 @@ def compute_ari(idx, param_df, remove_non_mb=False):
         for p in uni_pred:
             if np.sum(labels[pred_labels == p]) == 0:
                 keep_mask[pred_labels == p] = False
-                print(keep_mask)
         labels = labels[keep_mask]
         pred_labels = pred_labels[keep_mask]
 
