@@ -1,8 +1,6 @@
 # %% [markdown]
 # #
 import os
-import urllib.request
-from operator import itemgetter
 from pathlib import Path
 
 import colorcet as cc
@@ -13,7 +11,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from joblib import Parallel, delayed
-from random_word import RandomWords
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics import adjusted_rand_score
 from sklearn.metrics.cluster import contingency_matrix
