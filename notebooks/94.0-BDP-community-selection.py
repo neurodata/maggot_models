@@ -12,8 +12,6 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from graph_tool import load_graph
-from graph_tool.inference import minimize_blockmodel_dl
 from joblib import Parallel, delayed
 from random_word import RandomWords
 from scipy.optimize import linear_sum_assignment
