@@ -47,6 +47,10 @@ CLASS_IND_DICT = {
     "O_dSEZ": 26,
     "O_dVNC": 38,
     "unk": 190,
+    "LHNv": 104,
+    "LHNm": 14,
+    "LHNu": 123,
+    "LHNt": 65,
 }
 
 names = []
@@ -68,7 +72,6 @@ def plot_colors():
     for i, ax in enumerate(axs):
         pal = cc.glasbey_light[i * n_per_col : (i + 1) * n_per_col]
         palplot(n_per_col, pal, figsize=(1, 10), ax=ax, start=i * n_per_col)
-    plt.show()
 
 
 def plot_class_colormap():
@@ -85,9 +88,9 @@ def plot_class_colormap():
     colors = np.array(cc.glasbey_light)[color_inds]
     palplot(len(colors), colors, ax=ax)
     ax.yaxis.set_major_formatter(plt.FixedFormatter(names))
-    plt.show()
 
 
 if __name__ == "__main__":
     plot_colors()
     plot_class_colormap()
+    plt.show()
