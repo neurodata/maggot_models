@@ -96,18 +96,47 @@ mg = load_metagraph(graph_type, version=BRAIN_VERSION)
 mg = preprocess(
     mg, threshold=threshold, sym_threshold=True, remove_pdiff=True, binarize=binarize
 )
-adj = mg.adj
-adj = symmetrize(adj, method="avg")
-mg = MetaGraph(adj, mg.meta)
-g_sym = mg.g
-# g_sym = nx.to_undirected(mg.g)
-skeleton_labels = np.array(list(g_sym.nodes()))
-temp_loc = None
+
+from src.block import run_leiden, run_leiden_igraph
+
+partition = run_leiden(mg)
+
 
 # %% [markdown]
 # #
 
-if temp_loc is None:
-    temp_loc = f"maggot_models/data/interim/temp-{np.random.randint(1e8)}.graphml"
-    # save to temp
-    nx.write_graphml(mg.g, temp_loc)
+
+out = run_leiden_igraph(mg)
+
+# adj = mg.adj
+# adj = symmetrize(adj, method="avg")
+# mg = MetaGraph(adj, mg.meta)
+# g_sym = mg.g
+# # g_sym = nx.to_undirected(mg.g)
+# skeleton_labels = np.array(list(g_sym.nodes()))
+# temp_loc = None
+
+
+# if temp_loc is None:
+#     temp_loc = f"maggot_models/data/interim/temp-{np.random.randint(1e8)}.graphml"
+#     # save to temp
+#     nx.write_graphml(mg.g, temp_loc)
+
+# # %% [markdown]
+# # #
+
+# import igraph as ig
+# import leidenalg as la
+
+
+# g = ig.Graph.Read_GraphML(temp_loc)
+# nodes = [int(v["id"]) for v in g.vs]
+# vert_part = la.find_partition(g, la.ModularityVertexPartition)
+# labels = vert_part.membership
+# partition = pd.Series(data=labels, index=nodes)
+
+
+# %%
+
+
+# %%
