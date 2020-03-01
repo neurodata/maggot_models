@@ -83,11 +83,14 @@ param_df.loc[rank_df.index, "rank_test_pairedness"] = rank_df["test_pairedness"]
 param_df.loc[rank_df.index, "rank_MB-ARI"] = rank_df["MB-ARI"]
 param_df.sort_values("MB-ARI", ascending=False)
 
+#%%
+param_df.sort_values("AL-ARI", ascending=False)
+
 # %% [markdown]
 # # Plot a candidate
 
 # idx = sort_index[2]
-idx = "KatherineChungking"
+idx = "ReneAchaean"
 preprocess_params = dict(param_df.loc[idx, ["binarize", "threshold"]])
 graph_type = param_df.loc[idx, "graph_type"]
 mg = load_metagraph(graph_type, version=BRAIN_VERSION)
@@ -187,3 +190,6 @@ prob_df = prob_df.reindex(category_order, axis=1)
 probplot(100 * prob_df, fmt="2.0f", figsize=(20, 20), title=title, font_scale=0.7)
 stashfig(basename + f"probplot-counts{counts}-weights{weights}")
 
+
+# %%
+cel
