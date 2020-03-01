@@ -24,5 +24,6 @@ def run_leiden(mg, temp_loc=None, implementation="igraph", **kws):
         vert_part = la.find_partition(g, la.ModularityVertexPartition, **kws)
     labels = vert_part.membership
     partition = pd.Series(data=labels, index=nodes)
-    return partition
+
+    return partition, vert_part.modularity
 

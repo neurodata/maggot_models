@@ -73,7 +73,7 @@ def stashobj(obj, name, **kws):
 
 
 def run_experiment(
-    graph_type=None, threshold=None, res=None, binarize=None, seed=None, param_key=None
+    graph_type=None, threshold=None, binarize=None, seed=None, param_key=None, **kws
 ):
     np.random.seed(seed)
 
@@ -86,17 +86,9 @@ def run_experiment(
         remove_pdiff=True,
         binarize=binarize,
     )
-    adj = mg.adj
-    adj = symmetrize(adj, method="avg")
-    mg = MetaGraph(adj, mg.meta)
-    g_sym = mg.g
-    skeleton_labels = np.array(list(g_sym.nodes()))
-    partition, modularity = run_leiden(g_sym, res, skeleton_labels)
+    partition, modularity = run_leiden(mg, **kws)
 
-    partition_series = pd.Series(partition, index=skeleton_labels)
-    partition_series.name = param_key
-
-    return partition_series, modularity
+    return partition, modularity
 
 
 # %% [markdown]
@@ -106,9 +98,9 @@ n_replicates = 5
 param_grid = {
     "graph_type": ["G"],
     "threshold": [0, 1, 2, 3],
-    "res": np.geomspace(0.0005, 0.05, 10),
+    "resolution_parameter": np.geomspace(0.0005, 0.05, 10),
     "binarize": [True, False],
-    "objective_finction": ["CPM", "modularity"],
+    "objective_function": ["CPM", "modularity"],
     "n_iterations": [5],
 }
 params = list(ParameterGrid(param_grid))
