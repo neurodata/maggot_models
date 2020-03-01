@@ -239,7 +239,10 @@ def run_experiment(
         remove_pdiff=True,
         binarize=binarize,
     )
-    g_sym = nx.to_undirected(mg.g)
+    adj = mg.adj
+    adj = symmetrize(adj, method="avg")
+    mg = MetaGraph(adj, mg.meta)
+    g_sym = mg.g
     skeleton_labels = np.array(list(g_sym.nodes()))
     partition, modularity = run_louvain(g_sym, res, skeleton_labels)
 
