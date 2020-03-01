@@ -14,6 +14,8 @@ def run_leiden(mg, temp_loc=None, implementation="igraph", **kws):
 
     if temp_loc is None:
         temp_loc = f"maggot_models/data/interim/temp-{np.random.randint(1e8)}.graphml"
+    else:
+        temp_loc = f"maggot_models/data/interim/{temp_loc}.graphml"
     nx.write_graphml(mg.g, temp_loc)
 
     g = ig.Graph.Read_GraphML(temp_loc)
