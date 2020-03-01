@@ -97,16 +97,20 @@ mg = preprocess(
     mg, threshold=threshold, sym_threshold=True, remove_pdiff=True, binarize=binarize
 )
 
-from src.block import run_leiden, run_leiden_igraph
+# %% [markdown]
+# #
 
-partition = run_leiden(mg)
+from src.block import run_leiden
 
+partition = run_leiden(mg, implementation="leidenalg")
+print(partition.nunique())
 
 # %% [markdown]
 # #
 
 
-out = run_leiden_igraph(mg)
+partition = run_leiden(mg, resolution_parameter=0.0005)
+print(partition.nunique())
 
 # adj = mg.adj
 # adj = symmetrize(adj, method="avg")
@@ -135,8 +139,3 @@ out = run_leiden_igraph(mg)
 # labels = vert_part.membership
 # partition = pd.Series(data=labels, index=nodes)
 
-
-# %%
-
-
-# %%
