@@ -38,6 +38,18 @@ print(FNAME)
 BRAIN_VERSION = "2020-02-26"
 
 mb_classes = ["APL", "MBON", "MBIN", "KC"]
+al_classes = [
+    "bLN-Duet",
+    "bLN-Trio",
+    "cLN",
+    "keystone",
+    "mPN-multi",
+    "mPN-olfac",
+    "mPN;FFN-multi",
+    "pLN",
+    "uPN",
+    "sens-ORN",
+]
 
 
 def stashfig(name, **kws):
@@ -48,15 +60,15 @@ def stashcsv(df, name, **kws):
     savecsv(df, name, foldername=FNAME, save_on=True, **kws)
 
 
-def compute_ari(idx, param_df, remove_non_mb=False):
+def compute_ari(idx, param_df, classes, class_type="Class 1", remove_non_mb=False):
     preprocess_params = dict(param_df.loc[idx, ["binarize", "threshold"]])
     graph_type = param_df.loc[idx, "graph_type"]
     mg = load_metagraph(graph_type, version=BRAIN_VERSION)
     mg = preprocess(mg, sym_threshold=True, remove_pdiff=True, **preprocess_params)
-    left_mb_indicator = mg.meta["Class 1"].isin(mb_classes) & (
+    left_mb_indicator = mg.meta[class_type].isin(classes) & (
         mg.meta["Hemisphere"] == "L"
     )
-    right_mb_indicator = mg.meta["Class 1"].isin(mb_classes) & (
+    right_mb_indicator = mg.meta[class_type].isin(classes) & (
         mg.meta["Hemisphere"] == "R"
     )
     labels = np.zeros(len(mg.meta))
@@ -182,9 +194,19 @@ n_runs = len(max_inds)
 # # Compute ARI relative to MB
 
 aris = Parallel(n_jobs=-2, verbose=10)(
-    delayed(compute_ari)(i, best_param_df) for i in best_param_df.index
+    delayed(compute_ari)(i, best_param_df, mb_classes, "Class 1")
+    for i in best_param_df.index
 )
 best_param_df["MB-ARI"] = aris
+
+# %% [markdown]
+# #
+
+aris = Parallel(n_jobs=-2, verbose=10)(
+    delayed(compute_ari)(i, best_param_df, al_classes, "Merge Class")
+    for i in best_param_df.index
+)
+best_param_df["AL-ARI"] = aris
 
 # %% [markdown]
 # # Compute pairedness
@@ -218,124 +240,3 @@ best_param_df["train_pairedness"] = train_pairedness
 best_param_df["test_pairedness"] = test_pairedness
 
 stashcsv(best_param_df, "best_params")
-
-# #%%
-# argsort_inds = np.argsort(aris)[::-1]
-# sort_index = best_param_df.index[argsort_inds]
-
-
-# # %% [markdown]
-# # # Plot a candidate
-
-# idx = sort_index[2]
-# preprocess_params = dict(best_param_df.loc[idx, ["binarize", "threshold"]])
-# graph_type = best_param_df.loc[idx, "graph_type"]
-# mg = load_metagraph(graph_type, version=BRAIN_VERSION)
-# mg = preprocess(mg, sym_threshold=True, remove_pdiff=True, **preprocess_params)
-# left_mb_indicator = mg.meta["Class 1"].isin(mb_classes) & (mg.meta["Hemisphere"] == "L")
-# right_mb_indicator = mg.meta["Class 1"].isin(mb_classes) & (
-#     mg.meta["Hemisphere"] == "R"
-# )
-# labels = np.zeros(len(mg.meta))
-# labels[left_mb_indicator.values] = 1
-# labels[right_mb_indicator.values] = 2
-# pred_labels = best_block_df[idx]
-# pred_labels = pred_labels[pred_labels.index.isin(mg.meta.index)]
-# partition = pred_labels
-# title = idx
-# class_labels = mg["Merge Class"]
-# lineage_labels = mg["lineage"]
-# basename = idx
-
-
-# def augment_classes(class_labels, lineage_labels, fill_unk=True):
-#     if fill_unk:
-#         classlin_labels = class_labels.copy()
-#         fill_inds = np.where(class_labels == "unk")[0]
-#         classlin_labels[fill_inds] = lineage_labels[fill_inds]
-#         used_inds = np.array(list(CLASS_IND_DICT.values()))
-#         unused_inds = np.setdiff1d(range(len(cc.glasbey_light)), used_inds)
-#         lineage_color_dict = dict(
-#             zip(np.unique(lineage_labels), np.array(cc.glasbey_light)[unused_inds])
-#         )
-#         color_dict = {**CLASS_COLOR_DICT, **lineage_color_dict}
-#         hatch_dict = {}
-#         for key, val in color_dict.items():
-#             if key[0] == "~":
-#                 hatch_dict[key] = "//"
-#             else:
-#                 hatch_dict[key] = ""
-#     else:
-#         color_dict = "class"
-#         hatch_dict = None
-#     return classlin_labels, color_dict, hatch_dict
-
-
-# lineage_labels = np.vectorize(lambda x: "~" + x)(lineage_labels)
-# classlin_labels, color_dict, hatch_dict = augment_classes(class_labels, lineage_labels)
-
-# # TODO then sort all of them by proportion of sensory/motor
-# # barplot by merge class and lineage
-# _, _, order = barplot_text(
-#     partition,
-#     classlin_labels,
-#     color_dict=color_dict,
-#     plot_proportions=False,
-#     norm_bar_width=True,
-#     figsize=(24, 18),
-#     title=title,
-#     hatch_dict=hatch_dict,
-#     return_order=True,
-# )
-# stashfig(basename + "barplot-mergeclasslin-props")
-# category_order = np.unique(partition)[order]
-
-# fig, axs = barplot_text(
-#     partition,
-#     class_labels,
-#     color_dict=color_dict,
-#     plot_proportions=False,
-#     norm_bar_width=True,
-#     figsize=(24, 18),
-#     title=title,
-#     hatch_dict=None,
-#     category_order=category_order,
-# )
-# stashfig(basename + "barplot-mergeclass-props")
-# fig, axs = barplot_text(
-#     partition,
-#     class_labels,
-#     color_dict=color_dict,
-#     plot_proportions=False,
-#     norm_bar_width=False,
-#     figsize=(24, 18),
-#     title=title,
-#     hatch_dict=None,
-#     category_order=category_order,
-# )
-# stashfig(basename + "barplot-mergeclass-counts")
-
-# # TODO add gridmap
-
-# counts = False
-# weights = False
-# prob_df = get_blockmodel_df(
-#     mg.adj, partition, return_counts=counts, use_weights=weights
-# )
-# prob_df = prob_df.reindex(category_order, axis=0)
-# prob_df = prob_df.reindex(category_order, axis=1)
-# probplot(100 * prob_df, fmt="2.0f", figsize=(20, 20), title=title, font_scale=0.7)
-# stashfig(basename + f"probplot-counts{counts}-weights{weights}")
-
-
-# # %% [markdown]
-# # # Look at the relationship between ARI MB and Pairdness
-
-# best_param_df["ARI-MB"] = aris
-# best_param_df["Pairedness"] = pairedness
-# fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-# sns.scatterplot(data=best_param_df, x="ARI-MB", y="Pairedness", ax=ax)
-# stashfig("pair-vs-ari")
-
-
-# %%
