@@ -51,7 +51,7 @@ def stashcsv(df, name, **kws):
 # %% [markdown]
 # # Load the runs
 
-run_dir = Path("81.2-BDP-community")
+run_dir = Path("81.3-BDP-community")
 base_dir = Path("./maggot_models/notebooks/outs")
 block_file = base_dir / run_dir / "csvs" / "block-labels.csv"
 block_df = pd.read_csv(block_file, index_col=0)
@@ -60,11 +60,21 @@ run_names = block_df.columns.values
 n_runs = len(block_df.columns)
 block_pairs = cartprod(range(n_runs), range(n_runs))
 
-opt_dir = Path("94.0-BDP-community-selection")
+opt_dir = Path("94.1-BDP-community-selection")
 param_file = base_dir / opt_dir / "csvs" / "best_params.csv"
 param_df = pd.read_csv(param_file, index_col=0)
 
 best_block_df = block_df[param_df.index]
+# %% [markdown]
+# #
+
+fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+sns.scatterplot(data=param_df, x="MB-ARI", y="MB-cls", ax=ax)
+
+fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+sns.scatterplot(data=param_df, x="MB-cls", y="AL-cls", ax=ax)
+
+
 # %% [markdown]
 # # plot results
 
@@ -84,24 +94,20 @@ param_df.loc[rank_df.index, "rank_MB-ARI"] = rank_df["MB-ARI"]
 param_df.sort_values("MB-ARI", ascending=False)
 
 #%%
-param_df.sort_values("AL-ARI", ascending=False)
+param_df.sort_values("AL-cls", ascending=False)
 
 # %% [markdown]
 # # Plot a candidate
 
 # idx = sort_index[2]
-idx = "ReneAchaean"
+idx = "BrazilPepsiCo"
 preprocess_params = dict(param_df.loc[idx, ["binarize", "threshold"]])
 graph_type = param_df.loc[idx, "graph_type"]
 mg = load_metagraph(graph_type, version=BRAIN_VERSION)
 mg = preprocess(mg, sym_threshold=True, remove_pdiff=True, **preprocess_params)
-left_mb_indicator = mg.meta["Class 1"].isin(mb_classes) & (mg.meta["Hemisphere"] == "L")
-right_mb_indicator = mg.meta["Class 1"].isin(mb_classes) & (
-    mg.meta["Hemisphere"] == "R"
-)
+
 labels = np.zeros(len(mg.meta))
-labels[left_mb_indicator.values] = 1
-labels[right_mb_indicator.values] = 2
+
 pred_labels = best_block_df[idx]
 pred_labels = pred_labels[pred_labels.index.isin(mg.meta.index)]
 partition = pred_labels.astype(int)
@@ -190,6 +196,3 @@ prob_df = prob_df.reindex(category_order, axis=1)
 probplot(100 * prob_df, fmt="2.0f", figsize=(20, 20), title=title, font_scale=0.7)
 stashfig(basename + f"probplot-counts{counts}-weights{weights}")
 
-
-# %%
-cel

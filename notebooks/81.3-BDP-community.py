@@ -317,12 +317,12 @@ def run_experiment(
 
 # %% [markdown]
 # #
-np.random.seed(88888)
+np.random.seed(888888)
 n_replicates = 20
 param_grid = {
     "graph_type": ["G"],
     "threshold": [0, 1, 2, 3],
-    "res": [0.2, 0.3, 0.4, 0.45, 0.5, 0.55, 0.6],
+    "res": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8],
     "binarize": [True, False],
 }
 params = list(ParameterGrid(param_grid))
