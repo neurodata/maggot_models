@@ -260,7 +260,7 @@ def compute_good_pairedness(partition, meta, rand_adjust=False, plot=False):
         part_vals = partition.values
         np.random.shuffle(part_vals)
         partition = pd.Series(data=part_vals, index=partition.index)
-        rand_pairedness, rand_test_pairedness = compute_good_pairedness(
+        rand_pairedness = compute_good_pairedness(
             partition, meta, rand_adjust=False, plot=False
         )
         adj_pairedness = pairedness - rand_pairedness
