@@ -93,7 +93,7 @@ def run_experiment(
 
 # %% [markdown]
 # #
-np.random.seed(889888)
+np.random.seed(89888)
 n_replicates = 5
 param_grid = {
     "graph_type": ["G"],
