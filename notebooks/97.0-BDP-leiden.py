@@ -86,7 +86,9 @@ def run_experiment(
         remove_pdiff=True,
         binarize=binarize,
     )
-    partition, modularity = run_leiden(mg, temp_loc=seed, **kws)
+    partition, modularity = run_leiden(
+        mg, temp_loc=seed, implementation="leidenalg", **kws
+    )
 
     return partition, modularity
 
