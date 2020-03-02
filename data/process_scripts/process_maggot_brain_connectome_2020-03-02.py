@@ -71,16 +71,53 @@ def remove_date(string):
     return -1
 
 
+replace_classes = ["unk", "LHN", "LHN2"]
+
+priority_map = {
+    "MBON": 1,
+    "MBIN": 1,
+    "KC": 1,
+    "uPN": 1,
+    "tPN": 1,
+    "vPN": 1,
+    "mPN": 1,
+    "sens": 1,
+    "APL": 1,
+    "LHN": 2,
+    "CN": 2,
+    "FBN": 3,
+    "FAN": 3,
+    "dSEZ": 3,
+    "LHN2": 4,
+    "CN2": 5,
+    "FB2N": 3,
+    "FFN": 3,
+}
+
+
+def priority(name):
+    if name in priority_map:
+        return priority_map[name]
+    else:
+        return np.inf
+
+
 def append_class(df, id, col, name):
     try:
-        if df.loc[i, col] == "":
-            df.loc[i, col] += name
-        elif df.loc[i, col] == "unk":  # always replace "unk"
+        curr_name = df.loc[i, col]
+        if not curr_name:
             df.loc[i, col] = name
-        elif not df.loc[i, col]:
+        elif curr_name == "":
+            df.loc[i, col] += name
+        elif curr_name == "unk":  # always replace "unk"
+            df.loc[i, col] = name
+        elif priority(name) == priority(curr_name):
+            df.loc[i, col] += ";" + name
+        elif priority(name) < priority(curr_name):
             df.loc[i, col] = name
         else:
-            df.loc[i, col] += ";" + name
+            pass
+            # overridden
         return 0
     except KeyError:
         print()
@@ -261,6 +298,12 @@ for i in range(len(meta_data_df)):
                 f"{meta_data_df.index[i]} and partner {partner_id} have different labels"
             )
 print()
+
+
+#%% [markdown]
+# ## HELLO
+
+list(zip(*np.unique(meta_data_df["Class 1"], return_counts=True)))
 
 #%% lineagees
 lineage_df = pd.read_csv(lineage_file)

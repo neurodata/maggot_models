@@ -35,9 +35,7 @@ mpl.rcParams["axes.spines.top"] = False
 
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
-BRAIN_VERSION = "2020-02-26"
-
-mb_classes = ["APL", "MBON", "MBIN", "KC"]
+BRAIN_VERSION = "2020-03-02"
 
 
 def stashfig(name, **kws):
@@ -97,13 +95,13 @@ param_df.loc[rank_df.index, "rank_AL-cls"] = rank_df["AL-cls"]
 param_df.sort_values("MB-ARI", ascending=False)
 
 #%%
-param_df.sort_values("AL-cls", ascending=False)
+param_df.sort_values("AL-ARI", ascending=False)
 
 # %% [markdown]
 # # Plot a candidate
 
 # idx = sort_index[2]
-idx = "JollaTenneco"
+idx = "GoodmanDeimos"
 preprocess_params = dict(param_df.loc[idx, ["binarize", "threshold"]])
 graph_type = param_df.loc[idx, "graph_type"]
 mg = load_metagraph(graph_type, version=BRAIN_VERSION)
@@ -199,3 +197,5 @@ prob_df = prob_df.reindex(category_order, axis=1)
 probplot(100 * prob_df, fmt="2.0f", figsize=(20, 20), title=title, font_scale=0.7)
 stashfig(basename + f"probplot-counts{counts}-weights{weights}")
 
+
+# %%

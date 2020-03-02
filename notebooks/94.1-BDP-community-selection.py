@@ -91,6 +91,36 @@ def compute_ari(idx, param_df, classes, class_type="Class 1", remove_non_mb=Fals
     return ari
 
 
+def compute_good_ari(
+    partition, meta, classes, class_type="Class 1", remove_other=False, mask_other=False
+):
+    partition = partition.copy()
+    partition = partition[~partition.isna()]
+    meta = meta.copy()
+    meta = meta.loc[partition.index]
+    assert np.array_equal(partition.index, meta.index)
+    left_indicator = meta[class_type].isin(classes) & (meta["Hemisphere"] == "L")
+    right_indicator = meta[class_type].isin(classes) & (meta["Hemisphere"] == "R")
+    true_labels = np.zeros(len(meta))
+    true_labels[left_indicator.values] = 1
+    true_labels[right_indicator.values] = 2
+
+    if remove_other or mask_other:  # only consider ARI for clusters with some MB mass
+        uni_pred = np.unique(partition)
+        keep_mask = np.ones(len(true_labels), dtype=bool)
+        for p in uni_pred:
+            if np.sum(true_labels[partition == p]) == 0:
+                keep_mask[partition == p] = False
+        if remove_other:
+            true_labels = true_labels[keep_mask]
+            partition = partition[keep_mask]
+        else:
+            # make everything one class
+            partition[~keep_mask] = -9999
+    ari = adjusted_rand_score(true_labels, partition)
+    return ari
+
+
 def compute_classness(partition, meta, classes, class_type="Class 1"):
     partition = partition.copy()
     partition = partition[~partition.isna()]
@@ -215,32 +245,55 @@ best_param_df = param_df.loc[max_inds]
 best_block_df = block_df[max_inds]
 n_runs = len(max_inds)
 
-# %% [markdown]
-# # Compute ARI relative to MB
-
-
-aris = Parallel(n_jobs=-2, verbose=10)(
-    delayed(compute_ari)(i, best_param_df, mb_classes, "Class 1")
-    for i in best_param_df.index
-)
-best_param_df["MB-ARI"] = aris
-
-# %% [markdown]
-# #
-
-aris = Parallel(n_jobs=-2, verbose=10)(
-    delayed(compute_ari)(i, best_param_df, al_classes, "Merge Class")
-    for i in best_param_df.index
-)
-best_param_df["AL-ARI"] = aris
-
-# %% [markdown]
-# # Compute pairedness
-# TODO get the held-out pairs
 mg = load_metagraph("G", version=BRAIN_VERSION)
 
 meta = mg.meta
 partitions = [best_block_df[idx] for idx in best_param_df.index]
+
+# %% [markdown]
+# # Compute ARI relative to MB
+
+aris = Parallel(n_jobs=-2, verbose=10)(
+    delayed(compute_good_ari)(i, meta, mb_classes, "Class 1") for i in partitions
+)
+best_param_df["MB-ARI"] = aris
+
+aris = Parallel(n_jobs=-2, verbose=10)(
+    delayed(compute_good_ari)(i, meta, mb_classes, "Class 1", remove_other=True)
+    for i in partitions
+)
+best_param_df["MB-roARI"] = aris
+
+aris = Parallel(n_jobs=-2, verbose=10)(
+    delayed(compute_good_ari)(i, meta, mb_classes, "Class 1", mask_other=True)
+    for i in partitions
+)
+best_param_df["MB-moARI"] = aris
+
+# %% [markdown]
+# # ARI relative to AL
+
+aris = Parallel(n_jobs=-2, verbose=10)(
+    delayed(compute_good_ari)(i, meta, al_classes, "Class 1") for i in partitions
+)
+best_param_df["AL-ARI"] = aris
+
+aris = Parallel(n_jobs=-2, verbose=10)(
+    delayed(compute_good_ari)(i, meta, al_classes, "Class 1", remove_other=True)
+    for i in partitions
+)
+best_param_df["AL-roARI"] = aris
+
+aris = Parallel(n_jobs=-2, verbose=10)(
+    delayed(compute_good_ari)(i, meta, al_classes, "Class 1", mask_other=True)
+    for i in partitions
+)
+best_param_df["AL-moARI"] = aris
+
+
+# %% [markdown]
+# # Compute pairedness
+# TODO get the held-out pairs
 
 outs = Parallel(n_jobs=-2, verbose=10)(
     delayed(compute_classness)(i, meta, mb_classes, "Class 1") for i in partitions

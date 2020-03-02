@@ -34,7 +34,7 @@ print(FNAME)
 
 # %% [markdown]
 # # Parameters
-BRAIN_VERSION = "2020-03-01"
+BRAIN_VERSION = "2020-03-02"
 BLIND = True
 SAVEFIGS = False
 SAVESKELS = False

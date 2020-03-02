@@ -48,7 +48,10 @@ CLASS_IND_DICT = {
     "O_dVNC": 38,
     "unk": 190,
     "LHN": 123,
-    "LHN-2": 65,
+    "LHN2": 65,
+    "CN": 206,
+    "CN2": 95,
+    "LHN;CN": 108,
 }
 
 names = []
