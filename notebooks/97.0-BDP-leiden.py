@@ -107,7 +107,7 @@ def run_experiment(
         partition, modularity = run_leiden(
             mg, temp_loc=seed, implementation=implementation, **kws
         )
-
+    partition.name = param_key
     return partition, modularity
 
 

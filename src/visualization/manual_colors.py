@@ -47,10 +47,8 @@ CLASS_IND_DICT = {
     "O_dSEZ": 26,
     "O_dVNC": 38,
     "unk": 190,
-    "LHNv": 104,
-    "LHNm": 14,
-    "LHNu": 123,
-    "LHNt": 65,
+    "LHN": 123,
+    "LHN-2": 65,
 }
 
 names = []
