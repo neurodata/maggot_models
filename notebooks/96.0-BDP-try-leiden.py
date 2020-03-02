@@ -88,8 +88,8 @@ def stashobj(obj, name, **kws):
 
 
 graph_type = "G"
-threshold = 0
-binarize = True
+threshold = 3
+binarize = False
 
 # load and preprocess the data
 mg = load_metagraph(graph_type, version=BRAIN_VERSION)
@@ -137,8 +137,10 @@ def run_leiden(
 partition, modularity = run_leiden(
     mg,
     implementation="leidenalg",
-    resolution_parameter=0.005,
+    resolution_parameter=0.001,
     partition_type=la.CPMVertexPartition,
+    weights="weight",
+    n_iterations=-1,
 )
 print(partition.nunique())
 
@@ -211,7 +213,6 @@ fig, axs = barplot_text(
     category_order=category_order,
 )
 stashfig(basename + "barplot-mergeclass-props")
-plt.close()
 
 fig, axs = barplot_text(
     partition,

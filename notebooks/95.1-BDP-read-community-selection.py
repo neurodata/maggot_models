@@ -83,6 +83,23 @@ sns.scatterplot(data=param_df, x="MB-ARI", y="test_pairedness", ax=axs[1])
 fig, ax = plt.subplots(1, 1, figsize=(5, 5))
 sns.scatterplot(data=param_df, x="test_pairedness", y="train_pairedness", ax=ax)
 
+
+# %% [markdown]
+# #
+pg = sns.PairGrid(
+    data=param_df,
+    x_vars=["MB-ARI", "MB-roARI", "MB-moARI"],
+    y_vars=["MB-ARI", "MB-roARI", "MB-moARI"],
+)
+pg.map(sns.scatterplot)
+
+pg = sns.PairGrid(
+    data=param_df,
+    x_vars=["AL-ARI", "AL-roARI", "AL-moARI"],
+    y_vars=["AL-ARI", "AL-roARI", "AL-moARI"],
+)
+pg.map(sns.scatterplot)
+
 # %% [markdown]
 # #
 rank_df = param_df.rank(axis=0, ascending=False)
@@ -92,7 +109,7 @@ param_df.loc[rank_df.index, "rank_MB-ARI"] = rank_df["MB-ARI"]
 param_df.loc[rank_df.index, "rank_MB-cls"] = rank_df["MB-cls"]
 param_df.loc[rank_df.index, "rank_AL-ARI"] = rank_df["AL-ARI"]
 param_df.loc[rank_df.index, "rank_AL-cls"] = rank_df["AL-cls"]
-param_df.sort_values("MB-ARI", ascending=False)
+param_df.sort_values("MB-moARI", ascending=False)
 
 #%%
 param_df.sort_values("AL-ARI", ascending=False)
@@ -101,7 +118,7 @@ param_df.sort_values("AL-ARI", ascending=False)
 # # Plot a candidate
 
 # idx = sort_index[2]
-idx = "GoodmanDeimos"
+idx = "CushingBlackfoot"
 preprocess_params = dict(param_df.loc[idx, ["binarize", "threshold"]])
 graph_type = param_df.loc[idx, "graph_type"]
 mg = load_metagraph(graph_type, version=BRAIN_VERSION)

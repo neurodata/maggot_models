@@ -35,7 +35,7 @@ mpl.rcParams["axes.spines.top"] = False
 
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
-BRAIN_VERSION = "2020-03-01"
+BRAIN_VERSION = "2020-03-02"
 
 mb_classes = ["APL", "MBON", "MBIN", "KC"]
 al_classes = [
@@ -216,6 +216,59 @@ def compute_pairedness(partition, meta, holdout=None, rand_adjust=False, plot=Fa
     return train_pairedness, test_pairedness
 
 
+def compute_good_pairedness(partition, meta, rand_adjust=False, plot=False):
+    partition = partition.copy()
+    meta = meta.copy()
+    meta = meta.loc[partition.index]
+
+    uni_labels, inv = np.unique(partition, return_inverse=True)
+    int_mat = np.zeros((len(uni_labels), len(uni_labels)))
+
+    for i, ul in enumerate(uni_labels):
+
+        c1_mask = inv == i
+        c1_pairs = meta.loc[c1_mask, "Pair"]
+        # drop unpaired
+        c1_pairs.drop(c1_pairs[c1_pairs == -1].index)
+
+        for j, ul in enumerate(uni_labels):
+
+            c2_mask = inv == j
+            c2_inds = meta.loc[c2_mask].index
+            # get the number of times pairs for my cluster are in your cluster
+            n_pairs_in_other = np.sum(c1_pairs.isin(c2_inds))
+            int_mat[i, j] = n_pairs_in_other
+
+    # match clusters by their pairedness
+    row_ind, col_ind = linear_sum_assignment(int_mat, maximize=True)
+    pairedness = np.trace(int_mat[np.ix_(row_ind, col_ind)]) / np.sum(int_mat)
+
+    if plot:
+        # FIXME broken
+        fig, axs = plt.subplots(1, 2, figsize=(20, 10))
+        sns.heatmap(
+            int_mat, square=True, ax=axs[0], cbar=False, cmap="RdBu_r", center=0
+        )
+        int_df = pd.DataFrame(data=int_mat, index=uni_labels, columns=uni_labels)
+        int_df = int_df.reindex(index=uni_labels[row_ind])
+        int_df = int_df.reindex(columns=uni_labels[col_ind])
+        sns.heatmap(int_df, square=True, ax=axs[1], cbar=False, cmap="RdBu_r", center=0)
+
+    if rand_adjust:
+        # attempt to correct for difference in matchings as result of random chance
+        # TODO this could be analytic somehow
+        part_vals = partition.values
+        np.random.shuffle(part_vals)
+        partition = pd.Series(data=part_vals, index=partition.index)
+        rand_pairedness, rand_test_pairedness = compute_pairedness(
+            partition, meta, rand_adjust=False, plot=False
+        )
+        adj_pairedness = pairedness - rand_pairedness
+        return pairedness, adj_pairedness
+
+    return pairedness
+
+
 # %% [markdown]
 # # Load the runs
 
@@ -305,31 +358,19 @@ outs = Parallel(n_jobs=-2, verbose=10)(
 )
 best_param_df["AL-cls"] = outs
 
-#%%
-
-mb_pairs = meta[meta["Class 1"].isin(mb_classes) & (meta["Pair"] != -1)][
-    "Pair ID"
-].unique()
-pairs = meta[meta["Pair"] != -1]["Pair ID"].unique()
-pairs_left = np.setdiff1d(pairs, mb_pairs)
-holdout_pairs = np.random.choice(pairs_left, size=(len(pairs_left) // 2), replace=False)
-test_pairs = np.setdiff1d(pairs_left, holdout_pairs)
-
 # %% [markdown]
-# #
+# # Pairedness
 
+outs = Parallel(n_jobs=-2, verbose=10)(
+    delayed(compute_good_pairedness)(i, mg.meta, rand_adjust=True) for i in partitions
+)
 
-# outs = Parallel(n_jobs=-2, verbose=10)(
-#     delayed(compute_pairedness)(i, mg.meta, rand_adjust=True, holdout=holdout_pairs)
-#     for i in partitions
-# )
+outs = list(zip(*outs))
+pairedness = outs[0]
+adj_pairedness = outs[1]
+best_param_df["pairedness"] = pairedness
+best_param_df["adj_pairedness"] = adj_pairedness
 
-# outs = list(zip(*outs))
-# train_pairedness = outs[0]
-# test_pairedness = outs[1]
-# best_param_df["train_pairedness"] = train_pairedness
-# best_param_df["test_pairedness"] = test_pairedness
-
-#%%
+#%% Save
 
 stashcsv(best_param_df, "best_params")
