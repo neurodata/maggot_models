@@ -146,74 +146,74 @@ def compute_classness(partition, meta, classes, class_type="Class 1"):
     return (left_score + right_score) / 2
 
 
-# FIXME
-def compute_pairedness(partition, meta, holdout=None, rand_adjust=False, plot=False):
-    partition = partition.copy()
-    meta = meta.copy()
+# # FIXME
+# def compute_pairedness(partition, meta, holdout=None, rand_adjust=False, plot=False):
+#     partition = partition.copy()
+#     meta = meta.copy()
 
-    if holdout is not None:
-        keep_inds = meta[~meta["Pair ID"].isin(holdout)].index
-        test_inds = meta[meta["Pair ID"].isin(holdout)].index
-        # partition = partition.loc[keep_inds]
+#     if holdout is not None:
+#         keep_inds = meta[~meta["Pair ID"].isin(holdout)].index
+#         test_inds = meta[meta["Pair ID"].isin(holdout)].index
+#         # partition = partition.loc[keep_inds]
 
-    uni_labels, inv = np.unique(partition, return_inverse=True)
+#     uni_labels, inv = np.unique(partition, return_inverse=True)
 
-    train_int_mat = np.zeros((len(uni_labels), len(uni_labels)))
-    test_int_mat = np.zeros((len(uni_labels), len(uni_labels)))
-    meta = meta.loc[partition.index]
+#     train_int_mat = np.zeros((len(uni_labels), len(uni_labels)))
+#     test_int_mat = np.zeros((len(uni_labels), len(uni_labels)))
+#     meta = meta.loc[partition.index]
 
-    for i, ul in enumerate(uni_labels):
-        c1_mask = inv == i
+#     for i, ul in enumerate(uni_labels):
+#         c1_mask = inv == i
 
-        c1_pairs = meta.loc[c1_mask, "Pair"]
-        c1_pairs.drop(
-            c1_pairs[c1_pairs == -1].index
-        )  # HACK must be a better pandas sol
+#         c1_pairs = meta.loc[c1_mask, "Pair"]
+#         c1_pairs.drop(
+#             c1_pairs[c1_pairs == -1].index
+#         )  # HACK must be a better pandas sol
 
-        for j, ul in enumerate(uni_labels):
-            c2_mask = inv == j
-            c2_inds = meta.loc[c2_mask].index
-            train_pairs_in_other = np.sum(
-                c1_pairs.isin(c2_inds) & c1_pairs.index.isin(keep_inds)
-            )
-            test_pairs_in_other = np.sum(
-                c1_pairs.isin(c2_inds) & c1_pairs.index.isin(test_inds)
-            )
-            train_int_mat[i, j] = train_pairs_in_other
-            test_int_mat[i, j] = test_pairs_in_other
+#         for j, ul in enumerate(uni_labels):
+#             c2_mask = inv == j
+#             c2_inds = meta.loc[c2_mask].index
+#             train_pairs_in_other = np.sum(
+#                 c1_pairs.isin(c2_inds) & c1_pairs.index.isin(keep_inds)
+#             )
+#             test_pairs_in_other = np.sum(
+#                 c1_pairs.isin(c2_inds) & c1_pairs.index.isin(test_inds)
+#             )
+#             train_int_mat[i, j] = train_pairs_in_other
+#             test_int_mat[i, j] = test_pairs_in_other
 
-    row_ind, col_ind = linear_sum_assignment(train_int_mat, maximize=True)
-    train_pairedness = np.trace(train_int_mat[np.ix_(row_ind, col_ind)]) / np.sum(
-        train_int_mat
-    )
-    test_pairedness = np.trace(test_int_mat[np.ix_(row_ind, col_ind)]) / np.sum(
-        test_int_mat
-    )
+#     row_ind, col_ind = linear_sum_assignment(train_int_mat, maximize=True)
+#     train_pairedness = np.trace(train_int_mat[np.ix_(row_ind, col_ind)]) / np.sum(
+#         train_int_mat
+#     )
+#     test_pairedness = np.trace(test_int_mat[np.ix_(row_ind, col_ind)]) / np.sum(
+#         test_int_mat
+#     )
 
-    if plot:
-        # FIXME broken
-        fig, axs = plt.subplots(1, 2, figsize=(20, 10))
-        sns.heatmap(
-            int_mat, square=True, ax=axs[0], cbar=False, cmap="RdBu_r", center=0
-        )
-        int_df = pd.DataFrame(data=int_mat, index=uni_labels, columns=uni_labels)
-        int_df = int_df.reindex(index=uni_labels[row_ind])
-        int_df = int_df.reindex(columns=uni_labels[col_ind])
-        sns.heatmap(int_df, square=True, ax=axs[1], cbar=False, cmap="RdBu_r", center=0)
+#     if plot:
+#         # FIXME broken
+#         fig, axs = plt.subplots(1, 2, figsize=(20, 10))
+#         sns.heatmap(
+#             int_mat, square=True, ax=axs[0], cbar=False, cmap="RdBu_r", center=0
+#         )
+#         int_df = pd.DataFrame(data=int_mat, index=uni_labels, columns=uni_labels)
+#         int_df = int_df.reindex(index=uni_labels[row_ind])
+#         int_df = int_df.reindex(columns=uni_labels[col_ind])
+#         sns.heatmap(int_df, square=True, ax=axs[1], cbar=False, cmap="RdBu_r", center=0)
 
-    if rand_adjust:
-        # attempt to correct for difference in matchings as result of random chance
-        # TODO this could be analytic somehow
-        part_vals = partition.values
-        np.random.shuffle(part_vals)
-        partition = pd.Series(data=part_vals, index=partition.index)
-        rand_train_pairedness, rand_test_pairedness = compute_pairedness(
-            partition, meta, rand_adjust=False, plot=False, holdout=holdout
-        )
-        test_pairedness -= rand_test_pairedness
-        train_pairedness -= rand_train_pairedness
-        # pairedness = pairedness - rand_pairedness
-    return train_pairedness, test_pairedness
+#     if rand_adjust:
+#         # attempt to correct for difference in matchings as result of random chance
+#         # TODO this could be analytic somehow
+#         part_vals = partition.values
+#         np.random.shuffle(part_vals)
+#         partition = pd.Series(data=part_vals, index=partition.index)
+#         rand_train_pairedness, rand_test_pairedness = compute_pairedness(
+#             partition, meta, rand_adjust=False, plot=False, holdout=holdout
+#         )
+#         test_pairedness -= rand_test_pairedness
+#         train_pairedness -= rand_train_pairedness
+#         # pairedness = pairedness - rand_pairedness
+#     return train_pairedness, test_pairedness
 
 
 def compute_good_pairedness(partition, meta, rand_adjust=False, plot=False):
@@ -260,7 +260,7 @@ def compute_good_pairedness(partition, meta, rand_adjust=False, plot=False):
         part_vals = partition.values
         np.random.shuffle(part_vals)
         partition = pd.Series(data=part_vals, index=partition.index)
-        rand_pairedness, rand_test_pairedness = compute_pairedness(
+        rand_pairedness, rand_test_pairedness = compute_good_pairedness(
             partition, meta, rand_adjust=False, plot=False
         )
         adj_pairedness = pairedness - rand_pairedness
