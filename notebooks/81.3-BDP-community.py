@@ -50,7 +50,7 @@ print(FNAME)
 
 # %% [markdown]
 # # Parameters
-BRAIN_VERSION = "2020-03-01"
+BRAIN_VERSION = "2020-03-02"
 BLIND = True
 SAVEFIGS = False
 SAVESKELS = False
@@ -320,7 +320,7 @@ def run_experiment(
 
 # %% [markdown]
 # #
-np.random.seed(888888)
+np.random.seed(8888889)
 n_replicates = 20
 param_grid = {
     "graph_type": ["G"],
