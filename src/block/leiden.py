@@ -7,17 +7,19 @@ import networkx as nx
 import leidenalg as la
 
 
-def run_leiden(mg, temp_loc=None, implementation="igraph", **kws):
+def _process_metagraph(mg, temp_loc):
     adj = mg.adj
     adj = symmetrize(adj, method="avg")
     mg = MetaGraph(adj, mg.meta)
+    nx.write_graphml(mg.g, temp_loc)
 
+
+def run_leiden(mg, temp_loc=None, implementation="igraph", **kws):
     if temp_loc is None:
         temp_loc = f"maggot_models/data/interim/temp-{np.random.randint(1e8)}.graphml"
     else:
         temp_loc = f"maggot_models/data/interim/{temp_loc}.graphml"
-    nx.write_graphml(mg.g, temp_loc)
-
+    _process_metagraph(mg, temp_loc)
     g = ig.Graph.Read_GraphML(temp_loc)
     nodes = [int(v["id"]) for v in g.vs]
     if implementation == "igraph":
@@ -26,6 +28,5 @@ def run_leiden(mg, temp_loc=None, implementation="igraph", **kws):
         vert_part = la.find_partition(g, la.ModularityVertexPartition, **kws)
     labels = vert_part.membership
     partition = pd.Series(data=labels, index=nodes)
-
     return partition, vert_part.modularity
 
