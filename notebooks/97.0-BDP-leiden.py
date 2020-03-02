@@ -139,7 +139,9 @@ for i, seed in enumerate(seeds):
 print("\n\n\n\n")
 print(f"Running {len(rep_params)} jobs in total")
 print("\n\n\n\n")
-outs = Parallel(n_jobs=12, verbose=50)(delayed(run_experiment)(**p) for p in rep_params)
+outs = Parallel(n_jobs=12, verbose=50)(
+    delayed(run_experiment)(**p) for p in rep_params[:20]
+)
 partitions, modularities = list(zip(*outs))
 # %% [markdown]
 # #
