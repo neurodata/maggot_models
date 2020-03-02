@@ -5,6 +5,7 @@ import numpy as np
 import igraph as ig
 import networkx as nx
 import leidenalg as la
+import os
 
 
 def _process_metagraph(mg, temp_loc):
@@ -20,6 +21,7 @@ def run_leiden(mg, temp_loc=None, implementation="igraph", **kws):
     else:
         temp_loc = f"maggot_models/data/interim/{temp_loc}.graphml"
     _process_metagraph(mg, temp_loc)
+    os.remove(temp_loc)
     g = ig.Graph.Read_GraphML(temp_loc)
     nodes = [int(v["id"]) for v in g.vs]
     if implementation == "igraph":
