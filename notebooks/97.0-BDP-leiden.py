@@ -120,7 +120,7 @@ param_grid = {
     "threshold": [0, 1, 2, 3],
     "resolution_parameter": np.geomspace(0.0005, 0.05, 10),
     "binarize": [True, False],
-    "objective_function": ["CPM", "modularity"],
+    "objective_function": ["CPM"],
     "n_iterations": [2],
 }
 params = list(ParameterGrid(param_grid))
