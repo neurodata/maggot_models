@@ -15,7 +15,13 @@ def _process_metagraph(mg, temp_loc):
     nx.write_graphml(mg.g, temp_loc)
 
 
-def run_leiden(mg, temp_loc=None, implementation="igraph", **kws):
+def run_leiden(
+    mg,
+    temp_loc=None,
+    implementation="igraph",
+    partition_type=la.CPMVertexPartition,
+    **kws,
+):
     if temp_loc is None:
         temp_loc = f"maggot_models/data/interim/temp-{np.random.randint(1e8)}.graphml"
     else:
@@ -27,7 +33,7 @@ def run_leiden(mg, temp_loc=None, implementation="igraph", **kws):
     if implementation == "igraph":
         vert_part = g.community_leiden(**kws)
     elif implementation == "leidenalg":
-        vert_part = la.find_partition(g, la.ModularityVertexPartition, **kws)
+        vert_part = la.find_partition(g, partition_type, **kws)
     labels = vert_part.membership
     partition = pd.Series(data=labels, index=nodes)
     return partition, vert_part.modularity

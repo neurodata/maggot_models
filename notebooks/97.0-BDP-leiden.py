@@ -5,7 +5,7 @@ import warnings
 from operator import itemgetter
 from pathlib import Path
 from timeit import default_timer as timer
-
+import leidenalg as la
 import colorcet as cc
 import community as cm
 import matplotlib.colors as mplc
@@ -24,9 +24,7 @@ from graspy.utils import symmetrize
 from src.data import load_everything, load_metagraph, load_networkx
 from src.embed import lse, preprocess_graph
 from src.graph import MetaGraph, preprocess
-from src.hierarchy import signal_flow
 from src.io import savefig, saveobj, saveskels, savecsv
-from src.utils import get_blockmodel_df, get_sbm_prob
 from src.visualization import random_names
 from src.block import run_leiden
 
@@ -73,7 +71,14 @@ def stashobj(obj, name, **kws):
 
 
 def run_experiment(
-    graph_type=None, threshold=None, binarize=None, seed=None, param_key=None, **kws
+    graph_type=None,
+    threshold=None,
+    binarize=None,
+    seed=None,
+    param_key=None,
+    objective_function=None,
+    implementation="leidenalg",
+    **kws,
 ):
     np.random.seed(seed)
 
@@ -86,9 +91,22 @@ def run_experiment(
         remove_pdiff=True,
         binarize=binarize,
     )
-    partition, modularity = run_leiden(
-        mg, temp_loc=seed, implementation="leidenalg", **kws
-    )
+    if implementation == "leidenalg":
+        if objective_function == "CPM":
+            partition_type = la.CPMVertexPartition
+        elif objective_function == "modularity":
+            partition_type = la.ModularityVertexPartition
+        partition, modularity = run_leiden(
+            mg,
+            temp_loc=seed,
+            implementation=implementation,
+            partition_type=partition_type,
+            **kws,
+        )
+    elif implementation == "igraph":
+        partition, modularity = run_leiden(
+            mg, temp_loc=seed, implementation=implementation, **kws
+        )
 
     return partition, modularity
 
@@ -103,7 +121,7 @@ param_grid = {
     "resolution_parameter": np.geomspace(0.0005, 0.05, 10),
     "binarize": [True, False],
     "objective_function": ["CPM", "modularity"],
-    "n_iterations": [5],
+    "n_iterations": [2],
 }
 params = list(ParameterGrid(param_grid))
 seeds = np.random.choice(int(1e8), size=n_replicates * len(params), replace=False)
