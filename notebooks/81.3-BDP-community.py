@@ -166,22 +166,6 @@ def adjust_partition(partition, class_labels):
     return adjusted_partition
 
 
-def add_max_weight(df):
-    max_pair_edges = df.groupby("edge pair ID", sort=False)["weight"].max()
-    edge_max_weight_map = dict(zip(max_pair_edges.index.values, max_pair_edges.values))
-    df["max_weight"] = itemgetter(*df["edge pair ID"])(edge_max_weight_map)
-    asym_inds = df[df["edge pair ID"] == -1].index
-    df.loc[asym_inds, "max_weight"] = df.loc[asym_inds, "weight"]
-    return df
-
-
-def edgelist_to_mg(edgelist, meta):
-    g = nx.from_pandas_edgelist(edgelist, edge_attr=True, create_using=nx.DiGraph)
-    nx.set_node_attributes(g, meta.to_dict(orient="index"))
-    mg = MetaGraph(g)
-    return mg
-
-
 def run_louvain(g_sym, res, skeleton_labels):
     out_dict = cm.best_partition(g_sym, resolution=res)
     modularity = cm.modularity(out_dict, g_sym)
