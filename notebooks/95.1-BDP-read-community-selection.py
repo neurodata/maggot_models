@@ -88,9 +88,12 @@ sns.scatterplot(data=param_df, x="test_pairedness", y="train_pairedness", ax=ax)
 # %% [markdown]
 # #
 rank_df = param_df.rank(axis=0, ascending=False)
-param_df.loc[rank_df.index, "rank_train_pairedness"] = rank_df["train_pairedness"]
-param_df.loc[rank_df.index, "rank_test_pairedness"] = rank_df["test_pairedness"]
+# param_df.loc[rank_df.index, "rank_train_pairedness"] = rank_df["train_pairedness"]
+# param_df.loc[rank_df.index, "rank_test_pairedness"] = rank_df["test_pairedness"]
 param_df.loc[rank_df.index, "rank_MB-ARI"] = rank_df["MB-ARI"]
+param_df.loc[rank_df.index, "rank_MB-cls"] = rank_df["MB-cls"]
+param_df.loc[rank_df.index, "rank_AL-ARI"] = rank_df["AL-ARI"]
+param_df.loc[rank_df.index, "rank_AL-cls"] = rank_df["AL-cls"]
 param_df.sort_values("MB-ARI", ascending=False)
 
 #%%
@@ -100,7 +103,7 @@ param_df.sort_values("AL-cls", ascending=False)
 # # Plot a candidate
 
 # idx = sort_index[2]
-idx = "AriadneKyle"
+idx = "JollaTenneco"
 preprocess_params = dict(param_df.loc[idx, ["binarize", "threshold"]])
 graph_type = param_df.loc[idx, "graph_type"]
 mg = load_metagraph(graph_type, version=BRAIN_VERSION)
