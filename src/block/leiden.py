@@ -21,8 +21,8 @@ def run_leiden(mg, temp_loc=None, implementation="igraph", **kws):
     else:
         temp_loc = f"maggot_models/data/interim/{temp_loc}.graphml"
     _process_metagraph(mg, temp_loc)
-    os.remove(temp_loc)
     g = ig.Graph.Read_GraphML(temp_loc)
+    os.remove(temp_loc)
     nodes = [int(v["id"]) for v in g.vs]
     if implementation == "igraph":
         vert_part = g.community_leiden(**kws)
