@@ -104,7 +104,7 @@ param_grid = {
     "n_iterations": [5],
 }
 params = list(ParameterGrid(param_grid))
-seeds = np.random.choice(1e8, size=n_replicates * len(params), replace=False)
+seeds = np.random.choice(int(1e8), size=n_replicates * len(params), replace=False)
 param_keys = random_names(len(seeds))
 
 rep_params = []
