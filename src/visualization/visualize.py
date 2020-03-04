@@ -1571,7 +1571,7 @@ def draw_networkx_nice(
         edgelist=edgelist,
         edge_color=cmap,
         width=weight_scale * weights + 0.1,
-        # connectionstyle="arc3,rad=0.2",
+        connectionstyle="arc3,rad=0.2",
         arrows=True,
         # width=1.5,
         ax=ax,

@@ -29,7 +29,6 @@ CLASS_IND_DICT = {
     "mPN;FFN-multi": 3,
     "tPN": 186,
     "uPN": 36,
-    "vPN": 225,
     "pLN": 57,
     "bLN-Duet": 216,
     "bLN-Trio": 8,
@@ -52,6 +51,8 @@ CLASS_IND_DICT = {
     "CN": 206,
     "CN2": 95,
     "LHN;CN": 108,
+    "vPN": 33,
+    "LON": 159,
 }
 
 names = []

@@ -5,6 +5,7 @@ from graspy.utils import is_almost_symmetric, get_lcc
 from pathlib import Path
 from operator import itemgetter
 from tqdm import tqdm
+from copy import deepcopy
 
 # helper functions
 
@@ -62,6 +63,9 @@ class MetaGraph:
         else:
             raise ValueError("Invalid data source to initialize MetaGraph")
         self.n_verts = self.adj.shape[0]
+
+    def copy(self):
+        return deepcopy(self)
 
     def _update_from_nx(self, g):
         self.g = g

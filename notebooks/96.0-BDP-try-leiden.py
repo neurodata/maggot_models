@@ -89,7 +89,7 @@ def stashobj(obj, name, **kws):
 
 graph_type = "G"
 threshold = 3
-binarize = False
+binarize = True
 
 # load and preprocess the data
 mg = load_metagraph(graph_type, version=BRAIN_VERSION)
@@ -134,10 +134,25 @@ def run_leiden(
     return partition, vert_part.modularity
 
 
+# %% [markdown]
+# #
+temp_loc = f"maggot_models/data/interim/temp-{np.random.randint(1e8)}.graphml"
+_process_metagraph(mg, temp_loc)
+g = ig.Graph.Read_GraphML(temp_loc)
+os.remove(temp_loc)
+nodes = [int(v["id"]) for v in g.vs]
+vert_part = g.community_multilevel()
+labels = vert_part.membership
+partition = pd.Series(data=labels, index=nodes)
+# %% [markdown]
+# #
+
+
 partition, modularity = run_leiden(
     mg,
-    implementation="leidenalg",
-    resolution_parameter=0.001,
+    implementation="igraph",
+    resolution_parameter=0.1,
+    beta=0.1,
     partition_type=la.CPMVertexPartition,
     weights="weight",
     n_iterations=-1,
@@ -240,4 +255,3 @@ prob_df = prob_df.reindex(category_order, axis=1)
 probplot(100 * prob_df, fmt="2.0f", figsize=(20, 20), title=title, font_scale=0.7)
 stashfig(basename + f"probplot-counts{counts}-weights{weights}")
 plt.close()
-

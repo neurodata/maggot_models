@@ -204,3 +204,4 @@ prob_df = prob_df.reindex(category_order, axis=1)
 probplot(100 * prob_df, fmt="2.0f", figsize=(20, 20), title=title, font_scale=0.7)
 stashfig(basename + f"probplot-counts{counts}-weights{weights}")
 plt.close()
+
