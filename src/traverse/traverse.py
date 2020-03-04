@@ -10,8 +10,7 @@ def path_to_visits(paths, n_verts, from_order=True, out_inds=[]):
             if from_order:
                 visit_orders[n].append(i + 1)
             else:
-                if n in out_inds:
-                    visit_orders[n].append(len(path) - i)
+                visit_orders[n].append(len(path) - i)
     return visit_orders
 
 

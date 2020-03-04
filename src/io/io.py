@@ -150,3 +150,22 @@ def savecsv(
         savename = path / str(name + ".csv")
         df.to_csv(savename)
         print(f"Saved DataFrame to {savename}")
+
+
+import csv
+
+
+def savelol(
+    lol,
+    name,
+    foldername=None,
+    subfoldername="csvs",
+    pathname="./maggot_models/notebooks/outs",
+    save_on=True,
+):
+    path = _handle_dirs(pathname, foldername, subfoldername)
+    savename = path / str(name + ".csv")
+    with open(savename, "w") as f:
+        wr = csv.writer(f)
+        wr.writerows(lol)
+    print(f"Saved list of lists to {savename}")
