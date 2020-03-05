@@ -23,7 +23,7 @@ Output
 - dVNC: descending to ventral nerve cord
 - dSEZ: descending to sub-esophogeal zone
 - Ring gland
-  - IPC: insolin producing cells
+  - IPC: insulin producing cells
      - Paper: https://elifesciences.org/articles/16799
   - ITP
   - CA-LP
