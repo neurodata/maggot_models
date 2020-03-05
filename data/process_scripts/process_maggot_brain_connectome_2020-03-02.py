@@ -189,13 +189,6 @@ for name, ids in subgroup_map.items():
     for i in ids:
         num_missing += append_class(meta_data_df, i, "Class 2", name)
 
-# Merge class (put class 1 and class 2 together as a column)
-meta_data_df["Merge Class"] = ""
-for i in meta_data_df.index.values:
-    merge_class = meta_data_df.loc[i, "Class 1"]
-    if meta_data_df.loc[i, "Class 2"] != "":
-        merge_class += "-" + meta_data_df.loc[i, "Class 2"]
-    meta_data_df.loc[i, "Merge Class"] = merge_class
 
 #%% manage the "Categorical" (true/false) labels
 print("\n\n\n\n All true/false labels")
@@ -298,6 +291,17 @@ for i in range(len(meta_data_df)):
                 f"{meta_data_df.index[i]} and partner {partner_id} have different labels"
             )
 print()
+
+# %% [markdown]
+# #
+
+# Merge class (put class 1 and class 2 together as a column)
+meta_data_df["Merge Class"] = ""
+for i in meta_data_df.index.values:
+    merge_class = meta_data_df.loc[i, "Class 1"]
+    if meta_data_df.loc[i, "Class 2"] != "":
+        merge_class += "-" + meta_data_df.loc[i, "Class 2"]
+    meta_data_df.loc[i, "Merge Class"] = merge_class
 
 
 #%% [markdown]
