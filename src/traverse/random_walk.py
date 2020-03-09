@@ -51,6 +51,16 @@ def generate_random_walks(
     return sm_paths, visit_orders
 
 
+# def _step(start, prob_mat, path, max_walk=30):
+#     if len(path) < max_walk:
+#         choice = np.random.choice(len(prob_mat), p=prob_mat[start])
+#         path.append(choice)
+#         return choice
+
+# def _random_walk(start, prob_mat, )
+#     curr = start
+
+
 @njit()
 def _simulate_walk(s, prob_mat, visit_orders, out_inds, max_walk, dead_inds, n_verts):
     curr_ind = s

@@ -169,3 +169,19 @@ def savelol(
         wr = csv.writer(f)
         wr.writerows(lol)
     print(f"Saved list of lists to {savename}")
+
+
+def readlol(
+    name,
+    foldername=None,
+    subfoldername="csvs",
+    pathname="./maggot_models/notebooks/outs",
+):
+    path = _handle_dirs(pathname, foldername, subfoldername)
+    savename = path / str(name + ".csv")
+    outer_list = []
+    with open(savename, "r") as f:
+        reader = csv.reader(f)
+        for line in reader:
+            outer_list.append([int(l) for l in line])
+    return outer_list

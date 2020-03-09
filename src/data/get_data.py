@@ -81,9 +81,23 @@ def load_networkx(graph_type, version="2019-09-18-v2"):
 
 
 def load_metagraph(graph_type, version="2019-12-18"):
-    g = load_networkx(graph_type, version)
-    mg = MetaGraph(g)
-    return mg
+    if graph_type == "non-Gaa":
+        graph_types = ["Gad", "Gda", "Gdd"]
+        g = load_networkx(graph_types[0], version)
+        mg = MetaGraph(g)
+        adj = mg.adj
+        for gt in graph_types:
+            temp_g = load_networkx(gt, version)
+            temp_mg = MetaGraph(temp_g)
+            temp_mg.reindex(mg.meta.index, use_ids=True)
+            assert np.array_equal(temp_mg.meta.index, mg.meta.index)
+            adj += temp_mg.adj
+        mg = MetaGraph(adj, mg.meta)
+        return mg
+    else:
+        g = load_networkx(graph_type, version)
+        mg = MetaGraph(g)
+        return mg
 
 
 def load_everything(

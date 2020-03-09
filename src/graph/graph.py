@@ -81,12 +81,19 @@ class MetaGraph:
         self.g = g
         self.n_verts = adj.shape[0]
 
-    def reindex(self, perm_inds):
-        adj = self.adj.copy()
-        adj = adj[np.ix_(perm_inds, perm_inds)]
-        self.adj = adj
-        self.meta = self.meta.iloc[perm_inds, :]
-        self.g = _numpy_pandas_to_nx(adj, self.meta)
+    def reindex(self, perm_inds, use_ids=False):
+        if use_ids:
+            meta = self.meta.copy()
+            meta["idx"] = range(len(meta))
+            meta = meta.reindex(perm_inds)
+            idx_perm_inds = meta["idx"]
+            self.reindex(idx_perm_inds, use_ids=False)
+        else:
+            adj = self.adj.copy()
+            adj = adj[np.ix_(perm_inds, perm_inds)]
+            self.adj = adj
+            self.meta = self.meta.iloc[perm_inds, :]
+            self.g = _numpy_pandas_to_nx(adj, self.meta)
         return self
 
     def prune(self):

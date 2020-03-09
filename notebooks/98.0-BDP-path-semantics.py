@@ -56,7 +56,7 @@ def stashlol(df, name, **kws):
 
 #%% Load and preprocess the data
 
-VERSION = "2020-03-02"
+VERSION = "2020-03-05"
 print(f"Using version {VERSION}")
 
 graph_type = "Gad"
@@ -79,7 +79,18 @@ print(f"Preprocessed graph {graph_type} with threshold={threshold}, weight={weig
 class_key = "Merge Class"
 
 # out_groups = [("O_dVNC",), ("O_dSEZ",), ("O_IPC", "O_ITP", "O_CA-LP")]
-out_groups = [("O_dVNC", "O_dSEZ", "O_IPC", "O_ITP", "O_CA-LP")]
+out_groups = [
+    (
+        "O_dVNC",
+        "O_dSEZ",
+        "O_dVNC;O_RG",
+        "O_RG",
+        "O_dUnk",
+        "O_RG-IPC",
+        "O_RG-ITP",
+        "O_RG-CA-LP",
+    )
+]
 
 # sens_groups = [
 #     ("sens-ORN",),
@@ -109,6 +120,10 @@ g = nx.relabel_nodes(g, ind_map, copy=True)
 prob_mat = to_markov_matrix(adj)
 n_walks = 1000
 max_walk = 30
+
+
+#%%
+
 
 # %% [markdown]
 # ## Generate paths SOMEHOW
@@ -174,6 +189,11 @@ for p in params:
     param_paths.append(paths)
 
 # %% [markdown]
+# #
+
+idx = meta.loc[4679139, "idx"]
+
+# %% [markdown]
 # # TEMP
 # examine where the neurons 'die'
 paths = param_paths[0]
@@ -203,7 +223,7 @@ dead_meta = dead_meta.sort_values("dead_counts", ascending=False)
 # %% [markdown]
 # #
 
-stashcsv(dead_meta, "dead-neurons")
+stashcsv(dead_meta, "dead-neurons-03-05")
 
 # %% [markdown]
 # #

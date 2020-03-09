@@ -6,23 +6,24 @@ Sensory
    - Usually just get the axon entering the volume in this dataset
    - There are several nerve bundles coming in
    - Subclasses:
-      - ORN: odorant receptor
+      - `ORN`: odorant receptor
          - Paper: Berck et al.
          - These are in the antennal nerve also
-      - AN: antennal nerve (anatomical)
+      - `AN`: antennal nerve (anatomical)
          - Paper: https://elifesciences.org/articles/40247
          - In the antennal nerve but not odor receptors
          - Pharyngeal/internal organ info
-      - MN: maxillary nerve (anatomical)
+      - `MN`: maxillary nerve (anatomical)
          - Paper: https://elifesciences.org/articles/40247
          - Gustatory/somatosensory
-      - PaN: prothoracic accessory nerve (anatomical)
+      - `PaN`: prothoracic accessory nerve (anatomical)
          - Paper: https://elifesciences.org/articles/40247
          - Gustatory/somatosensory
-      - Photo: photoreceptor
+      - `Photo`: photoreceptor
          - Paper: https://elifesciences.org/articles/28387
-      - Temperature
+      - `Temp`: temperature sensing
          - Paper: no paper
+         - Come in as part of AN (I think)
 
 Output 
 --- 

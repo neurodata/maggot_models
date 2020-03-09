@@ -1,0 +1,112 @@
+,neuron_name,Class 1,is_LNpre,is_pdiff,is_usplit,CAT_is_sink,is_brain,Hemisphere,Pair,Pair ID,Merge Class,lineage,dendrite_input,axon_input,Class 2,idx,dead_counts
+8247641, (ChalOLP;right) [*OLP_r] #8247641,LON,True,False,True,False,True,R,17414715,952,LON,OLP,326,0,,861,5444.0
+17414715, (ChalOLP;left) [*OLP_l] #17414715,LON,True,False,True,False,True,L,8247641,952,LON,OLP,261,0,,2478,4767.0
+5030808, (keystone left) [] #5030808,keystone,False,False,False,False,False,L,10831005,1164,keystone,unk,1130,0,,467,3171.0
+11525714,OAN-g1 (MBE22 left) [] #11525714,MBIN,False,False,True,False,False,L,12805363,1182,MBIN-OAN,unk,190,0,OAN,1399,2714.0
+4116174,FFN-39,FFN,True,False,True,False,True,R,10865025,442,FFN,BAmv3,559,0,,324,2580.0
+10865025,FFN-39,FFN,True,False,True,False,True,L,4116174,442,FFN,BAmv3,488,0,,1298,2342.0
+12805363,OAN-g1 (MBE22 right) [] #12805363,MBIN,False,False,True,False,False,R,11525714,1182,MBIN-OAN,unk,157,0,OAN,1533,2138.0
+10831005, (keystone right) [] #10831005,keystone,False,False,False,False,False,R,5030808,1164,keystone,unk,1077,0,,1294,2106.0
+8198238,MB2IN-184 (broad T2 right) [*BAlc ant_r akira] #8198238,bLN,True,False,True,False,True,R,8311264,270,bLN-Trio,BAlc ant,1201,0,Trio,839,1932.0
+7939979, (broad T1 left) [*BAlc ant_l akira] #7939979,bLN,True,False,True,False,True,L,8198317,239,bLN-Trio,BAlc ant,1124,0,Trio,783,1923.0
+7983899,OAN-e1 (MBE9a left) [*CPc_l akira] #7983899,MBIN,False,False,True,False,True,L,7616956,244,MBIN-OAN,CPc,641,0,OAN,796,1831.0
+18028397,MBON-k1 (MBE5b right) [*DAMd1_r akira] #18028397,MBON,False,False,True,False,True,R,16846805,836,MBON,DAMd1,649,0,,2640,1731.0
+6557581,MB2IN-185 (broad T3 right) [*BAlc ant_r akira] #6557581,bLN,True,False,True,False,True,R,7939890,238,bLN-Trio,BAlc ant,1127,0,Trio,649,1730.0
+8198317, (broad T1 right) [*BAlc ant_r akira] #8198317,bLN,True,False,True,False,True,R,7939979,239,bLN-Trio,BAlc ant,1044,0,Trio,840,1719.0
+15618614,MB2ON-247 (Tidal wave right) [unknown lineage] #15618614,CN2,False,False,False,False,True,R,14342744,632,CN2,unk,238,6,,1889,1696.0
+8311264,MB2IN-184 (broad T2 left) [*BAlc ant_l akira] #8311264,bLN,True,False,True,False,True,L,8198238,270,bLN-Trio,BAlc ant,947,0,Trio,887,1667.0
+7939890,MB2IN-185 (broad T3 left) [*BAlc ant_l akira] #7939890,bLN,True,False,True,False,True,L,6557581,238,bLN-Trio,BAlc ant,979,0,Trio,782,1656.0
+7802210,MBON-i1 (MBE5a left) [*DAMd1_l akira] #7802210,MBON,False,False,True,False,True,L,16797672,225,MBON,DAMd1,693,0,,756,1648.0
+7616956,OAN-e1 (MBE9a right) [*CPc_r akira] #7616956,MBIN,False,False,True,False,True,R,7983899,244,MBIN-OAN,CPc,711,0,OAN,744,1514.0
+16797672,MBON-i1 (MBE5a right) [*DAMd1_r akira] #16797672,MBON,False,False,True,False,True,R,7802210,225,MBON,DAMd1,633,0,,2260,1466.0
+15770140,MB2IN-154,unk,True,False,True,False,True,L,12049797,725,unk,CPc,302,0,,2000,1408.0
+16846805,MBON-k1 (MBE5b left) [*DAMd1_l akira] #16846805,MBON,False,False,True,False,True,L,18028397,836,MBON,DAMd1,687,0,,2266,1329.0
+14342744,MB2ON-247 (Tidal wave left) [unknown lineage] #14342744,CN2,False,False,False,False,True,L,15618614,632,CN2,unk,254,10,,1680,1290.0
+17379372,MB2ON-235 (CM4 dor med_r; CM4 dor ant 8 right) [*CM4-dm_r akira,unk,True,False,True,False,True,R,10018260,380,unk,unk,325,0,,2468,1119.0
+12049797,MB2IN-154,unk,True,False,True,False,True,R,15770140,725,unk,CPc,250,0,,1458,1053.0
+8198416,_broad D1 (broad D1 right) [*BAlc ant_r akira] #8198416,bLN,True,False,True,False,True,R,7941652,241,bLN-Duet,BAlc ant,480,0,Duet,841,1011.0
+10018260,MB2ON-235 (CM4 dor med_l; CM4 dor ant 8 left) [*CM4-dm_l akira] #10018260,unk,True,False,True,False,True,L,17379372,380,unk,CM4-dm,348,0,,1190,1008.0
+6143930,MB2IN-182 (CSD right) [*BAlc post_r akira] #6143930,LHN2,True,False,True,False,True,R,13849557,609,LHN2,BAlc post,369,0,,621,957.0
+7941652,_broad D1 (broad D1 left) [*BAlc ant_l akira] #7941652,bLN,True,False,True,False,True,L,8198416,241,bLN-Duet,BAlc ant,409,0,Duet,785,931.0
+8198513, (broad D2 right) [*BAlc ant_r akira] #8198513,bLN,True,False,True,False,True,R,7941642,240,bLN-Duet,BAlc ant,436,0,Duet,842,891.0
+7600311, (picky 1 right) [*BAla12_r akira] #7600311,pLN,True,False,True,False,True,R,8102935,253,pLN,BAla12,357,0,,742,843.0
+7941642, (broad D2 left) [*BAlc ant_l akira] #7941642,bLN,True,False,True,False,True,L,8198513,240,bLN-Duet,BAlc ant,379,0,Duet,784,819.0
+8102935, (picky 1 left) [*BAla12_l akira] #8102935,pLN,True,False,True,False,True,L,7600311,253,pLN,BAla12,315,0,,819,755.0
+4679139,mPN,mPN,False,False,False,False,True,R,5261424,129,mPN-multi,BAmv3,296,0,multi,440,707.0
+5474852,CN-25,LHN;CN,True,False,True,False,True,L,17591442,136,LHN;CN,BLVa12,267,0,,507,676.0
+2512602, (LN2;right) [*BLAd-OL_r akira] #2512602,LON,False,False,False,True,True,R,2204467,8,LON,BLAd-OL,50,0,,79,623.0
+4195012,MBON-h1 (MBE13a right) [*DALv23_r akira] #4195012,MBON,False,False,True,False,True,R,8338584,271,MBON,DALv23,573,0,,346,616.0
+17591442,CN-25,LHN;CN,True,False,True,False,True,R,5474852,136,LHN;CN,BLVa12,274,0,,2517,599.0
+13849557,MB2IN-182 (CSD left) [*BAlc post_l akira] #13849557,LHN2,True,False,True,False,True,L,6143930,609,LHN2,BAlc post,264,0,,1632,585.0
+8177199, (SP2-1;right) [*CM4-dm_r akira] #8177199,LHN,True,False,True,False,True,R,7982896,243,LHN,CM4-dm,183,0,,836,571.0
+7982896, (SP2-1;left) [*CM4-dm_l akira] #7982896,LHN,True,False,True,False,True,L,8177199,243,LHN,CM4-dm,202,0,,795,547.0
+4230749,MBON-h2 (MBE13b right) [*DALv23_r akira] #4230749,MBON,False,False,True,False,True,R,8798010,291,MBON,DALv23,552,0,,361,530.0
+15732497, (BAmv12_dor loop right) [*BAmv12_dor_r akira] #15732497,unk,True,False,True,False,True,R,16547292,807,unk,BAmv12_dor,116,0,,1985,528.0
+8338584,MBON-h1 (MBE13a left) [*DALv23_l akira] #8338584,MBON,False,False,True,False,True,L,4195012,271,MBON,DALv23,477,0,,892,523.0
+16547292, (BAmv12_dor loop left) [*BAmv12_dor_l akira] #16547292,unk,True,False,True,False,True,L,15732497,807,unk,BAmv12_dor,122,0,,2195,522.0
+8798010,MBON-h2 (MBE13b left) [*DALv23_l akira] #8798010,MBON,False,False,True,False,True,L,4230749,291,MBON,DALv23,593,0,,967,520.0
+8357933,MB2ON-62 (BT; BAmd2 ven desc lat 5_left -AXON WRONG) [*BAmd2_v_l akira] #8357933,CN2,False,False,False,False,True,L,13764822,277,CN2,BAmd2_v,138,23,,900,509.0
+13764822,MB2ON-62 (BSD; BAmd2 ven desc lat 5_right - AXON WRONG) [*BAmd2_v_r akira] #13764822,CN2,False,False,False,False,True,R,8357933,277,CN2,BAmd2_v,116,29,,1616,455.0
+17125520,CN-32,CN,True,False,True,False,True,R,12839441,581,CN,BLVa12,204,0,,2358,450.0
+19611917, (DN1-1 - PDL007 #2 left) [*DPLc_ant_lat_l akira] #19611917,LHN,True,False,True,False,True,L,8138616,1061,LHN,DPLc_antat,113,0,,2737,445.0
+3021609, (DPM contralateral horseshoe right) [*DPMm2_r akira] #3021609,unk,True,False,True,False,True,R,17354414,921,unk,DPMm2,173,0,,136,392.0
+17354414, (DPM contralateral horseshoe left) [*DPMl_ant_dor_l akira] #17354414,unk,True,False,True,False,True,L,3021609,921,unk,DPMl_ant_dor,153,0,,2423,386.0
+12839441,CN-32,CN,True,False,True,False,True,L,17125520,581,CN,BLVa12,196,0,,1536,367.0
+3450751,MB2ON-164,LHN2,True,False,True,False,True,R,10160250,382,LHN2,BAmd1,163,0,,181,350.0
+8814524, (DPM long neck left) [*DPMl_ant_dor_l akira] #8814524,unk,True,False,True,False,True,L,17340973,297,unk,DPMl_ant_dor,104,0,,977,323.0
+17340973, (DPM long neck right) [*DPMpm1_r akira] #17340973,unk,True,False,True,False,True,R,8814524,297,unk,DPMpm1,102,0,,2416,295.0
+17588623, (ASB Strange Neurites right) [unknown lineage] #17588623,unk,True,False,True,False,True,R,-1,-1,unk,unk,126,0,,2515,290.0
+2628785,CN-36,unk,True,False,True,False,True,L,4311586,18,unk,BAmd2_v,166,0,,94,282.0
+14434314, (S1: neuron left) [*BLAd-vl_l akira,unk,True,False,True,False,True,L,13369670,633,unk,unk,116,0,,1682,269.0
+17075832, (BAlp descending 1 left) [unknown lineage] #17075832,CN2,False,False,False,False,True,L,14039007,879,CN2,unk,31,18,,2342,267.0
+2921933, (V1: possible PVL005 - 3 Right) [*BLVa34_r akira] #2921933,LHN,True,False,True,False,True,R,4570270,104,LHN,BLVa34,131,0,,123,264.0
+13369670, (S1: neuron right) [*BLAd-vl_r akira] #13369670,unk,True,False,True,False,True,R,14434314,633,unk,BLAd-vl,139,0,,1578,263.0
+16154290,MB2ON-200 (CM4 ven pos 2 right) [*CM4-vm_r akira] #16154290,LHN2,False,False,False,False,True,R,19298625,1056,LHN2,CM4-vm,86,18,,2074,258.0
+10160250,MB2ON-164,LHN2,True,False,True,False,True,L,3450751,382,LHN2,BAmd1,112,0,,1197,258.0
+8047280, (down pOLP left) [*CPf_l akira] #8047280,LHN2,False,False,False,False,True,L,7587948,249,LHN2,CPf,121,39,,805,253.0
+4311586,CN-36,unk,True,False,True,False,True,R,2628785,18,unk,BAmd2_v,155,0,,373,247.0
+2797480,MB2ON-205 (DPLc_post_med descending left) [*DPLc_post_med_l akira] #2797480,LHN2,True,False,True,False,True,L,13713529,20,LHN2,DPLc_post_med,107,0,,111,234.0
+2914206, (DN1-1 - PDL007 right ) [*DPLc_ant_lat_r akira] #2914206,LHN,True,False,True,False,True,R,12745771,577,LHN,DPLc_antat,144,0,,120,210.0
+5500958, (Coaster (NPF) 2 right) [*DPMpl12_r akira] #5500958,LHN2,False,False,False,False,True,R,7335439,212,LHN2,DPMpl12,76,20,,512,203.0
+12745771, (DN1-1 - PDL007 left) [*DPLc_ant_lat_l akira] #12745771,LHN,True,False,True,False,True,L,2914206,577,LHN,DPLc_antat,137,0,,1529,199.0
+13713529,MB2ON-205 (DPLc_post_med descending right) [*DPLc_post_med_r akira] #13713529,LHN2,True,False,True,False,True,R,2797480,20,LHN2,DPLc_post_med,121,0,,1602,198.0
+8138616, (DN1-1 - PDL007 #2 right) [*DPLc_ant_lat_r akira] #8138616,LHN,True,False,True,False,True,R,19611917,1061,LHN,DPLc_antat,128,0,,828,197.0
+14039007, (BAlp descending 1 right) [*BAlp_ant_r akira] #14039007,CN2,False,False,False,False,True,R,17075832,879,CN2,BAlp_ant,42,19,,1651,185.0
+11157622, (BAmd1 PN 1 left) [*BAmd1_l akira] #11157622,unk,False,False,True,False,True,L,17036160,481,unk,BAmd1,62,0,,1363,183.0
+7338309, (DPMpl12 Brain into SEZ left) [*DPMpl12_l akira] #7338309,LHN2,False,False,False,False,True,L,17352470,213,LHN2,DPMpl12,53,26,,700,173.0
+16141217, (BLAv12 2 left) [*BLAv12_ant_l akira] #16141217,LHN,False,False,False,False,True,L,13722516,748,LHN,BLAv12_ant,52,9,,2073,167.0
+9604434, (UNK brancher 2 right) [unknown lineage] #9604434,unk,False,False,False,False,True,R,15722990,722,unk,unk,35,22,,1123,163.0
+7982307, (CPf descending ipsilateral-like right) [*CPf_r akira] #7982307,unk,False,False,False,False,True,R,-1,-1,unk,CPf,116,1,,793,162.0
+13422280, (CP descending contralateral 1 left) [*CPe_l akira] #13422280,LHN2,False,False,False,False,True,L,7589765,599,LHN2,CPe,78,5,,1586,162.0
+15541971, (BAmd1 bilateral left) [*BAmd1_l akira] #15541971,LHN2,True,False,True,False,True,L,5734134,691,LHN2,BAmd1,116,0,,1801,155.0
+4570270, (V1: possible PVL005 -  3 Left) [*BLVa12_l akira] #4570270,LHN,True,False,True,False,True,L,2921933,104,LHN,BLVa12,109,0,,425,143.0
+16335254,MB2IN-160 (DALcm_r; DALcm12 m lat 2) [*DALcm12-m_r akira] #16335254,LHN2,True,False,True,False,True,R,15517247,684,LHN2,DALcm12-m,75,0,,2101,139.0
+17762417, (MB2ON-205 like right) [*DPLc_post_med_r akira,LHN2,True,False,True,False,True,R,16444758,782,LHN2,unk,72,0,,2593,138.0
+16444758, (MB2ON-205 like left) [*DPLc_post_med_l akira] #16444758,LHN2,True,False,True,False,True,L,17762417,782,LHN2,DPLc_post_med,61,0,,2158,118.0
+10378182, (PVM21?_left) [*CM4-vm_l akira] #10378182,unk,False,False,True,False,True,L,16713231,397,unk,CM4-vm,37,0,,1231,115.0
+17328580, (BAla34 bilateral 2 right) [*BAla34_r akira] #17328580,unk,False,False,False,False,True,R,16434560,774,unk,BAla34,28,20,,2408,108.0
+15517247,MB2IN-160 (DALcm12 L v e 1) [*DALcm12-m_l akira] #15517247,LHN2,True,False,True,False,True,L,16335254,684,LHN2,DALcm12-m,75,0,,1786,107.0
+17036160, (BAmd1 PN 1 right) [*BAmd1_r akira] #17036160,unk,False,False,True,False,True,R,11157622,481,unk,BAmd1,70,0,,2334,87.0
+15547235, (BAmd1 PN 2 left) [*BAmd1_l akira] #15547235,unk,False,False,True,False,True,L,17036132,692,unk,BAmd1,79,0,,1805,79.0
+17036132, (BAmd1 PN 2 right) [*BAmd1_r akira] #17036132,unk,False,False,True,False,True,R,15547235,692,unk,BAmd1,73,0,,2333,74.0
+16283590,MB2IN-159 (not MB2IN-159) [*BLAv12_ant_l akira,unk,False,False,False,False,True,L,-1,-1,unk,unk,35,0,,2091,70.0
+5734134, (BAmd1 bilateral right) [*BAmd1_r akira] #5734134,LHN2,True,False,True,False,True,R,15541971,691,LHN2,BAmd1,81,0,,546,65.0
+4985759,Thermo PN 2 (AVL011 PN Left) [*BAlp4_l akira] #4985759,LHN,True,False,True,False,True,L,9291474,120,LHN,BAlp4,83,0,,463,65.0
+16713231, (PVM21?_right (= Pre-goro15); CM4 dor pos 12 DNs) [*CM4-dm_r akira] #16713231,unk,False,False,False,False,True,R,10378182,397,unk,CM4-dm,36,2,,2249,63.0
+4620453, (AVL011 PN Right 2?) [*BAlp4_r akira] #4620453,unk,True,False,True,False,True,R,-1,-1,unk,BAlp4,64,0,,432,49.0
+9291474,Thermo PN 2 (AVL011 PN Right) [*BAlp4_r akira] #9291474,LHN,True,False,True,False,True,R,4985759,120,LHN,BAlp4,77,0,,1074,49.0
+16347476, (DPM splitter right) [*DPMl12_post_r akira] #16347476,LHN2,True,False,True,False,True,R,11073313,474,LHN2,DPMl12_post,50,0,,2114,47.0
+12989453, (DPLc ant med 1) [*DPLc_ant_med_r akira,unk,False,False,False,False,True,R,-1,-1,unk,unk,19,1,,1552,35.0
+14756440, (DALv1 bilateral 1 right) [*DALv1_r akira] #14756440,unk,True,False,True,False,True,R,13370624,596,unk,DALv1,28,0,,1721,34.0
+13370624, (DALv1 bilateral 1 left) [*DALv1_l akira] #13370624,unk,True,False,True,False,True,L,14756440,596,unk,DALv1,47,0,,1579,33.0
+19835787, (UNK posterior hook left) [unknown lineage] #19835787,unk,False,False,False,False,True,L,17380309,1137,unk,unk,9,3,,2740,31.0
+9513911, (BLDc ipsilateral unpaired right) [*BLDc_r akira] #9513911,unk,True,False,True,False,True,R,-1,-1,unk,BLDc,24,0,,1102,25.0
+11717030, (BLP12 descending 1 left; dpn_left_1304_11) [*BLP12_l akira] #11717030,unk,True,False,True,False,True,L,9606496,509,unk,BLP12,54,0,,1422,22.0
+11073313, (DPM splitter left) [*DPMpl12_l akira] #11073313,LHN2,True,False,True,False,True,L,16347476,474,LHN2,DPMpl12,33,0,,1352,19.0
+20278329, (BLP12 spaghetti right; BLP12 a 11) [*BLP12_r akira] #20278329,unk,True,False,True,False,True,R,11719626,512,unk,BLP12,101,0,,2756,18.0
+17360254, (AB left; DALv1 L Lineage - Downstream A00c) [*DALv1_l akira] #17360254,unk,True,False,True,False,True,L,4393350,942,unk,DALv1,104,0,,2450,11.0
+1137946, (mixed bpl terminal right ) [*BLP12_r akira] #1137946,unk,True,False,True,False,True,R,19919566,1067,unk,BLP12,114,0,,18,11.0
+16547287, (BAmv12 looper 3 left) [*BAmv12_dor_l akira] #16547287,unk,True,False,True,False,True,L,5167842,806,unk,BAmv12_dor,44,0,,2194,10.0
+10683313, (BLP12 gripper 1 right; BLP12 a 6) [*BLP12_r akira] #10683313,unk,True,False,True,False,True,R,11717001,506,unk,BLP12,62,0,,1269,3.0
+4393350, (AB right; Timo's Tel-like anterior cell body) [*DALv1_r akira] #4393350,unk,True,False,True,False,True,R,17360254,942,unk,DALv1,90,0,,393,3.0
+19919566, (mixed bpl terminal left) [*BLP12_l akira] #19919566,unk,True,False,True,False,True,L,1137946,1067,unk,BLP12,70,0,,2747,2.0
