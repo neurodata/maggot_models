@@ -47,9 +47,12 @@ CLASS_IND_DICT = {
     "O_dSEZ": 124,
     "O_dSEZ;CN": 124,
     "O_dSEZ;LHN": 124,
+    "LHN;O_dSEZ": 124,
     "O_dVNC": 38,
     "O_dVNC;CN": 38,
     "O_dVNC;O_RG": 38,
+    "O_RG;O_dVNC": 38,
+    "O_dVNC;O_dSEZ": 38,
     "O_dUnk": 105,
     "unk": 190,
     "LHN": 123,
@@ -59,7 +62,9 @@ CLASS_IND_DICT = {
     "LHN;CN": 108,
     "vPN": 33,
     "LON": 159,
+    "CX": 228,
 }
+
 
 names = []
 color_inds = []
@@ -70,6 +75,10 @@ for key, val in CLASS_IND_DICT.items():
 
 colors = np.array(cc.glasbey_light)[color_inds]
 CLASS_COLOR_DICT = dict(zip(names, colors))
+CLASS_COLOR_DICT["motor-mVAN"] = "#000000"
+CLASS_COLOR_DICT["motor-mAN"] = "#000000"
+CLASS_COLOR_DICT["motor-mPaN"] = "#000000"
+CLASS_COLOR_DICT["motor-mMN"] = "#000000"
 
 
 def plot_colors():
@@ -85,15 +94,23 @@ def plot_colors():
 def plot_class_colormap():
     from src.visualization import palplot
 
-    names = []
-    color_inds = []
+    # names = []
+    # color_inds = []
 
-    for key, val in CLASS_IND_DICT.items():
+    # for key, val in CLASS_IND_DICT.items():
+    #     names.append(key)
+    #     color_inds.append(val)
+    # print(color_inds)
+    # fig, ax = plt.subplots(1, 1, figsize=(3, 15))
+    # colors = np.array(cc.glasbey_light)[color_inds]
+    # palplot(len(colors), colors, ax=ax)
+    # ax.yaxis.set_major_formatter(plt.FixedFormatter(names))
+    names = []
+    colors = []
+    for key, val in CLASS_COLOR_DICT.items():
         names.append(key)
-        color_inds.append(val)
-    print(color_inds)
+        colors.append(val)
     fig, ax = plt.subplots(1, 1, figsize=(3, 15))
-    colors = np.array(cc.glasbey_light)[color_inds]
     palplot(len(colors), colors, ax=ax)
     ax.yaxis.set_major_formatter(plt.FixedFormatter(names))
 

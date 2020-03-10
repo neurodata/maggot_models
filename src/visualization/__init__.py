@@ -27,3 +27,4 @@ from .manual_colors import (
     plot_colors,
 )
 from .names import NAMES, random_names
+from .matrix import matrixplot, sort_meta, _get_tick_info, _draw_seperators
