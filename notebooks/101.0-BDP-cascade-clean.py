@@ -26,7 +26,7 @@ from src.embed import ase, lse, preprocess_graph
 from src.graph import MetaGraph, preprocess
 from src.io import savecsv, savefig, saveskels
 from src.traverse import (
-    generate_random_cascade,
+    generate_cascade_tree,
     generate_random_walks,
     path_to_visits,
     to_markov_matrix,
@@ -67,13 +67,14 @@ mg = load_metagraph(graph_type, VERSION)
 mg = preprocess(
     mg,
     threshold=threshold,
-    sym_threshold=True,
+    sym_threshold=False,
     remove_pdiff=False,
     binarize=False,
     weight=weight,
 )
 print(f"Preprocessed graph {graph_type} with threshold={threshold}, weight={weight}")
 
+# TODO update this
 out_classes = [
     "O_dSEZ",
     "O_dSEZ;CN",
@@ -94,7 +95,8 @@ sens_classes = [
     "sens-photoRh6",
     "sens-MN",
     "sens-thermo",
-    "sens-vtn",
+    "sens-vtd",
+    "sens-AN",
 ]
 class_key = "Merge Class"
 
@@ -116,11 +118,10 @@ out_ind_map = dict(zip(out_inds, range(len(out_inds))))
 p = 0.01
 not_probs = (1 - p) ** adj  # probability of none of the synapses causing postsynaptic
 probs = 1 - not_probs  # probability of ANY of the synapses firing onto next
-
 max_depth = 5
 n_bins = 5
-
 n_sims = 100
+seed = 8888
 
 
 def cascades_from_node(
@@ -130,7 +131,7 @@ def cascades_from_node(
     node_hist_mat = np.zeros((n_verts, n_bins), dtype=int)
     for n in range(n_sims):
         root = Node(start_ind)
-        root = generate_random_cascade(
+        root = generate_cascade_tree(
             root, probs, 1, stop_inds=stop_inds, visited=[], max_depth=max_depth
         )
         for level, children in enumerate(LevelOrderGroupIter(root)):
@@ -139,13 +140,14 @@ def cascades_from_node(
     return node_hist_mat
 
 
+np.random.seed(seed)
 seeds = np.random.choice(int(1e8), size=len(from_inds), replace=False)
 outs = Parallel(n_jobs=-2, verbose=10)(
     delayed(cascades_from_node)(fi, probs, out_inds, max_depth, n_sims, seed)
     for fi, seed in zip(from_inds, seeds)
 )
 hist_mat = np.concatenate(outs, axis=-1)
-log_mat = np.log10(hist_mat + 1)
+
 # %% [markdown]
 # # Sort metadata
 
@@ -166,6 +168,7 @@ col_df = pd.concat([orders, from_idx, from_ids, from_class], axis=1)
 
 # %% [markdown]
 # #
+log_mat = np.log10(hist_mat + 1)
 shape = log_mat.shape
 figsize = tuple(i / 40 for i in shape)
 fig, ax = plt.subplots(1, 1, figsize=figsize)
@@ -240,19 +243,36 @@ stashfig("source-pca-log")
 
 # %% [markdown]
 # # Collapse that matrix
+normalize_n_source = False
 collapsed_hist = []
 collapsed_col_df = []
-for fc in from_class.unique():
-    from_df = col_df[col_df["from_class"] == fc]
+from_groups = [
+    ("sens-ORN",),
+    ("sens-photoRh5", "sens-photoRh6"),
+    ("sens-MN",),
+    ("sens-thermo",),
+    ("sens-vtd",),
+    ("sens-AN",),
+]
+from_group_names = ["Odor", "Photo", "MN", "Temp", "VTD", "AN"]
+for fg, fg_name in zip(from_groups, from_group_names):
+    from_df = col_df[col_df["from_class"].isin(fg)]
+    n_in_group = len(from_df)
     for order in from_df["order"].unique():
         inds = from_df[from_df["order"] == order].index
         col = hist_mat[:, inds].sum(axis=1)
+        if normalize_n_source:
+            col = col.astype(float)
+            col /= n_in_group
         collapsed_hist.append(col)
-        row = {"order": order, "from_class": fc}
+        row = {"order": order, "from_class": fg_name}
         collapsed_col_df.append(row)
+
+
 collapsed_col_df = pd.DataFrame(collapsed_col_df)
 collapsed_hist = np.array(collapsed_hist).T
-log_collapsed_hist = np.log10(collapsed_hist)
+log_collapsed_hist = np.log10(collapsed_hist + 1)
+# log_collapsed_hist[np.isinf(log_collapsed_hist)] = 0
 
 fig, ax = plt.subplots(1, 1, figsize=(10, 20))
 matrixplot(
@@ -266,3 +286,46 @@ matrixplot(
     sizes=(0.5, 0.5),
 )
 stashfig("collapsed-matrixplot-heatmap")
+
+# %% [markdown]
+# # clustermap the matrix
+
+from src.visualization import _draw_seperators, sort_meta
+
+sns.set_context("talk", font_scale=1)
+linkage = "average"
+metric = "euclidean"
+colors = np.vectorize(CLASS_COLOR_DICT.get)(row_df["to_class"])
+
+perm_inds, sort_collapsed_col_df = sort_meta(
+    collapsed_col_df, sort_class=["from_class"]
+)
+sort_log_collapsed_hist = log_collapsed_hist[:, perm_inds]
+
+
+cg = sns.clustermap(
+    data=sort_log_collapsed_hist,
+    col_cluster=False,
+    row_colors=colors,
+    cmap="RdBu_r",
+    center=0,
+    cbar_pos=None,
+    method=linkage,
+    metric=metric,
+)
+ax = cg.ax_heatmap
+_draw_seperators(
+    ax, col_meta=sort_collapsed_col_df, col_sort_class=["from_class"], tick_rot=0
+)
+ax.yaxis.set_ticks([])
+stashfig("annot-clustermap-collapsed")
+# for i, x in enumerate(
+#     np.arange(bins.shape[0] - 1, hist_data.shape[-1], step=bins.shape[0] - 1)
+# ):
+#     ax.axvline(x, linestyle="--", linewidth=1, color="grey")
+# ax.set_xticks([])
+# ax.set_yticks([])
+ax.set_xlabel(r"Visits over time $\to$")
+ax.set_ylabel("Neuron")
+# ax.set_title(f"metric={metric}, linkage={linkage}")
+

@@ -17,10 +17,10 @@ def sort_meta(meta, sort_class, sort_node=[]):
         total_sort_by.append(f"{sc}_size")
         total_sort_by.append(sc)
     total_sort_by += sort_node
-    meta["idx"] = range(len(meta))
+    meta["sort_idx"] = range(len(meta))
     meta.sort_values(total_sort_by, inplace=True)
-    perm_inds = meta.idx.values
-    return perm_inds
+    perm_inds = meta["sort_idx"].values
+    return perm_inds, meta
 
 
 def _get_tick_info(sort_meta, sort_class):
@@ -28,13 +28,13 @@ def _get_tick_info(sort_meta, sort_class):
     """
     if sort_meta is not None and sort_class is not None:
         # get locations
-        sort_meta["idx"] = range(len(sort_meta))
+        sort_meta["sort_idx"] = range(len(sort_meta))
         # for the gridlines
         first_df = sort_meta.groupby(sort_class, sort=False).first()
-        first_inds = list(first_df["idx"].values)[1:]  # skip since we have spines
+        first_inds = list(first_df["sort_idx"].values)[1:]  # skip since we have spines
         # for the tic locs
         middle_df = sort_meta.groupby(sort_class, sort=False).mean()
-        middle_inds = list(middle_df["idx"].values)
+        middle_inds = np.array(middle_df["sort_idx"].values) + 0.5
         middle_labels = list(middle_df.index)
         return first_inds, middle_inds, middle_labels
     else:
@@ -53,6 +53,7 @@ def _draw_seperators(
     use_ticks=True,
     tick_fontsize=10,
     minor_ticking=False,
+    tick_rot=45,
 ):
 
     if gridline_kws is None:
@@ -148,13 +149,19 @@ def _draw_seperators(
             # add tick labels and locs
             if axis_name == "x":
                 top_tick_ax.set_xticks(middle_inds)
+                print(middle_inds)
                 if minor_ticking:
                     top_tick_ax.set_xticklabels(middle_labels[0::2])
                     top_tick_ax.set_xticklabels(middle_labels[1::2], minor=True)
                 else:
-                    top_tick_ax.set_xticklabels(
-                        middle_labels, rotation=45, ha="left", va="bottom"
-                    )
+                    if tick_rot != 0:
+                        top_tick_ax.set_xticklabels(
+                            middle_labels, rotation=tick_rot, ha="left", va="bottom"
+                        )
+                    else:
+                        top_tick_ax.set_xticklabels(
+                            middle_labels, rotation=tick_rot, ha="center", va="bottom"
+                        )
                 top_tick_ax.xaxis.tick_top()
                 # for tick in top_tick_ax.get_xticklabels():
                 #     tick.set_rotation(45)
@@ -223,6 +230,7 @@ def matrixplot(
     cmap="RdBu_r",
     sizes=(10, 40),
     square=False,
+    gridline_kws=None,
 ):
     tick_fontsize = 10
 
@@ -233,11 +241,11 @@ def matrixplot(
 
     # sort the data and metadata
     if row_meta is not None and row_sort_class is not None:
-        row_perm_inds = sort_meta(row_meta, row_sort_class)
+        row_perm_inds, row_meta = sort_meta(row_meta, row_sort_class)
     else:
         row_perm_inds = np.arange(data.shape[0])
     if col_meta is not None and col_sort_class is not None:
-        col_perm_inds = sort_meta(col_meta, col_sort_class)
+        col_perm_inds, col_meta = sort_meta(col_meta, col_sort_class)
     else:
         col_perm_inds = np.arange(data.shape[1])
     data = data[np.ix_(row_perm_inds, col_perm_inds)]
@@ -253,8 +261,23 @@ def matrixplot(
 
     if square:
         ax.axis("square")
+
     ax.set_ylim(data.shape[0], 0)
     ax.set_xlim(0, data.shape[1])
+
+    _draw_seperators(
+        ax,
+        row_meta=row_meta,
+        col_meta=col_meta,
+        row_sort_class=row_sort_class,
+        col_sort_class=col_sort_class,
+        plot_type=plot_type,
+        gridline_kws=gridline_kws,
+        use_colors=use_colors,
+        use_ticks=use_ticks,
+        tick_fontsize=tick_fontsize,
+        minor_ticking=minor_ticking,
+    )
 
     # spines
     if border:
