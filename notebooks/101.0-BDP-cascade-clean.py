@@ -6,6 +6,7 @@ import time
 from itertools import chain
 
 import colorcet as cc
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -13,6 +14,7 @@ import pandas as pd
 import seaborn as sns
 from anytree import LevelOrderGroupIter, Node, RenderTree
 from joblib import Parallel, delayed
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from sklearn.decomposition import PCA
 
 from graspy.plot import heatmap, pairplot
@@ -29,10 +31,11 @@ from src.traverse import (
 )
 from src.visualization import (
     CLASS_COLOR_DICT,
-    _draw_seperators,
     barplot_text,
     draw_networkx_nice,
+    draw_separators,
     matrixplot,
+    remove_shared_ax,
     remove_spines,
     screeplot,
     sort_meta,
@@ -56,6 +59,9 @@ def stashcsv(df, name, **kws):
 VERSION = "2020-03-09"
 print(f"Using version {VERSION}")
 
+plot_examples = True
+plot_embed = False
+plot_full_mat = False
 graph_type = "Gad"
 threshold = 0
 weight = "weight"
@@ -85,7 +91,7 @@ out_classes = [
     "O_RG-ITP",
     "O_RG-CA-LP",
 ]
-# out_classes = []
+out_classes = []
 
 from_groups = [
     ("sens-ORN",),
@@ -95,8 +101,11 @@ from_groups = [
     ("sens-vtd",),
     ("sens-AN",),
 ]
-# from_groups = [("O_dVNC",)]
 from_group_names = ["Odor", "Photo", "MN", "Temp", "VTD", "AN"]
+
+# from_groups = [("O_dVNC",), ("O_dSEZ",), ("O_RG-IPC", "O_RG-ITP", "O_RG-CA-LP")]
+# from_group_names = ["VNC", "SEZ", "RG"]
+
 from_classes = list(chain.from_iterable(from_groups))  # make this a flat list
 
 class_key = "Merge Class"
@@ -124,17 +133,19 @@ seed = 8888
 max_depth = 10
 n_bins = 10
 n_sims = 100
-method = "path"
+method = "tree"
 normalize_n_source = False
 
 
 basename = f"-{graph_type}-t{threshold}-pt{path_type}-b{n_bins}-n{n_sims}-m{method}"
 basename += f"-norm{normalize_n_source}"
+basename += f"-{from_groups}"
+basename += f"-{out_classes}"
 
 np.random.seed(seed)
 if method == "tree":
     seeds = np.random.choice(int(1e8), size=len(from_inds), replace=False)
-    outs = Parallel(n_jobs=-2, verbose=10)(
+    outs = Parallel(n_jobs=1, verbose=10)(
         delayed(cascades_from_node)(
             fi, probs, out_inds, max_depth, n_sims, seed, n_bins, method
         )
@@ -173,80 +184,89 @@ col_df = pd.concat([orders, from_idx, from_ids, from_class], axis=1)
 # %% [markdown]
 # #
 log_mat = np.log10(hist_mat + 1)
-shape = log_mat.shape
-# figsize = tuple(i / 40 for i in shape)
-figsize = (10, 20)
-fig, ax = plt.subplots(1, 1, figsize=figsize)
-matrixplot(
-    log_mat,
-    ax=ax,
-    col_meta=col_df,
-    col_sort_class=["from_class"],
-    row_meta=row_df,
-    row_sort_class=["to_class"],
-    plot_type="scattermap",
-    sizes=(0.5, 0.5),
-    tick_rot=45,
-)
-stashfig("log-full-scatter" + basename)
+if plot_full_mat:
+    shape = log_mat.shape
+    figsize = (10, 20)
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
+    matrixplot(
+        log_mat,
+        ax=ax,
+        col_meta=col_df,
+        col_sort_class=["from_class"],
+        row_meta=row_df,
+        row_sort_class=["to_class"],
+        plot_type="scattermap",
+        sizes=(0.5, 0.5),
+        tick_rot=45,
+    )
+    stashfig("log-full-scatter" + basename)
 
-fig, ax = plt.subplots(1, 1, figsize=figsize)
-matrixplot(
-    log_mat,
-    ax=ax,
-    col_meta=col_df,
-    col_sort_class=["from_class"],
-    row_meta=row_df,
-    row_sort_class=["to_class"],
-    plot_type="heatmap",
-    sizes=(0.5, 0.5),
-    tick_rot=45,
-)
-stashfig("log-full-heat" + basename)
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
+    matrixplot(
+        log_mat,
+        ax=ax,
+        col_meta=col_df,
+        col_sort_class=["from_class"],
+        row_colors=CLASS_COLOR_DICT,
+        row_meta=row_df,
+        row_sort_class=["to_class"],
+        plot_type="heatmap",
+        sizes=(0.5, 0.5),
+        tick_rot=45,
+    )
+    stashfig("log-full-heat" + basename)
 
 # %% [markdown]
 # # Screeplots
-screeplot(hist_mat.astype(float), title="Raw hist mat (full)")
-stashfig("scree-raw-mat" + basename)
-screeplot(log_mat, title="Log hist mat (full)")
-stashfig("scree-log-mat" + basename)
+
+if plot_embed:
+    screeplot(hist_mat.astype(float), title="Raw hist mat (full)")
+    stashfig("scree-raw-mat" + basename)
+    screeplot(log_mat, title="Log hist mat (full)")
+    stashfig("scree-log-mat" + basename)
 
 # %% [markdown]
 # # Pairplots
+if plot_embed:
+    pca = PCA(n_components=6)
+    embed = pca.fit_transform(log_mat)
+    loadings = pca.components_.T
+    pg = pairplot(
+        embed,
+        labels=to_class.values,
+        palette=CLASS_COLOR_DICT,
+        height=5,
+        title="Node response embedding (log)",
+    )
+    pg._legend.remove()
+    stashfig("node-pca-log" + basename)
+    pg = pairplot(
+        loadings,
+        labels=from_class.values,
+        height=5,
+        title="Source class embedding (log)",
+    )
+    stashfig("source-pca-log" + basename)
 
-pca = PCA(n_components=6)
-embed = pca.fit_transform(log_mat)
-loadings = pca.components_.T
-pg = pairplot(
-    embed,
-    labels=to_class.values,
-    palette=CLASS_COLOR_DICT,
-    height=5,
-    title="Node response embedding (log)",
-)
-pg._legend.remove()
-stashfig("node-pca-log" + basename)
-pg = pairplot(
-    loadings, labels=from_class.values, height=5, title="Source class embedding (log)"
-)
-stashfig("source-pca-log" + basename)
-
-pca = PCA(n_components=6)
-embed = pca.fit_transform(hist_mat.astype(float))
-loadings = pca.components_.T
-pg = pairplot(
-    embed,
-    labels=to_class.values,
-    palette=CLASS_COLOR_DICT,
-    height=5,
-    title="Node response embedding (raw)",
-)
-pg._legend.remove()
-stashfig("node-pca-log" + basename)
-pg = pairplot(
-    loadings, labels=from_class.values, height=5, title="Source class embedding (raw)"
-)
-stashfig("source-pca-log" + basename)
+    pca = PCA(n_components=6)
+    embed = pca.fit_transform(hist_mat.astype(float))
+    loadings = pca.components_.T
+    pg = pairplot(
+        embed,
+        labels=to_class.values,
+        palette=CLASS_COLOR_DICT,
+        height=5,
+        title="Node response embedding (raw)",
+    )
+    pg._legend.remove()
+    stashfig("node-pca-log" + basename)
+    pg = pairplot(
+        loadings,
+        labels=from_class.values,
+        height=5,
+        title="Source class embedding (raw)",
+    )
+    stashfig("source-pca-log" + basename)
 
 # %% [markdown]
 # # Collapse that matrix
@@ -271,7 +291,77 @@ collapsed_col_df = pd.DataFrame(collapsed_col_df)
 collapsed_hist = np.array(collapsed_hist).T
 log_collapsed_hist = np.log10(collapsed_hist + 1)
 
-fig, ax = plt.subplots(1, 1, figsize=(10, 20))
+# %% [markdown]
+# #
+if plot_embed:
+    pca = PCA(n_components=6)
+    embed = pca.fit_transform(log_collapsed_hist)
+    loadings = pca.components_.T
+    pg = pairplot(
+        embed,
+        labels=to_class.values,
+        palette=CLASS_COLOR_DICT,
+        height=5,
+        title="Collapsed node response embedding (log)",
+    )
+    pg._legend.remove()
+    stashfig("coll-node-pca-log" + basename)
+    pg = pairplot(
+        loadings,
+        labels=collapsed_col_df["from_class"].values,
+        height=5,
+        title="Collapsed source class embedding (log)",
+    )
+    stashfig("coll-source-pca-log" + basename)
+
+    pca = PCA(n_components=6)
+    embed = pca.fit_transform(collapsed_hist.astype(float))
+    loadings = pca.components_.T
+    pg = pairplot(
+        embed,
+        labels=to_class.values,
+        palette=CLASS_COLOR_DICT,
+        height=5,
+        title="Collapsed node response embedding (raw)",
+    )
+    pg._legend.remove()
+    stashfig("coll-node-pca-log" + basename)
+    pg = pairplot(
+        loadings,
+        labels=collapsed_col_df["from_class"].values,
+        height=5,
+        title="Collapsed source class embedding (raw)",
+    )
+    stashfig("coll-source-pca-log" + basename)
+
+# %% [markdown]
+# # Compute mean visit over all sources, for plotting
+def mean_visit(row):
+    n_groups = len(row) // n_bins
+    s = 0
+    for i in range(n_groups):
+        group = row[i * n_bins : (i + 1) * n_bins]
+        for j, val in enumerate(group):
+            s += j * val
+    s /= row.sum()
+    return s
+
+
+visits = []
+for r in collapsed_hist:
+    mv = mean_visit(r)
+    visits.append(mv)
+visits = np.array(visits)
+visits[np.isnan(visits)] = n_bins + 1
+row_df["visit_order"] = visits
+mean_visit_order = row_df.groupby(["to_class"])["visit_order"].mean()
+row_df["group_visit_order"] = row_df["to_class"].map(mean_visit_order)
+row_df["n_visit"] = collapsed_hist.sum(axis=1)
+# %% [markdown]
+# #
+fig, ax = plt.subplots(1, 1, figsize=(15, 15))
+sns.set_context("talk", font_scale=0.8)
+gridline_kws = dict(color="grey", linestyle="--", alpha=0.7, linewidth=0.3)
 matrixplot(
     log_collapsed_hist,
     ax=ax,
@@ -279,11 +369,82 @@ matrixplot(
     col_sort_class=["from_class"],
     row_meta=row_df,
     row_sort_class=["to_class"],
+    row_colors=CLASS_COLOR_DICT,
+    row_class_order="group_visit_order",
+    row_item_order=["visit_order"],
     plot_type="heatmap",
-    sizes=(0.5, 0.5),
     tick_rot=0,
+    row_ticks=False,
+    gridline_kws=gridline_kws,
 )
 stashfig("collapsed-log-heat" + basename)
+
+# %% [markdown]
+# #
+sns.set_context("talk", font_scale=1)
+gridline_kws = dict(color="grey", linestyle="--", alpha=0.7, linewidth=0.3)
+
+fig, ax = plt.subplots(1, 1, figsize=(25, 15))
+ax, divider, top_cax, left_cax = matrixplot(
+    log_collapsed_hist.T,
+    ax=ax,
+    row_meta=collapsed_col_df,
+    row_sort_class=["from_class"],
+    col_meta=row_df,
+    col_sort_class=["to_class"],
+    col_colors=CLASS_COLOR_DICT,
+    col_class_order="group_visit_order",
+    col_item_order=["visit_order"],
+    plot_type="heatmap",
+    tick_rot=45,
+    col_ticks=False,
+    gridline_kws=gridline_kws,
+)
+cax = divider.append_axes("right", size="1%", pad=0.02, sharey=ax)
+remove_shared_ax(cax)
+sns.heatmap(
+    collapsed_col_df["order"][:, None], ax=cax, cbar=False, cmap="RdBu", center=0
+)
+cax.set_xticks([])
+cax.set_yticks([])
+cax.set_ylabel(r"Hops $\to$", rotation=-90, ha="center", va="center", labelpad=20)
+cax.yaxis.set_label_position("right")
+top_cax.set_yticks([0.5])
+top_cax.set_yticklabels(["Class"], va="center")
+ax.set_xlabel("Neuron")
+ax.set_ylabel("Source class")
+stashfig("collapsed-log-heat-transpose" + basename)
+
+fig, ax = plt.subplots(1, 1, figsize=(25, 15))
+ax, divider, top_cax, left_cax = matrixplot(
+    log_collapsed_hist.T,
+    ax=ax,
+    row_meta=collapsed_col_df,
+    row_sort_class=["from_class"],
+    col_meta=row_df,
+    col_sort_class=["to_class"],
+    col_colors=CLASS_COLOR_DICT,
+    col_class_order="group_visit_order",
+    col_item_order=["visit_order"],
+    plot_type="heatmap",
+    tick_rot=45,
+    col_ticks=True,
+    gridline_kws=gridline_kws,
+)
+cax = divider.append_axes("right", size="1%", pad=0.02, sharey=ax)
+remove_shared_ax(cax)
+sns.heatmap(
+    collapsed_col_df["order"][:, None], ax=cax, cbar=False, cmap="RdBu", center=0
+)
+cax.set_xticks([])
+cax.set_yticks([])
+cax.set_ylabel(r"Hops $\to$", rotation=-90, ha="center", va="center", labelpad=20)
+cax.yaxis.set_label_position("right")
+top_cax.set_yticks([0.5])
+top_cax.set_yticklabels(["Class"], va="center")
+ax.set_xlabel("Neuron")
+ax.set_ylabel("Source class")
+stashfig("collapsed-log-heat-transpose-labeled" + basename)
 
 # %% [markdown]
 # # clustermap the matrix
@@ -301,9 +462,10 @@ sort_log_collapsed_hist = log_collapsed_hist[:, perm_inds]
 
 
 cg = sns.clustermap(
-    data=sort_log_collapsed_hist,
-    col_cluster=False,
-    row_colors=colors,
+    data=sort_log_collapsed_hist.T,
+    col_cluster=True,
+    row_cluster=False,
+    col_colors=colors,
     cmap="RdBu_r",
     center=0,
     cbar_pos=None,
@@ -311,77 +473,67 @@ cg = sns.clustermap(
     metric=metric,
 )
 ax = cg.ax_heatmap
-_draw_seperators(
-    ax, col_meta=sort_collapsed_col_df, col_sort_class=["from_class"], tick_rot=0
+draw_separators(
+    ax,
+    ax_type="y",
+    sort_meta=sort_collapsed_col_df,
+    sort_class=["from_class"],
+    tick_rot=0,
 )
-ax.yaxis.set_ticks([])
-ax.set_xlabel(r"Visits over time $\to$")
-ax.set_ylabel("Neuron")
+ax.xaxis.set_ticks([])
+# ax.set_ylabel(r"Visits over time $\to$")
+ax.set_xlabel("Neuron")
+ax.yaxis.tick_left()
+# ax.set_yticklabels(ax.get_yticklabels(), ha="left")
 stashfig("collapsed-log-clustermap" + basename)
-stashfig("collapsed-log-clustermap" + basename, fmt="pdf")
+# stashfig("collapsed-log-clustermap" + basename, fmt="pdf")
 
-# %% [markdown]
-# #
 
 # %% [markdown]
 # # Do some plotting for illustration only
-# from src.traverse import generate_cascade_paths
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import matplotlib as mpl
 
 
-def remove_shared_ax(ax):
-    shax = ax.get_shared_x_axes()
-    shay = ax.get_shared_y_axes()
-    shax.remove(ax)
-    shay.remove(ax)
-    for axis in [ax.xaxis, ax.yaxis]:
-        ticker = mpl.axis.Ticker()
-        axis.major = ticker
-        axis.minor = ticker
-        loc = mpl.ticker.NullLocator()
-        fmt = mpl.ticker.NullFormatter()
-        axis.set_major_locator(loc)
-        axis.set_major_formatter(fmt)
-        axis.set_minor_locator(loc)
-        axis.set_minor_formatter(fmt)
+if plot_examples:
+    sns.set_context("talk")
+    sns.set_palette("Set1")
+    examples = [742, 605, 743, 2282, 596, 2367, 1690, 2313]
+    for target_ind in examples:
+        row = collapsed_hist[target_ind, :]
+        perm_inds, sort_col_df = sort_meta(collapsed_col_df, sort_class=["from_class"])
+        sort_row = row[perm_inds]
 
+        fig, ax = plt.subplots(1, 1)
+        xs = np.arange(len(sort_row)) + 0.5
+        divider = make_axes_locatable(ax)
+        bot_cax = divider.append_axes("bottom", size="3%", pad=0.02, sharex=ax)
+        remove_shared_ax(bot_cax)
 
-sns.set_context("talk")
-# uPN 742
-target_ind = 605
-# target_ind = 743
-# target_ind = 2282
-# target_ind = 596
-# target_ind = 2367
-row = collapsed_hist[target_ind, :]
-perm_inds, sort_col_df = sort_meta(collapsed_col_df, sort_class=["from_class"])
-sort_row = row[perm_inds]
+        ax.bar(x=xs, height=sort_row, width=0.8)
+        draw_separators(
+            ax, sort_meta=sort_col_df, sort_class=["from_class"], tick_rot=0
+        )
+        ax.set_xlim(0, len(xs))
+        ax.set_ylabel("# hits @ time")
 
-fig, ax = plt.subplots(1, 1)
-xs = np.arange(len(sort_row)) + 0.5
-divider = make_axes_locatable(ax)
-bot_cax = divider.append_axes("bottom", size="3%", pad=0.02, sharex=ax)
-remove_shared_ax(bot_cax)
-sns.set_palette("Set1")
-ax.bar(x=xs, height=sort_row, width=0.8)
-_draw_seperators(ax, col_meta=sort_col_df, col_sort_class=["from_class"], tick_rot=0)
-ax.set_xlim(0, len(xs))
-ax.set_ylabel("# hits @ time")
+        sns.heatmap(
+            collapsed_col_df["order"][None, :],
+            ax=bot_cax,
+            cbar=False,
+            cmap="RdBu",
+            center=0,
+        )
+        bot_cax.set_xticks([])
+        bot_cax.set_yticks([])
+        bot_cax.set_xlabel(r"Hops $\to$", x=0.1, ha="left", labelpad=-22)
+        bot_cax.set_xticks([20.5, 24.5, 28.5])
+        bot_cax.set_xticklabels([1, 5, 9])
 
-sns.heatmap(
-    collapsed_col_df["order"][None, :], ax=bot_cax, cbar=False, cmap="RdBu", center=0
-)
-bot_cax.set_xticks([])
-bot_cax.set_yticks([])
-bot_cax.set_xlabel(r"Time $\to$", x=0.1, ha="left", labelpad=-22)
-bot_cax.set_xticks([20.5, 24.5, 28.5])
-bot_cax.set_xticklabels([1, 5, 9])
+        ax.spines["right"].set_visible(False)
+        ax.spines["top"].set_visible(False)
+        target_skid = meta.iloc[target_ind, :].name
+        ax.set_title(
+            f"Response for cell {target_skid} ({meta[meta['idx'] == target_ind]['Merge Class'].values[0]})"
+        )
 
-ax.spines["right"].set_visible(False)
-ax.spines["top"].set_visible(False)
-ax.set_title(
-    f"Response for cell {target_ind} ({meta[meta['idx'] == target_ind]['Merge Class'].values[0]})"
-)
+        stashfig(f"{target_skid}-response-hist" + basename)
 
-stashfig(f"{target_ind}-response-hist" + basename)
