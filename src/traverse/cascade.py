@@ -3,7 +3,11 @@ import numpy as np
 from anytree import LevelOrderGroupIter, Node
 
 
-def generate_cascade_paths(start_ind, probs, depth, stop_inds=[], max_depth=10):
+def generate_cascade_paths(
+    start_ind, probs, depth, stop_inds=[], visited=[], max_depth=10
+):
+    visited = visited.copy()
+    visited.append(start_ind)
     if (depth < max_depth) and (start_ind not in stop_inds):
         transmission_indicator = np.random.binomial(
             np.ones(len(probs), dtype=int), probs[start_ind]
@@ -11,15 +15,20 @@ def generate_cascade_paths(start_ind, probs, depth, stop_inds=[], max_depth=10):
         next_inds = np.where(transmission_indicator == 1)[0]
         paths = []
         for i in next_inds:
-            next_paths = generate_cascade_paths(
-                i, probs, depth + 1, stop_inds=stop_inds, max_depth=max_depth
-            )
-            for p in next_paths:
-                p.insert(0, start_ind)
-                paths.append(p)
+            if i not in visited:
+                next_paths = generate_cascade_paths(
+                    i,
+                    probs,
+                    depth + 1,
+                    stop_inds=stop_inds,
+                    visited=visited,
+                    max_depth=max_depth,
+                )
+                for p in next_paths:
+                    paths.append(p)
         return paths
     else:
-        return [[start_ind]]
+        return [visited]
 
 
 def generate_cascade_tree(

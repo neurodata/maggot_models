@@ -3,29 +3,24 @@
 import itertools
 import os
 import time
-from pathlib import Path
+from itertools import chain
 
 import colorcet as cc
-import matplotlib.colors as mplc
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import textdistance
-
 from anytree import LevelOrderGroupIter, Node, RenderTree
 from joblib import Parallel, delayed
 from sklearn.decomposition import PCA
 
-from graspy.embed import AdjacencySpectralEmbed, selectSVD
-from graspy.plot import gridplot, heatmap, pairplot
-from graspy.utils import get_lcc, symmetrize
+from graspy.plot import heatmap, pairplot
 from src.data import load_metagraph
-from src.embed import ase, lse, preprocess_graph
 from src.graph import MetaGraph, preprocess
 from src.io import savecsv, savefig, saveskels
 from src.traverse import (
+    cascades_from_node,
     generate_cascade_tree,
     generate_random_walks,
     path_to_visits,
@@ -34,11 +29,13 @@ from src.traverse import (
 )
 from src.visualization import (
     CLASS_COLOR_DICT,
+    _draw_seperators,
     barplot_text,
     draw_networkx_nice,
     matrixplot,
     remove_spines,
     screeplot,
+    sort_meta,
     stacked_barplot,
 )
 
@@ -62,7 +59,6 @@ print(f"Using version {VERSION}")
 graph_type = "Gad"
 threshold = 0
 weight = "weight"
-all_out = False
 mg = load_metagraph(graph_type, VERSION)
 mg = preprocess(
     mg,
@@ -74,7 +70,8 @@ mg = preprocess(
 )
 print(f"Preprocessed graph {graph_type} with threshold={threshold}, weight={weight}")
 
-# TODO update this
+# TODO update this with the mixed groups
+# TODO make these functional for selecting proper paths
 out_classes = [
     "O_dSEZ",
     "O_dSEZ;CN",
@@ -88,16 +85,20 @@ out_classes = [
     "O_RG-ITP",
     "O_RG-CA-LP",
 ]
+# out_classes = []
 
-sens_classes = [
-    "sens-ORN",
-    "sens-photoRh5",
-    "sens-photoRh6",
-    "sens-MN",
-    "sens-thermo",
-    "sens-vtd",
-    "sens-AN",
+from_groups = [
+    ("sens-ORN",),
+    ("sens-photoRh5", "sens-photoRh6"),
+    ("sens-MN",),
+    ("sens-thermo",),
+    ("sens-vtd",),
+    ("sens-AN",),
 ]
+# from_groups = [("O_dVNC",)]
+from_group_names = ["Odor", "Photo", "MN", "Temp", "VTD", "AN"]
+from_classes = list(chain.from_iterable(from_groups))  # make this a flat list
+
 class_key = "Merge Class"
 
 adj = nx.to_numpy_array(mg.g, weight=weight, nodelist=mg.meta.index.values)
@@ -106,7 +107,7 @@ meta = mg.meta.copy()
 g = mg.g.copy()
 meta["idx"] = range(len(meta))
 
-from_inds = meta[meta[class_key].isin(sens_classes)]["idx"].values
+from_inds = meta[meta[class_key].isin(from_classes)]["idx"].values
 out_inds = meta[meta[class_key].isin(out_classes)]["idx"].values
 ind_map = dict(zip(meta.index, meta["idx"]))
 g = nx.relabel_nodes(g, ind_map, copy=True)
@@ -115,39 +116,41 @@ out_ind_map = dict(zip(out_inds, range(len(out_inds))))
 # %% [markdown]
 # # Use a method to generate visits
 
+path_type = "cascade"
 p = 0.01
 not_probs = (1 - p) ** adj  # probability of none of the synapses causing postsynaptic
 probs = 1 - not_probs  # probability of ANY of the synapses firing onto next
-max_depth = 5
-n_bins = 5
-n_sims = 100
 seed = 8888
+max_depth = 10
+n_bins = 10
+n_sims = 100
+method = "path"
+normalize_n_source = False
 
 
-def cascades_from_node(
-    start_ind, probs, stop_inds=[], max_depth=10, n_sims=1000, seed=None
-):
-    np.random.seed(seed)
-    node_hist_mat = np.zeros((n_verts, n_bins), dtype=int)
-    for n in range(n_sims):
-        root = Node(start_ind)
-        root = generate_cascade_tree(
-            root, probs, 1, stop_inds=stop_inds, visited=[], max_depth=max_depth
-        )
-        for level, children in enumerate(LevelOrderGroupIter(root)):
-            for node in children:
-                node_hist_mat[node.name, level] += 1
-    return node_hist_mat
-
+basename = f"-{graph_type}-t{threshold}-pt{path_type}-b{n_bins}-n{n_sims}-m{method}"
+basename += f"-norm{normalize_n_source}"
 
 np.random.seed(seed)
-seeds = np.random.choice(int(1e8), size=len(from_inds), replace=False)
-outs = Parallel(n_jobs=-2, verbose=10)(
-    delayed(cascades_from_node)(fi, probs, out_inds, max_depth, n_sims, seed)
-    for fi, seed in zip(from_inds, seeds)
-)
+if method == "tree":
+    seeds = np.random.choice(int(1e8), size=len(from_inds), replace=False)
+    outs = Parallel(n_jobs=-2, verbose=10)(
+        delayed(cascades_from_node)(
+            fi, probs, out_inds, max_depth, n_sims, seed, n_bins, method
+        )
+        for fi, seed in zip(from_inds, seeds)
+    )
+elif method == "path":
+    outs = []
+    for start_ind in from_inds:
+        temp_hist = cascades_from_node(
+            start_ind, probs, out_inds, max_depth, n_sims, seed, n_bins, method
+        )
+        outs.append(temp_hist)
 hist_mat = np.concatenate(outs, axis=-1)
 
+
+# generate_cascade_paths(start_ind, probs, 1, stop_inds=out_inds, max_depth=10)
 # %% [markdown]
 # # Sort metadata
 
@@ -166,11 +169,13 @@ from_class = from_ids.map(meta["Merge Class"])
 from_class.name = "from_class"
 col_df = pd.concat([orders, from_idx, from_ids, from_class], axis=1)
 
+
 # %% [markdown]
 # #
 log_mat = np.log10(hist_mat + 1)
 shape = log_mat.shape
-figsize = tuple(i / 40 for i in shape)
+# figsize = tuple(i / 40 for i in shape)
+figsize = (10, 20)
 fig, ax = plt.subplots(1, 1, figsize=figsize)
 matrixplot(
     log_mat,
@@ -181,8 +186,9 @@ matrixplot(
     row_sort_class=["to_class"],
     plot_type="scattermap",
     sizes=(0.5, 0.5),
+    tick_rot=45,
 )
-stashfig("first-matrixplot-scatter")
+stashfig("log-full-scatter" + basename)
 
 fig, ax = plt.subplots(1, 1, figsize=figsize)
 matrixplot(
@@ -194,15 +200,16 @@ matrixplot(
     row_sort_class=["to_class"],
     plot_type="heatmap",
     sizes=(0.5, 0.5),
+    tick_rot=45,
 )
-stashfig("first-matrixplot-heatmap")
+stashfig("log-full-heat" + basename)
 
 # %% [markdown]
 # # Screeplots
 screeplot(hist_mat.astype(float), title="Raw hist mat (full)")
-stashfig("scree-hist-mat")
+stashfig("scree-raw-mat" + basename)
 screeplot(log_mat, title="Log hist mat (full)")
-stashfig("scree-log-mat")
+stashfig("scree-log-mat" + basename)
 
 # %% [markdown]
 # # Pairplots
@@ -218,11 +225,11 @@ pg = pairplot(
     title="Node response embedding (log)",
 )
 pg._legend.remove()
-stashfig("node-pca-log")
+stashfig("node-pca-log" + basename)
 pg = pairplot(
     loadings, labels=from_class.values, height=5, title="Source class embedding (log)"
 )
-stashfig("source-pca-log")
+stashfig("source-pca-log" + basename)
 
 pca = PCA(n_components=6)
 embed = pca.fit_transform(hist_mat.astype(float))
@@ -235,26 +242,17 @@ pg = pairplot(
     title="Node response embedding (raw)",
 )
 pg._legend.remove()
-stashfig("node-pca-log")
+stashfig("node-pca-log" + basename)
 pg = pairplot(
     loadings, labels=from_class.values, height=5, title="Source class embedding (raw)"
 )
-stashfig("source-pca-log")
+stashfig("source-pca-log" + basename)
 
 # %% [markdown]
 # # Collapse that matrix
-normalize_n_source = False
 collapsed_hist = []
 collapsed_col_df = []
-from_groups = [
-    ("sens-ORN",),
-    ("sens-photoRh5", "sens-photoRh6"),
-    ("sens-MN",),
-    ("sens-thermo",),
-    ("sens-vtd",),
-    ("sens-AN",),
-]
-from_group_names = ["Odor", "Photo", "MN", "Temp", "VTD", "AN"]
+
 for fg, fg_name in zip(from_groups, from_group_names):
     from_df = col_df[col_df["from_class"].isin(fg)]
     n_in_group = len(from_df)
@@ -272,7 +270,6 @@ for fg, fg_name in zip(from_groups, from_group_names):
 collapsed_col_df = pd.DataFrame(collapsed_col_df)
 collapsed_hist = np.array(collapsed_hist).T
 log_collapsed_hist = np.log10(collapsed_hist + 1)
-# log_collapsed_hist[np.isinf(log_collapsed_hist)] = 0
 
 fig, ax = plt.subplots(1, 1, figsize=(10, 20))
 matrixplot(
@@ -284,13 +281,13 @@ matrixplot(
     row_sort_class=["to_class"],
     plot_type="heatmap",
     sizes=(0.5, 0.5),
+    tick_rot=0,
 )
-stashfig("collapsed-matrixplot-heatmap")
+stashfig("collapsed-log-heat" + basename)
 
 # %% [markdown]
 # # clustermap the matrix
 
-from src.visualization import _draw_seperators, sort_meta
 
 sns.set_context("talk", font_scale=1)
 linkage = "average"
@@ -318,14 +315,73 @@ _draw_seperators(
     ax, col_meta=sort_collapsed_col_df, col_sort_class=["from_class"], tick_rot=0
 )
 ax.yaxis.set_ticks([])
-stashfig("annot-clustermap-collapsed")
-# for i, x in enumerate(
-#     np.arange(bins.shape[0] - 1, hist_data.shape[-1], step=bins.shape[0] - 1)
-# ):
-#     ax.axvline(x, linestyle="--", linewidth=1, color="grey")
-# ax.set_xticks([])
-# ax.set_yticks([])
 ax.set_xlabel(r"Visits over time $\to$")
 ax.set_ylabel("Neuron")
-# ax.set_title(f"metric={metric}, linkage={linkage}")
+stashfig("collapsed-log-clustermap" + basename)
+stashfig("collapsed-log-clustermap" + basename, fmt="pdf")
 
+# %% [markdown]
+# #
+
+# %% [markdown]
+# # Do some plotting for illustration only
+# from src.traverse import generate_cascade_paths
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import matplotlib as mpl
+
+
+def remove_shared_ax(ax):
+    shax = ax.get_shared_x_axes()
+    shay = ax.get_shared_y_axes()
+    shax.remove(ax)
+    shay.remove(ax)
+    for axis in [ax.xaxis, ax.yaxis]:
+        ticker = mpl.axis.Ticker()
+        axis.major = ticker
+        axis.minor = ticker
+        loc = mpl.ticker.NullLocator()
+        fmt = mpl.ticker.NullFormatter()
+        axis.set_major_locator(loc)
+        axis.set_major_formatter(fmt)
+        axis.set_minor_locator(loc)
+        axis.set_minor_formatter(fmt)
+
+
+sns.set_context("talk")
+# uPN 742
+target_ind = 605
+# target_ind = 743
+# target_ind = 2282
+# target_ind = 596
+# target_ind = 2367
+row = collapsed_hist[target_ind, :]
+perm_inds, sort_col_df = sort_meta(collapsed_col_df, sort_class=["from_class"])
+sort_row = row[perm_inds]
+
+fig, ax = plt.subplots(1, 1)
+xs = np.arange(len(sort_row)) + 0.5
+divider = make_axes_locatable(ax)
+bot_cax = divider.append_axes("bottom", size="3%", pad=0.02, sharex=ax)
+remove_shared_ax(bot_cax)
+sns.set_palette("Set1")
+ax.bar(x=xs, height=sort_row, width=0.8)
+_draw_seperators(ax, col_meta=sort_col_df, col_sort_class=["from_class"], tick_rot=0)
+ax.set_xlim(0, len(xs))
+ax.set_ylabel("# hits @ time")
+
+sns.heatmap(
+    collapsed_col_df["order"][None, :], ax=bot_cax, cbar=False, cmap="RdBu", center=0
+)
+bot_cax.set_xticks([])
+bot_cax.set_yticks([])
+bot_cax.set_xlabel(r"Time $\to$", x=0.1, ha="left", labelpad=-22)
+bot_cax.set_xticks([20.5, 24.5, 28.5])
+bot_cax.set_xticklabels([1, 5, 9])
+
+ax.spines["right"].set_visible(False)
+ax.spines["top"].set_visible(False)
+ax.set_title(
+    f"Response for cell {target_ind} ({meta[meta['idx'] == target_ind]['Merge Class'].values[0]})"
+)
+
+stashfig(f"{target_ind}-response-hist" + basename)

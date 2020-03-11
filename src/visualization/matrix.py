@@ -41,15 +41,32 @@ def _get_tick_info(sort_meta, sort_class):
         return None, None, None
 
 
+def remove_shared_ax(ax):
+    shax = ax.get_shared_x_axes()
+    shay = ax.get_shared_y_axes()
+    shax.remove(ax)
+    shay.remove(ax)
+    for axis in [ax.xaxis, ax.yaxis]:
+        ticker = mpl.axis.Ticker()
+        axis.major = ticker
+        axis.minor = ticker
+        loc = mpl.ticker.NullLocator()
+        fmt = mpl.ticker.NullFormatter()
+        axis.set_major_locator(loc)
+        axis.set_major_formatter(fmt)
+        axis.set_minor_locator(loc)
+        axis.set_minor_formatter(fmt)
+
+
 def _draw_seperators(
     ax,
     row_meta=None,
     col_meta=None,
     row_sort_class=None,
     col_sort_class=None,
+    row_colors=False,
     plot_type="heatmap",
     gridline_kws=None,
-    use_colors=False,
     use_ticks=True,
     tick_fontsize=10,
     minor_ticking=False,
@@ -149,7 +166,6 @@ def _draw_seperators(
             # add tick labels and locs
             if axis_name == "x":
                 top_tick_ax.set_xticks(middle_inds)
-                print(middle_inds)
                 if minor_ticking:
                     top_tick_ax.set_xticklabels(middle_labels[0::2])
                     top_tick_ax.set_xticklabels(middle_labels[1::2], minor=True)
@@ -163,12 +179,6 @@ def _draw_seperators(
                             middle_labels, rotation=tick_rot, ha="center", va="bottom"
                         )
                 top_tick_ax.xaxis.tick_top()
-                # for tick in top_tick_ax.get_xticklabels():
-                #     tick.set_rotation(45)
-                #     tick.set_fontsize(tick_fontsize)
-                # for tick in top_tick_ax.get_xticklabels(minor=True):
-                #     tick.set_rotation(45)
-                #     tick.set_fontsize(tick_fontsize)
             elif axis_name == "y":
                 left_tick_ax.set_yticks(middle_inds)
                 if minor_ticking:
@@ -181,38 +191,8 @@ def _draw_seperators(
                 for tick in left_tick_ax.get_yticklabels(minor=True):
                     tick.set_fontsize(tick_fontsize)
 
-            # modify the padding / offset every other tick
-            # for i, axis in enumerate([top_tick_ax.xaxis, left_tick_ax.yaxis]):
-            #     axis.set_major_locator(plt.FixedLocator(middle_inds[0::2]))
-            #     axis.set_minor_locator(plt.FixedLocator(middle_inds[1::2]))
-            #     axis.set_minor_formatter(plt.FormatStrFormatter("%s"))
-
-            # top_tick_ax.tick_params(
-            #     which="minor", pad=tick_pad[i] + base_tick_pad, length=5
-            # )
-            # top_tick_ax.tick_params(which="major", pad=base_tick_pad, length=5)
-            # left_tick_ax.tick_params(
-            #     which="minor", pad=tick_pad[i] + base_tick_pad, length=5
-            # )
-            # left_tick_ax.tick_params(which="major", pad=base_tick_pad, length=5)
-
-            # set tick size and rotation
-
             if use_colors and use_ticks:
-                shax = ax.get_shared_x_axes()
-                shay = ax.get_shared_y_axes()
-                shax.remove(ax)
-                shay.remove(ax)
-                xticker = mpl.axis.Ticker()
-                for axis in [ax.xaxis, ax.yaxis]:
-                    axis.major = xticker
-                    axis.minor = xticker
-                    loc = mpl.ticker.NullLocator()
-                    fmt = mpl.ticker.NullFormatter()
-                    axis.set_major_locator(loc)
-                    axis.set_major_formatter(fmt)
-                    axis.set_minor_locator(loc)
-                    axis.set_minor_formatter(fmt)
+                remove_shared_ax(ax)
 
 
 def matrixplot(
@@ -231,13 +211,16 @@ def matrixplot(
     sizes=(10, 40),
     square=False,
     gridline_kws=None,
+    spinestyle_kws=None,
+    tick_rot=0,
 ):
+    # TODO probably remove these
     tick_fontsize = 10
-
-    spinestyle_kws = dict(linestyle="-", linewidth=1, alpha=0.7, color="black")
-
     tick_pad = [0, 0]
     base_tick_pad = 5
+
+    if spinestyle_kws is None:
+        spinestyle_kws = dict(linestyle="-", linewidth=1, alpha=0.7, color="black")
 
     # sort the data and metadata
     if row_meta is not None and row_sort_class is not None:
@@ -277,6 +260,7 @@ def matrixplot(
         use_ticks=use_ticks,
         tick_fontsize=tick_fontsize,
         minor_ticking=minor_ticking,
+        tick_rot=tick_rot,
     )
 
     # spines

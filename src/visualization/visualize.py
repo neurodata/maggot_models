@@ -323,7 +323,8 @@ def screeplot(
     if not isinstance(cumulative, bool):
         msg = "cumulative must be a boolean"
         raise TypeError(msg)
-    _, D, _ = selectSVD(X, n_components=X.shape[1], algorithm="full")
+    n_components = min(X.shape) - 1
+    _, D, _ = selectSVD(X, n_components=n_components, algorithm="full")
     elbow_locs, elbow_vals = select_dimension(X, n_elbows=n_elbows)
     elbow_locs = np.array(elbow_locs)
     D /= D.sum()
