@@ -4,7 +4,6 @@ import pandas as pd
 from graspy.utils import is_almost_symmetric, get_lcc
 from pathlib import Path
 from operator import itemgetter
-from tqdm import tqdm
 from copy import deepcopy
 
 # helper functions
@@ -104,10 +103,6 @@ class MetaGraph:
         return self
 
     def make_lcc(self):
-        # make whole graph just the lcc
-        # update nx
-        # update adjacency matrix
-        # update metadataframe
         lcc, inds = get_lcc(self.adj, return_inds=True)
         self.adj = lcc
         self.meta = self.meta.iloc[inds, :]
@@ -132,17 +127,9 @@ class MetaGraph:
         degree_df = degree_df.set_index("ID")
         return degree_df
 
-    def add_metadata(self, meta, name=None):
-        # meta is either
-        #      array of metadata corresponding to current adj/meta sorting
-        #      dict of metadata, mapping node ID to value for new field
-        #      dataframe with same indexes as current metadata df
-        # name is the name of the field
-        return self
-
     def __getitem__(self, n):
         if n in self.meta.columns:
-            return self.meta[n].values
+            return self.meta[n]
         elif n in self.meta.index:
             return self.meta.loc[n]
         else:

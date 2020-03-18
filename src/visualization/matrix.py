@@ -259,30 +259,36 @@ def matrixplot(
 
     divider = make_axes_locatable(ax)
 
-    top_cax = draw_separators(
-        ax,
-        divider=divider,
-        ax_type="x",
-        sort_meta=col_meta,
-        sort_class=col_sort_class,
-        colors=col_colors,
-        plot_type=plot_type,
-        use_ticks=col_ticks,
-        tick_rot=tick_rot,
-        gridline_kws=gridline_kws,
-    )
-    left_cax = draw_separators(
-        ax,
-        divider=divider,
-        ax_type="y",
-        sort_meta=row_meta,
-        sort_class=row_sort_class,
-        colors=row_colors,
-        plot_type=plot_type,
-        use_ticks=row_ticks,
-        tick_rot=0,
-        gridline_kws=gridline_kws,
-    )
+    if col_sort_class is not None:
+        top_cax = draw_separators(
+            ax,
+            divider=divider,
+            ax_type="x",
+            sort_meta=col_meta,
+            sort_class=col_sort_class,
+            colors=col_colors,
+            plot_type=plot_type,
+            use_ticks=col_ticks,
+            tick_rot=tick_rot,
+            gridline_kws=gridline_kws,
+        )
+    else:
+        top_cax = None
+    if row_sort_class is not None:
+        left_cax = draw_separators(
+            ax,
+            divider=divider,
+            ax_type="y",
+            sort_meta=row_meta,
+            sort_class=row_sort_class,
+            colors=row_colors,
+            plot_type=plot_type,
+            use_ticks=row_ticks,
+            tick_rot=0,
+            gridline_kws=gridline_kws,
+        )
+    else:
+        left_cax = None
 
     # spines
     if border:

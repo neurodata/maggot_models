@@ -113,6 +113,9 @@ def plot_class_colormap():
     fig, ax = plt.subplots(1, 1, figsize=(3, 15))
     palplot(len(colors), colors, ax=ax)
     ax.yaxis.set_major_formatter(plt.FixedFormatter(names))
+    plt.savefig(
+        "./maggot_models/notebooks/outs/current_cmap.png", dpi=300, bbox_inches="tight"
+    )
 
 
 if __name__ == "__main__":

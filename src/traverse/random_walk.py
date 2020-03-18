@@ -10,6 +10,19 @@ def to_markov_matrix(adj):
     return prob_mat
 
 
+def random_walks_from_node(
+    start_ind,
+    probs,
+    stop_inds=[],
+    max_depth=10,
+    n_sims=1000,
+    seed=None,
+    n_bins=None,
+    method="tree",
+):
+    pass
+
+
 def generate_random_walks(
     prob_mat, from_inds, out_inds, n_walks=100, max_walk=25, return_stuck=False
 ):

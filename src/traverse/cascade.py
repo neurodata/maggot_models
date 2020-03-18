@@ -95,3 +95,4 @@ def _cascade_path_helper(start_ind, probs, stop_inds, max_depth, node_hist_mat):
     for path in paths:
         for i, node in enumerate(path):
             node_hist_mat[node, i] += 1
+    return paths

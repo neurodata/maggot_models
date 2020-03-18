@@ -59,7 +59,7 @@ def stashcsv(df, name, **kws):
 VERSION = "2020-03-09"
 print(f"Using version {VERSION}")
 
-plot_examples = True
+plot_examples = False
 plot_embed = False
 plot_full_mat = False
 graph_type = "Gad"
@@ -70,7 +70,7 @@ mg = preprocess(
     mg,
     threshold=threshold,
     sym_threshold=False,
-    remove_pdiff=False,
+    remove_pdiff=True,
     binarize=False,
     weight=weight,
 )
@@ -78,33 +78,50 @@ print(f"Preprocessed graph {graph_type} with threshold={threshold}, weight={weig
 
 # TODO update this with the mixed groups
 # TODO make these functional for selecting proper paths
-out_classes = [
-    "O_dSEZ",
-    "O_dSEZ;CN",
-    "O_dSEZ;LHN",
-    "O_dVNC",
-    "O_dVNC;O_RG",
-    "O_dVNC;CN",
-    "O_RG",
-    "O_dUnk",
-    "O_RG-IPC",
-    "O_RG-ITP",
-    "O_RG-CA-LP",
-]
-out_classes = []
 
-from_groups = [
-    ("sens-ORN",),
-    ("sens-photoRh5", "sens-photoRh6"),
-    ("sens-MN",),
-    ("sens-thermo",),
-    ("sens-vtd",),
-    ("sens-AN",),
-]
-from_group_names = ["Odor", "Photo", "MN", "Temp", "VTD", "AN"]
+inout = "sensory_to_out"
+if inout == "sensory_to_out":
+    out_classes = [
+        "O_dSEZ",
+        "O_dSEZ;CN",
+        "O_dSEZ;LHN",
+        "O_dVNC",
+        "O_dVNC;O_RG",
+        "O_dVNC;CN",
+        "O_RG",
+        "O_dUnk",
+        "O_RG-IPC",
+        "O_RG-ITP",
+        "O_RG-CA-LP",
+    ]
+    from_groups = [
+        ("sens-ORN",),
+        ("sens-photoRh5", "sens-photoRh6"),
+        ("sens-MN",),
+        ("sens-thermo",),
+        ("sens-vtd",),
+        ("sens-AN",),
+    ]
+    from_group_names = ["Odor", "Photo", "MN", "Temp", "VTD", "AN"]
 
-# from_groups = [("O_dVNC",), ("O_dSEZ",), ("O_RG-IPC", "O_RG-ITP", "O_RG-CA-LP")]
-# from_group_names = ["VNC", "SEZ", "RG"]
+if inout == "out_to_sensory":
+    from_groups = [
+        ("motor-mAN", "motormVAN", "motor-mPaN"),
+        ("O_dSEZ", "O_dVNC;O_dSEZ", "O_dSEZ;CN", "LHN;O_dSEZ"),
+        ("O_dVNC", "O_dVNC;CN", "O_RG;O_dVNC", "O_dVNC;O_dSEZ"),
+        ("O_RG", "O_RG-IPC", "O_RG-ITP", "O_RG-CA-LP", "O_RG;O_dVNC"),
+        ("O_dUnk",),
+    ]
+    from_group_names = ["Motor", "SEZ", "VNC", "RG", "dUnk"]
+    out_classes = [
+        "sens-ORN",
+        "sens-photoRh5",
+        "sens-photoRh6",
+        "sens-MN",
+        "sens-thermo",
+        "sens-vtd",
+        "sens-AN",
+    ]
 
 from_classes = list(chain.from_iterable(from_groups))  # make this a flat list
 
@@ -126,9 +143,23 @@ out_ind_map = dict(zip(out_inds, range(len(out_inds))))
 # # Use a method to generate visits
 
 path_type = "cascade"
-p = 0.01
-not_probs = (1 - p) ** adj  # probability of none of the synapses causing postsynaptic
-probs = 1 - not_probs  # probability of ANY of the synapses firing onto next
+if path_type == "cascade":
+    p = 0.01
+    # p = 0.05
+    not_probs = (
+        1 - p
+    ) ** adj  # probability of none of the synapses causing postsynaptic
+    probs = 1 - not_probs  # probability of ANY of the synapses firing onto next
+elif path_type == "fancy-cascade":
+    alpha = 0.5
+    flat = np.full(adj.shape, alpha)
+    deg = meta["dendrite_input"].values
+    deg[deg == 0] = 1
+    flat = flat / deg[None, :]
+    not_probs = np.power((1 - flat), adj)
+    probs = 1 - not_probs
+
+#%%
 seed = 8888
 max_depth = 10
 n_bins = 10
@@ -137,10 +168,10 @@ method = "tree"
 normalize_n_source = False
 
 
-basename = f"-{graph_type}-t{threshold}-pt{path_type}-b{n_bins}-n{n_sims}-m{method}"
+basename = f"-{graph_type}-p{p}-pt{path_type}-b{n_bins}-n{n_sims}-m{method}"
 basename += f"-norm{normalize_n_source}"
-basename += f"-{from_groups}"
-basename += f"-{out_classes}"
+basename += f"-{inout}"
+
 
 np.random.seed(seed)
 if method == "tree":
@@ -413,7 +444,7 @@ top_cax.set_yticks([0.5])
 top_cax.set_yticklabels(["Class"], va="center")
 ax.set_xlabel("Neuron")
 ax.set_ylabel("Source class")
-stashfig("collapsed-log-heat-transpose" + basename)
+stashfig("collapsed-log-heat-transpose" + basename, dpi=200)
 
 fig, ax = plt.subplots(1, 1, figsize=(25, 15))
 ax, divider, top_cax, left_cax = matrixplot(
@@ -444,7 +475,7 @@ top_cax.set_yticks([0.5])
 top_cax.set_yticklabels(["Class"], va="center")
 ax.set_xlabel("Neuron")
 ax.set_ylabel("Source class")
-stashfig("collapsed-log-heat-transpose-labeled" + basename)
+stashfig("collapsed-log-heat-transpose-labeled" + basename, dpi=200)
 
 # %% [markdown]
 # # clustermap the matrix
@@ -526,7 +557,7 @@ if plot_examples:
         bot_cax.set_yticks([])
         bot_cax.set_xlabel(r"Hops $\to$", x=0.1, ha="left", labelpad=-22)
         bot_cax.set_xticks([20.5, 24.5, 28.5])
-        bot_cax.set_xticklabels([1, 5, 9])
+        bot_cax.set_xticklabels([1, 5, 9], rotation=0)
 
         ax.spines["right"].set_visible(False)
         ax.spines["top"].set_visible(False)
