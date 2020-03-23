@@ -140,6 +140,10 @@ g = nx.relabel_nodes(g, ind_map, copy=True)
 out_ind_map = dict(zip(out_inds, range(len(out_inds))))
 
 # %% [markdown]
+# ##
+
+
+# %% [markdown]
 # # Use a method to generate visits
 
 path_type = "cascade"

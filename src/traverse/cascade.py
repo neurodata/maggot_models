@@ -1,6 +1,54 @@
 from anytree import Node
 import numpy as np
 from anytree import LevelOrderGroupIter, Node
+from .traverse import BaseTraverse
+
+
+def to_transmission_matrix(adj, p, method="uniform", in_weights=None):
+    if method == "uniform":
+        not_probs = (
+            1 - p
+        ) ** adj  # probability of none of the synapses causing postsynaptic
+        probs = 1 - not_probs  # probability of ANY of the synapses firing onto next
+    elif method == "input_weighted":
+        raise NotImplementedError()
+        alpha = p
+        flat = np.full(adj.shape, alpha)
+        # deg = meta["dendrite_input"].values
+        in_weights[in_weights == 0] = 1
+        flat = flat / in_weights[None, :]
+        not_probs = np.power((1 - flat), adj)
+        probs = 1 - not_probs
+    return probs
+
+
+class Cascade(BaseTraverse):
+    def _choose_next(self):
+        node_transition_probs = self.transition_probs[self._active]
+        transmission_indicator = np.random.binomial(
+            np.ones(node_transition_probs.shape, dtype=int), node_transition_probs
+        )
+        nxt = np.unique(np.nonzero(transmission_indicator)[1])
+        if len(nxt) > 0:
+            return nxt
+        else:
+            return None
+
+    def start(self, start_node):
+        if isinstance(start_node, int):
+            start_node = np.array([start_node])
+            super().start(start_node)
+        else:
+            start_node = np.array(start_node)
+            super().start(start_node)
+
+    def _check_visited(self):
+        self._active = np.setdiff1d(self._active, self._visited)
+        return len(self._active) > 0
+
+    def _check_stop_nodes(self):
+        self._active = np.setdiff1d(self._active, self.stop_nodes)
+        return len(self._active) > 0
 
 
 def generate_cascade_paths(

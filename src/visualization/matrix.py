@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import seaborn as sns
-from .visualize import gridmap
+from src.visualization import gridmap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib as mpl
 
@@ -75,6 +75,9 @@ def get_colors(labels, palette, desat=0.7):
         return get_colors(labels, dict(zip(uni_labels, palette)))
 
 
+draw_colors(ax, divider=None, ax_type="x")
+
+
 def draw_separators(
     ax,
     ax_type="x",
@@ -82,6 +85,7 @@ def draw_separators(
     sort_class=None,
     divider=None,
     colors=None,
+    palette="tab10",
     plot_type="heatmap",
     gridline_kws=None,
     use_ticks=True,
@@ -89,6 +93,42 @@ def draw_separators(
     minor_ticking=False,
     tick_rot=45,
 ):
+    """[summary]
+    
+    Parameters
+    ----------
+    ax : [type]
+        [description]
+    ax_type : str, optional
+        [description], by default "x"
+    sort_meta : [type], optional
+        [description], by default None
+    sort_class : [type], optional
+        [description], by default None
+    divider : [type], optional
+        [description], by default None
+    colors : dict or string, optional
+        By default, None, no colors are plotted for categorical labels
+        if dict, should map elements of `sort_class` to a color
+        if string, should be a palette specification (see mpl/sns) # TODO broken
+    plot_type : str, optional
+        [description], by default "heatmap"
+    gridline_kws : [type], optional
+        [description], by default None
+    use_ticks : bool, optional
+        [description], by default True
+    tick_fontsize : int, optional
+        [description], by default 10
+    minor_ticking : bool, optional
+        [description], by default False
+    tick_rot : int, optional
+        [description], by default 45
+    
+    Returns
+    -------
+    [type]
+        [description]
+    """
 
     if gridline_kws is None:
         gridline_kws = dict(color="grey", linestyle="--", alpha=0.7, linewidth=1)
@@ -125,17 +165,31 @@ def draw_separators(
             elif ax_type == "y":
                 cax = divider.append_axes("left", size="3%", pad=0, sharey=ax)
 
-            classes = sort_meta[sc].values
-            # colors = get_colors(classes, colors)
+            # if isinstance(colors, dict):
+            #     # in this case, the colors argument is treated as a dict mapping elements
+            #     # of sort_class to a color
+            #     classes = sort_meta[sc].values
+            #     color_dict = colors
+            # if isinstance(colors, (np.ndarray, pd.Series)):
+            #     classes = colors
+            #     color_dict = sns.color_palette()
+            if isinstance(colors, str):
+                classes = sort_meta[colors]
+
+            if isinstance(palette, dict):
+                color_dict = palette
+            elif isinstance(palette, str):
+                color_dict = dict(
+                    zip(classes.unique(), sns.color_palette(palette, classes.nunique()))
+                )
 
             from matplotlib.colors import ListedColormap
 
             # make colormap
             uni_classes = np.unique(classes)
             class_map = dict(zip(uni_classes, range(len(uni_classes))))
-            color_dict = colors  # TODO make this work when not a dict
-            color_sorted = np.vectorize(color_dict.get)(uni_classes)
 
+            color_sorted = np.vectorize(color_dict.get)(uni_classes)
             lc = ListedColormap(color_sorted)
             class_indicator = np.vectorize(class_map.get)(classes)
             if ax_type == "x":
@@ -188,6 +242,28 @@ def draw_separators(
         return cax
 
 
+def _process_meta(meta, sort_class):
+    if meta is None and sort_class is None:
+        return None, None
+    elif isinstance(meta, pd.DataFrame):
+        try:  # if sort class is a single element
+            iter(sort_class)
+        except TypeError:
+            sort_class = [sort_class]
+    elif isinstance(meta, pd.Series) and sort_class is None:
+        meta = meta.to_frame(name=0)
+        sort_class = [0]
+    elif isinstance(meta, list) and sort_class is None:
+        meta = pd.DataFrame({i: elem for i, elem in enumerate(meta)})
+        sort_class = list(range(meta.shape[1]))
+    elif isinstance(meta, np.ndarray) and sort_class is None:
+        meta = pd.DataFrame(meta)
+        sort_class = [0]
+    else:
+        raise ValueError("Improper metadata spec for matrixplot")
+    return meta, sort_class
+
+
 def matrixplot(
     data,
     ax=None,
@@ -198,6 +274,8 @@ def matrixplot(
     col_sort_class=None,
     row_colors=None,
     col_colors=None,
+    row_palette=None,
+    col_palette=None,
     row_class_order="size",
     col_class_order="size",
     row_item_order=None,
@@ -212,7 +290,65 @@ def matrixplot(
     gridline_kws=None,
     spinestyle_kws=None,
     tick_rot=0,
+    cbar=True,
+    **kws,
 ):
+    """Plotting matrices
+    
+    Parameters
+    ----------
+    data : np.ndarray, ndim=2
+        matrix to plot
+    ax : matplotlib axes object, optional
+        [description], by default None
+    plot_type : str, optional
+        One of "heatmap" or "scattermap", by default "heatmap"
+    row_meta : pd.DataFrame, pd.Series, list of pd.Series or np.array, optional
+        [description], by default None
+    col_meta : [type], optional
+        [description], by default None
+    row_sort_class : list or np.ndarray, optional
+        [description], by default None
+    col_sort_class : list or np.ndarray, optional
+        [description], by default None
+    row_colors : dict, optional
+        [description], by default None
+    col_colors : dict, optional
+        [description], by default None
+    row_class_order : str, optional
+        [description], by default "size"
+    col_class_order : str, optional
+        [description], by default "size"
+    row_item_order : string or list of string, optional
+        attribute in meta by which to sort elements within a class, by default None
+    col_item_order : [type], optional
+        [description], by default None
+    row_ticks : bool, optional
+        [description], by default True
+    col_ticks : bool, optional
+        [description], by default True
+    border : bool, optional
+        [description], by default True
+    minor_ticking : bool, optional
+        [description], by default False
+    cmap : str, optional
+        [description], by default "RdBu_r"
+    sizes : tuple, optional
+        [description], by default (10, 40)
+    square : bool, optional
+        [description], by default False
+    gridline_kws : [type], optional
+        [description], by default None
+    spinestyle_kws : [type], optional
+        [description], by default None
+    tick_rot : int, optional
+        [description], by default 0
+    
+    Returns
+    -------
+    [type]
+        [description]
+    """
     # TODO probably remove these
     tick_fontsize = 10
     tick_pad = [0, 0]
@@ -220,6 +356,10 @@ def matrixplot(
 
     if spinestyle_kws is None:
         spinestyle_kws = dict(linestyle="-", linewidth=1, alpha=0.7, color="black")
+
+    # verify and convert inout
+    row_meta, row_sort_class = _process_meta(row_meta, row_sort_class)
+    col_meta, col_sort_class = _process_meta(col_meta, col_sort_class)
 
     # sort the data and metadata
     if row_meta is not None and row_sort_class is not None:
@@ -242,12 +382,12 @@ def matrixplot(
         col_perm_inds = np.arange(data.shape[1])
     data = data[np.ix_(row_perm_inds, col_perm_inds)]
 
+    # do the actual plotting!
     if ax is None:
         _, ax = plt.subplots(1, 1, figsize=(10, 10))
 
-    # do the actual plotting!
     if plot_type == "heatmap":
-        sns.heatmap(data, cmap=cmap, ax=ax, vmin=0, center=0, cbar=False)
+        sns.heatmap(data, cmap=cmap, ax=ax, center=0, **kws)  # TODO stop hard code
     elif plot_type == "scattermap":
         gridmap(data, ax=ax, sizes=sizes, border=False)
 
@@ -259,6 +399,14 @@ def matrixplot(
 
     divider = make_axes_locatable(ax)
 
+    # TODO this whole thing should be a for loop over elements of sort class
+    # in reverse order... this could get complicated with simultaneously having colors
+    # perhaps the colors should be a separate function!
+
+    # draw colors
+
+    # draw separators (grid borders and ticks)
+
     if col_sort_class is not None:
         top_cax = draw_separators(
             ax,
@@ -267,11 +415,13 @@ def matrixplot(
             sort_meta=col_meta,
             sort_class=col_sort_class,
             colors=col_colors,
+            palette=col_palette,
             plot_type=plot_type,
             use_ticks=col_ticks,
             tick_rot=tick_rot,
             gridline_kws=gridline_kws,
         )
+        ax.xaxis.set_label_position("top")
     else:
         top_cax = None
     if row_sort_class is not None:

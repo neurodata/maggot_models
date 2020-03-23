@@ -1,5 +1,14 @@
 import numpy as np
 from numba import njit
+from .traverse import BaseTraverse
+
+
+class RandomWalk(BaseTraverse):
+    def _choose_next(self):
+        node_transition_probs = self.transition_probs[self._active]
+        if np.isclose(np.sum(node_transition_probs), 1):
+            nxt = np.random.choice(self.n_verts, p=node_transition_probs)
+            return nxt
 
 
 def to_markov_matrix(adj):
