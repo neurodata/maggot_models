@@ -2,9 +2,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import seaborn as sns
-from src.visualization import gridmap
+from src.visualization import gridmap, remove_spines
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib as mpl
+from matplotlib.colors import ListedColormap
 
 
 def sort_meta(meta, sort_class, sort_item=None, class_order="size"):
@@ -75,12 +76,57 @@ def get_colors(labels, palette, desat=0.7):
         return get_colors(labels, dict(zip(uni_labels, palette)))
 
 
-draw_colors(ax, divider=None, ax_type="x")
+def draw_colors(
+    ax, divider=None, ax_type="x", colors=None, palette="tab10", sort_meta=None
+):
+    if colors is not None:
+        if ax_type == "x":
+            cax = divider.append_axes("top", size="3%", pad=0, sharex=ax)
+        elif ax_type == "y":
+            cax = divider.append_axes("left", size="3%", pad=0, sharey=ax)
+
+        if isinstance(colors, str):  # string indexes a column in meta
+            classes = sort_meta[colors]
+        elif isinstance(colors, (list, np.ndarray, pd.Series)):
+            classes = colors  # TODO make sure this is a series
+
+        if isinstance(palette, dict):
+            color_dict = palette
+        elif isinstance(palette, str):
+            color_dict = dict(
+                zip(classes.unique(), sns.color_palette(palette, classes.nunique()))
+            )
+
+        # make colormap
+        uni_classes = np.unique(classes)
+        class_map = dict(zip(uni_classes, range(len(uni_classes))))
+        color_sorted = np.vectorize(color_dict.get)(uni_classes)
+        lc = ListedColormap(color_sorted)
+        # map each class to an integer to use to make the color heatmap
+        class_indicator = np.vectorize(class_map.get)(classes)
+
+        if ax_type == "x":
+            class_indicator = class_indicator.reshape(1, len(classes))
+        elif ax_type == "y":
+            class_indicator = class_indicator.reshape(len(classes), 1)
+        sns.heatmap(
+            class_indicator,
+            cmap=lc,
+            cbar=False,
+            yticklabels=False,
+            xticklabels=False,
+            ax=cax,
+            square=False,
+        )
+        return cax
+    else:
+        return ax
 
 
 def draw_separators(
     ax,
     ax_type="x",
+    tick_ax=None,
     sort_meta=None,
     sort_class=None,
     divider=None,
@@ -141,10 +187,10 @@ def draw_separators(
     # get info about the separators
     first_inds, middle_inds, middle_labels = _get_tick_info(sort_meta, sort_class)
 
-    if ax_type == "x":
-        axis = ax.xaxis
-    else:
-        axis = ax.yaxis
+    # if ax_type == "x":
+    #     axis = ax.xaxis
+    # else:
+    #     axis = ax.yaxis
 
     # draw the border lines
     for t in first_inds:
@@ -153,66 +199,10 @@ def draw_separators(
         else:
             ax.axhline(t - boost, **gridline_kws)
 
-    if colors is not None:
-        if divider is None:
-            divider = make_axes_locatable(ax)
-        axis.set_ticks([])
-        axis.set_ticks([])
-        sort_class = sort_class[:1]  # TODO fix
-        for sc in sort_class:  # TODO this will break for more than one category
-            if ax_type == "x":
-                cax = divider.append_axes("top", size="3%", pad=0, sharex=ax)
-            elif ax_type == "y":
-                cax = divider.append_axes("left", size="3%", pad=0, sharey=ax)
-
-            # if isinstance(colors, dict):
-            #     # in this case, the colors argument is treated as a dict mapping elements
-            #     # of sort_class to a color
-            #     classes = sort_meta[sc].values
-            #     color_dict = colors
-            # if isinstance(colors, (np.ndarray, pd.Series)):
-            #     classes = colors
-            #     color_dict = sns.color_palette()
-            if isinstance(colors, str):
-                classes = sort_meta[colors]
-
-            if isinstance(palette, dict):
-                color_dict = palette
-            elif isinstance(palette, str):
-                color_dict = dict(
-                    zip(classes.unique(), sns.color_palette(palette, classes.nunique()))
-                )
-
-            from matplotlib.colors import ListedColormap
-
-            # make colormap
-            uni_classes = np.unique(classes)
-            class_map = dict(zip(uni_classes, range(len(uni_classes))))
-
-            color_sorted = np.vectorize(color_dict.get)(uni_classes)
-            lc = ListedColormap(color_sorted)
-            class_indicator = np.vectorize(class_map.get)(classes)
-            if ax_type == "x":
-                class_indicator = class_indicator.reshape(1, len(classes))
-            elif ax_type == "y":
-                class_indicator = class_indicator.reshape(len(classes), 1)
-            sns.heatmap(
-                class_indicator,
-                cmap=lc,
-                cbar=False,
-                yticklabels=False,
-                xticklabels=False,
-                ax=cax,
-                square=False,
-            )
+    ax.xaxis.set_ticks([])
+    ax.yaxis.set_ticks([])
 
     if use_ticks:
-        if use_ticks and colors is not None:
-            tick_ax = cax
-        else:
-            tick_ax = ax
-        if colors is not None:
-            remove_shared_ax(cax)
         # add tick labels and locs
         if ax_type == "x":
             tick_ax.set_xticks(middle_inds)
@@ -238,8 +228,6 @@ def draw_separators(
                 tick_ax.set_yticklabels(
                     middle_labels, rotation=tick_rot, ha="right", va="center"
                 )
-    if colors is not None:
-        return cax
 
 
 def _process_meta(meta, sort_class):
@@ -290,7 +278,6 @@ def matrixplot(
     gridline_kws=None,
     spinestyle_kws=None,
     tick_rot=0,
-    cbar=True,
     **kws,
 ):
     """Plotting matrices
@@ -399,46 +386,67 @@ def matrixplot(
 
     divider = make_axes_locatable(ax)
 
-    # TODO this whole thing should be a for loop over elements of sort class
-    # in reverse order... this could get complicated with simultaneously having colors
-    # perhaps the colors should be a separate function!
-
     # draw colors
+    top_cax = draw_colors(
+        ax,
+        divider=divider,
+        ax_type="x",
+        colors=col_colors,
+        palette=col_palette,
+        sort_meta=col_meta,
+    )
+
+    left_cax = draw_colors(
+        ax,
+        divider=divider,
+        ax_type="y",
+        colors=row_colors,
+        palette=row_palette,
+        sort_meta=row_meta,
+    )
+
+    remove_shared_ax(ax)
 
     # draw separators (grid borders and ticks)
-
     if col_sort_class is not None:
-        top_cax = draw_separators(
-            ax,
-            divider=divider,
-            ax_type="x",
-            sort_meta=col_meta,
-            sort_class=col_sort_class,
-            colors=col_colors,
-            palette=col_palette,
-            plot_type=plot_type,
-            use_ticks=col_ticks,
-            tick_rot=tick_rot,
-            gridline_kws=gridline_kws,
-        )
+        tick_ax = top_cax  # prime the loop
+        for i, sc in enumerate(col_sort_class[::-1]):
+            if i > 0:
+                tick_ax = divider.append_axes("top", size="1%", pad=0.5, sharex=ax)
+                remove_shared_ax(tick_ax)
+                remove_spines(tick_ax)
+            draw_separators(
+                ax,
+                divider=divider,
+                tick_ax=tick_ax,
+                ax_type="x",
+                sort_meta=col_meta,
+                sort_class=sc,
+                plot_type=plot_type,
+                use_ticks=col_ticks,
+                tick_rot=tick_rot,
+                gridline_kws=gridline_kws,
+            )
         ax.xaxis.set_label_position("top")
-    else:
-        top_cax = None
     if row_sort_class is not None:
-        left_cax = draw_separators(
-            ax,
-            divider=divider,
-            ax_type="y",
-            sort_meta=row_meta,
-            sort_class=row_sort_class,
-            colors=row_colors,
-            plot_type=plot_type,
-            use_ticks=row_ticks,
-            tick_rot=0,
-            gridline_kws=gridline_kws,
-        )
-    else:
-        left_cax = None
+        tick_ax = left_cax  # prime the loop
+        for i, sc in enumerate(row_sort_class[::-1]):
+            if i > 0:
+                tick_ax = divider.append_axes("left", size="1%", pad=0.5, sharex=ax)
+                remove_shared_ax(tick_ax)
+                remove_spines(tick_ax)
+            draw_separators(
+                ax,
+                divider=divider,
+                tick_ax=tick_ax,
+                ax_type="y",
+                sort_meta=row_meta,
+                sort_class=sc,
+                plot_type=plot_type,
+                use_ticks=row_ticks,
+                tick_rot=0,
+                gridline_kws=gridline_kws,
+            )
 
     # spines
     if border:

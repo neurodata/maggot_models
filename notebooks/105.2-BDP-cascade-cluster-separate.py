@@ -1,33 +1,30 @@
 # %% [markdown]
 # #
-import itertools
 import os
-import time
 from itertools import chain
 
 import colorcet as cc
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from anytree import LevelOrderGroupIter, Node, RenderTree
-from joblib import Parallel, delayed
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from sklearn.decomposition import PCA
 
-from graspy.plot import heatmap, pairplot
+from graspy.cluster import AutoGMMCluster
+from graspy.utils import pass_to_ranks
 from src.data import load_metagraph
 from src.graph import MetaGraph, preprocess
 from src.io import savecsv, savefig, saveskels
 from src.traverse import (
+    Cascade,
+    TraverseDispatcher,
     cascades_from_node,
     generate_cascade_tree,
     generate_random_walks,
     path_to_visits,
     to_markov_matrix,
     to_path_graph,
+    to_transmission_matrix,
 )
 from src.visualization import (
     CLASS_COLOR_DICT,
@@ -53,6 +50,8 @@ def stashfig(name, **kws):
 def stashcsv(df, name, **kws):
     savecsv(df, name, foldername=FNAME, save_on=True, **kws)
 
+
+# TODO set up code to make it very easy for exploration
 
 #%% Load and preprocess the data
 
@@ -137,6 +136,28 @@ g = nx.relabel_nodes(g, ind_map, copy=True)
 out_ind_map = dict(zip(out_inds, range(len(out_inds))))
 
 # %% [markdown]
+# ##
+
+
+fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+matrixplot(
+    pass_to_ranks(adj),
+    ax=ax,
+    col_meta=meta,
+    col_sort_class=["Class 1", "Class 2"],
+    col_colors="Merge Class",
+    col_palette=CLASS_COLOR_DICT,
+    col_ticks=True,
+    row_meta=meta,
+    row_sort_class=["Class 1"],
+    row_item_order=["Class 2"],
+    row_colors="Merge Class",
+    row_palette=CLASS_COLOR_DICT,
+    row_ticks=True,
+    cbar=False,
+)
+
+# %% [markdown]
 # ## Organize metadata for the neurons
 ids = pd.Series(index=meta["inds"], data=meta.index, name="id")
 to_class = ids.map(meta["Merge Class"])
@@ -148,19 +169,27 @@ col_df = pd.concat([ids, to_class, colors], axis=1)
 # %% [markdown]
 # # Setup to generate cascades/random walks
 
-from src.traverse import to_transmission_matrix, TraverseDispatcher, Cascade
 
+# traversal parameters
 p = 0.05
-n_init = 1000
+n_init = 100
 seed = 8888
 max_hops = 10
+simultaneous = False
+use_stop_nodes = False
+if use_stop_nodes:
+    stop_nodes = out_inds
+else:
+    stop_nodes = []
+
 cascade_kws = {
     "n_init": n_init,
     "max_hops": max_hops,
-    "stop_nodes": [],
+    "stop_nodes": stop_nodes,
     "allow_loops": False,
-    "simultaneous": True,
+    "simultaneous": simultaneous,
 }
+
 np.random.seed(seed)
 transition_probs = to_transmission_matrix(adj, p)
 
@@ -199,13 +228,14 @@ sns.set_context("talk")
 print(f"Running cascades, n_init={n_init}")
 fg_hop_hists = []
 fg_col_meta = []
-for fg, fg_name in zip(from_groups, from_group_names):
+for fg, fg_name in zip(from_groups[:1], from_group_names[:1]):
     print(fg_name)
 
     # running the cascadese
     from_inds = meta[meta[class_key].isin(fg)]["inds"].values
     hop_hist = hist_from_cascade(transition_probs, from_inds, **cascade_kws).T
     fg_hop_hists.append(hop_hist)
+    stashcsv(pd.DataFrame(data=hop_hist), f"{fg_name}-hop-hist")
 
     # add some metadata based on the cascade results just for plotting
     n_visits = np.sum(hop_hist, axis=0)
@@ -216,6 +246,7 @@ for fg, fg_name in zip(from_groups, from_group_names):
     group_means = fg_col_df.groupby("to_class")["mean_visit"].mean()
     fg_col_df["group_mean_visit"] = fg_col_df["to_class"].map(group_means)
     fg_col_meta.append(fg_col_df)
+    stashcsv(fg_col_df, f"{fg_name}-meta")
 
     # plot the super row
     fig, axs = plt.subplots(
@@ -229,7 +260,8 @@ for fg, fg_name in zip(from_groups, from_group_names):
         col_sort_class=["to_class"],
         col_class_order="group_mean_visit",
         col_item_order=["mean_visit"],
-        col_colors=CLASS_COLOR_DICT,
+        col_colors="to_class",
+        col_palette=CLASS_COLOR_DICT,
         col_ticks=False,
         cbar_kws=dict(fraction=0.05),
     )
@@ -239,11 +271,15 @@ for fg, fg_name in zip(from_groups, from_group_names):
 
 # %% [markdown]
 # ## Cluster the "superrows"
-from graspy.cluster import AutoGMMCluster
 
+
+# clustering parameters
+normalize = False
+log_cluster = True
 cluster_kws = dict(
     min_components=5, max_components=40, affinity=["euclidean", "manhattan"], n_jobs=-1
 )
+
 fg_autoclusters = []
 print("Running GMM")
 for i, (fg, fg_name) in enumerate(zip(from_groups[:1], from_group_names[:1])):
@@ -251,26 +287,39 @@ for i, (fg, fg_name) in enumerate(zip(from_groups[:1], from_group_names[:1])):
 
     # run the clustering on histogram
     hop_hist = fg_hop_hists[i]
+
+    X = hop_hist.T
+    if normalize:
+        sums = X.sum(axis=1)
+        sums[sums == 0] = 1
+        X = X / sums[:, None]
+
+    if log_cluster:
+        X = np.log10(X + 1)
+
     agmm = AutoGMMCluster(**cluster_kws)
-    pred_labels = agmm.fit_predict(hop_hist.T)
+    pred_labels = agmm.fit_predict(X)
     results = agmm.results_
     fg_col_meta[i]["pred_labels"] = pred_labels
     fg_autoclusters.append(agmm)
 
-    fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-    sns.scatterplot(data=results, y="bic/aic", x="n_components", label="all", ax=ax)
-    best_results = results.groupby("n_components")["bic/aic"].min()
-    best_results = best_results.reset_index()
-    sns.scatterplot(
-        data=best_results, y="bic/aic", x="n_components", label="best", ax=ax
-    )
-    ax.set_ylabel("BIC")
-    ax.set_xlabel("K")
-    stashfig("odor-bic")
+basename = f"-p={p}-n_init={n_init}-max_hops={max_hops}-normalize={normalize}"
+basename += f"-logclust={log_cluster}-simult={simultaneous}-stopnodes={use_stop_nodes}"
 
 # %% [markdown]
 # ##
-k = 26
+fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+sns.scatterplot(data=results, y="bic/aic", x="n_components", label="all", ax=ax)
+best_results = results.groupby("n_components").min()
+best_results = best_results.reset_index()
+sns.scatterplot(data=best_results, y="bic/aic", x="n_components", label="best", ax=ax)
+ax.set_ylabel("BIC")
+ax.set_xlabel("K")
+stashfig(f"{fg_name}-bic")
+
+# %% [markdown]
+# ##
+k = 17
 idx = results[results["n_components"] == k]["bic/aic"].idxmin()
 model = results.loc[idx, "model"]
 
@@ -278,15 +327,17 @@ fig, axs = plt.subplots(
     2, 1, figsize=(25, 15), gridspec_kw=dict(height_ratios=[0.97, 0.03])
 )
 ax = axs[0]
-meta = fg_col_meta[i].copy()
-meta["cluster"] = model.predict(hop_hist.T)
-cluster_means = meta.groupby("cluster")["mean_visit"].mean()
-meta["cluster_mean_visit"] = meta["cluster"].map(cluster_means)
+fg_meta = fg_col_meta[i].copy()
+fg_meta["cluster"] = model.predict(X)
+cluster_means = fg_meta.groupby("cluster")["mean_visit"].mean()
+fg_meta["cluster_mean_visit"] = fg_meta["cluster"].map(cluster_means)
 
 out = matrixplot(
-    np.log10(fg_hop_hists[i] + 1),
+    # np.log10(fg_hop_hists[i] + 1),
+    # np.log10(X.T + 1),
+    X.T,
     ax=ax,
-    col_meta=meta,
+    col_meta=fg_meta,
     col_sort_class=["cluster"],
     col_class_order="cluster_mean_visit",
     col_item_order=["to_class", "mean_visit"],
@@ -298,17 +349,14 @@ out = matrixplot(
 
 ax = axs[-1]
 ax.axis("off")
-fg_name = "Odor"
-caption = (
-    f"Figure x: Hop histogram for cascades from {fg_name}, simultaneous cascades\n"
-)
+
+caption = f"Figure x: Hop histogram for cascades from {fg_name}. Parameters were  simultaneous cascades\n"
 caption += f"from all sensory neurons in {fg_name}, p={p}."
 caption += (
     f"Columns (neurons) are sorted into clusters (GMM, K={k}), clusters are sorted\n"
 )
-caption += f"by mean hop, and within cluster, by the mean hop for an individual neuron."
-ax.invert_yaxis()
-ax.text(0, 0, caption)  # va="top")
-# plt.tight_layout()
-stashfig(f"{fg_name}-cluster-k={k}")
+caption += f"by mean hop, and within cluster by class, and then by the mean hop for an individual neuron."
 
+ax.invert_yaxis()
+ax.text(0, 0, caption)
+stashfig(f"{fg_name}-cluster-k={k}" + basename)
