@@ -49,9 +49,10 @@ def collapse_multigraph(multigraph):
 
 # Maybe this class is unnecessary?
 class TraverseDispatcher:
-    def __init__(self, worker, *args, n_init=10, **kwargs):
+    def __init__(self, worker, *args, n_init=10, simultaneous=True, **kwargs):
         self._worker = worker(*args, **kwargs)
         self.n_init = n_init
+        self.simultaneous = simultaneous
 
     def start(self, start_node):
         worker = self._worker
@@ -63,6 +64,16 @@ class TraverseDispatcher:
                 hit_hist[nodes, level] += 1
         self.hit_hist_ = hit_hist
         return hit_hist
+
+    def multistart(self, start_nodes):
+        if self.simultaneous:
+            hop_hist = self.start(start_nodes)
+        else:
+            n_verts = len(self._worker.transition_probs)
+            hop_hist = np.zeros((n_verts, self._worker.max_hops))
+        for s in start_nodes:
+            hop_hist += self.start(s)
+        return hop_hist
 
 
 class BaseTraverse:

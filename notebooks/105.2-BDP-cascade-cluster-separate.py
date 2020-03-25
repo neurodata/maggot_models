@@ -171,17 +171,17 @@ col_df = pd.concat([ids, to_class, colors], axis=1)
 
 
 # traversal parameters
-p = 0.05
+p = 0.01
 n_init = 100
 seed = 8888
 max_hops = 10
 simultaneous = False
 use_stop_nodes = False
+
 if use_stop_nodes:
     stop_nodes = out_inds
 else:
     stop_nodes = []
-
 cascade_kws = {
     "n_init": n_init,
     "max_hops": max_hops,
@@ -189,6 +189,8 @@ cascade_kws = {
     "allow_loops": False,
     "simultaneous": simultaneous,
 }
+
+basename = f"-p={p}-n_init={n_init}-max_hops={max_hops}-simult={simultaneous}-stopnodes={use_stop_nodes}"
 
 np.random.seed(seed)
 transition_probs = to_transmission_matrix(adj, p)
@@ -267,7 +269,7 @@ for fg, fg_name in zip(from_groups[:1], from_group_names[:1]):
     )
     ax = axs[-1]
     ax.axis("off")
-    stashfig(f"{fg_name}")
+    stashfig(f"{fg_name}-hop-hist" + basename)
 
 # %% [markdown]
 # ## Cluster the "superrows"
@@ -279,6 +281,8 @@ log_cluster = True
 cluster_kws = dict(
     min_components=5, max_components=40, affinity=["euclidean", "manhattan"], n_jobs=-1
 )
+
+basename += f"-normalize={normalize}-logclust={log_cluster}"
 
 fg_autoclusters = []
 print("Running GMM")
@@ -303,8 +307,6 @@ for i, (fg, fg_name) in enumerate(zip(from_groups[:1], from_group_names[:1])):
     fg_col_meta[i]["pred_labels"] = pred_labels
     fg_autoclusters.append(agmm)
 
-basename = f"-p={p}-n_init={n_init}-max_hops={max_hops}-normalize={normalize}"
-basename += f"-logclust={log_cluster}-simult={simultaneous}-stopnodes={use_stop_nodes}"
 
 # %% [markdown]
 # ##
@@ -333,8 +335,6 @@ cluster_means = fg_meta.groupby("cluster")["mean_visit"].mean()
 fg_meta["cluster_mean_visit"] = fg_meta["cluster"].map(cluster_means)
 
 out = matrixplot(
-    # np.log10(fg_hop_hists[i] + 1),
-    # np.log10(X.T + 1),
     X.T,
     ax=ax,
     col_meta=fg_meta,
@@ -350,13 +350,13 @@ out = matrixplot(
 ax = axs[-1]
 ax.axis("off")
 
-caption = f"Figure x: Hop histogram for cascades from {fg_name}. Parameters were  simultaneous cascades\n"
-caption += f"from all sensory neurons in {fg_name}, p={p}."
-caption += (
-    f"Columns (neurons) are sorted into clusters (GMM, K={k}), clusters are sorted\n"
-)
+caption = f"Figure x: Hop histogram for cascades from {fg_name}.\n"
+caption += "Cascade parameters were: "
+caption += f"p={p}, n_init={n_init}, max_hops={max_hops}, simulataneous={simultaneous}, stop_nodes={use_stop_nodes}.\n"
+caption += f"Clustering parameters were: k={k}, normalize={normalize}, log_cluster={log_cluster}.\n"
+caption += f"Columns (neurons) are sorted into clusters, clusters are sorted "
 caption += f"by mean hop, and within cluster by class, and then by the mean hop for an individual neuron."
 
 ax.invert_yaxis()
-ax.text(0, 0, caption)
+ax.text(0, 0, caption, va="center")
 stashfig(f"{fg_name}-cluster-k={k}" + basename)

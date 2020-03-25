@@ -15,6 +15,8 @@ from graspy.plot import heatmap
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
 
+sns.set_context("talk")
+
 
 def stashfig(name, **kws):
     savefig(name, foldername=FNAME, save_on=True, **kws)
@@ -173,35 +175,45 @@ n_verts = A.shape[0]
 sns.heatmap(block_probs, square=True, cmap="RdBu_r", center=0, annot=True, cbar=False)
 stashfig("sbm-B")
 
-
 matrixplot(A, row_meta=labels, col_meta=labels, cbar=False)
 stashfig("sbm")
 
 # %% [markdown]
 # ##
-p = 0.05
+p = 0.005
+max_hops = 10
+simultaneous = True
 transition_probs = to_transmission_matrix(A, p)
 
 cdispatch = TraverseDispatcher(Cascade, transition_probs, allow_loops=False, n_init=100)
-hit_hist = np.zeros((n_verts, max_hops))
-for i in np.arange(n_feedforward):
-    hit_hist += cdispatch.start(i)
+if simultaneous:
+    hit_hist = cdispatch.start(np.arange(n_feedforward))
+else:
+    hit_hist = np.zeros((n_verts, max_hops))
+    for i in np.arange(n_feedforward):
+        hit_hist += cdispatch.start(i)
 fig, axs = plt.subplots(
     3, 1, figsize=(10, 10), gridspec_kw=dict(height_ratios=[0.45, 0.45, 0.1])
 )
 ax = axs[0]
 matrixplot(hit_hist.T, ax=ax, col_meta=labels, cbar=True)
 ax.set_xlabel("Block")
+ax.set_yticks(np.arange(1, max_hops + 1) - 0.5)
+ax.set_yticklabels(np.arange(1, max_hops + 1))
 ax.set_ylabel("Hops")
 ax = axs[1]
 matrixplot(np.log10(hit_hist.T + 1), ax=ax, col_meta=labels, cbar=True)
+ax.set_yticks(np.arange(1, max_hops + 1) - 0.5)
+ax.set_yticklabels(np.arange(1, max_hops + 1))
 ax.set_ylabel("Hops")
 ax = axs[2]
 ax.axis("off")
-caption = f"Figure x: Hop histogram, cascade on feedforward SBM, p={p}.\n"
-caption += "Top - linear scale, Bottom - Log10 scale. "
+caption = f"Figure x: Hop histogram, cascade on feedforward SBM.\n"
+caption += "Top - linear scale, Bottom - Log10 scale.\n"
+caption += f"p={p}, simultaneous={simultaneous}."
 ax.text(0, 1, caption, va="top")
-stashfig(f"hop-hist-cascade-p{p}")
+stashfig(f"hop-hist-cascade-p{p}-simult{simultaneous}")
+
 # %% [markdown]
 # ##
 transition_probs = to_markov_matrix(A)

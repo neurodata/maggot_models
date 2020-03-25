@@ -96,11 +96,14 @@ def draw_colors(
             color_dict = dict(
                 zip(classes.unique(), sns.color_palette(palette, classes.nunique()))
             )
-
         # make colormap
         uni_classes = np.unique(classes)
         class_map = dict(zip(uni_classes, range(len(uni_classes))))
         color_sorted = np.vectorize(color_dict.get)(uni_classes)
+        # HACK fix the below 3 lines
+        color_sorted = np.array(color_sorted)
+        if len(color_sorted) != len(uni_classes):
+            color_sorted = color_sorted.T
         lc = ListedColormap(color_sorted)
         # map each class to an integer to use to make the color heatmap
         class_indicator = np.vectorize(class_map.get)(classes)
@@ -187,20 +190,12 @@ def draw_separators(
     # get info about the separators
     first_inds, middle_inds, middle_labels = _get_tick_info(sort_meta, sort_class)
 
-    # if ax_type == "x":
-    #     axis = ax.xaxis
-    # else:
-    #     axis = ax.yaxis
-
     # draw the border lines
     for t in first_inds:
         if ax_type == "x":
             ax.axvline(t - boost, **gridline_kws)
         else:
             ax.axhline(t - boost, **gridline_kws)
-
-    ax.xaxis.set_ticks([])
-    ax.yaxis.set_ticks([])
 
     if use_ticks:
         # add tick labels and locs
@@ -233,19 +228,22 @@ def draw_separators(
 def _process_meta(meta, sort_class):
     if meta is None and sort_class is None:
         return None, None
+    elif meta is not None and sort_class is None:
+        return meta, []
     elif isinstance(meta, pd.DataFrame):
+        # TODO need to check if string first
         try:  # if sort class is a single element
             iter(sort_class)
         except TypeError:
             sort_class = [sort_class]
-    elif isinstance(meta, pd.Series) and sort_class is None:
-        meta = meta.to_frame(name=0)
+    elif isinstance(sort_class, pd.Series) and meta is None:
+        meta = sort_class.to_frame(name=0)
         sort_class = [0]
-    elif isinstance(meta, list) and sort_class is None:
-        meta = pd.DataFrame({i: elem for i, elem in enumerate(meta)})
+    elif isinstance(sort_class, list) and meta is None:
+        meta = pd.DataFrame({i: elem for i, elem in enumerate(sort_class)})
         sort_class = list(range(meta.shape[1]))
-    elif isinstance(meta, np.ndarray) and sort_class is None:
-        meta = pd.DataFrame(meta)
+    elif isinstance(sort_class, np.ndarray) and meta is None:
+        meta = pd.DataFrame(sort_class)
         sort_class = [0]
     else:
         raise ValueError("Improper metadata spec for matrixplot")
@@ -260,24 +258,25 @@ def matrixplot(
     col_meta=None,
     row_sort_class=None,
     col_sort_class=None,
-    row_colors=None,
-    col_colors=None,
-    row_palette=None,
-    col_palette=None,
     row_class_order="size",
     col_class_order="size",
-    row_item_order=None,
-    col_item_order=None,
     row_ticks=True,
     col_ticks=True,
+    row_item_order=None,
+    col_item_order=None,
+    row_colors=None,
+    col_colors=None,
+    row_palette="tab10",
+    col_palette="tab10",
     border=True,
     minor_ticking=False,
+    tick_rot=0,
+    center=0,
     cmap="RdBu_r",
     sizes=(10, 40),
     square=False,
     gridline_kws=None,
     spinestyle_kws=None,
-    tick_rot=0,
     **kws,
 ):
     """Plotting matrices
@@ -348,8 +347,13 @@ def matrixplot(
     row_meta, row_sort_class = _process_meta(row_meta, row_sort_class)
     col_meta, col_sort_class = _process_meta(col_meta, col_sort_class)
 
+    if isinstance(col_item_order, str):
+        col_item_order = [col_item_order]
+    if isinstance(row_item_order, str):
+        row_item_order = [row_item_order]
+
     # sort the data and metadata
-    if row_meta is not None and row_sort_class is not None:
+    if row_meta is not None:
         row_perm_inds, row_meta = sort_meta(
             row_meta,
             row_sort_class,
@@ -358,7 +362,7 @@ def matrixplot(
         )
     else:
         row_perm_inds = np.arange(data.shape[0])
-    if col_meta is not None and col_sort_class is not None:
+    if col_meta is not None:
         col_perm_inds, col_meta = sort_meta(
             col_meta,
             col_sort_class,
@@ -374,9 +378,9 @@ def matrixplot(
         _, ax = plt.subplots(1, 1, figsize=(10, 10))
 
     if plot_type == "heatmap":
-        sns.heatmap(data, cmap=cmap, ax=ax, center=0, **kws)  # TODO stop hard code
+        sns.heatmap(data, cmap=cmap, ax=ax, center=center, **kws)  # TODO stop hard code
     elif plot_type == "scattermap":
-        gridmap(data, ax=ax, sizes=sizes, border=False)
+        gridmap(data, ax=ax, sizes=sizes, border=False, **kws)
 
     if square:
         ax.axis("square")
@@ -387,6 +391,7 @@ def matrixplot(
     divider = make_axes_locatable(ax)
 
     # draw colors
+    # note that top_cax and left_cax may = ax if no colors are required
     top_cax = draw_colors(
         ax,
         divider=divider,
