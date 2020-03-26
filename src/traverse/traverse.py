@@ -49,10 +49,13 @@ def collapse_multigraph(multigraph):
 
 # Maybe this class is unnecessary?
 class TraverseDispatcher:
-    def __init__(self, worker, *args, n_init=10, simultaneous=True, **kwargs):
+    def __init__(
+        self, worker, *args, n_init=10, verbose=False, simultaneous=True, **kwargs
+    ):
         self._worker = worker(*args, **kwargs)
         self.n_init = n_init
         self.simultaneous = simultaneous
+        self.verbose = verbose
 
     def start(self, start_node):
         worker = self._worker

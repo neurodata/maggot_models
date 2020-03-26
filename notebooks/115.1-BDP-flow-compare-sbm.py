@@ -71,7 +71,7 @@ def hist_from_cascade(
 low_p = 0.01
 diag_p = 0.1
 feedforward_p = 0.3
-n_blocks = 10
+n_blocks = 20
 basename = f"-{feedforward_p}-{diag_p}-{low_p}-{n_blocks}"
 
 
