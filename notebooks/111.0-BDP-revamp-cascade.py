@@ -173,7 +173,7 @@ n_verts = A.shape[0]
 sns.heatmap(block_probs, square=True, cmap="RdBu_r", center=0, annot=True, cbar=False)
 stashfig("sbm-B")
 
-matrixplot(A, row_meta=labels, col_meta=labels, cbar=False)
+matrixplot(A, row_sort_class=labels, col_sort_class=labels, cbar=False)
 stashfig("sbm")
 
 # %% [markdown]
