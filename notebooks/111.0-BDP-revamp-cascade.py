@@ -3,9 +3,7 @@
 import os
 
 import matplotlib.pyplot as plt
-import networkx as nx
 import numpy as np
-import pandas as pd
 import seaborn as sns
 from graspy.simulations import sbm
 from src.io import savefig
@@ -180,29 +178,33 @@ stashfig("sbm")
 
 # %% [markdown]
 # ##
-p = 0.005
+p = 0.05
 max_hops = 10
+n_init = 100
 simultaneous = True
 transition_probs = to_transmission_matrix(A, p)
+start_nodes = np.arange(n_feedforward)
 
-cdispatch = TraverseDispatcher(Cascade, transition_probs, allow_loops=False, n_init=100)
-if simultaneous:
-    hit_hist = cdispatch.start(np.arange(n_feedforward))
-else:
-    hit_hist = np.zeros((n_verts, max_hops))
-    for i in np.arange(n_feedforward):
-        hit_hist += cdispatch.start(i)
+cdispatch = TraverseDispatcher(
+    Cascade,
+    transition_probs,
+    allow_loops=False,
+    n_init=n_init,
+    simultaneous=simultaneous,
+)
+hit_hist = cdispatch.multistart(start_nodes)
+
 fig, axs = plt.subplots(
     3, 1, figsize=(10, 10), gridspec_kw=dict(height_ratios=[0.45, 0.45, 0.1])
 )
 ax = axs[0]
-matrixplot(hit_hist.T, ax=ax, col_meta=labels, cbar=True)
+matrixplot(hit_hist.T, ax=ax, col_sort_class=labels, cbar=True)
 ax.set_xlabel("Block")
 ax.set_yticks(np.arange(1, max_hops + 1) - 0.5)
 ax.set_yticklabels(np.arange(1, max_hops + 1))
 ax.set_ylabel("Hops")
 ax = axs[1]
-matrixplot(np.log10(hit_hist.T + 1), ax=ax, col_meta=labels, cbar=True)
+matrixplot(np.log10(hit_hist.T + 1), ax=ax, col_sort_class=labels, cbar=True)
 ax.set_yticks(np.arange(1, max_hops + 1) - 0.5)
 ax.set_yticklabels(np.arange(1, max_hops + 1))
 ax.set_ylabel("Hops")
@@ -217,32 +219,40 @@ stashfig(f"hop-hist-cascade-p{p}-simult{simultaneous}")
 # %% [markdown]
 # ##
 transition_probs = to_markov_matrix(A)
+start_nodes = np.arange(n_feedforward)
 max_hops = 10
+n_init = 100
+
 cdispatch = TraverseDispatcher(
     RandomWalk,
     transition_probs,
     allow_loops=False,
-    n_init=100,
-    max_hops=10,
+    n_init=n_init,
+    max_hops=max_hops,
     stop_nodes=np.arange((n_blocks - 1) * n_feedforward, n_blocks * n_feedforward),
+    simultaneous=False,
 )
-start_nodes = np.arange(n_feedforward)
-hit_hist = np.zeros((n_verts, max_hops))
-for start_node in start_nodes:
-    hit_hist += cdispatch.start(start_node)
+
+hit_hist = cdispatch.multistart(start_nodes)
+
 fig, axs = plt.subplots(
     3, 1, figsize=(10, 10), gridspec_kw=dict(height_ratios=[0.45, 0.45, 0.1])
 )
 ax = axs[0]
-matrixplot(hit_hist.T, ax=ax, col_meta=labels, cbar=True)
+matrixplot(hit_hist.T, ax=ax, col_sort_class=labels, cbar=True)
 ax.set_xlabel("Block")
 ax.set_ylabel("Hops")
+ax.set_yticks(np.arange(1, max_hops + 1) - 0.5)
+ax.set_yticklabels(np.arange(1, max_hops + 1))
 ax = axs[1]
-matrixplot(np.log10(hit_hist.T + 1), ax=ax, col_meta=labels, cbar=True)
+matrixplot(np.log10(hit_hist.T + 1), ax=ax, col_sort_class=labels, cbar=True)
 ax.set_ylabel("Hops")
+ax.set_yticks(np.arange(1, max_hops + 1) - 0.5)
+ax.set_yticklabels(np.arange(1, max_hops + 1))
 ax = axs[2]
 ax.axis("off")
 caption = f"Figure x: Hop histogram, random walk on feedforward SBM\n"
 caption += "Top - linear scale, Bottom - Log10 scale. "
 ax.text(0, 1, caption, va="top")
 stashfig(f"hop-hist-rw")
+

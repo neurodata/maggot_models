@@ -74,8 +74,8 @@ class TraverseDispatcher:
         else:
             n_verts = len(self._worker.transition_probs)
             hop_hist = np.zeros((n_verts, self._worker.max_hops))
-        for s in start_nodes:
-            hop_hist += self.start(s)
+            for s in start_nodes:
+                hop_hist += self.start(s)
         return hop_hist
 
 
