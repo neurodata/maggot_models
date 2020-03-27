@@ -149,6 +149,7 @@ class1_name_map = {
     "RG": "RG",
     "picky_LN": "pLN",
     "choosy_LN": "cLN",
+    "broad_LN": "bLN",
     "CN": "CN",
     "CN2": "CN2",
     "CX": "CX",

@@ -236,6 +236,7 @@ Class 1 unique values:
  "['MBIN']": 28,
  "['MBON']": 40,
  "['RG']": 54,
+ "['bLN']": 10,
  "['cLN']": 4,
  "['dSEZ' 'CN' 'LHN2']": 4,
  "['dSEZ' 'CN']": 2,
@@ -262,7 +263,7 @@ Class 1 unique values:
  "['tPN']": 10,
  "['uPN']": 42,
  "['vPN']": 8,
- '[]': 1118}
+ '[]': 1108}
 
 Class 2 unique values:
 {"['KC_subclass_1claw']": 36,
@@ -356,6 +357,8 @@ Merge class unique values:
  'RG-RG_subclass_CA-LP': 6,
  'RG-RG_subclass_IPC': 14,
  'RG-RG_subclass_ITP': 8,
+ 'bLN-broad_LN_subclass_Duet': 4,
+ 'bLN-broad_LN_subclass_Trio': 6,
  'cLN': 4,
  'dSEZ': 167,
  'dSEZ;CN': 6,
@@ -384,8 +387,6 @@ Merge class unique values:
  'tPN': 10,
  'uPN': 42,
  'unk': 1102,
- 'unk-broad_LN_subclass_Duet': 4,
- 'unk-broad_LN_subclass_Trio': 6,
  'vPN': 10}
 
 Missing lineage info for 149 skeletons
