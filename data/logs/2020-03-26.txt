@@ -1,0 +1,495 @@
+maggot_models/data/processed/2020-03-26
+Loading annotations:
+
+mw brain neurons
+brain_neurons
+
+mw left
+left
+
+mw right
+right
+
+mw dSEZ
+dSEZ
+
+mw dVNC
+dVNC
+
+mw RG
+RG
+
+mw APL
+APL
+
+mw sink
+sink
+
+mw preliminary LN
+preliminary_LN
+
+mw partially differentiated
+partially_differentiated
+
+mw unsplittable
+unsplittable
+
+mw picky LN
+picky_LN
+
+mw choosy LN
+choosy_LN
+
+mw CN
+CN
+
+mw CN2
+CN2
+
+mw CX
+CX
+
+mw FAN
+FAN
+
+mw FB2N
+FB2N
+
+mw FBN
+FBN
+
+mw FFN
+FFN
+
+mw KC_subclass_1claw
+KC_subclass_1claw
+
+mw KC_subclass_2claw
+KC_subclass_2claw
+
+mw KC_subclass_3claw
+KC_subclass_3claw
+
+mw KC_subclass_4claw
+KC_subclass_4claw
+
+mw KC_subclass_5claw
+KC_subclass_5claw
+
+mw KC_subclass_6claw
+KC_subclass_6claw
+
+mw KC
+KC
+
+mw keystone
+keystone
+
+mw LHN
+LHN
+
+mw LHN2
+LHN2
+
+mw LON
+LON
+
+mw MBIN
+MBIN
+
+mw MBON
+MBON
+
+mw motor subclass_AN
+motor_subclass_AN
+
+mw motor subclass_MN
+motor_subclass_MN
+
+mw motor subclass_PaN
+motor_subclass_PaN
+
+mw motor subclass_VAN
+motor_subclass_VAN
+
+mw motor
+motor
+
+mw mPN
+mPN
+
+mw dUnk
+dUnk
+
+mw sens subclass_AN
+sens_subclass_AN
+
+mw sens subclass_MN
+sens_subclass_MN
+
+mw sens subclass_ORN
+sens_subclass_ORN
+
+mw sens subclass_PaN
+sens_subclass_PaN
+
+mw sens subclass_photoRh5
+sens_subclass_photoRh5
+
+mw sens subclass_photoRh6
+sens_subclass_photoRh6
+
+mw sens subclass_thermo
+sens_subclass_thermo
+
+mw sens subclass_vtd
+sens_subclass_vtd
+
+mw sens
+sens
+
+mw tPN
+tPN
+
+mw uPN
+uPN
+
+mw vPN
+vPN
+
+mw RG subclass_CA-LP
+RG_subclass_CA-LP
+
+mw MBIN subclass_DAN
+MBIN_subclass_DAN
+
+mw RG subclass_IPC
+RG_subclass_IPC
+
+mw RG subclass_ITP
+RG_subclass_ITP
+
+mw mPN subclass_multi
+mPN_subclass_multi
+
+mw MBIN subclass_OAN
+MBIN_subclass_OAN
+
+mw mPN subclass_olfactory
+mPN_subclass_olfactory
+
+mw broad LN
+broad_LN
+
+mw broad LN subclass_Duet
+broad_LN_subclass_Duet
+
+mw broad LN subclass_Trio
+broad_LN_subclass_Trio
+
+mw MBON subclass_appetitive
+MBON_subclass_appetitive
+
+mw MBON subclass_aversive
+MBON_subclass_aversive
+
+mw MBON subclass_neither
+MBON_subclass_neither
+
+
+Class 1 unique values:
+{"['APL']": 2,
+ "['CN' 'FAN' 'LHN2']": 6,
+ "['CN' 'FAN']": 6,
+ "['CN' 'FBN' 'LHN']": 2,
+ "['CN' 'FBN' 'LHN2']": 4,
+ "['CN' 'FBN']": 20,
+ "['CN' 'LHN']": 30,
+ "['CN' 'LHN2']": 28,
+ "['CN' 'MBON']": 4,
+ "['CN']": 32,
+ "['CN2' 'CX' 'FBN']": 4,
+ "['CN2' 'CX']": 8,
+ "['CN2' 'FAN']": 2,
+ "['CN2' 'FBN']": 10,
+ "['CN2' 'MBIN']": 2,
+ "['CN2']": 28,
+ "['CX' 'FB2N']": 4,
+ "['CX' 'FBN']": 4,
+ "['CX' 'LHN2']": 2,
+ "['CX']": 84,
+ "['FAN' 'LHN']": 2,
+ "['FAN' 'LHN2']": 2,
+ "['FAN']": 6,
+ "['FB2N' 'LHN']": 2,
+ "['FB2N' 'LHN2']": 4,
+ "['FB2N']": 30,
+ "['FBN' 'LHN']": 2,
+ "['FBN' 'LHN2']": 4,
+ "['FBN']": 6,
+ "['KC']": 222,
+ "['LHN' 'vPN']": 2,
+ "['LHN']": 170,
+ "['LHN2' 'MBON']": 2,
+ "['LHN2']": 158,
+ "['LON']": 15,
+ "['MBIN']": 28,
+ "['MBON']": 40,
+ "['RG']": 54,
+ "['cLN']": 4,
+ "['dSEZ' 'CN' 'LHN2']": 4,
+ "['dSEZ' 'CN']": 2,
+ "['dSEZ' 'CN2']": 6,
+ "['dSEZ' 'FB2N']": 2,
+ "['dSEZ' 'LHN']": 2,
+ "['dSEZ' 'LHN2']": 4,
+ "['dSEZ' 'MBON']": 2,
+ "['dSEZ' 'dVNC' 'CN2']": 2,
+ "['dSEZ' 'dVNC']": 6,
+ "['dSEZ']": 155,
+ "['dUnk']": 8,
+ "['dVNC' 'CN']": 2,
+ "['dVNC' 'CN2' 'LHN2']": 2,
+ "['dVNC' 'CX']": 19,
+ "['dVNC' 'LHN2']": 10,
+ "['dVNC' 'RG']": 2,
+ "['dVNC']": 135,
+ "['keystone']": 2,
+ "['mPN']": 28,
+ "['motor']": 56,
+ "['pLN']": 10,
+ "['sens']": 445,
+ "['tPN']": 10,
+ "['uPN']": 42,
+ "['vPN']": 8,
+ '[]': 1118}
+
+Class 2 unique values:
+{"['KC_subclass_1claw']": 36,
+ "['KC_subclass_2claw']": 19,
+ "['KC_subclass_3claw']": 34,
+ "['KC_subclass_4claw']": 34,
+ "['KC_subclass_5claw']": 15,
+ "['KC_subclass_6claw']": 7,
+ "['MBIN_subclass_DAN']": 14,
+ "['MBIN_subclass_OAN']": 6,
+ "['MBON_subclass_appetitive']": 16,
+ "['MBON_subclass_aversive']": 12,
+ "['MBON_subclass_neither']": 8,
+ "['RG_subclass_CA-LP']": 6,
+ "['RG_subclass_IPC']": 14,
+ "['RG_subclass_ITP']": 8,
+ "['broad_LN_subclass_Duet']": 4,
+ "['broad_LN_subclass_Trio']": 6,
+ "['mPN_subclass_multi']": 16,
+ "['mPN_subclass_olfactory']": 12,
+ "['motor_subclass_AN']": 28,
+ "['motor_subclass_MN']": 18,
+ "['motor_subclass_PaN']": 4,
+ "['motor_subclass_VAN']": 6,
+ "['sens_subclass_AN']": 176,
+ "['sens_subclass_MN']": 155,
+ "['sens_subclass_ORN']": 42,
+ "['sens_subclass_PaN']": 12,
+ "['sens_subclass_photoRh5']": 10,
+ "['sens_subclass_photoRh6']": 19,
+ "['sens_subclass_thermo']": 6,
+ "['sens_subclass_vtd']": 25,
+ '[]': 2349}
+
+
+
+
+Duplicate pairs right:
+[8598886]
+
+
+
+
+
+
+Dropping pairs:
+       leftid  rightid  pair_id
+130   5289042  8598886      130
+1120  4926999  8598886     1120
+
+
+
+
+
+Finding asymmetric L/R labels
+9612903 had asymmetric class label CX, fixed
+13028455 had asymmetric class label CX, fixed
+16561429 had asymmetric class label CX, fixed
+17334530 had asymmetric class label CX, fixed
+18267838 had asymmetric class label CX, fixed
+18551732 had asymmetric class label CX, fixed
+
+
+Merge class unique values:
+{'APL': 2,
+ 'CN': 96,
+ 'CN2': 36,
+ 'CN;LHN': 32,
+ 'CX': 90,
+ 'FAN': 10,
+ 'FB2N': 38,
+ 'FBN': 28,
+ 'KC': 77,
+ 'KC-KC_subclass_1claw': 36,
+ 'KC-KC_subclass_2claw': 19,
+ 'KC-KC_subclass_3claw': 34,
+ 'KC-KC_subclass_4claw': 34,
+ 'KC-KC_subclass_5claw': 15,
+ 'KC-KC_subclass_6claw': 7,
+ 'LHN': 176,
+ 'LHN2': 160,
+ 'LON': 15,
+ 'MBIN': 10,
+ 'MBIN-MBIN_subclass_DAN': 14,
+ 'MBIN-MBIN_subclass_OAN': 6,
+ 'MBON': 12,
+ 'MBON-MBON_subclass_appetitive': 16,
+ 'MBON-MBON_subclass_aversive': 12,
+ 'MBON-MBON_subclass_neither': 8,
+ 'RG': 26,
+ 'RG-RG_subclass_CA-LP': 6,
+ 'RG-RG_subclass_IPC': 14,
+ 'RG-RG_subclass_ITP': 8,
+ 'cLN': 4,
+ 'dSEZ': 167,
+ 'dSEZ;CN': 6,
+ 'dSEZ;LHN': 2,
+ 'dSEZ;dVNC': 8,
+ 'dUnk': 8,
+ 'dVNC': 166,
+ 'dVNC;CN': 2,
+ 'dVNC;RG': 2,
+ 'keystone': 2,
+ 'mPN-mPN_subclass_multi': 16,
+ 'mPN-mPN_subclass_olfactory': 12,
+ 'motor-motor_subclass_AN': 28,
+ 'motor-motor_subclass_MN': 18,
+ 'motor-motor_subclass_PaN': 4,
+ 'motor-motor_subclass_VAN': 6,
+ 'pLN': 10,
+ 'sens-sens_subclass_AN': 176,
+ 'sens-sens_subclass_MN': 155,
+ 'sens-sens_subclass_ORN': 42,
+ 'sens-sens_subclass_PaN': 12,
+ 'sens-sens_subclass_photoRh5': 10,
+ 'sens-sens_subclass_photoRh6': 19,
+ 'sens-sens_subclass_thermo': 6,
+ 'sens-sens_subclass_vtd': 25,
+ 'tPN': 10,
+ 'uPN': 42,
+ 'unk': 1102,
+ 'unk-broad_LN_subclass_Duet': 4,
+ 'unk-broad_LN_subclass_Trio': 6,
+ 'vPN': 10}
+
+Missing lineage info for 149 skeletons
+
+Brain neurons without entry in lineage file:
+          brain_neurons   left  right  ...     Pair  Pair ID  merge_class
+1980134            True   True  False  ...       -1       -1         dVNC
+11941255           True  False  False  ...       -1       -1         dSEZ
+16501652           True   True  False  ...  3167039     1162          unk
+
+[3 rows x 74 columns]
+
+
+
+
+
+Importing raw adjacency matrices:
+
+axon-axon
+
+axon-dendrite
+
+dendrite-axon
+
+dendrite-dendrite
+
+Checking normalized weights
+axon-axon
+Same indexing!
+1.0000000000000002
+
+dendrite-axon
+Same indexing!
+1.0
+
+axon-dendrite
+Same indexing!
+1.0
+
+dendrite-dendrite
+Same indexing!
+1.0
+
+
+
+Checking for rows with Nan values
+
+These skeletons have missing values in the metadata
+[]
+
+
+
+Saving graphs:
+
+axon-axon
+axon-dendrite
+dendrite-axon
+dendrite-dendrite
+axon-axon
+dendrite-axon
+axon-dendrite
+dendrite-dendrite
+
+
+Checking graphs are the same when saved
+maggot_models/data/processed/2020-03-26
+Gaa
+True
+True
+
+Gad
+True
+True
+
+Gda
+True
+True
+
+Gdd
+True
+True
+
+Gaan
+True
+True
+
+Gdan
+True
+True
+
+Gadn
+True
+True
+
+Gddn
+True
+True
+
+G
+True
+True
+
+Gn
+True
+True
+
+Done!

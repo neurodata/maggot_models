@@ -1,15 +1,20 @@
 #%% Imports and file loading
-from pathlib import Path
 import glob
 import json
-from os import listdir
+import pprint
+import sys
 from operator import itemgetter
+from os import listdir
+from pathlib import Path
 
-import pandas as pd
 import networkx as nx
 import numpy as np
+import pandas as pd
+
+import pymaid
 from graspy.plot import gridplot
 from src.data import load_networkx
+from src.pymaid import start_instance
 
 # File locations
 base_path = Path("./maggot_models/data/raw/Maggot-Brain-Connectome/")
@@ -20,24 +25,18 @@ data_date_graphs = "2020-03-06"  # this is for the graph, not the annotations
 
 graph_types = ["axon-axon", "axon-dendrite", "dendrite-axon", "dendrite-dendrite"]
 
-data_date_groups = "2020-03-09"  # this is for the annotations
-
-class_data_folder = base_path / f"neuron-groups/{data_date_groups}"
-
-all_neuron_file = "all-neurons-with-sensories-2020-01-14.json"
-left_file = "hemisphere-L-2020-3-9.json"
-right_file = "hemisphere-R-2020-3-9.json"
-
 input_counts_file = "input_counts"
 
 pair_file = base_path / "pairs/pairs-2020-02-19.csv"
 
-output_path = Path(f"maggot_models/data/processed/{data_date_groups}")  # CHANGEME
+output_name = "2020-03-26"
+output_path = Path(f"maggot_models/data/processed/{output_name}")
+
+sys.stdout = open(f"maggot_models/data/logs/{output_name}.txt", "w")
+
+
 print(output_path)
 
-skeleton_data_file = (
-    data_path / Path(data_date_graphs) / "skeleton_id_vs_neuron_name.csv"
-)
 
 lineage_file = data_path / Path(data_date_graphs) / "skeleton_id_vs_lineage.csv"
 
@@ -54,26 +53,6 @@ def df_to_nx(df, meta_data_dict):
     return graph
 
 
-def extract_ids(lod):
-    out_list = []
-    for d in lod:
-        skel_id = d["skeleton_id"]
-        out_list.append(skel_id)
-    return out_list
-
-
-def remove_date(string):
-    datestrings = ["-2019", "-2020"]
-    for d in datestrings:
-        ind = string.find(d)
-        if ind != -1:
-            return string[:ind]
-    print(f"Could not remove date from string {string}")
-    return -1
-
-
-replace_classes = ["unk", "LHN", "LHN2"]
-
 priority_map = {
     "MBON": 1,
     "MBIN": 1,
@@ -86,10 +65,10 @@ priority_map = {
     "APL": 1,
     "LHN": 2,
     "CN": 2,
-    "O_dVNC": 2,
-    "O_dSEZ": 2,
-    "O_RG": 2,
-    "O_dUnk": 2,
+    "dVNC": 2,
+    "dSEZ": 2,
+    "RG": 2,
+    "dUnk": 2,
     "FBN": 3,
     "FAN": 3,
     "LHN2": 4,
@@ -103,129 +82,132 @@ def priority(name):
     if name in priority_map:
         return priority_map[name]
     else:
-        return np.inf
+        return 1000
 
 
-def append_class(df, id, col, name):
-    try:
-        curr_name = df.loc[i, col]
-        if not curr_name:
-            df.loc[i, col] = name
-        elif curr_name == "":
-            df.loc[i, col] += name
-        elif curr_name == "unk":  # always replace "unk"
-            df.loc[i, col] = name
-        elif priority(name) == priority(curr_name):
-            df.loc[i, col] += ";" + name
-        elif priority(name) < priority(curr_name):
-            df.loc[i, col] = name
+check_priority = np.vectorize(priority)
+
+
+def get_single_class(classes):
+    single_class = classes[0]
+    for c in classes[1:]:
+        single_class += ";" + c
+    return str(single_class)
+
+
+def get_classes(meta, class_cols, fill_unk=False):
+    all_class = []
+    single_class = []
+    n_class = []
+    for index, row in meta.iterrows():
+        classes = class_cols[row[class_cols].astype(bool)]
+        all_class.append(str(classes))
+        n_class.append(int(len(classes)))
+        if len(classes) > 0:
+            priorities = check_priority(classes)
+            inds = np.where(priorities == priorities.min())[0]
+            sc = get_single_class(classes[inds])
         else:
-            pass
-            # overridden
-        return 0
-    except KeyError:
-        print()
-        print(f"Skeleton ID {id} from metadata JSON not in graph")
-        print(f"Skeleton class was {name}")
-        return 1
-
-
-# # Begin main script
-
-meta_data_df = pd.read_csv(skeleton_data_file, delimiter=",", usecols=range(2))
-meta_data_df.rename(lambda x: x.strip(" "), axis=1, inplace=True)
-meta_data_df.head()
-
-meta_data_df.set_index("skeleton_id", inplace=True)
-skeleton_ids = meta_data_df.index.values
-print(f"There are {len(skeleton_ids)} possible nodes in the graph")
-
-# %% [markdown]
-# # Load initial files
-
-# append new cell type classes
-group_files = listdir(class_data_folder)
-
-remove_files = [all_neuron_file, left_file, right_file]
-[group_files.remove(rf) for rf in remove_files]
-
-new_group_files = []
-for f in group_files:
-    if f.endswith(".json"):
-        new_group_files.append(f)
-group_files = new_group_files
-
-# %% [markdown]
-# # Iterate over all class and subclasses, put into dicts
-print("\n\n\n\nAll classes\n\n")
-names = []
-group_map = {}
-subgroup_map = {}
-for f in group_files:
-    if "CAT" not in f:  # skip categorical ones here
-        name = remove_date(f)
-        print()
-        print(f"Processing metadata JSON for {name}")
-        with open(class_data_folder / f, "r") as json_file:
-            temp_dict = json.load(json_file)
-            temp_ids = extract_ids(temp_dict)
-            if "subclass_" in name:
-                ind = name.find("subclass_")
-                temp_name = name[ind + len("subclass_") :]  # only keep things after
-                subgroup_map[temp_name] = temp_ids
+            if fill_unk:
+                sc = "unk"
             else:
-                group_map[name] = temp_ids
+                sc = ""
+        single_class.append(sc)
+    return single_class, all_class, n_class
+
 
 # %% [markdown]
-# #
-meta_data_df["Class 1"] = "unk"
-num_missing = 0
-for name, ids in group_map.items():
-    for i in ids:
-        num_missing += append_class(meta_data_df, i, "Class 1", name)
+# ##
+print("Loading annotations:\n")
 
-print("\n\n\n\n")
-print(f"{num_missing} skeleton IDs missing from graph")
-print("\n\n\n\n")
+start_instance()
+annot_df = pymaid.get_annotated("mw neuron groups")
 
-meta_data_df["Class 2"] = ""
-for name, ids in subgroup_map.items():
-    for i in ids:
-        num_missing += append_class(meta_data_df, i, "Class 2", name)
-
-
-#%% manage the "Categorical" (true/false) labels
-print("\n\n\n\n All true/false labels")
-for f in group_files:
-    if "CAT" in f:
-        name = remove_date(f)
-        print()
-        print(f"Processing metadata JSON for {name}")
-        name = name.replace("CAT-", "")
-        meta_data_df[name] = False
-        with open(class_data_folder / f, "r") as json_file:
-            temp_dict = json.load(json_file)
-            temp_ids = extract_ids(temp_dict)
-            for i in temp_ids:
-                append_class(meta_data_df, i, name, True)
-
-# %% [markdown]
-# # Add hemisphere labels
-meta_data_df["Hemisphere"] = None
-for f in [left_file, right_file]:
-    name = remove_date(f)
-    name = name.replace("hemisphere-", "")
+series_ids = []
+for annot_name in annot_df["name"]:
+    print(annot_name)
+    ids = pymaid.get_skids_by_annotation(annot_name)
+    name = annot_name.replace("mw ", "")
+    name = name.replace(" ", "_")
     print(name)
-    with open(class_data_folder / f, "r") as json_file:
-        temp_dict = json.load(json_file)
-        temp_ids = extract_ids(temp_dict)
-        for i in temp_ids:
-            append_class(meta_data_df, i, "Hemisphere", name)
-meta_data_df.loc[17068730, "Hemisphere"] = "C"
-meta_data_df.loc[3813487, "Hemisphere"] = "C"
-print("\n\n\n\nMissing Hemisphere annotation for")
-print(meta_data_df[meta_data_df["Hemisphere"].isnull()])
+    indicator = pd.Series(
+        index=ids, data=np.ones(len(ids), dtype=bool), name=name, dtype=bool
+    )
+    series_ids.append(indicator)
+    print()
 
+
+# %% [markdown]
+# ##
+meta = pd.concat(series_ids, axis=1, ignore_index=False)
+meta.fillna(False, inplace=True)
+
+class1_name_map = {
+    "APL": "APL",
+    "dSEZ": "dSEZ",
+    "dVNC": "dVNC",
+    "RG": "RG",
+    "picky_LN": "pLN",
+    "choosy_LN": "cLN",
+    "CN": "CN",
+    "CN2": "CN2",
+    "CX": "CX",
+    "FAN": "FAN",
+    "FB2N": "FB2N",
+    "FBN": "FBN",
+    "KC": "KC",
+    "keystone": "keystone",
+    "LHN": "LHN",
+    "LHN2": "LHN2",
+    "LON": "LON",
+    "MBIN": "MBIN",
+    "MBON": "MBON",
+    "motor": "motor",
+    "mPN": "mPN",
+    "dUnk": "dUnk",
+    "sens": "sens",
+    "tPN": "tPN",
+    "uPN": "uPN",
+    "vPN": "vPN",
+}
+
+
+meta.rename(class1_name_map, axis=1, inplace=True)
+
+# %% [markdown]
+# ##
+class1_cols = np.array(list(class1_name_map.values()))
+
+
+single_class1, all_class1, n_class1 = get_classes(meta, class1_cols, fill_unk=True)
+
+meta["class1"] = single_class1
+meta["all_class1"] = all_class1
+meta["n_class1"] = n_class1
+
+
+# %% [markdown]
+# ##
+class2_cols = []
+for c in meta.columns.values:
+    if "subclass" in c:
+        class2_cols.append(c)
+class2_cols = np.array(class2_cols)
+
+single_class2, all_class2, n_class2 = get_classes(meta, class2_cols)
+meta["class2"] = single_class2
+meta["all_class2"] = all_class2
+meta["n_class2"] = n_class2
+
+# %% [markdown]
+# ##
+print()
+print("Class 1 unique values:")
+pprint.pprint(dict(zip(*np.unique(all_class1, return_counts=True))))
+print()
+print("Class 2 unique values:")
+pprint.pprint(dict(zip(*np.unique(all_class2, return_counts=True))))
+print()
 # %% [markdown]
 # # Pairs
 
@@ -241,27 +223,27 @@ dup_right_inds = np.where(right_counts != 1)[0]
 dup_left_ids = uni_left[dup_left_inds]
 dup_right_ids = uni_right[dup_right_inds]
 
-print("\n\n\n\n")
+print("\n\n")
 if len(dup_left_inds) > 0:
     print("Duplicate pairs left:")
     print(dup_left_ids)
 if len(dup_right_inds) > 0:
     print("Duplicate pairs right:")
     print(dup_right_ids)
-print("\n\n\n\n")
+print("\n\n")
 
 drop_df = pair_df[
     pair_df["leftid"].isin(dup_left_ids) | pair_df["rightid"].isin(dup_right_ids)
 ]
-print("\n\n\n\n")
+print("\n\n")
 print("Dropping pairs:")
 print(drop_df)
-print("\n\n\n\n")
+print("\n\n")
 
 pair_df.drop(drop_df.index, axis=0, inplace=True)
 
 pair_ids = np.concatenate((pair_df["leftid"].values, pair_df["rightid"].values))
-meta_ids = meta_data_df.index.values
+meta_ids = meta.index.values
 in_meta_ids = np.isin(pair_ids, meta_ids)
 drop_ids = pair_ids[~in_meta_ids]
 pair_df = pair_df[~pair_df["leftid"].isin(drop_ids)]
@@ -271,28 +253,28 @@ left_to_right_df = pair_df.set_index("leftid")
 right_to_left_df = pair_df.set_index("rightid")
 right_to_left_df.head()
 
-meta_data_df["Pair"] = -1
-meta_data_df["Pair ID"] = -1
-meta_data_df.loc[left_to_right_df.index, "Pair"] = left_to_right_df["rightid"]
-meta_data_df.loc[right_to_left_df.index, "Pair"] = right_to_left_df["leftid"]
+meta["Pair"] = -1
+meta["Pair ID"] = -1
+meta.loc[left_to_right_df.index, "Pair"] = left_to_right_df["rightid"]
+meta.loc[right_to_left_df.index, "Pair"] = right_to_left_df["leftid"]
 
-meta_data_df.loc[left_to_right_df.index, "Pair ID"] = left_to_right_df["pair_id"]
-meta_data_df.loc[right_to_left_df.index, "Pair ID"] = right_to_left_df["pair_id"]
+meta.loc[left_to_right_df.index, "Pair ID"] = left_to_right_df["pair_id"]
+meta.loc[right_to_left_df.index, "Pair ID"] = right_to_left_df["pair_id"]
 
 #%% Fix places where L/R labels are not the same
-print("\n\n\n\nFinding asymmetric L/R labels")
-for i in range(len(meta_data_df)):
-    my_id = meta_data_df.index[i]
-    my_class = meta_data_df.loc[my_id, "Class 1"]
-    partner_id = meta_data_df.loc[my_id, "Pair"]
+print("\n\nFinding asymmetric L/R labels")
+for i in range(len(meta)):
+    my_id = meta.index[i]
+    my_class = meta.loc[my_id, "class1"]
+    partner_id = meta.loc[my_id, "Pair"]
     if partner_id != -1:
-        partner_class = meta_data_df.loc[partner_id, "Class 1"]
+        partner_class = meta.loc[partner_id, "class1"]
         if partner_class != "unk" and my_class == "unk":
             print(f"{my_id} had asymmetric class label {partner_class}, fixed")
-            meta_data_df.loc[my_id, "Class 1"] = partner_class
+            meta.loc[my_id, "class1"] = partner_class
         elif (partner_class != my_class) and (partner_class != "unk"):
             msg = (
-                f"{meta_data_df.index[i]} and partner {partner_id} have different labels"
+                f"{meta.index[i]} and partner {partner_id} have different labels"
                 + f", labels are {my_class}, {partner_class}"
             )
             print(msg)
@@ -302,26 +284,27 @@ print()
 # #
 
 # Merge class (put class 1 and class 2 together as a column)
-meta_data_df["Merge Class"] = ""
-for i in meta_data_df.index.values:
-    merge_class = meta_data_df.loc[i, "Class 1"]
-    if meta_data_df.loc[i, "Class 2"] != "":
-        merge_class += "-" + meta_data_df.loc[i, "Class 2"]
-    meta_data_df.loc[i, "Merge Class"] = merge_class
+meta["merge_class"] = ""
+for i in meta.index.values:
+    merge_class = meta.loc[i, "class1"]
+    if meta.loc[i, "class2"] != "":
+        merge_class += "-" + meta.loc[i, "class2"]
+    meta.loc[i, "merge_class"] = merge_class
 
-
-#%% lineagees
+print()
+print("Merge class unique values:")
+pprint.pprint(dict(zip(*np.unique(meta["merge_class"], return_counts=True))))
+print()
+#%% lineages
 lineage_df = pd.read_csv(lineage_file)
 lineage_df = lineage_df.set_index("skeleton_id")
 lineage_df = lineage_df.fillna("unk")
 # ignore lineages for nonexistent skeletons
-lineage_df = lineage_df[lineage_df.index.isin(meta_data_df.index)]
-print(f"Missing lineage info for {len(meta_data_df) - len(lineage_df)} skeletons")
+lineage_df = lineage_df[lineage_df.index.isin(meta.index)]
+print(f"Missing lineage info for {len(meta) - len(lineage_df)} skeletons")
 print()
 print(f"Brain neurons without entry in lineage file:")
-print(
-    meta_data_df[~meta_data_df.index.isin(lineage_df.index) & meta_data_df["is_brain"]]
-)
+print(meta[~meta.index.isin(lineage_df.index) & meta["brain_neurons"]])
 print("\n\n\n\n")
 
 
@@ -338,9 +321,9 @@ def filter(string):
 
 lineages = lineage_df["lineage"]
 lineages = np.vectorize(filter)(lineages)
-meta_data_df["lineage"] = "unk"
-meta_data_df.loc[lineage_df.index, "lineage"] = lineages
-nulls = meta_data_df[meta_data_df.isnull().any(axis=1)]
+meta["lineage"] = "unk"
+meta.loc[lineage_df.index, "lineage"] = lineages
+nulls = meta[meta.isnull().any(axis=1)]
 
 input_counts_path = data_path / data_date_graphs / (input_counts_file + ".csv")
 input_counts_df = pd.read_csv(input_counts_path, index_col=0)
@@ -348,21 +331,20 @@ cols = input_counts_df.columns.values
 cols = [str(c).strip(" ") for c in cols]
 input_counts_df.columns = cols
 
-meta_data_df.loc[input_counts_df.index, "dendrite_input"] = input_counts_df[
-    "dendrite_inputs"
-]
-meta_data_df.loc[input_counts_df.index, "axon_input"] = input_counts_df["axon_inputs"]
-
-meta_data_dict = meta_data_df.to_dict(orient="index")
+meta.loc[input_counts_df.index, "dendrite_input"] = input_counts_df["dendrite_inputs"]
+meta.loc[input_counts_df.index, "axon_input"] = input_counts_df["axon_inputs"]
 
 
 #%% Import the raw graphs
+print("Importing raw adjacency matrices:\n")
 nx_graphs_raw = {}
 df_graphs_raw = {}
 for graph_type in graph_types:
     print(graph_type)
     edgelist_path = data_path / data_date_graphs / (graph_type + ".csv")
     adj = pd.read_csv(edgelist_path, index_col=0)
+    meta = meta.reindex(adj.index)
+    meta_data_dict = meta.to_dict(orient="index")
     graph = df_to_nx(adj, meta_data_dict)
     nx_graphs_raw[graph_type] = graph
     df_graphs_raw[graph_type] = adj
@@ -414,9 +396,9 @@ for graph_type in ["axon-dendrite", "dendrite-dendrite"]:
 
 #%%
 
-print("\n\n\n\nChecking for rows with Nan values")
+print("\n\nChecking for rows with Nan values")
 missing_na = []
-nan_df = meta_data_df[meta_data_df.isna().any(axis=1)]
+nan_df = meta[meta.isna().any(axis=1)]
 for row in nan_df.index:
     na_ind = nan_df.loc[row].isna()
     print(nan_df.loc[row][na_ind])
@@ -424,7 +406,8 @@ for row in nan_df.index:
 print()
 print("These skeletons have missing values in the metadata")
 print(missing_na)
-print("\n\n\n\n")
+print("\n\n")
+
 
 #%% All-all graph
 total_input = (
@@ -451,6 +434,7 @@ nx_all_norm = df_to_nx(df_all_norm, meta_data_dict)
 
 #%% Save
 
+print("Saving graphs:\n")
 out_graphs = []
 [out_graphs.append(i) for i in nx_graphs_raw.values()]
 [print(i) for i in nx_graphs_raw.keys()]
@@ -466,10 +450,10 @@ save_names.append("Gn")
 for name, graph in zip(save_names, out_graphs):
     nx.write_graphml(graph, output_path / (name + ".graphml"))
 
-meta_data_df.to_csv(output_path / "meta_data.csv")
+meta.to_csv(output_path / "meta_data.csv")
 
 #%% verify things are right
-print("\n\n\n\nChecking graphs are the same when saved")
+print("\n\nChecking graphs are the same when saved")
 print(output_path)
 for name, graph_wrote in zip(save_names, out_graphs):
     print(name)
@@ -477,8 +461,10 @@ for name, graph_wrote in zip(save_names, out_graphs):
     adj_read = nx.to_numpy_array(graph_read)
     adj_wrote = nx.to_numpy_array(graph_wrote)
     print(np.array_equal(adj_read, adj_wrote))
-    graph_loader = load_networkx(name, version=data_date_groups)
+    graph_loader = load_networkx(name, version=output_name)
     adj_loader = nx.to_numpy_array(graph_loader)
     print(np.array_equal(adj_wrote, adj_loader))
     print()
 
+print("Done!")
+sys.stdout.close()
