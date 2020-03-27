@@ -2,199 +2,134 @@ maggot_models/data/processed/2020-03-26
 Loading annotations:
 
 mw brain neurons
-brain_neurons
 
 mw left
-left
 
 mw right
-right
 
 mw dSEZ
-dSEZ
 
 mw dVNC
-dVNC
 
 mw RG
-RG
 
 mw APL
-APL
 
 mw sink
-sink
 
 mw preliminary LN
-preliminary_LN
 
 mw partially differentiated
-partially_differentiated
 
 mw unsplittable
-unsplittable
 
 mw picky LN
-picky_LN
 
 mw choosy LN
-choosy_LN
 
 mw CN
-CN
 
 mw CN2
-CN2
 
 mw CX
-CX
 
 mw FAN
-FAN
 
 mw FB2N
-FB2N
 
 mw FBN
-FBN
 
 mw FFN
-FFN
 
 mw KC_subclass_1claw
-KC_subclass_1claw
 
 mw KC_subclass_2claw
-KC_subclass_2claw
 
 mw KC_subclass_3claw
-KC_subclass_3claw
 
 mw KC_subclass_4claw
-KC_subclass_4claw
 
 mw KC_subclass_5claw
-KC_subclass_5claw
 
 mw KC_subclass_6claw
-KC_subclass_6claw
 
 mw KC
-KC
 
 mw keystone
-keystone
 
 mw LHN
-LHN
 
 mw LHN2
-LHN2
 
 mw LON
-LON
 
 mw MBIN
-MBIN
 
 mw MBON
-MBON
 
 mw motor subclass_AN
-motor_subclass_AN
 
 mw motor subclass_MN
-motor_subclass_MN
 
 mw motor subclass_PaN
-motor_subclass_PaN
 
 mw motor subclass_VAN
-motor_subclass_VAN
 
 mw motor
-motor
 
 mw mPN
-mPN
 
 mw dUnk
-dUnk
 
 mw sens subclass_AN
-sens_subclass_AN
 
 mw sens subclass_MN
-sens_subclass_MN
 
 mw sens subclass_ORN
-sens_subclass_ORN
 
 mw sens subclass_PaN
-sens_subclass_PaN
 
 mw sens subclass_photoRh5
-sens_subclass_photoRh5
 
 mw sens subclass_photoRh6
-sens_subclass_photoRh6
 
 mw sens subclass_thermo
-sens_subclass_thermo
 
 mw sens subclass_vtd
-sens_subclass_vtd
 
 mw sens
-sens
 
 mw tPN
-tPN
 
 mw uPN
-uPN
 
 mw vPN
-vPN
 
 mw RG subclass_CA-LP
-RG_subclass_CA-LP
 
 mw MBIN subclass_DAN
-MBIN_subclass_DAN
 
 mw RG subclass_IPC
-RG_subclass_IPC
 
 mw RG subclass_ITP
-RG_subclass_ITP
 
 mw mPN subclass_multi
-mPN_subclass_multi
 
 mw MBIN subclass_OAN
-MBIN_subclass_OAN
 
 mw mPN subclass_olfactory
-mPN_subclass_olfactory
 
 mw broad LN
-broad_LN
 
 mw broad LN subclass_Duet
-broad_LN_subclass_Duet
 
 mw broad LN subclass_Trio
-broad_LN_subclass_Trio
 
 mw MBON subclass_appetitive
-MBON_subclass_appetitive
 
 mw MBON subclass_aversive
-MBON_subclass_aversive
 
 mw MBON subclass_neither
-MBON_subclass_neither
 
 
 Class 1 unique values:
@@ -337,28 +272,28 @@ Merge class unique values:
  'FB2N': 38,
  'FBN': 28,
  'KC': 77,
- 'KC-KC_subclass_1claw': 36,
- 'KC-KC_subclass_2claw': 19,
- 'KC-KC_subclass_3claw': 34,
- 'KC-KC_subclass_4claw': 34,
- 'KC-KC_subclass_5claw': 15,
- 'KC-KC_subclass_6claw': 7,
+ 'KC-1claw': 36,
+ 'KC-2claw': 19,
+ 'KC-3claw': 34,
+ 'KC-4claw': 34,
+ 'KC-5claw': 15,
+ 'KC-6claw': 7,
  'LHN': 176,
  'LHN2': 160,
  'LON': 15,
  'MBIN': 10,
- 'MBIN-MBIN_subclass_DAN': 14,
- 'MBIN-MBIN_subclass_OAN': 6,
+ 'MBIN-DAN': 14,
+ 'MBIN-OAN': 6,
  'MBON': 12,
- 'MBON-MBON_subclass_appetitive': 16,
- 'MBON-MBON_subclass_aversive': 12,
- 'MBON-MBON_subclass_neither': 8,
+ 'MBON-app': 16,
+ 'MBON-av': 12,
+ 'MBON-neith': 8,
  'RG': 26,
- 'RG-RG_subclass_CA-LP': 6,
- 'RG-RG_subclass_IPC': 14,
- 'RG-RG_subclass_ITP': 8,
- 'bLN-broad_LN_subclass_Duet': 4,
- 'bLN-broad_LN_subclass_Trio': 6,
+ 'RG-CA-LP': 6,
+ 'RG-IPC': 14,
+ 'RG-ITP': 8,
+ 'bLN-Duet': 4,
+ 'bLN-Trio': 6,
  'cLN': 4,
  'dSEZ': 167,
  'dSEZ;CN': 6,
@@ -369,21 +304,21 @@ Merge class unique values:
  'dVNC;CN': 2,
  'dVNC;RG': 2,
  'keystone': 2,
- 'mPN-mPN_subclass_multi': 16,
- 'mPN-mPN_subclass_olfactory': 12,
- 'motor-motor_subclass_AN': 28,
- 'motor-motor_subclass_MN': 18,
- 'motor-motor_subclass_PaN': 4,
- 'motor-motor_subclass_VAN': 6,
+ 'mPN-multi': 16,
+ 'mPN-olfac': 12,
+ 'motor-AN': 28,
+ 'motor-MN': 18,
+ 'motor-PaN': 4,
+ 'motor-VAN': 6,
  'pLN': 10,
- 'sens-sens_subclass_AN': 176,
- 'sens-sens_subclass_MN': 155,
- 'sens-sens_subclass_ORN': 42,
- 'sens-sens_subclass_PaN': 12,
- 'sens-sens_subclass_photoRh5': 10,
- 'sens-sens_subclass_photoRh6': 19,
- 'sens-sens_subclass_thermo': 6,
- 'sens-sens_subclass_vtd': 25,
+ 'sens-AN': 176,
+ 'sens-MN': 155,
+ 'sens-ORN': 42,
+ 'sens-PaN': 12,
+ 'sens-photoRh5': 10,
+ 'sens-photoRh6': 19,
+ 'sens-thermo': 6,
+ 'sens-vtd': 25,
  'tPN': 10,
  'uPN': 42,
  'unk': 1102,
@@ -392,10 +327,10 @@ Merge class unique values:
 Missing lineage info for 149 skeletons
 
 Brain neurons without entry in lineage file:
-          brain_neurons   left  right  ...     Pair  Pair ID  merge_class
-1980134            True   True  False  ...       -1       -1         dVNC
-11941255           True  False  False  ...       -1       -1         dSEZ
-16501652           True   True  False  ...  3167039     1162          unk
+          brain_neurons   left  right   dSEZ   dVNC     RG    APL   sink  preliminary_LN  ...  class1  all_class1  n_class1  class2  all_class2  n_class2     Pair  Pair ID  merge_class
+1980134            True   True  False  False   True  False  False  False           False  ...    dVNC    ['dVNC']         1                  []         0       -1       -1         dVNC
+11941255           True  False  False   True  False  False  False  False           False  ...    dSEZ    ['dSEZ']         1                  []         0       -1       -1         dSEZ
+16501652           True   True  False  False  False  False  False  False           False  ...     unk          []         0                  []         0  3167039     1162          unk
 
 [3 rows x 74 columns]
 

@@ -129,7 +129,6 @@ for annot_name in annot_df["name"]:
     ids = pymaid.get_skids_by_annotation(annot_name)
     name = annot_name.replace("mw ", "")
     name = name.replace(" ", "_")
-    print(name)
     indicator = pd.Series(
         index=ids, data=np.ones(len(ids), dtype=bool), name=name, dtype=bool
     )
@@ -175,6 +174,7 @@ class1_name_map = {
 
 meta.rename(class1_name_map, axis=1, inplace=True)
 
+
 # %% [markdown]
 # ##
 class1_cols = np.array(list(class1_name_map.values()))
@@ -195,7 +195,33 @@ for c in meta.columns.values:
         class2_cols.append(c)
 class2_cols = np.array(class2_cols)
 
+
 single_class2, all_class2, n_class2 = get_classes(meta, class2_cols)
+
+
+def remove_subclass(string):
+    ind = string.find("subclass_")
+    return string[ind + len("subclass_") :]
+
+
+class2_name_map = {
+    "appetitive": "app",
+    "aversive": "av",
+    "neither": "neith",
+    "olfactory": "olfac",
+}
+
+
+def name_mapper(string, name_map):
+    if string in name_map:
+        return name_map[string]
+    else:
+        return string
+
+
+single_class2 = np.vectorize(remove_subclass)(single_class2)
+single_class2 = np.vectorize(lambda x: name_mapper(x, class2_name_map))(single_class2)
+
 meta["class2"] = single_class2
 meta["all_class2"] = all_class2
 meta["n_class2"] = n_class2
