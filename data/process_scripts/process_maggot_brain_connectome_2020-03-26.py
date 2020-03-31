@@ -235,6 +235,15 @@ print()
 print("Class 2 unique values:")
 pprint.pprint(dict(zip(*np.unique(all_class2, return_counts=True))))
 print()
+
+# %% [markdown]
+# ## Hemisphere
+meta["hemisphere"] = "C"  # default is center
+left_meta = meta[meta["left"]]
+meta.loc[left_meta.index, "hemisphere"] = "L"
+right_meta = meta[meta["right"]]
+meta.loc[right_meta.index, "hemisphere"] = "R"
+
 # %% [markdown]
 # # Pairs
 

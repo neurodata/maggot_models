@@ -1,6 +1,7 @@
 import numpy as np
 import itertools
 import networkx as nx
+from tqdm import tqdm
 
 
 def path_to_visits(paths, n_verts, from_order=True, out_inds=[]):
@@ -60,7 +61,7 @@ class TraverseDispatcher:
     def start(self, start_node):
         worker = self._worker
         hit_hist = np.zeros((worker.n_verts, worker.max_hops))
-        for i in range(self.n_init):
+        for i in tqdm(range(self.n_init)):
             worker.start(start_node)
             traversal = worker.traversal_
             for level, nodes in enumerate(traversal):

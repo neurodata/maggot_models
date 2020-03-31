@@ -26,7 +26,8 @@ def sort_meta(meta, sort_class, sort_item=None, class_order="size"):
         total_sort_by.append(sc)
     total_sort_by += sort_item
     meta["sort_idx"] = range(len(meta))
-    meta.sort_values(total_sort_by, inplace=True)
+    if len(total_sort_by) > 0:
+        meta.sort_values(total_sort_by, inplace=True)
     perm_inds = meta["sort_idx"].values
     return perm_inds, meta
 
@@ -232,10 +233,13 @@ def _process_meta(meta, sort_class):
         return meta, []
     elif isinstance(meta, pd.DataFrame):
         # TODO need to check if string first
-        try:  # if sort class is a single element
-            iter(sort_class)
-        except TypeError:
+        if isinstance(sort_class, str):
             sort_class = [sort_class]
+        else:
+            try:  # if sort class is a single element
+                iter(sort_class)
+            except TypeError:
+                raise TypeError("`sort_class` must be an iterable or string")
     elif isinstance(sort_class, pd.Series) and meta is None:
         meta = sort_class.to_frame(name=0)
         sort_class = [0]
@@ -339,6 +343,10 @@ def matrixplot(
     tick_fontsize = 10
     tick_pad = [0, 0]
     base_tick_pad = 5
+
+    plot_type_opts = ["scattermap", "heatmap"]
+    if plot_type not in plot_type_opts:
+        raise ValueError(f"`plot_type` must be one of {plot_type_opts}")
 
     if spinestyle_kws is None:
         spinestyle_kws = dict(linestyle="-", linewidth=1, alpha=0.7, color="black")

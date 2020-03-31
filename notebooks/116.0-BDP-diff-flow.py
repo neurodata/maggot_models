@@ -1,6 +1,5 @@
 # %% [markdown]
 # ##
-from src.hierarchy import signal_flow
 from src.data import load_metagraph
 from src.visualization import matrixplot
 from src.visualization import CLASS_COLOR_DICT
@@ -25,7 +24,7 @@ def stashfig(name, **kws):
     savefig(name, foldername=FNAME, save_on=True, **kws)
 
 
-VERSION = "2020-03-09"
+VERSION = "2020-03-26"
 print(f"Using version {VERSION}")
 graph_types = ["G", "Gad", "Gaa", "Gdd", "Gda"]
 threshold = 0
@@ -48,20 +47,31 @@ for graph_type in graph_types:
     )
     graphs.append(mg)
 
+# %% [markdown]
+# ##
+mg = graphs[0]
+mg.meta.merge_class.unique()
+# %% [markdown]
+# ##
+
+
 inout = "sensory_to_out"
 if inout == "sensory_to_out":
     out_classes = [
-        "O_dSEZ",
-        "O_dSEZ;CN",
-        "O_dSEZ;LHN",
-        "O_dVNC",
-        "O_dVNC;O_RG",
-        "O_dVNC;CN",
-        "O_RG",
-        "O_dUnk",
-        "O_RG-IPC",
-        "O_RG-ITP",
-        "O_RG-CA-LP",
+        "dSEZ",
+        "dVNC",
+        "motor-PaN",
+        "RG",
+        "RG-IPC",
+        "dUnk",
+        "RG-ITP",
+        "RG-CA-LP",
+        "dVNC;CN",
+        "dVNC;RG",
+        "motor-MN",
+        "dSEZ;CN",
+        "dSEZ;dVNC",
+        "dSEZ;LHN",
     ]
     from_groups = [
         ("sens-ORN",),
@@ -73,28 +83,28 @@ if inout == "sensory_to_out":
     ]
     from_group_names = ["Odor", "Photo", "MN", "Temp", "VTD", "AN"]
 
-if inout == "out_to_sensory":
-    from_groups = [
-        ("motor-mAN", "motormVAN", "motor-mPaN"),
-        ("O_dSEZ", "O_dVNC;O_dSEZ", "O_dSEZ;CN", "LHN;O_dSEZ"),
-        ("O_dVNC", "O_dVNC;CN", "O_RG;O_dVNC", "O_dVNC;O_dSEZ"),
-        ("O_RG", "O_RG-IPC", "O_RG-ITP", "O_RG-CA-LP", "O_RG;O_dVNC"),
-        ("O_dUnk",),
-    ]
-    from_group_names = ["Motor", "SEZ", "VNC", "RG", "dUnk"]
-    out_classes = [
-        "sens-ORN",
-        "sens-photoRh5",
-        "sens-photoRh6",
-        "sens-MN",
-        "sens-thermo",
-        "sens-vtd",
-        "sens-AN",
-    ]
+# if inout == "out_to_sensory":
+#     from_groups = [
+#         ("motor-mAN", "motormVAN", "motor-mPaN"),
+#         ("O_dSEZ", "O_dVNC;O_dSEZ", "O_dSEZ;CN", "LHN;O_dSEZ"),
+#         ("O_dVNC", "O_dVNC;CN", "O_RG;O_dVNC", "O_dVNC;O_dSEZ"),
+#         ("O_RG", "O_RG-IPC", "O_RG-ITP", "O_RG-CA-LP", "O_RG;O_dVNC"),
+#         ("O_dUnk",),
+#     ]
+#     from_group_names = ["Motor", "SEZ", "VNC", "RG", "dUnk"]
+#     out_classes = [
+#         "sens-ORN",
+#         "sens-photoRh5",
+#         "sens-photoRh6",
+#         "sens-MN",
+#         "sens-thermo",
+#         "sens-vtd",
+#         "sens-AN",
+#     ]
 
 from_classes = list(chain.from_iterable(from_groups))  # make this a flat list
 
-class_key = "Merge Class"
+class_key = "merge_class"
 
 
 # %% [markdown]
@@ -104,6 +114,7 @@ class_key = "Merge Class"
 def compute_mean_visit(hop_hist):
     n_visits = np.sum(hop_hist, axis=0)
     weight_sum_visits = (np.arange(1, max_hops + 1)[:, None] * hop_hist).sum(axis=0)
+    weight_sum_visits[weight_sum_visits == 0] = np.inf  # cells that are never visited
     mean_visit = weight_sum_visits / n_visits
     return mean_visit
 
@@ -113,10 +124,11 @@ from src.traverse import to_transmission_matrix, Cascade, TraverseDispatcher
 sns.set_context("talk", font_scale=1.25)
 
 max_hops = 10
-n_init = 10
-p = 0.03
+n_init = 100
+p = 0.05
 traverse = Cascade
 simultaneous = True
+sorter = "casc_mean_visit"
 
 graph_sfs = []
 print("Generating cascades")
@@ -162,23 +174,32 @@ for mg, graph_type in zip(graphs, graph_types):
     meta["back_mean_visit"] = compute_mean_visit(back_hop_hist)
     meta["diff"] = meta["casc_mean_visit"] - meta["back_mean_visit"]
 
+# %% [markdown]
+# ##
+sorter = "diff"
+for mg, graph_type in zip(graphs, graph_types):
+    print(graph_type)
+    # get out the graph and relevant nodes
+    meta = mg.meta
+
     fig, ax = plt.subplots(1, 1, figsize=(20, 20))
     matrixplot(
         mg.adj,
         ax=ax,
         col_meta=meta,
         row_meta=meta,
-        col_item_order="diff",
-        row_item_order="diff",
-        col_colors="Merge Class",
-        row_colors="Merge Class",
+        col_item_order=sorter,
+        row_item_order=sorter,
+        col_colors="merge_class",
+        row_colors="merge_class",
         col_palette=CLASS_COLOR_DICT,
         row_palette=CLASS_COLOR_DICT,
         plot_type="scattermap",
         sizes=(2.5, 5),
     )
-    fig.suptitle(f"{graph_type}, signal flow sorted", y=0.91)
-    stashfig(f"sort-scattermap-{graph_type}")
+    fig.suptitle(f"{graph_type}, {sorter} sorted", y=0.91)
+    stashfig(f"sort-{sorter}-scattermap-{graph_type}")
+
 
 # %% [markdown]
 # ## plot the rank orders for each
@@ -188,7 +209,7 @@ from scipy.stats import rankdata
 sfs = []
 rank_sfs = []
 for mg, name in zip(graphs, graph_types):
-    sf = mg.meta["signal_flow"].copy()
+    sf = mg.meta[sorter].copy()
     sf.name = name
     sfs.append(sf)
     rank_sf = rankdata(sf)
@@ -200,7 +221,7 @@ sns.pairplot(sf_df)
 # %% [markdown]
 # ##
 rank_sf_df = pd.DataFrame(rank_sfs).T
-rank_sf_df.loc[meta.index, "class"] = meta["Merge Class"]
+rank_sf_df.loc[meta.index, "class"] = meta["merge_class"]
 pg = sns.PairGrid(
     rank_sf_df, vars=graph_types, hue="class", palette=CLASS_COLOR_DICT, corner=True
 )
@@ -237,7 +258,4 @@ def hide_current_axis(*args, **kwds):
 
 pg.map_offdiag(tweak)
 pg.map_diag(remove_diag)
-stashfig("rank-sf-pairs")
-# %% [markdown]
-# ## plot sorted by some kind of random walk thingy
-
+stashfig(f"rank-{sorter}-pairs")

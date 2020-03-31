@@ -80,7 +80,7 @@ def load_networkx(graph_type, version="2019-09-18-v2"):
     return graph
 
 
-def load_metagraph(graph_type, version="2019-12-18"):
+def load_metagraph(graph_type, version="2020-03-26"):
     if graph_type == "non-Gaa":
         graph_types = ["Gad", "Gda", "Gdd"]
         g = load_networkx(graph_types[0], version)

@@ -180,7 +180,7 @@ class MetaGraph:
         )
         # specify whether this is ipsilateral or contralateral
         edgelist_df["is_ipsi"] = (
-            edgelist_df["source Hemisphere"] == edgelist_df["target Hemisphere"]
+            edgelist_df["source hemisphere"] == edgelist_df["target hemisphere"]
         )
         # now that we have specified side as well, max # here is 2 (one on each side)
         edgelist_df["edge pairs"] = list(
@@ -272,7 +272,7 @@ class MetaGraph:
                 raise ValueError(f"Edge from {row_id} to {col_id} does not exist")
 
     def remove_pdiff(self):
-        not_pdiff = np.where(~self.meta["is_pdiff"])[0]
+        not_pdiff = np.where(~self.meta["partially_differentiated"])[0]
         return self.reindex(not_pdiff)
 
 

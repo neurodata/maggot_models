@@ -1,7 +1,11 @@
+# %% [markdown]
+# ##
 import colorcet as cc
 import numpy as np
 
 import matplotlib.pyplot as plt
+
+from src.data import load_metagraph
 
 CLASS_IND_DICT = {
     "KC": 0,
@@ -15,7 +19,10 @@ CLASS_IND_DICT = {
     "MBIN": 121,
     "MBIN-DAN": 58,
     "MBIN-OAN": 5,
-    "MBON": 172,  # 43,
+    "MBON": 172,
+    "MBON-av": 200,
+    "MBON-app": 234,
+    "MBON-neith": 172,  # 43,
     "sens-AN": 1,
     "sens-MN": 12,
     "sens-ORN": 51,
@@ -38,28 +45,30 @@ CLASS_IND_DICT = {
     "FB2N": 21,
     "FBN": 50,
     "FFN": 52,
-    "O_dSEZ;FB2N": 21,
-    "O_dSEZ;FFN": 52,
-    "O_RG-CA-LP": 42,
-    "O_RG-IPC": 42,
-    "O_RG-ITP": 42,
-    "O_RG": 42,
-    "O_dSEZ": 124,
-    "O_dSEZ;CN": 124,
-    "O_dSEZ;LHN": 124,
-    "LHN;O_dSEZ": 124,
-    "O_dVNC": 38,
-    "O_dVNC;CN": 38,
-    "O_dVNC;O_RG": 38,
-    "O_RG;O_dVNC": 38,
-    "O_dVNC;O_dSEZ": 38,
-    "O_dUnk": 105,
+    "dSEZ;FB2N": 21,
+    "dSEZ;FFN": 52,
+    "RG-CA-LP": 42,
+    "RG-IPC": 42,
+    "RG-ITP": 42,
+    "RG": 42,
+    "dSEZ": 124,
+    "dSEZ;CN": 124,
+    "dSEZ;LHN": 124,
+    "LHN;dSEZ": 124,
+    "dVNC": 38,
+    "dVNC;CN": 38,
+    "dVNC;RG": 38,
+    "RG;dVNC": 38,
+    "dVNC;dSEZ": 38,
+    "dSEZ;dVNC": 38,
+    "dUnk": 105,
     "unk": 190,
     "LHN": 123,
     "LHN2": 65,
     "CN": 206,
     "CN2": 95,
     "LHN;CN": 108,
+    "CN;LHN": 108,
     "vPN": 33,
     "LON": 159,
     "CX": 228,
@@ -75,10 +84,21 @@ for key, val in CLASS_IND_DICT.items():
 
 colors = np.array(cc.glasbey_light)[color_inds]
 CLASS_COLOR_DICT = dict(zip(names, colors))
-CLASS_COLOR_DICT["motor-mVAN"] = "#000000"
-CLASS_COLOR_DICT["motor-mAN"] = "#000000"
-CLASS_COLOR_DICT["motor-mPaN"] = "#000000"
-CLASS_COLOR_DICT["motor-mMN"] = "#000000"
+CLASS_COLOR_DICT["motor-VAN"] = "#000000"
+CLASS_COLOR_DICT["motor-AN"] = "#000000"
+CLASS_COLOR_DICT["motor-PaN"] = "#000000"
+CLASS_COLOR_DICT["motor-MN"] = "#000000"
+
+VERSION = "2020-03-26"
+mg = load_metagraph("G", VERSION)
+uni_class, counts = np.unique(mg["merge_class"], return_counts=True)
+count_map = dict(zip(uni_class, counts))
+
+# print("Not in colors:\n")
+# for uc in uni_class:
+#     if uc not in CLASS_COLOR_DICT:
+#         print(uc)
+# print()
 
 
 def plot_colors():
@@ -94,22 +114,12 @@ def plot_colors():
 def plot_class_colormap():
     from src.visualization import palplot
 
-    # names = []
-    # color_inds = []
-
-    # for key, val in CLASS_IND_DICT.items():
-    #     names.append(key)
-    #     color_inds.append(val)
-    # print(color_inds)
-    # fig, ax = plt.subplots(1, 1, figsize=(3, 15))
-    # colors = np.array(cc.glasbey_light)[color_inds]
-    # palplot(len(colors), colors, ax=ax)
-    # ax.yaxis.set_major_formatter(plt.FixedFormatter(names))
     names = []
     colors = []
     for key, val in CLASS_COLOR_DICT.items():
-        names.append(key)
-        colors.append(val)
+        if key in uni_class:
+            names.append(f"{key} ({count_map[key]})")
+            colors.append(val)
     fig, ax = plt.subplots(1, 1, figsize=(3, 15))
     palplot(len(colors), colors, ax=ax)
     ax.yaxis.set_major_formatter(plt.FixedFormatter(names))
@@ -122,3 +132,4 @@ if __name__ == "__main__":
     plot_colors()
     plot_class_colormap()
     plt.show()
+

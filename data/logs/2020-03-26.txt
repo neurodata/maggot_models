@@ -327,12 +327,12 @@ Merge class unique values:
 Missing lineage info for 149 skeletons
 
 Brain neurons without entry in lineage file:
-          brain_neurons   left  right   dSEZ   dVNC     RG    APL   sink  preliminary_LN  ...  class1  all_class1  n_class1  class2  all_class2  n_class2     Pair  Pair ID  merge_class
-1980134            True   True  False  False   True  False  False  False           False  ...    dVNC    ['dVNC']         1                  []         0       -1       -1         dVNC
-11941255           True  False  False   True  False  False  False  False           False  ...    dSEZ    ['dSEZ']         1                  []         0       -1       -1         dSEZ
-16501652           True   True  False  False  False  False  False  False           False  ...     unk          []         0                  []         0  3167039     1162          unk
+          brain_neurons   left  right   dSEZ   dVNC     RG    APL   sink  preliminary_LN  ...  all_class1  n_class1  class2  all_class2  n_class2  hemisphere     Pair  Pair ID  merge_class
+1980134            True   True  False  False   True  False  False  False           False  ...    ['dVNC']         1                  []         0           L       -1       -1         dVNC
+11941255           True  False  False   True  False  False  False  False           False  ...    ['dSEZ']         1                  []         0           C       -1       -1         dSEZ
+16501652           True   True  False  False  False  False  False  False           False  ...          []         0                  []         0           L  3167039     1162          unk
 
-[3 rows x 74 columns]
+[3 rows x 75 columns]
 
 
 
