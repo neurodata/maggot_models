@@ -1,18 +1,27 @@
 # %% [markdown]
 # ##
-from graspy.embed import AdjacencySpectralEmbed
-from graspy.models import RDPGEstimator, SBMEstimator
-
-from src.data import load_metagraph
-from src.graph import preprocess
 import os
+import time
+
+import colorcet as cc
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import seaborn as sns
+from scipy.linalg import orthogonal_procrustes
+from tqdm import tqdm
 
 from graspy.cluster import GaussianCluster
-
-
+from graspy.embed import AdjacencySpectralEmbed
+from graspy.models import DCSBMEstimator, RDPGEstimator, SBMEstimator
+from graspy.plot import heatmap, pairplot
+from graspy.simulations import rdpg
+from graspy.utils import binarize, pass_to_ranks
+from src.data import load_metagraph
+from src.graph import preprocess
+from src.hierarchy import signal_flow
 from src.io import savefig
-
+from src.visualization import CLASS_COLOR_DICT, gridmap, matrixplot
 
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
@@ -25,13 +34,17 @@ def stashfig(name, **kws):
 
 
 mg = load_metagraph("G")
-
+mg = preprocess(
+    mg,
+    threshold=0,
+    sym_threshold=False,
+    remove_pdiff=True,
+    binarize=False,
+    weight="weight",
+)
 # %% [markdown]
 # ##
-from graspy.utils import pass_to_ranks
-import numpy as np
-from graspy.plot import pairplot
-from src.visualization import CLASS_COLOR_DICT
+
 
 adj = mg.adj
 adj = pass_to_ranks(adj)
@@ -39,14 +52,11 @@ meta = mg.meta
 
 ase = AdjacencySpectralEmbed(n_components=None, n_elbows=2)
 embed = ase.fit_transform(adj)
-# embed = np.concatenate(embed, axis=-1)
-
-# pairplot(embed, labels=mg.meta["merge_class"].values, palette=CLASS_COLOR_DICT)
 
 
 # %% [markdown]
 # ##
-from tqdm import tqdm
+
 
 meta["inds"] = range(len(meta))
 left_inds = meta[meta["left"]]["inds"]
@@ -78,77 +88,74 @@ lp_inds, rp_inds = get_paired_inds(meta)
 
 # %% [markdown]
 # ##
-import time
+
 
 currtime = time.time()
 
 n_init = 50
 
-from scipy.linalg import orthogonal_procrustes
 
 rows = []
 Rs = []
-for n_components in range(1, embed[0].shape[1]):
-    print(n_components)
-    print()
-    train_embed = np.concatenate(
-        (embed[0][:, :n_components], embed[1][:, :n_components]), axis=-1
-    )
-    R, _ = orthogonal_procrustes(train_embed[lp_inds], train_embed[rp_inds])
-    Rs.append(R)
-    left_embed = train_embed[left_inds]
-    left_embed = left_embed @ R
-    right_embed = train_embed[right_inds]
+n_components = embed[0].shape[1]
+print(n_components)
+print()
+train_embed = np.concatenate(
+    (embed[0][:, :n_components], embed[1][:, :n_components]), axis=-1
+)
+R, _ = orthogonal_procrustes(train_embed[lp_inds], train_embed[rp_inds])
+Rs.append(R)
+left_embed = train_embed[left_inds]
+left_embed = left_embed @ R
+right_embed = train_embed[right_inds]
 
-    # for k in tqdm(range(2, 15)):
-    #     # train left, test right
-    #     left_gc = GaussianCluster(min_components=k, max_components=k, n_init=n_init)
-    #     left_gc.fit(left_embed)
-    #     model = left_gc.model_
-    #     train_left_bic = model.bic(left_embed)
-    #     train_left_lik = model.score(left_embed)
-    #     test_left_bic = model.bic(right_embed)
-    #     test_left_lik = model.score(right_embed)
+for k in tqdm(range(2, 15)):
+    # train left, test right
+    left_gc = GaussianCluster(min_components=k, max_components=k, n_init=n_init)
+    left_gc.fit(left_embed)
+    model = left_gc.model_
+    train_left_bic = model.bic(left_embed)
+    train_left_lik = model.score(left_embed)
+    test_left_bic = model.bic(right_embed)
+    test_left_lik = model.score(right_embed)
 
-    #     row = {
-    #         "k": k,
-    #         "contra_bic": test_left_bic,
-    #         "contra_lik": test_left_lik,
-    #         "ipsi_bic": train_left_bic,
-    #         "ipsi_lik": train_left_lik,
-    #         "cluster": left_gc,
-    #         "train": "left",
-    #         "n_components": n_components,
-    #     }
-    #     rows.append(row)
+    row = {
+        "k": k,
+        "contra_bic": test_left_bic,
+        "contra_lik": test_left_lik,
+        "ipsi_bic": train_left_bic,
+        "ipsi_lik": train_left_lik,
+        "cluster": left_gc,
+        "train": "left",
+        "n_components": n_components,
+    }
+    rows.append(row)
 
-    #     # train right, test left
-    #     right_gc = GaussianCluster(min_components=k, max_components=k, n_init=n_init)
-    #     right_gc.fit(right_embed)
-    #     model = right_gc.model_
-    #     train_right_bic = model.bic(right_embed)
-    #     train_right_lik = model.score(right_embed)
-    #     test_right_bic = model.bic(left_embed)
-    #     test_right_lik = model.score(left_embed)
+    # train right, test left
+    right_gc = GaussianCluster(min_components=k, max_components=k, n_init=n_init)
+    right_gc.fit(right_embed)
+    model = right_gc.model_
+    train_right_bic = model.bic(right_embed)
+    train_right_lik = model.score(right_embed)
+    test_right_bic = model.bic(left_embed)
+    test_right_lik = model.score(left_embed)
 
-    #     row = {
-    #         "k": k,
-    #         "contra_bic": test_right_bic,
-    #         "contra_lik": test_right_lik,
-    #         "ipsi_bic": train_right_bic,
-    #         "ipsi_lik": train_right_lik,
-    #         "cluster": right_gc,
-    #         "train": "right",
-    #         "n_components": n_components,
-    #     }
-    #     rows.append(row)
+    row = {
+        "k": k,
+        "contra_bic": test_right_bic,
+        "contra_lik": test_right_lik,
+        "ipsi_bic": train_right_bic,
+        "ipsi_lik": train_right_lik,
+        "cluster": right_gc,
+        "train": "right",
+        "n_components": n_components,
+    }
+    rows.append(row)
 
 print(f"{time.time() - currtime} elapsed")
 
 # %% [markdown]
 # ##
-import pandas as pd
-import matplotlib.pyplot as plt
 
 
 results = pd.DataFrame(rows)
@@ -219,7 +226,7 @@ stashfig(f"cross-val-n_components={n_components}")
 
 # %% [markdown]
 # ## Set k = 8, set n_components = 4
-from graspy.plot import heatmap
+
 
 k = 8
 n_per_hemisphere = 1000
@@ -239,7 +246,6 @@ pairplot(X)
 X_left = X[:, :n_components]
 X_right = X[:, n_components:]
 
-from graspy.simulations import rdpg
 
 graph = rdpg(X_left, X_right, rescale=False, directed=True, loops=True)
 # %% [markdown]
@@ -284,22 +290,20 @@ ax, _, tax, _ = matrixplot(
 )
 # %% [markdown]
 # ##
-from src.visualization import matrixplot
+
 
 # %% [markdown]
 # ##
 
 # %% [markdown]
 # ##
-import colorcet as cc
+
 
 pairplot(embed, labels=pred_labels, palette=cc.glasbey_light)
 
 # %% [markdown]
 # ##
-from graspy.utils import binarize
-from src.visualization import gridmap
-from graspy.models import DCSBMEstimator
+
 
 sbm = DCSBMEstimator(directed=True, degree_directed=True, loops=False, max_comm=30)
 sbm.fit(binarize(adj))
@@ -310,8 +314,6 @@ meta["pred_labels"] = pred_labels
 
 graph = np.squeeze(sbm.sample())
 
-
-from src.hierarchy import signal_flow
 
 meta["adj_sf"] = -signal_flow(binarize(adj))
 

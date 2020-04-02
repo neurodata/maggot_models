@@ -40,7 +40,7 @@ def savefig(
         plt.savefig(
             savename,
             format=fmt,
-            facecolor="w",
+            facecolor="white",
             transparent=transparent,
             bbox_inches=bbox_inches,
             pad_inches=pad_inches,

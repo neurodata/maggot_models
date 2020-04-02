@@ -33,4 +33,5 @@ from .matrix import (
     _get_tick_info,
     draw_separators,
     remove_shared_ax,
+    draw_colors,
 )

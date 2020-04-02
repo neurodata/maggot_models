@@ -71,8 +71,12 @@ def hist_from_cascade(
 low_p = 0.01
 diag_p = 0.1
 feedforward_p = 0.3
-n_blocks = 10
-basename = f"-{feedforward_p}-{diag_p}-{low_p}-{n_blocks}"
+n_blocks = 15
+
+max_hops = 15
+n_init = 1000
+p = 0.03
+basename = f"-{feedforward_p}-{diag_p}-{low_p}-{n_blocks}-{max_hops}-{n_init}-{p}"
 
 
 block_probs = get_feedforward_B(low_p, diag_p, feedforward_p, n_blocks=n_blocks)
@@ -106,9 +110,6 @@ stashfig("sbm" + basename)
 # %% [markdown]
 # ##
 
-max_hops = 10
-n_init = 100
-p = 0.03
 
 # random walk
 transition_probs = to_markov_matrix(adj)  # row normalize!
