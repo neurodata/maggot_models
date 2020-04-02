@@ -50,7 +50,7 @@ def get_paired_inds(meta):
 
 # %% [markdown]
 # ## Load
-mg = load_metagraph("G")
+mg = load_metagraph("G", version="2020-04-01")
 mg = preprocess(
     mg,
     threshold=0,
@@ -66,8 +66,14 @@ fig, ax = plt.subplots(1, 1, figsize=(10, 5))
 sns.distplot(np.log10(degrees["Total edgesum"]), ax=ax)
 q = np.quantile(degrees["Total edgesum"], 0.05)
 ax.axvline(np.log10(q), linestyle="--", color="r")
+# remove low degree neurons
 idx = meta[degrees["Total edgesum"] > q].index
 mg = mg.reindex(idx, use_ids=True)
+
+# remove center neurons # FIXME
+idx = mg.meta[mg.meta["hemisphere"].isin(["L", "R"])].index
+mg = mg.reindex(idx, use_ids=True)
+
 mg = mg.make_lcc()
 meta = mg.meta
 
@@ -193,7 +199,7 @@ stashfig(f"cross-val-n_components={n_components}")
 # ## Set k = 8, set n_components = 4
 
 
-k = 7
+k = 6
 n_per_hemisphere = 1000
 res = small_results[small_results["k"] == k]
 models = res["cluster"].values
@@ -206,7 +212,7 @@ y = np.concatenate((y1, y2), axis=0)
 pairplot(X, labels=y, palette=cc.glasbey_light)
 # %% [markdown]
 # ##
-pairplot(train_embed, labels=meta["merge_class"].values, palette=CLASS_COLOR_DICT)
+# pairplot(train_embed, labels=meta["merge_class"].values, palette=CLASS_COLOR_DICT)
 
 # %% [markdown]
 # ##
@@ -240,12 +246,11 @@ def make_ellipses(gmm, ax, i, j, colors, alpha=0.5, **kws):
         ell.set_clip_box(ax.bbox)
         ell.set_alpha(alpha)
         ax.add_artist(ell)
-        ax.set_aspect("equal", "datalim")
+        # ax.set_aspect("equal", "datalim")
 
 
 n_dims = X.shape[1]
 
-plt.rcParams["figure.facecolor"] = "w"
 
 fig, axs = plt.subplots(
     n_dims, n_dims, sharex=False, sharey=False, figsize=(20, 20), frameon=False
@@ -300,8 +305,24 @@ for i in range(n_dims):
 
 plt.tight_layout()
 
+plt.rcParams["figure.facecolor"] = "w"
+plt.rcParams["savefig.facecolor"] = "w"
+
+
 stashfig(f"gmm-crossval-pairs-k={k}-n_components={n_components}")
 stashfig(f"gmm-crossval-pairs-k={k}-n_components={n_components}", fmt="pdf")
+
+# %% [markdown]
+# ##
+
+from src.visualization import barplot_text, stacked_barplot
+
+# barplot_text(pred, meta["merge_class"].values, color_dict=CLASS_COLOR_DICT)
+stacked_barplot(
+    pred, meta["merge_class"].values, color_dict=CLASS_COLOR_DICT, legend_ncol=4
+)
+
+stashfig(f"gmm-crossval-barplot-k={k}-n_components={n_components}")
 
 # %% [markdown]
 # ##
