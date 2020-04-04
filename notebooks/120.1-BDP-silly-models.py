@@ -325,159 +325,178 @@ stacked_barplot(
 stashfig(f"gmm-crossval-barplot-k={k}-n_components={n_components}")
 
 # %% [markdown]
-# ##
+# ## SUBCLUSTER !
+
+from scipy.optimize import linear_sum_assignment
 
 
-# %% [markdown]
-# ##
-# np.random.shuffle(X)
-# X[:n_per_hemisphere] = X[:n_per_hemisphere] @ R.T
+def compute_pairedness(partition, meta, rand_adjust=False, plot=False):
+    partition = partition.copy()
+    meta = meta.copy()
+
+    uni_labels, inv = np.unique(partition, return_inverse=True)
+
+    train_int_mat = np.zeros((len(uni_labels), len(uni_labels)))
+    meta = meta.loc[partition.index]
+
+    for i, ul in enumerate(uni_labels):
+        c1_mask = inv == i
+
+        c1_pairs = meta.loc[c1_mask, "Pair"]
+        c1_pairs.drop(
+            c1_pairs[c1_pairs == -1].index
+        )  # HACK must be a better pandas sol
+
+        for j, ul in enumerate(uni_labels):
+            c2_mask = inv == j
+            c2_inds = meta.loc[c2_mask].index
+            train_pairs_in_other = np.sum(c1_pairs.isin(c2_inds))
+            train_int_mat[i, j] = train_pairs_in_other
+
+    row_ind, col_ind = linear_sum_assignment(train_int_mat, maximize=True)
+    train_pairedness = np.trace(train_int_mat[np.ix_(row_ind, col_ind)]) / np.sum(
+        train_int_mat
+    )
+
+    if plot:
+        # FIXME broken
+        fig, axs = plt.subplots(1, 2, figsize=(20, 10))
+        sns.heatmap(
+            train_int_mat, square=True, ax=axs[0], cbar=False, cmap="RdBu_r", center=0
+        )
+        int_df = pd.DataFrame(data=train_int_mat, index=uni_labels, columns=uni_labels)
+        int_df = int_df.reindex(index=uni_labels[row_ind])
+        int_df = int_df.reindex(columns=uni_labels[col_ind])
+        sns.heatmap(int_df, square=True, ax=axs[1], cbar=False, cmap="RdBu_r", center=0)
+
+    if rand_adjust:
+        # attempt to correct for difference in matchings as result of random chance
+        # TODO this could be analytic somehow
+        part_vals = partition.values
+        np.random.shuffle(part_vals)
+        partition = pd.Series(data=part_vals, index=partition.index)
+        rand_train_pairedness, rand_test_pairedness = compute_pairedness(
+            partition, meta, rand_adjust=False, plot=False, holdout=holdout
+        )
+        test_pairedness -= rand_test_pairedness
+        train_pairedness -= rand_train_pairedness
+        # pairedness = pairedness - rand_pairedness
+    return train_pairedness, row_ind, col_ind
 
 
-# X_left = X[:, :n_components]
-# X_right = X[:, n_components:]
-
-
-# graph = rdpg(X_left, X_right, rescale=False, directed=True, loops=True)
-# %% [markdown]
-# ##
-n_components = 4
-train_embed = np.concatenate(
-    (embed[0][:, :n_components], embed[1][:, :n_components]), axis=-1
+pness, row_ind, col_ind = compute_pairedness(
+    pd.Series(index=meta.index, data=pred), meta, plot=True
 )
-R, _ = orthogonal_procrustes(train_embed[lp_inds], train_embed[rp_inds])
-Rs.append(R)
-left_embed = train_embed[left_inds]
-left_embed = left_embed @ R
-right_embed = train_embed[right_inds]
 
-pred_left = models[0].model_.predict(left_embed)
-pred_right = models[1].model_.predict(right_embed)
-pred_left += len(np.unique(pred_right)) + 1
-
-pred = np.empty(len(embed[0]))
-pred[left_inds] = pred_left
-pred[right_inds] = pred_right
-meta["joint_pred"] = pred
-
-ax, _, tax, _ = matrixplot(
-    binarize(adj),
-    plot_type="scattermap",
-    sizes=(0.25, 0.5),
-    col_colors="merge_class",
-    col_palette=CLASS_COLOR_DICT,
-    col_meta=meta,
-    col_sort_class=["hemisphere", "joint_pred"],
-    col_ticks=False,
-    # col_class_order="block_sf",
-    col_item_order="adj_sf",
-    row_ticks=False,
-    row_colors="merge_class",
-    row_palette=CLASS_COLOR_DICT,
-    row_meta=meta,
-    row_sort_class=["hemisphere", "joint_pred"],
-    # row_class_order="block_sf",
-    row_item_order="adj_sf",
-)
-# %% [markdown]
-# ##
-
+dict(zip(row_ind, col_ind))
 
 # %% [markdown]
 # ##
 
-# %% [markdown]
-# ##
+pair = (3, 6)
+
+left_sub_inds = np.where(pred == pair[0])[0]
+right_sub_inds = np.where(pred == pair[1])[0]
+inds = np.concatenate((left_sub_inds, right_sub_inds))
+
+ase = AdjacencySpectralEmbed()
+embed = ase.fit_transform(adj[np.ix_(inds, inds)])
+
+left_embed = train_embed[left_sub_inds]
+right_embed = train_embed[right_sub_inds]
+rows = []
+for k in tqdm(range(2, 15)):
+    # train left, test right
+    # TODO add option for AutoGMM as well, might as well check
+    left_gc = GaussianCluster(min_components=k, max_components=k, n_init=n_init)
+    left_gc.fit(left_embed)
+    model = left_gc.model_
+    train_left_bic = model.bic(left_embed)
+    train_left_lik = model.score(left_embed)
+    test_left_bic = model.bic(right_embed @ R.T)
+    test_left_lik = model.score(right_embed @ R.T)
+
+    row = {
+        "k": k,
+        "contra_bic": test_left_bic,
+        "contra_lik": test_left_lik,
+        "ipsi_bic": train_left_bic,
+        "ipsi_lik": train_left_lik,
+        "cluster": left_gc,
+        "train": "left",
+        "n_components": n_components,
+    }
+    rows.append(row)
+
+    # train right, test left
+    right_gc = GaussianCluster(min_components=k, max_components=k, n_init=n_init)
+    right_gc.fit(right_embed)
+    model = right_gc.model_
+    train_right_bic = model.bic(right_embed)
+    train_right_lik = model.score(right_embed)
+    test_right_bic = model.bic(left_embed @ R)
+    test_right_lik = model.score(left_embed @ R)
+
+    row = {
+        "k": k,
+        "contra_bic": test_right_bic,
+        "contra_lik": test_right_lik,
+        "ipsi_bic": train_right_bic,
+        "ipsi_lik": train_right_lik,
+        "cluster": right_gc,
+        "train": "right",
+        "n_components": n_components,
+    }
+    rows.append(row)
+
+print(f"{time.time() - currtime} elapsed")
+
+results = pd.DataFrame(rows)
 
 
-pairplot(embed, labels=pred_labels, palette=cc.glasbey_light)
-
-# %% [markdown]
-# ##
-
-
-sbm = DCSBMEstimator(directed=True, degree_directed=True, loops=False, max_comm=30)
-sbm.fit(binarize(adj))
-pred_labels = sbm.vertex_assignments_
-print(len(np.unique(pred_labels)))
-
-meta["pred_labels"] = pred_labels
-
-graph = np.squeeze(sbm.sample())
-
-
-meta["adj_sf"] = -signal_flow(binarize(adj))
-
-block_sf = -signal_flow(sbm.block_p_)
-block_map = pd.Series(data=block_sf)
-meta["block_sf"] = meta["pred_labels"].map(block_map)
-
-#%%
-graph_type = "G"
-fig, axs = plt.subplots(1, 2, figsize=(20, 10))
+small_results = results[results["n_components"] == n_components]
+fig, axs = plt.subplots(2, 1, figsize=(10, 10), sharex=True)
 ax = axs[0]
-ax, _, tax, _ = matrixplot(
-    binarize(adj),
-    ax=ax,
-    plot_type="scattermap",
-    sizes=(0.25, 0.5),
-    col_colors="merge_class",
-    col_palette=CLASS_COLOR_DICT,
-    col_meta=meta,
-    col_sort_class="pred_labels",
-    col_ticks=False,
-    col_class_order="block_sf",
-    col_item_order="adj_sf",
-    row_ticks=False,
-    row_colors="merge_class",
-    row_palette=CLASS_COLOR_DICT,
-    row_meta=meta,
-    row_sort_class="pred_labels",
-    row_class_order="block_sf",
-    row_item_order="adj_sf",
-)
-tax.set_title(f"Data ({graph_type})")
+sns.lineplot(data=small_results, x="k", y="contra_bic", hue="train", ax=ax)
+ax.lines[0].set_linestyle("--")
+ax.lines[1].set_linestyle("--")
+sns.lineplot(data=small_results, x="k", y="ipsi_bic", hue="train", ax=ax)
+ax.set_ylabel("BIC")
+leg = ax.get_legend().remove()
+ax.set_title(f"n_components={n_components}")
+
 ax = axs[1]
-ax, _, tax, _ = matrixplot(
-    graph,
-    ax=ax,
-    plot_type="scattermap",
-    sizes=(0.25, 0.5),
-    col_colors="merge_class",
-    col_palette=CLASS_COLOR_DICT,
-    col_meta=meta,
-    col_ticks=False,
-    col_class_order="block_sf",
-    row_ticks=False,
-    col_sort_class="pred_labels",
-    col_item_order="adj_sf",
-    row_colors="merge_class",
-    row_palette=CLASS_COLOR_DICT,
-    row_meta=meta,
-    row_sort_class="pred_labels",
-    row_class_order="block_sf",
-    row_item_order="adj_sf",
-)
-tax.set_title(f"Model sample (dDCSBM)")
+sns.lineplot(data=small_results, x="k", y="contra_lik", hue="train", ax=ax)
+ax.lines[0].set_linestyle("--")
+ax.lines[1].set_linestyle("--")
+sns.lineplot(data=small_results, x="k", y="ipsi_lik", hue="train", ax=ax)
+ax.set_ylabel("Log likelihood")
 
-stashfig("null-model-adjs")
-
+leg = ax.get_legend()
+leg.set_title("Train side")
+leg.texts[0].set_text("Test contra")
+leg.set_bbox_to_anchor((1, 1.5))
+lines = leg.get_lines()
+lines[0].set_linestyle("--")
+lines[1].set_linestyle("--")
+lines[2].set_linestyle("--")
+leg.texts[3].set_text("Test ipsi")
 # %% [markdown]
 # ##
-block_p = sbm.block_p_
-block_meta = pd.DataFrame(index=range(len(block_p)))
-block_meta["signal_flow"] = block_sf
-matrixplot(
-    block_p,
-    col_meta=block_meta,
-    row_meta=block_meta,
-    col_item_order="signal_flow",
-    row_item_order="signal_flow",
-)
-
-
-# %% [markdown]
-# ##
-
-sbm = DCSBMEstimator(directed=True, degree_directed=True, loops=False, max_comm=30)
-sbm.fit(binarize(adj), y=pred)
+# X = np.concatenate((left_embed, right_embed))
+k = 5
+# data = pd.DataFrame
+X = np.concatenate((left_embed, right_embed))
+n_per_hemisphere = 1000
+res = small_results[small_results["k"] == k]
+models = res["cluster"].values
+left_model = models[0].model_
+right_model = models[1].model_
+labels = meta["merge_class"].values[inds]
+pred = np.empty(len(labels), dtype=int)
+left_pred = left_model.predict(left_embed)
+right_pred = right_model.predict(right_embed) + left_pred.max() + 1
+pred[: len(left_sub_inds)] = left_pred
+pred[len(left_sub_inds) :] = right_pred
+stacked_barplot(pred, labels, color_dict=CLASS_COLOR_DICT, legend_ncol=4)
+stashfig("example-subclust")

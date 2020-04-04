@@ -81,20 +81,24 @@ class MetaGraph:
         self.g = g
         self.n_verts = adj.shape[0]
 
-    def reindex(self, perm_inds, use_ids=False):
+    def reindex(self, perm_inds, use_ids=False, inplace=True):
         if use_ids:
             meta = self.meta.copy()
             meta["idx"] = range(len(meta))
             meta = meta.reindex(perm_inds)
             idx_perm_inds = meta["idx"]
-            self.reindex(idx_perm_inds, use_ids=False)
+            return self.reindex(idx_perm_inds, use_ids=False)
         else:
             adj = self.adj.copy()
             adj = adj[np.ix_(perm_inds, perm_inds)]
-            self.adj = adj
-            self.meta = self.meta.iloc[perm_inds, :]
-            self.g = _numpy_pandas_to_nx(adj, self.meta)
-        return self
+            meta = self.meta.iloc[perm_inds, :]
+            if inplace:
+                self.adj = adj
+                self.meta = meta
+                self.g = _numpy_pandas_to_nx(adj, self.meta)
+                return self
+            else:
+                return MetaGraph(adj, meta)
 
     def prune(self):
         # remove pendant nodes
@@ -110,7 +114,7 @@ class MetaGraph:
         self.n_verts = self.adj.shape[0]
         return self
 
-    def calculate_degrees(self):
+    def calculate_degrees(self, inplace=False):
         adj = self.adj
         in_edgesums = adj.sum(axis=0)
         out_edgesums = adj.sum(axis=1)
@@ -125,7 +129,11 @@ class MetaGraph:
         degree_df["Total degree"] = in_degree + out_degree
         degree_df["ID"] = self.meta.index
         degree_df = degree_df.set_index("ID")
-        return degree_df
+        if inplace:
+            self.meta = pd.concat((self.meta, degree_df), ignore_index=False, axis=1)
+            return self
+        else:
+            return degree_df
 
     def __getitem__(self, n):
         if n in self.meta.columns:

@@ -19,7 +19,7 @@ def sort_meta(meta, sort_class, sort_item=None, class_order="size"):
             # negative so we can sort alphabetical still in one line
             meta[f"{sc}_size"] = -meta[sc].map(class_size)
             total_sort_by.append(f"{sc}_size")
-        else:
+        elif class_order is not None:
             class_value = meta.groupby(sc)[class_order].first()
             meta[f"{sc}_order"] = meta[sc].map(class_value)
             total_sort_by.append(f"{sc}_order")
@@ -142,6 +142,7 @@ def draw_separators(
     tick_fontsize=10,
     minor_ticking=False,
     tick_rot=45,
+    tick_ax_border=False,
 ):
     """[summary]
     
@@ -191,12 +192,42 @@ def draw_separators(
     # get info about the separators
     first_inds, middle_inds, middle_labels = _get_tick_info(sort_meta, sort_class)
 
+    # if tick_ax_border:
+    #     if ax_type == "x":
+    #         tick_ax.axvline(0, color="black", linestyle="-", alpha=1, linewidth=2)
+    #         tick_ax.axvline(
+    #             len(sort_meta), color="black", linestyle="-", alpha=1, linewidth=2
+    #         )
+    #     else:
+    #         tick_ax.axvline(0, color="black", linestyle="-", alpha=1, linewidth=2)
+    #         tick_ax.axvline(
+    #             len(sort_meta), color="black", linestyle="-", alpha=1, linewidth=2
+    #         )
+
     # draw the border lines
     for t in first_inds:
         if ax_type == "x":
             ax.axvline(t - boost, **gridline_kws)
+            if tick_ax_border:
+                tick_ax.axvline(
+                    t - boost,
+                    ymin=-1,
+                    color="black",
+                    linestyle="-",
+                    alpha=1,
+                    linewidth=2,
+                )
         else:
             ax.axhline(t - boost, **gridline_kws)
+            if tick_ax_border:
+                tick_ax.axhline(
+                    t - boost,
+                    xmin=-10,
+                    color="black",
+                    linestyle="-",
+                    alpha=1,
+                    linewidth=2,
+                )
 
     if use_ticks:
         # add tick labels and locs
@@ -339,6 +370,8 @@ def matrixplot(
     [type]
         [description]
     """
+    row_meta = row_meta.copy()
+    col_meta = col_meta.copy()
     # TODO probably remove these
     tick_fontsize = 10
     tick_pad = [0, 0]
@@ -423,11 +456,16 @@ def matrixplot(
     # draw separators (grid borders and ticks)
     if col_sort_class is not None:
         tick_ax = top_cax  # prime the loop
+        tick_ax_border = False
         for i, sc in enumerate(col_sort_class[::-1]):
             if i > 0:
                 tick_ax = divider.append_axes("top", size="1%", pad=0.5, sharex=ax)
                 remove_shared_ax(tick_ax)
-                remove_spines(tick_ax)
+                tick_ax.spines["right"].set_visible(True)
+                tick_ax.spines["top"].set_visible(True)
+                tick_ax.spines["left"].set_visible(True)
+                tick_ax.spines["bottom"].set_visible(False)
+                tick_ax_border = True
             draw_separators(
                 ax,
                 divider=divider,
@@ -439,15 +477,22 @@ def matrixplot(
                 use_ticks=col_ticks,
                 tick_rot=tick_rot,
                 gridline_kws=gridline_kws,
+                tick_ax_border=tick_ax_border,
             )
         ax.xaxis.set_label_position("top")
     if row_sort_class is not None:
         tick_ax = left_cax  # prime the loop
+        tick_ax_border = False
         for i, sc in enumerate(row_sort_class[::-1]):
             if i > 0:
-                tick_ax = divider.append_axes("left", size="1%", pad=0.5, sharex=ax)
+                tick_ax = divider.append_axes("left", size="1%", pad=0.5, sharey=ax)
                 remove_shared_ax(tick_ax)
-                remove_spines(tick_ax)
+                # remove_spines(tick_ax)
+                tick_ax.spines["right"].set_visible(False)
+                tick_ax.spines["top"].set_visible(True)
+                tick_ax.spines["bottom"].set_visible(True)
+                tick_ax.spines["left"].set_visible(True)
+                tick_ax_border = True
             draw_separators(
                 ax,
                 divider=divider,
@@ -459,6 +504,7 @@ def matrixplot(
                 use_ticks=row_ticks,
                 tick_rot=0,
                 gridline_kws=gridline_kws,
+                tick_ax_border=tick_ax_border,
             )
 
     # spines

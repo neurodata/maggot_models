@@ -1056,6 +1056,7 @@ def stacked_barplot(
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(15, 10))
+        remove_spines(ax)
     ax.set_ylim(-1, len(labels))
     ax.invert_yaxis()
     ax.xaxis.set_visible(False)
