@@ -34,4 +34,5 @@ from .matrix import (
     draw_separators,
     remove_shared_ax,
     draw_colors,
+    adjplot,
 )

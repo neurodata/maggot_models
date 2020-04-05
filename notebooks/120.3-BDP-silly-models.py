@@ -35,6 +35,11 @@ from src.visualization import (
     matrixplot,
     stacked_barplot,
 )
+from sklearn.utils.testing import ignore_warnings
+from sklearn.exceptions import ConvergenceWarning
+import warnings
+
+warnings.filterwarnings(action="ignore", category=ConvergenceWarning)
 
 CLUSTER_SPLIT = "best"
 
@@ -378,6 +383,62 @@ def reindex_model(gmm, perm_inds):
     return gmm
 
 
+def plot_metrics(results, plot_all=True):
+    plot_results = results.copy()
+    plot_results["k"] += np.random.normal(size=len(plot_results), scale=0.1)
+
+    fig, axs = plt.subplots(3, 3, figsize=(20, 10), sharex=True)
+
+    def miniplotter(var, ax):
+        if plot_all:
+            sns.scatterplot(
+                data=plot_results,
+                x="k",
+                y=var,
+                hue="train",
+                ax=ax,
+                s=8,
+                linewidth=0,
+                alpha=0.5,
+            )
+        best_inds = results.groupby(["k"])[var].idxmax()
+        best_results = results.loc[best_inds].copy()
+        sns.lineplot(
+            data=best_results, x="k", y=var, ax=ax, color="purple", label="max"
+        )
+        mean_results = results.groupby(["k"]).mean()
+        mean_results.reset_index(inplace=True)
+        sns.lineplot(
+            data=mean_results, x="k", y=var, ax=ax, color="green", label="mean"
+        )
+        ax.get_legend().remove()
+
+    plot_vars = [
+        "train_lik",
+        "test_lik",
+        "lik",
+        "train_bic",
+        "test_bic",
+        "bic",
+        "ARI",
+        "pairedness",
+    ]
+    axs = axs.T.ravel()
+
+    for pv, ax in zip(plot_vars, axs):
+        miniplotter(pv, ax)
+
+    axs[2].xaxis.set_major_locator(mpl.ticker.MultipleLocator(2))
+    axs[-2].tick_params(labelbottom=True)
+    axs[-2].set_xlabel("k")
+
+    handles, labels = axs[-2].get_legend_handles_labels()
+    axs[-1].legend(handles, labels, loc="upper left")
+    axs[-1].axis("off")
+
+    return fig, axs
+
+
 # %% [markdown]
 # ## Load data
 # In this case we are working with `G`, the directed graph formed by summing the edge
@@ -414,6 +475,7 @@ idx = mg.meta[mg.meta["hemisphere"].isin(["L", "R"])].index
 mg = mg.reindex(idx, use_ids=True)
 
 mg = mg.make_lcc()
+mg.calculate_degrees(inplace=True)
 meta = mg.meta
 
 adj = mg.adj
@@ -428,7 +490,7 @@ lp_inds, rp_inds = get_paired_inds(meta)
 # ## Embed
 # Here the embedding is ASE, with PTR and DiagAug, the number of embedding dimensions
 # is for now set to ZG2 (4 + 4). Using the known pairs as "seeds", the left embedding
-# is matched to the right for subsequent clustering.
+# is matched to the right using procrustes.
 ase = AdjacencySpectralEmbed(n_components=None, n_elbows=2)
 embed = ase.fit_transform(adj)
 n_components = embed[0].shape[1]  # use all of ZG2
@@ -439,7 +501,7 @@ if CLUSTER_SPLIT == "best":
     X[left_inds] = X[left_inds] @ R
 
 # %% [markdown]
-# ## Cluster
+# ## Clustering
 # Clustering is performed using Gaussian mixture modeling. At each candidate value of k,
 # 50 models are trained on the left embedding, 50 models are trained on the right
 # embedding (choosing the best covariance structure based on BIC on the train set).
@@ -473,65 +535,24 @@ results = crossval_cluster(
 #  - Pairedness, like the above but simply the raw fraction of pairs that end up in
 #    corresponding L/R clusters. Very related to ARI but not normalized.
 
-plot_results = results.copy()
-plot_results["k"] += np.random.normal(size=len(plot_results), scale=0.1)
-
-
-plot_all = True
-fig, axs = plt.subplots(3, 3, figsize=(20, 10), sharex=True)
-
-
-def miniplotter(var, ax):
-    if plot_all:
-        sns.scatterplot(
-            data=plot_results,
-            x="k",
-            y=var,
-            hue="train",
-            ax=ax,
-            s=8,
-            linewidth=0,
-            alpha=0.5,
-        )
-    best_inds = results.groupby(["k"])[var].idxmax()
-    best_results = results.loc[best_inds].copy()
-    sns.lineplot(data=best_results, x="k", y=var, ax=ax, color="purple", label="max")
-    mean_results = results.groupby(["k"]).mean()
-    mean_results.reset_index(inplace=True)
-    sns.lineplot(data=mean_results, x="k", y=var, ax=ax, color="green", label="mean")
-    ax.get_legend().remove()
-
-
-plot_vars = [
-    "train_lik",
-    "test_lik",
-    "lik",
-    "train_bic",
-    "test_bic",
-    "bic",
-    "ARI",
-    "pairedness",
-]
-axs = axs.T.ravel()
-
-for pv, ax in zip(plot_vars, axs):
-    miniplotter(pv, ax)
-
-axs[2].xaxis.set_major_locator(mpl.ticker.MultipleLocator(2))
-axs[-2].tick_params(labelbottom=True)
-axs[-2].set_xlabel("k")
-
-handles, labels = axs[-2].get_legend_handles_labels()
-axs[-1].legend(handles, labels, loc="upper left")
-axs[-1].axis("off")
-
+plot_metrics(results)
 stashfig(f"cluster-metrics-n_components={n_components}")
 
 
 # %% [markdown]
 # ## Choose a model
+# A few things are clear from the above. One is that the likelihood on the train set
+# continues to go up as `k` increases, but plateaus and then drops on the test set around
+# k = 6 - 8. This is even slightly more clear when looking at the BIC plots, where the
+# only difference is the added penalty for complexity. Based on this, I would say that
+# the best k at this scale is around 6-8; however, we still need to pick a single metric
+# to give us the *best* model to proceed. I'm not sure whether it makes more sense to use
+# likelihood or bic here, or, to use performance on the test set or performance on all
+# of the data. Here we will proceed with k=7, and choose the model with the best BIC on
+# all of the data.
+
 k = 7
-metric = "lik"
+metric = "bic"
 basename = f"-metric={metric}-k={k}-n_components={n_components}"
 basetitle = f"Metric={metric}, k={k}, n_components={n_components}"
 
@@ -545,15 +566,15 @@ model = results.loc[ind, "model"]
 left_model = model
 right_model = model
 
-pred = composite_predict(X, left_inds, right_inds, left_model, right_model)
-_, row_inds, col_inds = compute_pairedness_bipartite(pred[lp_inds], pred[rp_inds])
-
 pred = composite_predict(
+    X, left_inds, right_inds, left_model, right_model, relabel=False
+)
+pred_side = composite_predict(
     X, left_inds, right_inds, left_model, right_model, relabel=True
 )
 
 ax = stacked_barplot(
-    pred, meta["merge_class"].values, color_dict=CLASS_COLOR_DICT, legend_ncol=6
+    pred_side, meta["merge_class"].values, color_dict=CLASS_COLOR_DICT, legend_ncol=6
 )
 ax.set_title(basetitle)
 stashfig(f"barplot" + basename)
@@ -566,19 +587,20 @@ fig.suptitle(basetitle, y=1)
 
 stashfig(f"pairs" + basename)
 
+
 sf = signal_flow(adj)
 meta["signal_flow"] = -sf
 meta["pred"] = pred
+meta["pred_side"] = pred_side
 meta["group_signal_flow"] = meta["pred"].map(meta.groupby("pred")["signal_flow"].mean())
-
 fig, ax = plt.subplots(1, 1, figsize=(20, 20))
-_, _, top_cax, _ = matrixplot(
+matrixplot(
     adj,
     ax=ax,
     row_meta=meta,
     col_meta=meta,
-    row_sort_class="pred",
-    col_sort_class="pred",
+    row_sort_class="pred_side",
+    col_sort_class="pred_side",
     row_class_order="group_signal_flow",
     col_class_order="group_signal_flow",
     row_colors="merge_class",
@@ -591,171 +613,58 @@ _, _, top_cax, _ = matrixplot(
     sizes=(0.5, 1),
 )
 fig.suptitle(basetitle, y=0.94)
-stashfig(f"adj" + basename)
+stashfig(f"adj-sf" + basename)
+
+meta["te"] = -meta["Total edgesum"]
+fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+matrixplot(
+    adj,
+    ax=ax,
+    row_meta=meta,
+    col_meta=meta,
+    row_sort_class="pred_side",
+    col_sort_class="pred_side",
+    row_class_order="group_signal_flow",
+    col_class_order="group_signal_flow",
+    row_colors="merge_class",
+    col_colors="merge_class",
+    row_palette=CLASS_COLOR_DICT,
+    col_palette=CLASS_COLOR_DICT,
+    row_item_order=["merge_class", "te"],
+    col_item_order=["merge_class", "te"],
+    plot_type="scattermap",
+    sizes=(0.5, 1),
+)
+fig.suptitle(basetitle, y=0.94)
+stashfig(f"adj-te" + basename)
+
+meta["rand"] = np.random.uniform(size=len(meta))
+fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+matrixplot(
+    adj,
+    ax=ax,
+    row_meta=meta,
+    col_meta=meta,
+    row_sort_class="pred_side",
+    col_sort_class="pred_side",
+    row_class_order="group_signal_flow",
+    col_class_order="group_signal_flow",
+    row_colors="merge_class",
+    col_colors="merge_class",
+    row_palette=CLASS_COLOR_DICT,
+    col_palette=CLASS_COLOR_DICT,
+    row_item_order="rand",
+    col_item_order="rand",
+    plot_type="scattermap",
+    sizes=(0.5, 1),
+)
+fig.suptitle(basetitle, y=0.94)
+stashfig(f"adj-rand" + basename)
 
 # %% [markdown]
 # ## SUBCLUSTER with reembedding!
 
-pred = composite_predict(
-    X, left_inds, right_inds, left_model, right_model, relabel=False
-)
 uni_labels, inv = np.unique(pred, return_inverse=True)
-all_sub_results = []
-sub_data = []
-
-reembed = True
-
-for label in uni_labels:
-    print(label)
-    print()
-    label_mask = inv == label
-    sub_meta = meta[label_mask].copy()
-    sub_meta["inds"] = range(len(sub_meta))
-    sub_left_inds = sub_meta[sub_meta["left"]]["inds"].values
-    sub_right_inds = sub_meta[sub_meta["right"]]["inds"].values
-    sub_lp_inds, sub_rp_inds = get_paired_inds(sub_meta)
-
-    if reembed:
-        ase = AdjacencySpectralEmbed()
-        # TODO look into PTR at this level as well
-        sub_adj = adj[np.ix_(label_mask, label_mask)]
-        sub_embed = ase.fit_transform(sub_adj)
-        sub_X = np.concatenate(sub_embed, axis=1)
-        sub_R, _ = orthogonal_procrustes(sub_X[sub_lp_inds], sub_X[sub_rp_inds])
-    else:
-        sub_X = X[label_mask].copy()
-        sub_R = R
-
-    var_dict = {
-        "meta": sub_meta,
-        "left_inds": sub_left_inds,
-        "right_inds": sub_right_inds,
-        "left_pair_inds": sub_lp_inds,
-        "right_pair_inds": sub_rp_inds,
-        "X": sub_X,
-    }
-    if reembed:
-        var_dict["adj"] = sub_adj
-    sub_data.append(var_dict)
-
-    sub_results = crossval_cluster(
-        sub_X,
-        sub_left_inds,
-        sub_right_inds,
-        left_pair_inds=sub_lp_inds,
-        right_pair_inds=sub_rp_inds,
-        max_clusters=10,
-        min_clusters=1,
-    )
-
-    fig, axs = plot_crossval_cluster(sub_results)
-    fig.suptitle(f"Subclustering for cluster {label}, reembed={reembed}")
-    stashfig(f"sub-cluster-profile-label={label}-reembed={reembed}")
-    all_sub_results.append(sub_results)
-
-# %% [markdown]
-# ##
-
-
-sub_ks = [(2, 4), (6,), (2, 5), (2, 5), (2, 4), (2, 3, 5)]
-
-for i, label in enumerate(uni_labels):
-    ks = sub_ks[i]
-    sub_results = all_sub_results[i]
-    sub_X = sub_data[i]["X"]
-    sub_left_inds = sub_data[i]["left_inds"]
-    sub_right_inds = sub_data[i]["right_inds"]
-    sub_lp_inds = sub_data[i]["left_pair_inds"]
-    sub_rp_inds = sub_data[i]["right_pair_inds"]
-    sub_meta = sub_data[i]["meta"]
-
-    fig, axs = plot_crossval_cluster(sub_results)
-    fig.suptitle(f"Subclustering for cluster {label}, reembed={reembed}")
-    for ax in axs:
-        for k in ks:
-            ax.axvline(k, linestyle="--", color="red", linewidth=2)
-    stashfig(f"sub-cluster-profile-label={label}-k={k}-reembed={reembed}")
-    plt.close()
-
-    for k in ks:
-        models = sub_results[sub_results["k"] == k]["cluster"].values
-        sub_left_model = models[0].model_
-        sub_right_model = models[1].model_
-
-        sub_pred = composite_predict(
-            sub_X, sub_left_inds, sub_right_inds, sub_left_model, sub_right_model
-        )
-        _, row_inds, col_inds = compute_pairedness_bipartite(
-            sub_pred[sub_lp_inds], sub_pred[sub_rp_inds]
-        )
-
-        # there is a weird edge case for KCs
-        if len(row_inds) < len(np.unique(sub_pred)):
-            row_inds = np.unique(sub_pred)
-            col_inds = np.unique(sub_pred)
-
-        sub_left_model = reindex_model(sub_left_model, row_inds)
-        sub_right_model = reindex_model(sub_right_model, col_inds)
-
-        fig, axs = plot_cluster_pairs(
-            sub_X,
-            sub_left_inds,
-            sub_right_inds,
-            sub_left_model,
-            sub_right_model,
-            sub_meta["merge_class"].values,
-        )
-        fig.suptitle(f"Subclustering for cluster {label}, sub-K={k}, reembed={reembed}")
-        stashfig(f"subcluster-pairs-label={label}-k={k}-reembed={reembed}")
-        plt.close()
-
-        sub_pred = composite_predict(
-            sub_X,
-            sub_left_inds,
-            sub_right_inds,
-            sub_left_model,
-            sub_right_model,
-            relabel=True,
-        )
-
-        ax = stacked_barplot(
-            sub_pred,
-            sub_meta["merge_class"].values,
-            color_dict=CLASS_COLOR_DICT,
-            legend_ncol=4,
-        )
-        ax.set_title(f"Subclusters for cluster {label}, sub-K={k}, reembed={reembed}")
-        stashfig(f"subcluster-barplot-label={label}-k={k}-reembed={reembed}")
-        plt.close()
-
-        if "adj" in sub_data[i]:
-            sub_adj = sub_data[i]["adj"]
-            sub_meta["sub_pred"] = sub_pred
-            fig, ax = plt.subplots(1, 1, figsize=(20, 20))
-            matrixplot(
-                sub_adj,
-                ax=ax,
-                row_meta=sub_meta,
-                col_meta=sub_meta,
-                row_sort_class=["hemisphere", "sub_pred"],
-                col_sort_class=["hemisphere", "sub_pred"],
-                row_class_order=None,
-                col_class_order=None,
-                row_colors="merge_class",
-                col_colors="merge_class",
-                row_palette=CLASS_COLOR_DICT,
-                col_palette=CLASS_COLOR_DICT,
-                row_item_order="merge_class",
-                col_item_order="merge_class",
-                plot_type="scattermap",
-                sizes=(5, 7),
-            )
-            stashfig(f"subcluster-adj-label={label}-k={k}-reembed={reembed}")
-            plt.close()
-
-# %% [markdown]
-# ## SUBCLUSTER without reembedding
-
 all_sub_results = []
 sub_data = []
 
@@ -764,20 +673,21 @@ reembed = False
 for label in uni_labels:
     print(label)
     print()
-    label_mask = inv == label
+    label_mask = pred == label
     sub_meta = meta[label_mask].copy()
     sub_meta["inds"] = range(len(sub_meta))
     sub_left_inds = sub_meta[sub_meta["left"]]["inds"].values
     sub_right_inds = sub_meta[sub_meta["right"]]["inds"].values
     sub_lp_inds, sub_rp_inds = get_paired_inds(sub_meta)
+    sub_adj = adj[np.ix_(label_mask, label_mask)]
 
     if reembed:
         ase = AdjacencySpectralEmbed()
         # TODO look into PTR at this level as well
-        sub_adj = adj[np.ix_(label_mask, label_mask)]
         sub_embed = ase.fit_transform(sub_adj)
         sub_X = np.concatenate(sub_embed, axis=1)
         sub_R, _ = orthogonal_procrustes(sub_X[sub_lp_inds], sub_X[sub_rp_inds])
+        sub_X[sub_left_inds] = sub_X[sub_left_inds] @ sub_R
     else:
         sub_X = X[label_mask].copy()
         sub_R = R
@@ -789,30 +699,35 @@ for label in uni_labels:
         "left_pair_inds": sub_lp_inds,
         "right_pair_inds": sub_rp_inds,
         "X": sub_X,
+        "adj": sub_adj,
     }
-    if reembed:
-        var_dict["adj"] = sub_adj
+
     sub_data.append(var_dict)
 
     sub_results = crossval_cluster(
         sub_X,
         sub_left_inds,
         sub_right_inds,
-        sub_R,
         left_pair_inds=sub_lp_inds,
         right_pair_inds=sub_rp_inds,
         max_clusters=10,
         min_clusters=1,
+        n_init=50,
     )
-    fig, axs = plot_crossval_cluster(sub_results)
+
+    fig, axs = plot_metrics(sub_results, plot_all=False)
     fig.suptitle(f"Subclustering for cluster {label}, reembed={reembed}")
     stashfig(f"sub-cluster-profile-label={label}-reembed={reembed}")
+    plt.close()
     all_sub_results.append(sub_results)
 
 # %% [markdown]
 # ##
 
-sub_ks = [(2, 4, 5), (3,), (2, 4, 5), (2, 3, 4), (2, 3, 7), (3, 6)]
+if not reembed:
+    sub_ks = [(2, 4), (0,), (3, 4), (3,), (2, 3), (0,), (4,)]
+else:
+    sub_kws = [(4,), (0,), (4,), (3, 4), (2, 3), (3,), (3, 4, 5)]
 
 for i, label in enumerate(uni_labels):
     ks = sub_ks[i]
@@ -824,86 +739,88 @@ for i, label in enumerate(uni_labels):
     sub_rp_inds = sub_data[i]["right_pair_inds"]
     sub_meta = sub_data[i]["meta"]
 
-    fig, axs = plot_crossval_cluster(sub_results)
+    fig, axs = plot_metrics(sub_results)
     fig.suptitle(f"Subclustering for cluster {label}, reembed={reembed}")
-    for ax in axs:
+    for ax in axs[:-1]:
         for k in ks:
             ax.axvline(k, linestyle="--", color="red", linewidth=2)
-    stashfig(f"sub-cluster-profile-label={label}-k={k}-reembed={reembed}")
+    stashfig(f"sub-cluster-metrics-label={label}-reembed={reembed}" + basename)
     plt.close()
 
     for k in ks:
-        models = sub_results[sub_results["k"] == k]["cluster"].values
-        sub_left_model = models[0].model_
-        sub_right_model = models[1].model_
+        if k != 0:
+            sub_basename = f"label={label}-subk={k}-reembed={reembed}" + basename
+            sub_basetitle = f"Subcluster for {label}, subk={k}, reembed={reembed},"
+            sub_basetitle += f" metric={metric}, k={k}, n_components={n_components}"
 
-        sub_pred = composite_predict(
-            sub_X, sub_left_inds, sub_right_inds, sub_left_model, sub_right_model
-        )
-        _, row_inds, col_inds = compute_pairedness_bipartite(
-            sub_pred[sub_lp_inds], sub_pred[sub_rp_inds]
-        )
+            ind = sub_results[sub_results["k"] == k][metric].idxmax()
+            sub_model = sub_results.loc[ind, "model"]
+            sub_left_model = sub_model
+            sub_right_model = sub_model
 
-        # there is a weird edge case for KCs
-        if len(row_inds) < len(np.unique(sub_pred)):
-            row_inds = np.unique(sub_pred)
-            col_inds = np.unique(sub_pred)
+            sub_pred_side = composite_predict(
+                sub_X,
+                sub_left_inds,
+                sub_right_inds,
+                sub_left_model,
+                sub_right_model,
+                relabel=True,
+            )
 
-        sub_left_model = reindex_model(sub_left_model, row_inds)
-        sub_right_model = reindex_model(sub_right_model, col_inds)
+            ax = stacked_barplot(
+                sub_pred_side,
+                sub_meta["merge_class"].values,
+                color_dict=CLASS_COLOR_DICT,
+                legend_ncol=6,
+            )
+            ax.set_title(sub_basetitle)
+            stashfig(f"barplot" + sub_basename)
+            plt.close()
 
-        fig, axs = plot_cluster_pairs(
-            sub_X,
-            sub_left_inds,
-            sub_right_inds,
-            sub_left_model,
-            sub_right_model,
-            sub_meta["merge_class"].values,
-        )
-        fig.suptitle(f"Subclustering for cluster {label}, sub-K={k}, reembed={reembed}")
-        stashfig(f"subcluster-pairs-label={label}-k={k}-reembed={reembed}")
-        plt.close()
+            fig, ax = plot_cluster_pairs(
+                sub_X,
+                sub_left_inds,
+                sub_right_inds,
+                sub_left_model,
+                sub_right_model,
+                sub_meta["merge_class"].values,
+            )
+            fig.suptitle(sub_basetitle, y=1)
+            stashfig(f"pairs" + sub_basename)
+            plt.close()
 
-        sub_pred = composite_predict(
-            sub_X,
-            sub_left_inds,
-            sub_right_inds,
-            sub_left_model,
-            sub_right_model,
-            relabel=True,
-        )
-
-        ax = stacked_barplot(
-            sub_pred,
-            sub_meta["merge_class"].values,
-            color_dict=CLASS_COLOR_DICT,
-            legend_ncol=4,
-        )
-        ax.set_title(f"Subclusters for cluster {label}, sub-K={k}, reembed={reembed}")
-        stashfig(f"subcluster-barplot-label={label}-k={k}-reembed={reembed}")
-        plt.close()
-
-        if "adj" in sub_data[i]:
             sub_adj = sub_data[i]["adj"]
-            sub_meta["sub_pred"] = sub_pred
+            sub_meta["sub_pred_side"] = sub_pred_side
+
+            sub_pred_var = f"c{label}_sub_pred_side"
+            meta[sub_pred_var] = ""
+            meta.loc[
+                pred == label, sub_pred_var
+            ] = sub_pred_side  # TODO indexing is dangerous here
+            meta[f"is_c{label}"] = pred == label
             fig, ax = plt.subplots(1, 1, figsize=(20, 20))
             matrixplot(
-                sub_adj,
+                adj,
                 ax=ax,
-                row_meta=sub_meta,
-                col_meta=sub_meta,
-                row_sort_class=["hemisphere", "sub_pred"],
-                col_sort_class=["hemisphere", "sub_pred"],
-                row_class_order=None,
-                col_class_order=None,
+                row_meta=meta,
+                col_meta=meta,
+                row_sort_class=["pred_side", sub_pred_var],
+                col_sort_class=["pred_side", sub_pred_var],
+                row_class_order="group_signal_flow",
+                col_class_order="group_signal_flow",
                 row_colors="merge_class",
                 col_colors="merge_class",
                 row_palette=CLASS_COLOR_DICT,
                 col_palette=CLASS_COLOR_DICT,
-                row_item_order="merge_class",
-                col_item_order="merge_class",
+                row_item_order=["merge_class", "signal_flow"],
+                col_item_order=["merge_class", "signal_flow"],
+                row_highlight=f"is_c{label}",
+                col_highlight=f"is_c{label}",
+                highlight_kws=dict(color="red", linestyle="-", linewidth=1),
                 plot_type="scattermap",
-                sizes=(5, 7),
+                sizes=(0.5, 1),
+                square=True,
             )
-            stashfig(f"subcluster-adj-label={label}-k={k}-reembed={reembed}")
-            plt.close()
+            fig.suptitle(sub_basetitle, y=0.94)
+            stashfig("full-adj" + sub_basename)
+

@@ -40,7 +40,9 @@ def _get_tick_info(sort_meta, sort_class):
         sort_meta["sort_idx"] = range(len(sort_meta))
         # for the gridlines
         first_df = sort_meta.groupby(sort_class, sort=False).first()
-        first_inds = list(first_df["sort_idx"].values)[1:]  # skip since we have spines
+        first_inds = list(first_df["sort_idx"].values)  # skip since we have spines
+        last_df = sort_meta.groupby(sort_class, sort=False).last()
+        first_inds.append(last_df["sort_idx"].values[-1] + 1)
         # for the tic locs
         middle_df = sort_meta.groupby(sort_class, sort=False).mean()
         middle_inds = np.array(middle_df["sort_idx"].values) + 0.5
@@ -204,30 +206,23 @@ def draw_separators(
     #             len(sort_meta), color="black", linestyle="-", alpha=1, linewidth=2
     #         )
 
+    if ax_type == "x":
+        lims = ax.get_xlim()
+        drawer = ax.axvline
+        if tick_ax_border:
+            tick_drawer = tick_ax.axvline
+    else:
+        lims = ax.get_ylim()
+        drawer = ax.axhline
+        if tick_ax_border:
+            tick_drawer = tick_ax.axhline
+
     # draw the border lines
     for t in first_inds:
-        if ax_type == "x":
-            ax.axvline(t - boost, **gridline_kws)
-            if tick_ax_border:
-                tick_ax.axvline(
-                    t - boost,
-                    ymin=-1,
-                    color="black",
-                    linestyle="-",
-                    alpha=1,
-                    linewidth=2,
-                )
-        else:
-            ax.axhline(t - boost, **gridline_kws)
-            if tick_ax_border:
-                tick_ax.axhline(
-                    t - boost,
-                    xmin=-10,
-                    color="black",
-                    linestyle="-",
-                    alpha=1,
-                    linewidth=2,
-                )
+        if t not in lims:
+            drawer(t - boost, **gridline_kws)
+        if tick_ax_border:
+            tick_drawer(t - boost, color="black", linestyle="-", alpha=1, linewidth=2)
 
     if use_ticks:
         # add tick labels and locs
@@ -303,6 +298,8 @@ def matrixplot(
     col_colors=None,
     row_palette="tab10",
     col_palette="tab10",
+    col_highlight=None,
+    row_highlight=None,
     border=True,
     minor_ticking=False,
     tick_rot=0,
@@ -312,6 +309,7 @@ def matrixplot(
     square=False,
     gridline_kws=None,
     spinestyle_kws=None,
+    highlight_kws=None,
     **kws,
 ):
     """Plotting matrices
@@ -507,6 +505,35 @@ def matrixplot(
                 tick_ax_border=tick_ax_border,
             )
 
+    if highlight_kws is None:
+        highlight_kws = dict(color="black", linestyle="-", linewidth=1)
+    if col_highlight is not None:
+        draw_separators(
+            ax,
+            divider=divider,
+            # tick_ax=tick_ax,
+            ax_type="x",
+            sort_meta=col_meta,
+            sort_class=col_highlight,
+            plot_type=plot_type,
+            use_ticks=False,
+            gridline_kws=highlight_kws,
+            tick_ax_border=False,
+        )
+    if row_highlight is not None:
+        draw_separators(
+            ax,
+            divider=divider,
+            # tick_ax=tick_ax,
+            ax_type="y",
+            sort_meta=row_meta,
+            sort_class=row_highlight,
+            plot_type=plot_type,
+            use_ticks=False,
+            gridline_kws=highlight_kws,
+            tick_ax_border=False,
+        )
+
     # spines
     if border:
         for spine in ax.spines.values():
@@ -517,3 +544,62 @@ def matrixplot(
             spine.set_alpha(spinestyle_kws["alpha"])
 
     return ax, divider, top_cax, left_cax
+
+
+def adjplot(
+    data,
+    ax=None,
+    plot_type="heatmap",
+    meta=None,
+    sort_class=None,
+    class_order=None,
+    item_order=None,
+    colors=None,
+    highlight=None,
+    palette="tab10",
+    ticks=True,
+    border=True,
+    minor_ticking=False,
+    tick_rot=0,
+    center=0,
+    cmap="RdBu_r",
+    sizes=(10, 40),
+    square=True,
+    gridline_kws=None,
+    spinestyle_kws=None,
+    highlight_kws=None,
+    **kws,
+):
+    outs = matrixplot(
+        data,
+        ax=ax,
+        plot_type=plot_type,
+        row_meta=meta,
+        col_meta=meta,
+        row_sort_class=sort_class,
+        col_sort_class=sort_class,
+        row_class_order=class_order,
+        col_class_order=class_order,
+        row_item_order=item_order,
+        col_item_order=item_order,
+        row_colors=colors,
+        col_colors=colors,
+        row_palette=palette,
+        col_palette=palette,
+        row_highlight=highlight,
+        col_highlight=highlight,
+        row_ticks=ticks,
+        col_ticks=ticks,
+        border=border,
+        tick_rot=tick_rot,
+        center=center,
+        cmap=cmap,
+        sizes=sizes,
+        square=square,
+        gridline_kws=gridline_kws,
+        spinestyle_kws=spinestyle_kws,
+        highlight_kws=highlight_kws,
+        **kws,
+    )
+    return outs
+
