@@ -59,6 +59,8 @@ for key, val in rc_dict.items():
 context = sns.plotting_context(context="talk", font_scale=1, rc=rc_dict)
 sns.set_context(context)
 
+np.random.seed(8888)
+
 
 def stashfig(name, **kws):
     savefig(name, foldername=FNAME, save_on=True, **kws)
@@ -278,44 +280,23 @@ def make_ellipses(gmm, ax, i, j, colors, alpha=0.5, equal=False, **kws):
 
 
 def plot_cluster_pairs(
-    X,
-    left_inds,
-    right_inds,
-    left_model,
-    right_model,
-    labels,
-    left_colors=None,
-    right_colors=None,
-    equal=True,
+    X, left_inds, right_inds, left_model, right_model, labels, colors=None, equal=True
 ):
     k = left_model.n_components
     n_dims = X.shape[1]
 
-    # if left_colors is None and right_colors is None:
-    #     tab20 = sns.color_palette("tab20", n_colors=2 * k, desat=0.7)
-    #     left_colors = tab20[::2]
-    #     right_colors = tab20[1::2]
-
-    # colors = left_colors + right_colors
-    # print(len(colors))
-    # print(k)
-    colors = sns.color_palette("tab20", n_colors=k, desat=0.7)
+    if colors is None:
+        colors = sns.color_palette("tab10", n_colors=k, desat=0.7)
 
     fig, axs = plt.subplots(
         n_dims, n_dims, sharex=False, sharey=False, figsize=(20, 20)
     )
     data = pd.DataFrame(data=X)
     data["label"] = labels  #
-    # TODO fill this in with composite_predict here
-    pred_left = left_model.predict(X[left_inds])
-    pred_right = right_model.predict(X[right_inds]) + pred_left.max() + 1
-    print(len(np.unique(pred_left)))
-    print(len(np.unique(pred_right)))
-    pred = np.empty(len(data), dtype=int)
-    pred[left_inds] = pred_left
-    pred[right_inds] = pred_right
+    pred = composite_predict(
+        X, left_inds, right_inds, left_model, right_model, relabel=False
+    )
     data["pred"] = pred
-    print(data["pred"].nunique())
 
     for i in range(n_dims):
         for j in range(n_dims):
@@ -334,12 +315,7 @@ def plot_cluster_pairs(
                     hue="label",
                     palette=CLASS_COLOR_DICT,
                 )
-                make_ellipses(
-                    left_model, ax, i, j, left_colors, fill=False, equal=equal
-                )
-                make_ellipses(
-                    right_model, ax, i, j, right_colors, fill=False, equal=equal
-                )
+                make_ellipses(left_model, ax, i, j, colors, fill=False, equal=equal)
             if i > j:
                 sns.scatterplot(
                     data=data,
@@ -353,10 +329,7 @@ def plot_cluster_pairs(
                     hue="pred",
                     palette=colors,
                 )
-                make_ellipses(left_model, ax, i, j, left_colors, fill=True, equal=equal)
-                make_ellipses(
-                    right_model, ax, i, j, right_colors, fill=True, equal=equal
-                )
+                make_ellipses(left_model, ax, i, j, colors, fill=True, equal=equal)
 
     plt.tight_layout()
     return fig, axs
@@ -558,7 +531,7 @@ stashfig(f"cluster-metrics-n_components={n_components}")
 # of the data. Here we will proceed with k=7, and choose the model with the best BIC on
 # all of the data.
 
-k = 7
+k = 6
 metric = "bic"
 basename = f"-metric={metric}-k={k}-n_components={n_components}"
 basetitle = f"Metric={metric}, k={k}, n_components={n_components}"
@@ -651,7 +624,9 @@ fig.suptitle(basetitle, y=0.94)
 stashfig(f"adj-rand" + basename)
 
 # %% [markdown]
-# ## SUBCLUSTER with reembedding!
+# ## SUBCLUSTER
+
+np.random.seed(8888)
 
 uni_labels, inv = np.unique(pred, return_inverse=True)
 all_sub_results = []
@@ -712,11 +687,13 @@ for label in uni_labels:
 
 # %% [markdown]
 # ##
-
+# sub_ks = [(2, 4), (0,), (3, 4), (3,), (2, 3), (0,), (4,)]
+# sub_kws = [(4,), (0,), (4,), (3, 4), (2, 3), (3,), (3, 4, 5)]
 if not reembed:
-    sub_ks = [(2, 4), (0,), (3, 4), (3,), (2, 3), (0,), (4,)]
+    sub_ks = [(4,), (4,), (3,), (2, 3, 4), (0,), (3,)]
 else:
-    sub_kws = [(4,), (0,), (4,), (3, 4), (2, 3), (3,), (3, 4, 5)]
+    pass
+
 
 for i, label in enumerate(uni_labels):
     ks = sub_ks[i]
@@ -738,7 +715,7 @@ for i, label in enumerate(uni_labels):
 
     for k in ks:
         if k != 0:
-            sub_basename = f"label={label}-subk={k}-reembed={reembed}" + basename
+            sub_basename = f"-label={label}-subk={k}-reembed={reembed}" + basename
             sub_basetitle = f"Subcluster for {label}, subk={k}, reembed={reembed},"
             sub_basetitle += f" metric={metric}, k={k}, n_components={n_components}"
 
@@ -786,6 +763,15 @@ for i, label in enumerate(uni_labels):
             meta.loc[
                 pred == label, sub_pred_var
             ] = sub_pred_side  # TODO indexing is dangerous here
+            meta[f"c{label}_sub_pred"] = ""
+            meta.loc[pred == label, f"c{label}_sub_pred"] = composite_predict(
+                sub_X,
+                sub_left_inds,
+                sub_right_inds,
+                sub_left_model,
+                sub_right_model,
+                relabel=False,
+            )
             meta[f"is_c{label}"] = pred == label
             fig, ax = plt.subplots(1, 1, figsize=(20, 20))
             adjplot(
@@ -804,4 +790,66 @@ for i, label in enumerate(uni_labels):
             )
             fig.suptitle(sub_basetitle, y=0.94)
             stashfig("full-adj" + sub_basename)
+            plt.close()
+# %% [markdown]
+# ##
 
+cols = meta.columns
+sub_pred_side_cols = []
+sub_pred_cols = []
+for c in cols:
+    if "_sub_pred" in c:
+        if "_side" in c:
+            sub_pred_side_cols.append(c)
+        else:
+            sub_pred_cols.append(c)
+
+meta["total_pred"] = ""
+meta["total_pred"] = meta["pred"].astype(str) + "-"
+meta["total_pred_side"] = ""
+meta["total_pred_side"] = meta["pred_side"].astype(str) + "-"
+meta["sub_pred"] = ""
+meta["sub_pred_side"] = ""
+
+for c in sub_pred_cols:
+    meta["total_pred"] += meta[c].astype(str)
+    meta["sub_pred"] += meta[c].astype(str)
+
+for c in sub_pred_side_cols:
+    meta["sub_pred_side"] += meta[c].astype(str)
+    meta["total_pred_side"] += meta[c].astype(str)
+
+# %% [markdown]
+# ##
+
+fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+adjplot(
+    adj,
+    ax=ax,
+    meta=meta,
+    sort_class=["pred_side", "sub_pred_side"],
+    class_order=None,
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    item_order=["merge_class", "signal_flow"],
+    plot_type="scattermap",
+    sizes=(0.5, 1),
+)
+fig.suptitle(sub_basetitle, y=0.94)
+stashfig("lvl2-full-adj" + sub_basename)
+plt.close()
+
+# %% [markdown]
+# ##
+all_sort_class = ["pred_side", "sub_pred_side"]
+sm = meta.sort_values(["pred_side", "sub_pred_side"])
+sm["sort_inds"] = range(len(sm))
+first_df = sm.groupby(["pred_side", "sub_pred_side"], sort=False).mean()
+
+# first_df.reset_index(inplace=True)
+# first_df.groupby(["pred_side"], sort=False).mean()
+# %% [markdown] 
+# ## 
+np.where(np.array(all_sort_class) == "sub_pred_side")
+
+# %%

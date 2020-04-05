@@ -32,26 +32,6 @@ def sort_meta(meta, sort_class, sort_item=None, class_order="size"):
     return perm_inds, meta
 
 
-def _get_tick_info(sort_meta, sort_class):
-    """ Assumes meta is already sorted
-    """
-    if sort_meta is not None and sort_class is not None:
-        # get locations
-        sort_meta["sort_idx"] = range(len(sort_meta))
-        # for the gridlines
-        first_df = sort_meta.groupby(sort_class, sort=False).first()
-        first_inds = list(first_df["sort_idx"].values)  # skip since we have spines
-        last_df = sort_meta.groupby(sort_class, sort=False).last()
-        first_inds.append(last_df["sort_idx"].values[-1] + 1)
-        # for the tic locs
-        middle_df = sort_meta.groupby(sort_class, sort=False).mean()
-        middle_inds = np.array(middle_df["sort_idx"].values) + 0.5
-        middle_labels = list(middle_df.index)
-        return first_inds, middle_inds, middle_labels
-    else:
-        return None, None, None
-
-
 def remove_shared_ax(ax):
     shax = ax.get_shared_x_axes()
     shay = ax.get_shared_y_axes()
@@ -129,12 +109,44 @@ def draw_colors(
         return ax
 
 
+def _get_tick_info(sort_meta, all_sort_class, level_sort_class):
+    """ Assumes meta is already sorted
+    """
+    if sort_meta is not None and all_sort_class is not None:
+        # get locations
+        sort_meta["sort_idx"] = range(len(sort_meta))
+
+        # for the gridlines
+        first_df = sort_meta.groupby(all_sort_class, sort=False).first()
+        first_df.reset_index(inplace=True)
+        first_df = first_df.groupby(level_sort_class, sort=False).first()
+        first_inds = list(first_df["sort_idx"].values)
+        last_df = sort_meta.groupby(all_sort_class, sort=False).last()
+        last_df.reset_index(inplace=True)
+        last_df = last_df.groupby(level_sort_class, sort=False).last()
+        first_inds.append(last_df["sort_idx"].values[-1] + 1)
+
+        # for the tic locs
+        ind = np.where(np.array(all_sort_class) == level_sort_class)[0][0]
+        middle_df = sort_meta.groupby(all_sort_class[: ind + 1], sort=False).mean()
+        # middle_df.reset_index(inplace=True)
+        # middle_df.groupby(level_sort_class, sort=False).mean()
+        middle_inds = np.array(middle_df["sort_idx"].values) + 0.5
+
+        # middle_labels = list(middle_df.index)
+        middle_labels = list(middle_df.index.get_level_values(level_sort_class))
+        return first_inds, middle_inds, middle_labels
+    else:
+        return None, None, None
+
+
 def draw_separators(
     ax,
     ax_type="x",
     tick_ax=None,
     sort_meta=None,
-    sort_class=None,
+    all_sort_class=None,
+    level_sort_class=None,
     divider=None,
     colors=None,
     palette="tab10",
@@ -192,7 +204,9 @@ def draw_separators(
         boost = 0.5
 
     # get info about the separators
-    first_inds, middle_inds, middle_labels = _get_tick_info(sort_meta, sort_class)
+    first_inds, middle_inds, middle_labels = _get_tick_info(
+        sort_meta, all_sort_class, level_sort_class
+    )
 
     # if tick_ax_border:
     #     if ax_type == "x":
@@ -455,6 +469,7 @@ def matrixplot(
     if col_sort_class is not None:
         tick_ax = top_cax  # prime the loop
         tick_ax_border = False
+        rev_sc = col_sort_class[::-1]
         for i, sc in enumerate(col_sort_class[::-1]):
             if i > 0:
                 tick_ax = divider.append_axes("top", size="1%", pad=0.5, sharex=ax)
@@ -470,7 +485,8 @@ def matrixplot(
                 tick_ax=tick_ax,
                 ax_type="x",
                 sort_meta=col_meta,
-                sort_class=sc,
+                all_sort_class=rev_sc,
+                level_sort_class=sc,
                 plot_type=plot_type,
                 use_ticks=col_ticks,
                 tick_rot=tick_rot,
@@ -497,7 +513,8 @@ def matrixplot(
                 tick_ax=tick_ax,
                 ax_type="y",
                 sort_meta=row_meta,
-                sort_class=sc,
+                all_sort_class=row_sort_class,
+                level_sort_class=sc,
                 plot_type=plot_type,
                 use_ticks=row_ticks,
                 tick_rot=0,
@@ -514,7 +531,8 @@ def matrixplot(
             # tick_ax=tick_ax,
             ax_type="x",
             sort_meta=col_meta,
-            sort_class=col_highlight,
+            all_sort_class=col_sort_class,
+            level_sort_class=col_highlight,
             plot_type=plot_type,
             use_ticks=False,
             gridline_kws=highlight_kws,
@@ -527,7 +545,8 @@ def matrixplot(
             # tick_ax=tick_ax,
             ax_type="y",
             sort_meta=row_meta,
-            sort_class=row_highlight,
+            all_sort_class=row_sort_class,
+            level_sort_class=row_highlight,
             plot_type=plot_type,
             use_ticks=False,
             gridline_kws=highlight_kws,
