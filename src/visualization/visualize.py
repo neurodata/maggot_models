@@ -985,6 +985,7 @@ def stacked_barplot(
     color_dict=None,
     hatch_dict=None,
     return_order=False,
+    plot_names=False,
 ):
     """
     Parameters
@@ -996,6 +997,10 @@ def stacked_barplot(
     category_names : list of str
         The category labels.
     """
+    if isinstance(category, pd.Series):
+        category = category.values
+    if isinstance(subcategory, pd.Series):
+        subcategory = subcategory.values
 
     # Counts the nunmber of unique category within each category, plotting as bar plot
     if category_order is None:
@@ -1007,6 +1012,7 @@ def stacked_barplot(
     if color_dict == "class":
         color_dict = CLASS_COLOR_DICT
 
+    # stolen from mpl docs
     # HACK this could be one line in pandas
     counts_by_label = []
     for label in uni_cat:
@@ -1056,7 +1062,7 @@ def stacked_barplot(
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(15, 10))
-        remove_spines(ax)
+
     ax.set_ylim(-1, len(labels))
     ax.invert_yaxis()
     ax.xaxis.set_visible(False)
@@ -1114,10 +1120,27 @@ def stacked_barplot(
                         color=text_color,
                     )
 
+        if plot_names:
+            xcenters = starts + widths / 2
+            r, g, b = color
+            text_color = "black"
+            for y, (x, c) in enumerate(zip(xcenters, colname)):
+                text_color = "black"  # TODO
+                if c != 0:
+                    ax.text(
+                        x,
+                        y - bar_height / 2 - i % 2 * bar_height / 4,
+                        f"{c:.2f}",
+                        ha="center",
+                        va="bottom",
+                        color=text_color,
+                    )
+
     # this places the legend outside of the axes and in the lower left corner
     ax.legend(
         ncol=legend_ncol, bbox_to_anchor=(0, 0), loc="upper left", fontsize="small"
     )
+    remove_spines(ax)
     if return_data:
         return ax, data, uni_subcat, subcategory_colors, order
     else:

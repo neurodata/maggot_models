@@ -466,6 +466,7 @@ left_inds = meta[meta["left"]]["inds"]
 right_inds = meta[meta["right"]]["inds"]
 lp_inds, rp_inds = get_paired_inds(meta)
 
+
 # %% [markdown]
 # ## Embed
 # Here the embedding is ASE, with PTR and DiagAug, the number of embedding dimensions
@@ -821,35 +822,77 @@ for c in sub_pred_side_cols:
 
 # %% [markdown]
 # ##
+meta["lvl2_signal_flow"] = meta["total_pred"].map(
+    meta.groupby("total_pred")["signal_flow"].mean()
+)
 
 fig, ax = plt.subplots(1, 1, figsize=(20, 20))
 adjplot(
     adj,
     ax=ax,
     meta=meta,
-    sort_class=["pred_side", "sub_pred_side"],
-    class_order=None,
+    sort_class=["hemisphere", "pred", "sub_pred"],
+    class_order="lvl2_signal_flow",
     colors="merge_class",
     palette=CLASS_COLOR_DICT,
     item_order=["merge_class", "signal_flow"],
     plot_type="scattermap",
     sizes=(0.5, 1),
 )
-fig.suptitle(sub_basetitle, y=0.94)
+fig.suptitle(f"2-level hierarchy clustering, reembed={reembed}" + basetitle, y=0.94)
 stashfig("lvl2-full-adj" + sub_basename)
-plt.close()
+
+fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+adjplot(
+    adj,
+    ax=ax,
+    meta=meta,
+    sort_class=["hemisphere", "pred", "sub_pred"],
+    class_order="lvl2_signal_flow",
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    item_order=["rand"],
+    plot_type="scattermap",
+    sizes=(0.5, 1),
+)
+fig.suptitle(f"2-level hierarchy clustering, reembed={reembed}" + basetitle, y=0.94)
+stashfig("lvl2-full-adj-rand" + sub_basename)
 
 # %% [markdown]
 # ##
-all_sort_class = ["pred_side", "sub_pred_side"]
-sm = meta.sort_values(["pred_side", "sub_pred_side"])
-sm["sort_inds"] = range(len(sm))
-first_df = sm.groupby(["pred_side", "sub_pred_side"], sort=False).mean()
+fig, ax = plt.subplots(1, 1, figsize=(15, 20))
+ax = stacked_barplot(
+    meta["total_pred_side"].values,
+    meta["merge_class"].values,
+    color_dict=CLASS_COLOR_DICT,
+    legend_ncol=6,
+    ax=ax,
+    norm_bar_width=False,
+)
 
-# first_df.reset_index(inplace=True)
-# first_df.groupby(["pred_side"], sort=False).mean()
-# %% [markdown] 
-# ## 
-np.where(np.array(all_sort_class) == "sub_pred_side")
+stashfig("lvl2-barplot" + sub_basename)
+
+# %% [markdown]
+# ##
+import pymaid
+from src.pymaid import start_instance
+
+
+start_instance()
+
+for tp in meta["total_pred"].unique()[:10]:
+    ids = list(meta[meta["total_pred"] == tp].index.values)
+    ids = [int(i) for i in ids]
+    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+    skeleton_color_dict = dict(
+        zip(meta.index, np.vectorize(CLASS_COLOR_DICT.get)(meta["merge_class"]))
+    )
+    pymaid.plot2d(ids, color=skeleton_color_dict, ax=ax)
+    ax.axis("equal")
+    stashfig(f"test-plot2d-{tp}")
+
+# %% [markdown]
+# ##
+
 
 # %%

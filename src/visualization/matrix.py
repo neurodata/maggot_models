@@ -109,54 +109,102 @@ def draw_colors(
         return ax
 
 
-def _get_tick_info(sort_meta, all_sort_class, level_sort_class):
+# def _get_tick_info(sort_meta, all_sort_class, level_sort_class):
+#     """ Assumes meta is already sorted
+#     """
+#     if sort_meta is not None and all_sort_class is not None:
+#         # get locations
+#         sort_meta["sort_idx"] = range(len(sort_meta))
+
+#         # for the gridlines
+#         first_df = sort_meta.groupby(all_sort_class, sort=False).first()
+#         first_df.reset_index(inplace=True)
+#         first_df = first_df.groupby(level_sort_class, sort=False).first()
+#         first_inds = list(first_df["sort_idx"].values)
+#         last_df = sort_meta.groupby(all_sort_class, sort=False).last()
+#         last_df.reset_index(inplace=True)
+#         last_df = last_df.groupby(level_sort_class, sort=False).last()
+#         first_inds.append(last_df["sort_idx"].values[-1] + 1)
+
+#         # for the tic locs
+#         ind = np.where(np.array(all_sort_class) == level_sort_class)[0][0]
+#         middle_df = sort_meta.groupby(all_sort_class[: ind + 1], sort=False).mean()
+#         # middle_df.reset_index(inplace=True)
+#         # middle_df.groupby(level_sort_class, sort=False).mean()
+#         middle_inds = np.array(middle_df["sort_idx"].values) + 0.5
+
+#         # middle_labels = list(middle_df.index)
+#         middle_labels = list(middle_df.index.get_level_values(level_sort_class))
+#         return first_inds, middle_inds, middle_labels
+#     else:
+#         return None, None, None
+
+
+def _get_separator_info(sort_meta, sort_class):
     """ Assumes meta is already sorted
     """
-    if sort_meta is not None and all_sort_class is not None:
-        # get locations
-        sort_meta["sort_idx"] = range(len(sort_meta))
+    if sort_meta is None and sort_class is None:
+        return None
 
-        # for the gridlines
-        first_df = sort_meta.groupby(all_sort_class, sort=False).first()
-        first_df.reset_index(inplace=True)
-        first_df = first_df.groupby(level_sort_class, sort=False).first()
-        first_inds = list(first_df["sort_idx"].values)
-        last_df = sort_meta.groupby(all_sort_class, sort=False).last()
-        last_df.reset_index(inplace=True)
-        last_df = last_df.groupby(level_sort_class, sort=False).last()
-        first_inds.append(last_df["sort_idx"].values[-1] + 1)
+    sort_meta["sort_idx"] = range(len(sort_meta))
+    first_df = sort_meta.groupby(sort_class, sort=False).first()
+    sep_inds = list(first_df["sort_idx"].values)
+    last_df = sort_meta.groupby(sort_class, sort=False).last()
+    sep_inds.append(last_df["sort_idx"].values[-1] + 1)
+    return sep_inds
 
-        # for the tic locs
-        ind = np.where(np.array(all_sort_class) == level_sort_class)[0][0]
-        middle_df = sort_meta.groupby(all_sort_class[: ind + 1], sort=False).mean()
-        # middle_df.reset_index(inplace=True)
-        # middle_df.groupby(level_sort_class, sort=False).mean()
-        middle_inds = np.array(middle_df["sort_idx"].values) + 0.5
 
-        # middle_labels = list(middle_df.index)
-        middle_labels = list(middle_df.index.get_level_values(level_sort_class))
-        return first_inds, middle_inds, middle_labels
+def _get_tick_info(sort_meta, sort_class):
+    if sort_meta is None and sort_class is None:
+        return None, None
+
+    # first_df = sort_meta.groupby(sort_class, sort=False).first()
+
+    middle_df = sort_meta.groupby(sort_class, sort=False).mean()
+    middle_inds = np.array(middle_df["sort_idx"].values) + 0.5
+    middle_labels = list(middle_df.index.get_level_values(sort_class[0]))
+
+    # need to return the location of the tick, the label, and the divider
+    return middle_inds, middle_labels
+
+
+def draw_ticks(
+    tick_ax,
+    sort_meta=None,
+    sort_class=None,
+    ax_type="x",
+    tick_rot=0,
+    tick_ax_border=True,
+):
+    tick_inds, tick_labels = _get_tick_info(sort_meta, sort_class)
+    if tick_rot != 0:
+        ha = "left"
     else:
-        return None, None, None
+        ha = "center"
+    if ax_type == "x":
+        tick_ax.set_xticks(tick_inds)
+        tick_ax.set_xticklabels(tick_labels, rotation=tick_rot, ha=ha, va="bottom")
+        tick_ax.xaxis.tick_top()
+    else:
+        tick_ax.set_yticks(tick_inds)
+        tick_ax.set_yticklabels(tick_labels, ha="right", va="center")
+
+    if tick_ax_border:
+        sep_inds = _get_separator_info(sort_meta, sort_class)
+        for t in sep_inds:
+            if ax_type == "x":
+                tick_ax.axvline(t, color="black", linestyle="-", alpha=1, linewidth=2)
+            else:
+                tick_ax.axhline(t, color="black", linestyle="-", alpha=1, linewidth=2)
 
 
 def draw_separators(
     ax,
     ax_type="x",
-    tick_ax=None,
     sort_meta=None,
-    all_sort_class=None,
-    level_sort_class=None,
-    divider=None,
-    colors=None,
-    palette="tab10",
+    sort_class=None,
     plot_type="heatmap",
     gridline_kws=None,
-    use_ticks=True,
-    tick_fontsize=10,
-    minor_ticking=False,
-    tick_rot=45,
-    tick_ax_border=False,
 ):
     """[summary]
     
@@ -204,66 +252,56 @@ def draw_separators(
         boost = 0.5
 
     # get info about the separators
-    first_inds, middle_inds, middle_labels = _get_tick_info(
-        sort_meta, all_sort_class, level_sort_class
-    )
+    # first_inds, middle_inds, middle_labels = _get_tick_info(
+    #     sort_meta, all_sort_class, level_sort_class
+    # )
 
-    # if tick_ax_border:
-    #     if ax_type == "x":
-    #         tick_ax.axvline(0, color="black", linestyle="-", alpha=1, linewidth=2)
-    #         tick_ax.axvline(
-    #             len(sort_meta), color="black", linestyle="-", alpha=1, linewidth=2
-    #         )
-    #     else:
-    #         tick_ax.axvline(0, color="black", linestyle="-", alpha=1, linewidth=2)
-    #         tick_ax.axvline(
-    #             len(sort_meta), color="black", linestyle="-", alpha=1, linewidth=2
-    #         )
+    sep_inds = _get_separator_info(sort_meta, sort_class)
 
     if ax_type == "x":
         lims = ax.get_xlim()
         drawer = ax.axvline
-        if tick_ax_border:
-            tick_drawer = tick_ax.axvline
+        # if tick_ax_border:
+        #     tick_drawer = tick_ax.axvline
     else:
         lims = ax.get_ylim()
         drawer = ax.axhline
-        if tick_ax_border:
-            tick_drawer = tick_ax.axhline
+        # if tick_ax_border:
+        #     tick_drawer = tick_ax.axhline
 
     # draw the border lines
-    for t in first_inds:
+    for t in sep_inds:
         if t not in lims:
             drawer(t - boost, **gridline_kws)
-        if tick_ax_border:
-            tick_drawer(t - boost, color="black", linestyle="-", alpha=1, linewidth=2)
+        # if tick_ax_border:
+        #     tick_drawer(t - boost, color="black", linestyle="-", alpha=1, linewidth=2)
 
-    if use_ticks:
-        # add tick labels and locs
-        if ax_type == "x":
-            tick_ax.set_xticks(middle_inds)
-            if minor_ticking:
-                tick_ax.set_xticklabels(middle_labels[0::2])
-                tick_ax.set_xticklabels(middle_labels[1::2], minor=True)
-            else:
-                if tick_rot != 0:
-                    tick_ax.set_xticklabels(
-                        middle_labels, rotation=tick_rot, ha="left", va="bottom"
-                    )
-                else:
-                    tick_ax.set_xticklabels(
-                        middle_labels, rotation=tick_rot, ha="center", va="bottom"
-                    )
-            tick_ax.xaxis.tick_top()
-        elif ax_type == "y":
-            tick_ax.set_yticks(middle_inds)
-            if minor_ticking:
-                tick_ax.set_yticklabels(middle_labels[0::2])
-                tick_ax.set_yticklabels(middle_labels[1::2], minor=True)
-            else:
-                tick_ax.set_yticklabels(
-                    middle_labels, rotation=tick_rot, ha="right", va="center"
-                )
+    # if use_ticks:
+    #     # add tick labels and locs
+    #     if ax_type == "x":
+    #         tick_ax.set_xticks(middle_inds)
+    #         if minor_ticking:
+    #             tick_ax.set_xticklabels(middle_labels[0::2])
+    #             tick_ax.set_xticklabels(middle_labels[1::2], minor=True)
+    #         else:
+    #             if tick_rot != 0:
+    #                 tick_ax.set_xticklabels(
+    #                     middle_labels, rotation=tick_rot, ha="left", va="bottom"
+    #                 )
+    #             else:
+    #                 tick_ax.set_xticklabels(
+    #                     middle_labels, rotation=tick_rot, ha="center", va="bottom"
+    #                 )
+    #         tick_ax.xaxis.tick_top()
+    #     elif ax_type == "y":
+    #         tick_ax.set_yticks(middle_inds)
+    #         if minor_ticking:
+    #             tick_ax.set_yticklabels(middle_labels[0::2])
+    #             tick_ax.set_yticklabels(middle_labels[1::2], minor=True)
+    #         else:
+    #             tick_ax.set_yticklabels(
+    #                 middle_labels, rotation=tick_rot, ha="right", va="center"
+    #             )
 
 
 def _process_meta(meta, sort_class):
@@ -465,12 +503,32 @@ def matrixplot(
 
     remove_shared_ax(ax)
 
-    # draw separators (grid borders and ticks)
+    # draw separators
+    draw_separators(
+        ax,
+        ax_type="x",
+        sort_meta=col_meta,
+        sort_class=col_sort_class,
+        plot_type=plot_type,
+        gridline_kws=gridline_kws,
+    )
+    draw_separators(
+        ax,
+        ax_type="y",
+        sort_meta=row_meta,
+        sort_class=row_sort_class,
+        plot_type=plot_type,
+        gridline_kws=gridline_kws,
+    )
+
+    # draw ticks
+
     if col_sort_class is not None:
         tick_ax = top_cax  # prime the loop
         tick_ax_border = False
-        rev_sc = col_sort_class[::-1]
-        for i, sc in enumerate(col_sort_class[::-1]):
+        rev_col_sort_class = list(col_sort_class[::-1])
+
+        for i, sc in enumerate(rev_col_sort_class):
             if i > 0:
                 tick_ax = divider.append_axes("top", size="1%", pad=0.5, sharex=ax)
                 remove_shared_ax(tick_ax)
@@ -479,79 +537,126 @@ def matrixplot(
                 tick_ax.spines["left"].set_visible(True)
                 tick_ax.spines["bottom"].set_visible(False)
                 tick_ax_border = True
-            draw_separators(
-                ax,
-                divider=divider,
-                tick_ax=tick_ax,
+
+            draw_ticks(
+                tick_ax,
+                col_meta,
+                rev_col_sort_class[i:],
                 ax_type="x",
-                sort_meta=col_meta,
-                all_sort_class=rev_sc,
-                level_sort_class=sc,
-                plot_type=plot_type,
-                use_ticks=col_ticks,
                 tick_rot=tick_rot,
-                gridline_kws=gridline_kws,
                 tick_ax_border=tick_ax_border,
             )
-        ax.xaxis.set_label_position("top")
+            ax.xaxis.set_label_position("top")
+
     if row_sort_class is not None:
         tick_ax = left_cax  # prime the loop
         tick_ax_border = False
-        for i, sc in enumerate(row_sort_class[::-1]):
+        rev_row_sort_class = list(row_sort_class[::-1])
+
+        for i, sc in enumerate(rev_row_sort_class):
             if i > 0:
                 tick_ax = divider.append_axes("left", size="1%", pad=0.5, sharey=ax)
                 remove_shared_ax(tick_ax)
-                # remove_spines(tick_ax)
                 tick_ax.spines["right"].set_visible(False)
                 tick_ax.spines["top"].set_visible(True)
                 tick_ax.spines["bottom"].set_visible(True)
                 tick_ax.spines["left"].set_visible(True)
                 tick_ax_border = True
-            draw_separators(
-                ax,
-                divider=divider,
-                tick_ax=tick_ax,
+
+            draw_ticks(
+                tick_ax,
+                row_meta,
+                rev_row_sort_class[i:],
                 ax_type="y",
-                sort_meta=row_meta,
-                all_sort_class=row_sort_class,
-                level_sort_class=sc,
-                plot_type=plot_type,
-                use_ticks=row_ticks,
-                tick_rot=0,
-                gridline_kws=gridline_kws,
                 tick_ax_border=tick_ax_border,
             )
 
-    if highlight_kws is None:
-        highlight_kws = dict(color="black", linestyle="-", linewidth=1)
-    if col_highlight is not None:
-        draw_separators(
-            ax,
-            divider=divider,
-            # tick_ax=tick_ax,
-            ax_type="x",
-            sort_meta=col_meta,
-            all_sort_class=col_sort_class,
-            level_sort_class=col_highlight,
-            plot_type=plot_type,
-            use_ticks=False,
-            gridline_kws=highlight_kws,
-            tick_ax_border=False,
-        )
-    if row_highlight is not None:
-        draw_separators(
-            ax,
-            divider=divider,
-            # tick_ax=tick_ax,
-            ax_type="y",
-            sort_meta=row_meta,
-            all_sort_class=row_sort_class,
-            level_sort_class=row_highlight,
-            plot_type=plot_type,
-            use_ticks=False,
-            gridline_kws=highlight_kws,
-            tick_ax_border=False,
-        )
+        # if col_sort_class is not None:
+        #     tick_ax = top_cax  # prime the loop
+        #     tick_ax_border = False
+        #     rev_sc = col_sort_class[::-1]
+        #     for i, sc in enumerate(col_sort_class[::-1]):
+        #         if i > 0:
+        #             tick_ax = divider.append_axes("top", size="1%", pad=0.5, sharex=ax)
+        #             remove_shared_ax(tick_ax)
+        #             tick_ax.spines["right"].set_visible(True)
+        #             tick_ax.spines["top"].set_visible(True)
+        #             tick_ax.spines["left"].set_visible(True)
+        #             tick_ax.spines["bottom"].set_visible(False)
+        #             tick_ax_border = True
+        #         draw_separators(
+        #             ax,
+        #             divider=divider,
+        #             tick_ax=tick_ax,
+        #             ax_type="x",
+        #             sort_meta=col_meta,
+        #             all_sort_class=rev_sc,
+        #             level_sort_class=sc,
+        #             plot_type=plot_type,
+        #             use_ticks=col_ticks,
+        #             tick_rot=tick_rot,
+        #             gridline_kws=gridline_kws,
+        #             tick_ax_border=tick_ax_border,
+        #         )
+
+    # if row_sort_class is not None:
+    #     tick_ax = left_cax  # prime the loop
+    #     tick_ax_border = False
+    #     for i, sc in enumerate(row_sort_class[::-1]):
+    #         if i > 0:
+    #             tick_ax = divider.append_axes("left", size="1%", pad=0.5, sharey=ax)
+    #             remove_shared_ax(tick_ax)
+    #             # remove_spines(tick_ax)
+    #             tick_ax.spines["right"].set_visible(False)
+    #             tick_ax.spines["top"].set_visible(True)
+    #             tick_ax.spines["bottom"].set_visible(True)
+    #             tick_ax.spines["left"].set_visible(True)
+    #             tick_ax_border = True
+    #         draw_separators(
+    #             ax,
+    #             divider=divider,
+    #             tick_ax=tick_ax,
+    #             ax_type="y",
+    #             sort_meta=row_meta,
+    #             all_sort_class=row_sort_class,
+    #             level_sort_class=sc,
+    #             plot_type=plot_type,
+    #             use_ticks=row_ticks,
+    #             tick_rot=0,
+    #             gridline_kws=gridline_kws,
+    #             tick_ax_border=tick_ax_border,
+    #         )
+
+    # if highlight_kws is None:
+    #     highlight_kws = dict(color="black", linestyle="-", linewidth=1)
+    # if col_highlight is not None:
+    #     draw_separators(
+    #         ax,
+    #         divider=divider,
+    #         # tick_ax=tick_ax,
+    #         ax_type="x",
+    #         sort_meta=col_meta,
+    #         all_sort_class=col_sort_class,
+    #         level_sort_class=col_highlight,
+    #         plot_type=plot_type,
+    #         use_ticks=False,
+    #         gridline_kws=highlight_kws,
+    #         tick_ax_border=False,
+    #     )
+    # if row_highlight is not None:
+    #     draw_separators(
+    #         ax,
+    #         divider=divider,
+    #         # tick_ax=tick_ax,
+    #         ax_type="y",
+    #         sort_meta=row_meta,
+    #         all_sort_class=row_sort_class,
+    #         level_sort_class=row_highlight,
+    #         plot_type=plot_type,
+    #         use_ticks=False,
+    #         gridline_kws=highlight_kws,
+    #         tick_ax_border=False,
+    #     )
 
     # spines
     if border:
