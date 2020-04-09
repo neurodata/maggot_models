@@ -36,7 +36,7 @@ def stashcsv(df, name, **kws):
 
 # %% [markdown]
 # #
-VERSION = "2020-03-09"
+VERSION = "2020-04-01"
 print(f"Using version {VERSION}")
 
 graph_type = "Gad"
@@ -76,7 +76,7 @@ sink_groups = [
 sink_group_names = ["Motor", "SEZ", "VNC", "RG", "dUnk"]
 
 meta = mg.meta.copy()
-class_key = "Merge Class"
+class_key = "merge_class"
 
 meta["idx"] = range(len(meta))
 
@@ -123,7 +123,7 @@ matrixplot(
     rank_voltage_df.values,
     ax=ax,
     row_meta=meta,
-    row_sort_class=["Merge Class"],
+    row_sort_class=[class_key],
     col_meta=col_meta,
     col_sort_class=["in_out"],
     tick_rot=45,
@@ -134,7 +134,7 @@ matrixplot(
 
 pca = PCA(n_components=5)
 embed = pca.fit_transform(rank_voltage_df.values)
-pg = pairplot(embed, labels=meta["Merge Class"].values, palette=CLASS_COLOR_DICT)
+pg = pairplot(embed, labels=meta[class_key].values, palette=CLASS_COLOR_DICT)
 pg._legend.remove()
 
 # %% [markdown]

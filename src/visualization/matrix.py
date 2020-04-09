@@ -11,6 +11,8 @@ from matplotlib.colors import ListedColormap
 def sort_meta(meta, sort_class, sort_item=None, class_order="size"):
     if sort_item is None:
         sort_item = []
+    if isinstance(class_order, str):
+        class_order = [class_order]
     meta = meta.copy()
     total_sort_by = []
     for sc in sort_class:
@@ -20,9 +22,10 @@ def sort_meta(meta, sort_class, sort_item=None, class_order="size"):
             meta[f"{sc}_size"] = -meta[sc].map(class_size)
             total_sort_by.append(f"{sc}_size")
         elif class_order is not None:
-            class_value = meta.groupby(sc)[class_order].first()
-            meta[f"{sc}_order"] = meta[sc].map(class_value)
-            total_sort_by.append(f"{sc}_order")
+            for co in class_order:
+                class_value = meta.groupby(sc)[co].mean()
+                meta[f"{sc}_{co}_order"] = meta[sc].map(class_value)
+                total_sort_by.append(f"{sc}_{co}_order")
         total_sort_by.append(sc)
     total_sort_by += sort_item
     meta["sort_idx"] = range(len(meta))
@@ -118,7 +121,7 @@ def draw_colors(
 
 #         # for the gridlines
 #         first_df = sort_meta.groupby(all_sort_class, sort=False).first()
-#         first_df.reset_index(inplace=True)
+#         first_df.reset_index(inplace=True)f
 #         first_df = first_df.groupby(level_sort_class, sort=False).first()
 #         first_inds = list(first_df["sort_idx"].values)
 #         last_df = sort_meta.groupby(all_sort_class, sort=False).last()
@@ -340,8 +343,8 @@ def matrixplot(
     col_meta=None,
     row_sort_class=None,
     col_sort_class=None,
-    row_class_order="size",
-    col_class_order="size",
+    row_class_order=None,
+    col_class_order=None,
     row_ticks=True,
     col_ticks=True,
     row_item_order=None,
@@ -504,26 +507,28 @@ def matrixplot(
     remove_shared_ax(ax)
 
     # draw separators
-    draw_separators(
-        ax,
-        ax_type="x",
-        sort_meta=col_meta,
-        sort_class=col_sort_class,
-        plot_type=plot_type,
-        gridline_kws=gridline_kws,
-    )
-    draw_separators(
-        ax,
-        ax_type="y",
-        sort_meta=row_meta,
-        sort_class=row_sort_class,
-        plot_type=plot_type,
-        gridline_kws=gridline_kws,
-    )
+    if len(col_sort_class) > 0:
+        draw_separators(
+            ax,
+            ax_type="x",
+            sort_meta=col_meta,
+            sort_class=col_sort_class,
+            plot_type=plot_type,
+            gridline_kws=gridline_kws,
+        )
+    if len(col_sort_class) > 0:
+        draw_separators(
+            ax,
+            ax_type="y",
+            sort_meta=row_meta,
+            sort_class=row_sort_class,
+            plot_type=plot_type,
+            gridline_kws=gridline_kws,
+        )
 
     # draw ticks
 
-    if col_sort_class is not None:
+    if col_sort_class is not None and col_ticks:
         tick_ax = top_cax  # prime the loop
         tick_ax_border = False
         rev_col_sort_class = list(col_sort_class[::-1])
@@ -548,7 +553,7 @@ def matrixplot(
             )
             ax.xaxis.set_label_position("top")
 
-    if row_sort_class is not None:
+    if row_sort_class is not None and row_ticks:
         tick_ax = left_cax  # prime the loop
         tick_ax_border = False
         rev_row_sort_class = list(row_sort_class[::-1])

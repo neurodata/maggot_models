@@ -1205,11 +1205,11 @@ def barplot_text(
         **kws,
     )
     ax.set_frame_on(False)
-
+    k = len(uni_pred_labels)
     if norm_bar_width:
-        ax1_title = "Cluster proportion of known cell types"
+        ax1_title = f"Cluster proportion of known cell types (k={k})"
     else:
-        ax1_title = "Cluster counts by known cell types"
+        ax1_title = f"Cluster counts by known cell types (k={k})"
 
     ax1_title = ax.set_title(ax1_title, pad=0)
     transformer = ax.transData.inverted()

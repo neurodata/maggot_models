@@ -22,6 +22,7 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics import adjusted_rand_score
 from sklearn.utils.testing import ignore_warnings
 from tqdm import tqdm
+from graspy.embed import LaplacianSpectralEmbed
 
 import pymaid
 from graspy.cluster import GaussianCluster
@@ -156,7 +157,9 @@ def predict(X, left_inds, right_inds, model, relabel=False):
 
 
 def fit_and_score(X_train, X_test, k, **kws):
-    gc = GaussianCluster(min_components=k, max_components=k, **kws)
+    gc = GaussianCluster(
+        min_components=k, max_components=k, covariance_type=["full", "diag"], **kws
+    )
     gc.fit(X_train)
     model = gc.model_
     train_bic = model.bic(X_train)
@@ -402,16 +405,26 @@ def plot_metrics(results, plot_all=True):
                 linewidth=0,
                 alpha=0.5,
             )
-        best_inds = results.groupby(["k"])[var].idxmax()
-        best_results = results.loc[best_inds].copy()
-        sns.lineplot(
-            data=best_results, x="k", y=var, ax=ax, color="purple", label="max"
-        )
+
         mean_results = results.groupby(["k"]).mean()
         mean_results.reset_index(inplace=True)
         sns.lineplot(
             data=mean_results, x="k", y=var, ax=ax, color="green", label="mean"
         )
+
+        best_inds = results.groupby(["k"])[var].idxmax()
+        best_results = results.loc[best_inds].copy()
+        sns.lineplot(
+            data=best_results, x="k", y=var, ax=ax, color="purple", label="max"
+        )
+
+        ymin = best_results[var].min()
+        ymax = best_results[var].max()
+        rng = ymax - ymin
+        ymin = ymin - 0.1 * rng
+        ymax = ymax + 0.02 * rng
+        ax.set_ylim((ymin, ymax))
+
         ax.get_legend().remove()
 
     plot_vars = [
@@ -641,7 +654,7 @@ mg.calculate_degrees(inplace=True)
 meta = mg.meta
 
 adj = mg.adj
-ptr_adj = pass_to_ranks(adj)
+# ptr_adj = pass_to_ranks(adj)
 meta["inds"] = range(len(meta))
 
 left_inds = meta[meta["left"]]["inds"]
@@ -651,6 +664,9 @@ lp_inds, rp_inds = get_paired_inds(meta)
 
 # %% [markdown]
 # ##
+
+from graspy.embed import selectSVD
+from graspy.utils import augment_diagonal
 
 
 class MaggotCluster(NodeMixin):
@@ -665,6 +681,13 @@ class MaggotCluster(NodeMixin):
         reembed=False,
         parent=None,
         stashfig=None,
+        min_clusters=1,
+        max_clusters=15,
+        n_components=None,
+        n_elbows=2,
+        normalize=False,
+        embed="ase",
+        regularizer=None,
     ):  # X=None, full_adj=None, full_meta=None):
         super(MaggotCluster, self).__init__()
         self.name = name
@@ -677,6 +700,13 @@ class MaggotCluster(NodeMixin):
         self.left_inds = self.meta[self.meta["left"]]["inds"]
         self.right_inds = self.meta[self.meta["right"]]["inds"]
         self.n_init = n_init
+        self.min_clusters = min_clusters
+        self.max_clusters = max_clusters
+        self.n_components = n_components
+        self.n_elbows = n_elbows
+        self.normalize = normalize
+        self.embed = embed
+        self.regularizer = regularizer
 
         if root_inds is None:
             print("No `root_inds` were input; assuming this is the root.")
@@ -686,20 +716,47 @@ class MaggotCluster(NodeMixin):
 
     def _stashfig(self, name):
         if self.stashfig is not None:
-            basename = f"-cluster={self.name}-reembed={self.reembed}"
+            basename = f"-cluster={self.name}-reembed={self.reembed}-normalize={self.normalize}"
             self.stashfig(name + basename)
             plt.close()
 
-    def _embed(self,):
+    def _embed(self, adj=None):
+        if adj is None:
+            adj = self.adj
         # TODO look into PTR at this level as well
         lp_inds, rp_inds = get_paired_inds(self.meta)
 
-        ase = AdjacencySpectralEmbed()
-        embed = ase.fit_transform(self.adj)
+        embed_adj = pass_to_ranks(adj)
+        if self.embed == "ase":
+            embedder = AdjacencySpectralEmbed(
+                n_components=self.n_components, n_elbows=self.n_elbows
+            )
+            embed = embedder.fit_transform(embed_adj)
+        elif self.embed == "lse":
+            embedder = LaplacianSpectralEmbed(
+                n_components=self.n_components,
+                n_elbows=self.n_elbows,
+                regularizer=self.regularizer,
+            )
+            embed = embedder.fit_transform(embed_adj)
+        elif self.embed == "unscaled_ase":
+            embed_adj = pass_to_ranks(adj)
+            embed_adj = augment_diagonal(embed_adj)
+            embed = selectSVD(
+                embed_adj, n_components=self.n_components, n_elbows=self.n_elbows
+            )
+            embed = (embed[0], embed[2].T)
+
         X = np.concatenate(embed, axis=1)
 
+        fraction_paired = (len(lp_inds) + len(rp_inds)) / len(self.root_inds)
+        print(f"Learning transformation with {fraction_paired} neurons paired")
         R, _ = orthogonal_procrustes(X[lp_inds], X[rp_inds])
         X[self.left_inds] = X[self.left_inds] @ R
+
+        if self.normalize:
+            row_sums = np.sum(X, axis=1)
+            X /= row_sums[:, None]
 
         return X
 
@@ -709,10 +766,18 @@ class MaggotCluster(NodeMixin):
 
         lp_inds, rp_inds = get_paired_inds(meta)
 
-        if self.reembed or self.is_root:
+        if self.reembed is True or self.is_root:
             X = self._embed()
-        else:
+        elif self.reembed is False:
             X = root.X_[self.root_inds]
+        elif self.reembed == "masked":
+            mask = np.zeros(self.root.adj.shape, dtype=bool)
+            mask[np.ix_(self.root_inds, self.root_inds)] = True
+            masked_adj = np.zeros(mask.shape)
+            masked_adj[mask] = self.root.adj[mask]
+            X = self._embed(masked_adj)
+            X = X[self.root_inds]
+
         self.X_ = X
 
         results = crossval_cluster(
@@ -721,8 +786,8 @@ class MaggotCluster(NodeMixin):
             self.right_inds,
             left_pair_inds=lp_inds,
             right_pair_inds=rp_inds,
-            max_clusters=8,
-            min_clusters=1,
+            max_clusters=self.max_clusters,
+            min_clusters=self.min_clusters,
             n_init=self.n_init,
         )
         self.results_ = results
@@ -744,6 +809,7 @@ class MaggotCluster(NodeMixin):
             self.right_inds,
             model,
             self.meta["merge_class"].values,
+            equal=False,
         )
         fig.suptitle(f"{self.name}, k={k}", y=1)
         self._stashfig(f"pairs-k={k}")
@@ -754,6 +820,7 @@ class MaggotCluster(NodeMixin):
             self.meta["merge_class"],
             color_dict=CLASS_COLOR_DICT,
             legend_ncol=6,
+            category_order=np.unique(pred_side),
         )
         k = int(len(np.unique(pred_side)) / 2)
         ax.set_title(f"{self.name}, k={k}")
@@ -776,6 +843,7 @@ class MaggotCluster(NodeMixin):
 
     def select_model(self, k, metric="bic"):
         self.k_ = k
+        self.children = []
         if k > 0:
             model, pred, pred_side = self._model_predict(k, metric=metric)
             self.model_ = model
@@ -803,6 +871,10 @@ class MaggotCluster(NodeMixin):
                     parent=self,
                     n_init=self.n_init,
                     stashfig=self.stashfig,
+                    max_clusters=self.max_clusters,
+                    min_clusters=self.min_clusters,
+                    n_components=self.n_components,
+                    n_elbows=self.n_elbows,
                 )
 
     def plot_state(self):
@@ -820,6 +892,7 @@ def get_lowest_level(node):
     while nxt is not None:
         last = nxt
         nxt = next(level_it, None)
+
     return last
 
 
@@ -829,6 +902,10 @@ def get_lowest_level(node):
 # TODO would be cool to take the best fitting model and see how it compares in terms of
 # signal flow and or cascades
 # TODO look into doing DCSBM?
+# TODO fix plots to only range based on the maxs
+# TODO for masked embedding look into effect of d_hat
+# TODO run on the subgraph instead of just masked
+# TODO try running without spherical and tied
 
 # Not tomorrow
 # TODO seedless procrustes investigations
@@ -840,7 +917,7 @@ np.random.seed(8888)
 mc = MaggotCluster("0", adj=ptr_adj, meta=meta, n_init=50, stashfig=stashfig)
 mc.fit_candidates()
 mc.plot_model(6)
-mc.plot_model(7)  # TODO 7 might be better
+# mc.plot_model(7)  # TODO 7 might be better
 mc.select_model(6)
 
 # %% [markdown]
@@ -883,381 +960,323 @@ for i, node in enumerate(get_lowest_level(mc)):
     print()
     node.fit_candidates()
 
+# %% [markdown]
+# ##
+np.random.seed(1010)
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    node.fit_candidates()
 
 # %% [markdown]
 # ##
 
-pred = np.zeros(len(meta))
-results, data = level(ptr_adj, meta, pred, reembed=True)
-# %% [markdown]
-# ##
-ks = [6]
-for i, (r, d) in enumerate(zip(results, data)):
-    plot_level(r, d, ks[i], i)
+sub_ks = [
+    (2, 6),
+    (3, 4, 6),
+    (2, 3),  # this one has a legit case, esp k=3
+    (0,),
+    (3,),
+    (3, 4),
+    (3,),
+    (2, 3),
+    (0,),
+    (0,),
+    (0,),
+    (0,),
+    (2, 3),
+    (3,),
+    (3,),
+    (2,),
+]
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    for k in sub_ks[i]:
+        if k != 0:
+            node.plot_model(k)
 
 # %% [markdown]
 # ##
-def pick_model(results, data, k, metric="bic"):
-    ind = results[results["k"] == k][metric].idxmax()
-    model = results.loc[ind, "model"]
-    left_model = model
-    right_model = model
-    pred = composite_predict(
-        X, left_inds, right_inds, left_model, right_model, relabel=False
-    )
-    pred_side = composite_predict(
-        X, left_inds, right_inds, left_model, right_model, relabel=True
-    )
-    return pred, pred_side
+
+np.random.seed(8888)
+mc = MaggotCluster(
+    "0", adj=adj, meta=meta, n_init=50, stashfig=stashfig, reembed="masked"
+)
+mc.fit_candidates()
+mc.plot_model(7)
+# mc.plot_model(7)  # TODO 7 might be better
+mc.select_model(7)
 
 
-ks = [6]
-for i, (r, d) in enumerate(zip(results, data)):
-    pred, pred_side = pick_model(results, data, ks[i])
+# %%
+np.random.seed(9999)
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    node.fit_candidates()
+
+
+# %%
+# sub_ks = [(6,), (3, 4), (2, 3, 4), (2, 3, 4), (2, 3, 4), (2, 5)]
+sub_kws = [(2, 3), (4, 6, 7), (2, 3, 4), (3, 4, 5), (2, 3, 4), (3, 4, 5), (4,)]
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    for k in sub_ks[i]:
+        node.plot_model(k)
+
+
+# %% [markdown]
+# ## TRY SOME COMPARISONS
+
 
 # %% [markdown]
 # ##
-
-
-pred, pred_side = pick_model(results, 6)
-
-
-def apply_pred(meta, pred, pred_side, level):
-    meta[f"lvl{level}_pred"] = pred
-    meta[f"lvl{level}_pred_side"] = pred_side
-
-
-meta[""]
-
-# %% [markdown]
-# ## Embed
-# Here the embedding is ASE, with PTR and DiagAug, the number of embedding dimensions
-# is for now set to ZG2 (4 + 4). Using the known pairs as "seeds", the left embedding
-# is matched to the right using procrustes.
-ase = AdjacencySpectralEmbed(n_components=None, n_elbows=2)
-embed = ase.fit_transform(adj)
-n_components = embed[0].shape[1]  # use all of ZG2
-X = np.concatenate((embed[0][:, :n_components], embed[1][:, :n_components]), axis=-1)
-R, _ = orthogonal_procrustes(X[lp_inds], X[rp_inds])
-
-if CLUSTER_SPLIT == "best":
-    X[left_inds] = X[left_inds] @ R
-
-# %% [markdown]
-# ## Clustering
-# Clustering is performed using Gaussian mixture modeling. At each candidate value of k,
-# 50 models are trained on the left embedding, 50 models are trained on the right
-# embedding (choosing the best covariance structure based on BIC on the train set).
-results = crossval_cluster(
-    X,
-    left_inds,
-    right_inds,
-    left_pair_inds=lp_inds,
-    right_pair_inds=rp_inds,
-    max_clusters=8,
+np.random.seed(8888)
+mc = MaggotCluster(
+    "0",
+    adj=adj,
+    meta=meta,
     n_init=50,
+    # stashfig=stashfig,
+    min_clusters=1,
+    max_clusters=7,
 )
-# best_inds = results.groupby(["k", "train"])["test_bic"].idxmax()
-# best_results = results.loc[best_inds].copy()
-# plot_crossval_cluster(best_results)
-# stashfig(f"cross-val-n_components={n_components}")
+mc.fit_candidates()
+mc.plot_model(6)
+# mc.plot_model(7)  # TODO 7 might be better
 
 # %% [markdown]
-# ## Evaluating Clustering
-# Of the 100 models we fit as described above, we now evaluate them on a variety of
-# metrics:
-#  - likelihood of the data the model was trained on ("train_lik")
-#  - likelihood of the held out (other hemisphere) data ("test_lik")
-#  - likelihood of all of the data ("lik", = "train_lik" + "test_lik")
-#  - BIC using the data the model was trained on ("train_bic")
-#  - BIC using the held out (other hemisphere) data ("test_bic")
-#  - BIC using all of the data ("bic")
-#  - ARI for pairs. Given the prediction of the model on the left data and the right
-#    data, using known pairs to define a correspondence between (some) nodes, what is
-#    the ARI(left_prediction, right_prediciton) for the given model
-#  - Pairedness, like the above but simply the raw fraction of pairs that end up in
-#    corresponding L/R clusters. Very related to ARI but not normalized.
-
-plot_metrics(results)
-stashfig(f"cluster-metrics-n_components={n_components}")
-
+# ##
+mc.children = []
+mc.select_model(6)
 
 # %% [markdown]
-# ## Choose a model
-# A few things are clear from the above. One is that the likelihood on the train set
-# continues to go up as `k` increases, but plateaus and then drops on the test set around
-# k = 6 - 8. This is even slightly more clear when looking at the BIC plots, where the
-# only difference is the added penalty for complexity. Based on this, I would say that
-# the best k at this scale is around 6-8; however, we still need to pick a single metric
-# to give us the *best* model to proceed. I'm not sure whether it makes more sense to use
-# likelihood or bic here, or, to use performance on the test set or performance on all
-# of the data. Here we will proceed with k=7, and choose the model with the best BIC on
-# all of the data.
+# ##
+np.random.seed(9999)
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    node.fit_candidates()
 
-k = 6
-metric = "bic"
-basename = f"-metric={metric}-k={k}-n_components={n_components}"
-basetitle = f"Metric={metric}, k={k}, n_components={n_components}"
-
-ind = results[results["k"] == k][metric].idxmax()
-
-print(f"Choosing model at k={k} based on best {metric}.\n")
-print(f"ARI: {results.loc[ind, 'ARI']}")
-print(f"Pairedness: {results.loc[ind, 'pairedness']}\n")
-
-model = results.loc[ind, "model"]
-left_model = model
-right_model = model
-
-pred = composite_predict(
-    X, left_inds, right_inds, left_model, right_model, relabel=False
-)
-pred_side = composite_predict(
-    X, left_inds, right_inds, left_model, right_model, relabel=True
-)
-
-ax = stacked_barplot(
-    pred_side, meta["merge_class"].values, color_dict=CLASS_COLOR_DICT, legend_ncol=6
-)
-ax.set_title(basetitle)
-stashfig(f"barplot" + basename)
+# %% [markdown]
+# ## pick some models
+sub_k = [3, 0, 5, 2, 2, 3]
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    node.select_model(sub_k[i])
+# %% [markdown]
+# ##
+mc.meta
 
 
-fig, ax = plot_cluster_pairs(
-    X, left_inds, right_inds, left_model, right_model, meta["merge_class"].values
-)
-fig.suptitle(basetitle, y=1)
+# %%
+label_meta = mc.meta.copy()
+sub_cols = [f"0-{i}_pred_side" for i in range(6)]
+sub_cols.remove("0-1_pred_side")
+lvl_2_labels = label_meta[sub_cols].fillna("").sum(axis=1)
+lvl_2_labels.name = "lvl2_pred_side"
+label_meta = pd.concat((label_meta, lvl_2_labels), axis=1)
 
-stashfig(f"pairs" + basename)
 
-
-sf = signal_flow(adj)
-meta["signal_flow"] = -sf
-meta["pred"] = pred
-meta["pred_side"] = pred_side
-meta["group_signal_flow"] = meta["pred"].map(meta.groupby("pred")["signal_flow"].mean())
+# %%
+label_meta["rand"] = np.random.uniform(size=len(label_meta))
 fig, ax = plt.subplots(1, 1, figsize=(20, 20))
 adjplot(
     adj,
+    meta=label_meta,
+    sort_class=["0_pred_side", "lvl2_pred_side"],
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    item_order=["merge_class", "rand"],
+    plot_type="scattermap",
+    sizes=(0.5, 1),
     ax=ax,
-    meta=meta,
-    sort_class="pred_side",
-    class_order="group_signal_flow",
+)
+stashfig("example-hierarchy-adj")
+# %% [markdown]
+# ##
+sf = signal_flow(adj)
+label_meta["signal_flow"] = -sf
+label_meta["lvl2_signal_flow"] = label_meta["lvl2_pred_side"].map(
+    label_meta.groupby("lvl2_pred_side")["signal_flow"].mean()
+)
+label_meta["lvl1_signal_flow"] = label_meta["0_pred_side"].map(
+    label_meta.groupby("0_pred_side")["signal_flow"].mean()
+)
+# TODO fix for multilayer class_order
+fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+adjplot(
+    adj,
+    meta=label_meta,
+    sort_class=["0_pred_side", "lvl2_pred_side"],
+    # class_order="lvl2_signal_flow",
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    item_order=["signal_flow"],
+    plot_type="scattermap",
+    sizes=(0.5, 1),
+    ax=ax,
+)
+stashfig("example-hierarchy-adj-sf")
+
+fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+adjplot(
+    adj,
+    meta=label_meta,
+    sort_class=["0_pred_side", "lvl2_pred_side"],
+    # class_order="lvl2_signal_flow",
     colors="merge_class",
     palette=CLASS_COLOR_DICT,
     item_order=["merge_class", "signal_flow"],
     plot_type="scattermap",
     sizes=(0.5, 1),
+    ax=ax,
 )
-fig.suptitle(basetitle, y=0.94)
-stashfig(f"adj-sf" + basename)
+stashfig("example-hierarchy-adj-class-sf")
 
-meta["te"] = -meta["Total edgesum"]
+#%%
+
+label_meta["te"] = -label_meta["Total edgesum"]
 fig, ax = plt.subplots(1, 1, figsize=(20, 20))
 adjplot(
     adj,
+    meta=label_meta,
+    sort_class=["0_pred_side", "lvl2_pred_side"],
+    class_order="lvl1_signal_flow",
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    item_order=["te"],
+    plot_type="scattermap",
+    sizes=(0.5, 1),
     ax=ax,
-    meta=meta,
-    sort_class="pred_side",
-    class_order="group_signal_flow",
+)
+stashfig("example-hierarchy-adj-te")
+
+fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+adjplot(
+    adj,
+    meta=label_meta,
+    sort_class=["0_pred_side", "lvl2_pred_side"],
+    class_order="lvl1_signal_flow",
     colors="merge_class",
     palette=CLASS_COLOR_DICT,
     item_order=["merge_class", "te"],
     plot_type="scattermap",
     sizes=(0.5, 1),
-)
-fig.suptitle(basetitle, y=0.94)
-stashfig(f"adj-te" + basename)
-
-meta["rand"] = np.random.uniform(size=len(meta))
-fig, ax = plt.subplots(1, 1, figsize=(20, 20))
-adjplot(
-    adj,
     ax=ax,
-    meta=meta,
-    sort_class="pred_side",
-    class_order="group_signal_flow",
-    colors="merge_class",
-    palette=CLASS_COLOR_DICT,
-    item_order="rand",
-    plot_type="scattermap",
-    sizes=(0.5, 1),
 )
-fig.suptitle(basetitle, y=0.94)
-stashfig(f"adj-rand" + basename)
+stashfig("example-hierarchy-adj-class-te")
 
 # %% [markdown]
-# ## SUBCLUSTER
+# ## Try with normalization
+np.random.seed(8888)
+mc = MaggotCluster(
+    "0", adj=adj, meta=meta, n_init=50, stashfig=stashfig, normalize=True
+)
+mc.fit_candidates()
+
+
+# %%
+for k in range(3, 9):
+    mc.plot_model(k)
+
+# %% [markdown]
+# ##
+
 
 np.random.seed(8888)
-
-
-# %% [markdown]
-# ##
-# sub_ks = [(2, 4), (0,), (3, 4), (3,), (2, 3), (0,), (4,)]
-# sub_kws = [(4,), (0,), (4,), (3, 4), (2, 3), (3,), (3, 4, 5)]
-if not reembed:
-    sub_ks = [(4,), (4,), (3,), (2, 3, 4), (0,), (3,)]
-else:
-    pass
-
-
-# for i, label in enumerate(uni_labels):
-
-
-# %% [markdown]
-# ##
-
-cols = meta.columns
-sub_pred_side_cols = []
-sub_pred_cols = []
-for c in cols:
-    if "_sub_pred" in c:
-        if "_side" in c:
-            sub_pred_side_cols.append(c)
-        else:
-            sub_pred_cols.append(c)
-
-meta["total_pred"] = ""
-meta["total_pred"] = meta["pred"].astype(str) + "-"
-meta["total_pred_side"] = ""
-meta["total_pred_side"] = meta["pred_side"].astype(str) + "-"
-meta["sub_pred"] = ""
-meta["sub_pred_side"] = ""
-
-for c in sub_pred_cols:
-    meta["total_pred"] += meta[c].astype(str)
-    meta["sub_pred"] += meta[c].astype(str)
-
-for c in sub_pred_side_cols:
-    meta["sub_pred_side"] += meta[c].astype(str)
-    meta["total_pred_side"] += meta[c].astype(str)
-
-# %% [markdown]
-# ##
-meta["lvl2_signal_flow"] = meta["total_pred"].map(
-    meta.groupby("total_pred")["signal_flow"].mean()
-)
-
-fig, ax = plt.subplots(1, 1, figsize=(20, 20))
-adjplot(
-    adj,
-    ax=ax,
+mc = MaggotCluster(
+    "0",
+    adj=adj,
     meta=meta,
-    sort_class=["hemisphere", "pred", "sub_pred"],
-    class_order="lvl2_signal_flow",
-    colors="merge_class",
-    palette=CLASS_COLOR_DICT,
-    item_order=["merge_class", "signal_flow"],
-    plot_type="scattermap",
-    sizes=(0.5, 1),
+    n_init=50,
+    stashfig=stashfig,
+    normalize=False,
+    n_elbows=2,
+    max_clusters=10,
+    reembed="masked",
 )
-fig.suptitle(f"2-level hierarchy clustering, reembed={reembed}" + basetitle, y=0.94)
-stashfig("lvl2-full-adj" + sub_basename)
 
-fig, ax = plt.subplots(1, 1, figsize=(20, 20))
-adjplot(
-    adj,
-    ax=ax,
+mc.fit_candidates()
+mc.plot_model(6)
+mc.select_model(6)
+
+for c in mc.children:
+    c.n_elbows = 1
+
+np.random.seed(9999)
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    node.fit_candidates()
+# %% [markdown]
+# ##
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    for k in range(2, 7):
+        node.plot_model(k, metric="test_bic")
+
+
+# %% [markdown]
+# ## Try unscaled ASE
+np.random.seed(8888)
+mc = MaggotCluster(
+    "0",
+    adj=adj,
     meta=meta,
-    sort_class=["hemisphere", "pred", "sub_pred"],
-    class_order="lvl2_signal_flow",
-    colors="merge_class",
-    palette=CLASS_COLOR_DICT,
-    item_order=["rand"],
-    plot_type="scattermap",
-    sizes=(0.5, 1),
+    n_init=50,
+    stashfig=stashfig,
+    normalize=False,
+    embed="unscaled_ase",
+    regularizer=None,
+    n_elbows=2,
+    max_clusters=10,
+    reembed="masked",
 )
-fig.suptitle(f"2-level hierarchy clustering, reembed={reembed}" + basetitle, y=0.94)
-stashfig("lvl2-full-adj-rand" + sub_basename)
+
+mc.fit_candidates()
+
+# for k in range(3, 8):
+#     mc.plot_model(k)
+
+
+# %%
+
+mc.select_model(7)
+np.random.seed(9999)
+print(mc.children)
+print(len(mc.children))
+print()
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    node.n_components = None
+    node.n_elbows = 1
+    node.fit_candidates()
 
 # %% [markdown]
 # ##
-fig, ax = plt.subplots(1, 1, figsize=(15, 20))
-ax = stacked_barplot(
-    meta["total_pred_side"].values,
-    meta["merge_class"].values,
-    color_dict=CLASS_COLOR_DICT,
-    legend_ncol=6,
-    ax=ax,
-    norm_bar_width=False,
-)
+# ks = [(2,), (2, 3), (2, 3, 4), (2, 3, 4), (0,), (3, 4), (2, 4, 7)]
+ks = [(2,), (2, 3, 5), (3, 4), (2, 3, 4), (0,), (2, 3, 4), (2, 3, 4, 6)]
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    for k in ks[i]:
+        if k > 0:
+            node.plot_model(k, metric="bic")
 
-stashfig("lvl2-barplot" + sub_basename)
+
+# %%
+[2, 2]
 
 # %% [markdown]
 # ##
 
-start_instance()
-
-#%%
+meta[meta["class1"] == "bLN"]["Pair"]
 
 
-for tp in meta["total_pred"].unique()[0:4]:
-    ids = list(meta[meta["total_pred"] == tp].index.values)
-    ids = [int(i) for i in ids]
-    fig = plt.figure(figsize=(30, 10))
-
-    gs = plt.GridSpec(2, 3, figure=fig, wspace=0, hspace=0, height_ratios=[0.8, 0.2])
-
-    skeleton_color_dict = dict(
-        zip(meta.index, np.vectorize(CLASS_COLOR_DICT.get)(meta["merge_class"]))
-    )
-
-    # ax = fig.add_subplot(1, 3, 1, projection="3d")
-    ax = fig.add_subplot(gs[0, 0], projection="3d")
-
-    pymaid.plot2d(
-        ids,
-        color=skeleton_color_dict,
-        ax=ax,
-        connectors=False,
-        method="3d",
-        autoscale=True,
-    )
-    ax.azim = -90  # 0 for side view
-    ax.elev = 0
-    ax.dist = 6
-    set_axes_equal(ax)
-
-    # ax = fig.add_subplot(1, 3, 2, projection="3d")
-    ax = fig.add_subplot(gs[0, 1], projection="3d")
-    pymaid.plot2d(
-        ids,
-        color=skeleton_color_dict,
-        ax=ax,
-        connectors=False,
-        method="3d",
-        autoscale=True,
-    )
-    ax.azim = 0  # 0 for side view
-    ax.elev = 0
-    ax.dist = 6
-    set_axes_equal(ax)
-
-    # ax = fig.add_subplot(1, 3, 3, projection="3d")
-    ax = fig.add_subplot(gs[0, 2], projection="3d")
-    pymaid.plot2d(
-        ids,
-        color=skeleton_color_dict,
-        ax=ax,
-        connectors=False,
-        method="3d",
-        autoscale=True,
-    )
-    ax.azim = -90
-    ax.elev = 90
-    ax.dist = 6
-    set_axes_equal(ax)
-
-    ax = fig.add_subplot(gs[1, :])
-    temp_meta = meta[meta["total_pred"] == tp]
-    cat = temp_meta["total_pred_side"].values
-    subcat = temp_meta["merge_class"].values
-    stacked_barplot(cat, subcat, ax=ax, color_dict=CLASS_COLOR_DICT)
-    ax.get_legend().remove()
-
-    fig.suptitle(tp)
-
-    stashfig(f"plot3d-{tp}")
-    plt.close()
+# %%
