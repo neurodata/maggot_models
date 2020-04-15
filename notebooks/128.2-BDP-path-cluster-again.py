@@ -156,7 +156,7 @@ og_name = "All"
 
 np.random.seed(888)
 max_hops = 10
-n_init = 1000
+n_init = 1024
 p = 0.05
 traverse = Cascade
 simultaneous = True
@@ -195,7 +195,7 @@ for p in paths:
 
 # %% [markdown]
 # ## Subsampling and selecting paths
-subsample = 2 ** 12
+subsample = 2 ** 13
 path_len = 6
 paths = paths_by_len[path_len]
 
