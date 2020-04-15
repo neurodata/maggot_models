@@ -9,12 +9,7 @@ import warnings
 
 import colorcet as cc
 import matplotlib as mpl
-
-# mpl.use("Agg")
 import matplotlib.pyplot as plt
-
-#
-# import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 import numpy as np
 import pandas as pd
@@ -38,7 +33,7 @@ from graspy.utils import augment_diagonal, binarize, pass_to_ranks
 from src.data import load_metagraph
 from src.graph import preprocess
 from src.hierarchy import signal_flow
-from src.io import savecsv, savefig
+from src.io import savefig
 from src.pymaid import start_instance
 from src.visualization import (
     CLASS_COLOR_DICT,
@@ -67,9 +62,11 @@ for key, val in rc_dict.items():
 context = sns.plotting_context(context="talk", font_scale=1, rc=rc_dict)
 sns.set_context(context)
 
-PLOT_MODELS = False
+PLOT_MODELS = True
 
 np.random.seed(8888)
+
+from src.io import savecsv
 
 
 def stashfig(name, **kws):
@@ -252,7 +249,7 @@ def plot_cluster_pairs(
     left_pair_inds=None,
     right_pair_inds=None,
     colors=None,
-    equal=True,
+    equal=False,
 ):
     k = model.n_components
     n_dims = X.shape[1]
@@ -399,6 +396,7 @@ class MaggotCluster(NodeMixin):
         normalize=False,
         embed="ase",
         regularizer=None,
+        realign=False,
     ):  # X=None, full_adj=None, full_meta=None):
         super(MaggotCluster, self).__init__()
         self.name = name
@@ -486,6 +484,11 @@ class MaggotCluster(NodeMixin):
             X = self._embed()
         elif self.reembed is False:
             X = root.X_[self.root_inds]
+            if self.realign:
+                R, _ = orthogonal_procrustes(
+                    X[self.left_pair_inds], X[self.right_pair_inds]
+                )
+                X[self.left_inds] = X[self.left_inds] @ R
         elif self.reembed == "masked":
             mask = np.zeros(self.root.adj.shape, dtype=bool)
             mask[np.ix_(self.root_inds, self.root_inds)] = True
@@ -538,7 +541,7 @@ class MaggotCluster(NodeMixin):
         fig.suptitle(f"{self.name}, k={k}", y=1)
         self._stashfig(f"pairs-k={k}")
 
-    def _plot_bars(self, pred_side):
+    def _plot_bars(self, pred_side, k):
         ax = stacked_barplot(
             pred_side,
             self.meta["merge_class"],
@@ -546,7 +549,7 @@ class MaggotCluster(NodeMixin):
             legend_ncol=6,
             category_order=np.unique(pred_side),
         )
-        k = int(len(np.unique(pred_side)) / 2)
+        # k = int(pred_side / 2)
         ax.set_title(f"{self.name}, k={k}")
         self._stashfig(f"bars-k={k}")
 
@@ -555,7 +558,7 @@ class MaggotCluster(NodeMixin):
             return
         if k > 0:
             model, pred, pred_side = self._model_predict(k, metric=metric)
-            self._plot_bars(pred_side)
+            self._plot_bars(pred_side, k)
             self._plot_pairs(model, lines=lines)
 
     def _model_predict(self, k, metric="bic"):
@@ -620,16 +623,14 @@ class MaggotCluster(NodeMixin):
             self._plot_bars(self.pred_side_)
             self._plot_pairs(self.model_)
 
-
-def get_lowest_level(node):
-    level_it = LevelOrderGroupIter(node)
-    last = next(level_it)
-    nxt = last
-    while nxt is not None:
-        last = nxt
-        nxt = next(level_it, None)
-
-    return last
+    def get_lowest_level(self):
+        level_it = LevelOrderGroupIter(self)
+        last = next(level_it)
+        nxt = last
+        while nxt is not None:
+            last = nxt
+            nxt = next(level_it, None)
+        return last
 
 
 # %% [markdown]
@@ -639,7 +640,6 @@ def get_lowest_level(node):
 # partially differentiated cells, and cutting out the lowest 5th percentile of nodes in
 # terms of their number of incident synapses. 5th percentile ~= 12 synapses. After this,
 # the largest connected component is used.
-
 
 mg = load_metagraph("G", version="2020-04-01")
 mg = preprocess(
@@ -671,232 +671,440 @@ mg = mg.reindex(idx, use_ids=True)
 mg = mg.make_lcc()
 mg.calculate_degrees(inplace=True)
 meta = mg.meta
-meta["inds"] = range(len(meta))
+
 adj = mg.adj
-
-# %% [markdown]
-# ##
-
-from src.traverse import Cascade, TraverseDispatcher, to_transmission_matrix
-from itertools import chain
-
-out_groups = [
-    ("dVNC", "dVNC;CN", "dVNC;RG", "dSEZ;dVNC"),
-    ("dSEZ", "dSEZ;CN", "dSEZ;LHN", "dSEZ;dVNC"),
-    ("motor-PaN", "motor-MN", "motor-VAN", "motor-AN"),
-    ("RG", "RG-IPC", "RG-ITP", "RG-CA-LP", "dVNC;RG"),
-    ("dUnk",),
-]
-out_group_names = ["VNC", "SEZ" "motor", "RG", "dUnk"]
-source_groups = [
-    ("sens-ORN",),
-    ("sens-MN",),
-    ("sens-photoRh5", "sens-photoRh6"),
-    ("sens-thermo",),
-    ("sens-vtd",),
-    ("sens-AN",),
-]
-source_group_names = ["Odor", "MN", "Photo", "Temp", "VTD", "AN"]
-class_key = "merge_class"
-
-sg = list(chain.from_iterable(source_groups))
-og = list(chain.from_iterable(out_groups))
-sg_name = "All"
-og_name = "All"
-
-print(f"Running cascades for {sg_name} and {og_name}")
-
-
-np.random.seed(888)
-max_hops = 10
-n_init = 100
-p = 0.05
-traverse = Cascade
-simultaneous = True
-transition_probs = to_transmission_matrix(adj, p)
-
-source_inds = meta[meta[class_key].isin(sg)]["inds"].values
-out_inds = meta[meta[class_key].isin(og)]["inds"].values
-
-td = TraverseDispatcher(
-    traverse,
-    transition_probs,
-    n_init=n_init,
-    simultaneous=simultaneous,
-    stop_nodes=out_inds,
-    max_hops=max_hops,
-    allow_loops=False,
-)
-fwd_hop_hist = td.multistart(source_inds)
-fwd_hop_hist = fwd_hop_hist.T
-
-# backward cascade
-td = TraverseDispatcher(
-    traverse,
-    transition_probs.T,
-    n_init=n_init,
-    simultaneous=simultaneous,
-    stop_nodes=source_inds,
-    max_hops=max_hops,
-    allow_loops=False,
-)
-back_hop_hist = td.multistart(out_inds)
-back_hop_hist = back_hop_hist.T
-
-full_hop_hist = np.concatenate((fwd_hop_hist, back_hop_hist), axis=0)
-
-
-# %% [markdown]
-# ##
-
-embedder = AdjacencySpectralEmbed(n_components=None, n_elbows=2)
-embed = embedder.fit_transform(pass_to_ranks(adj))
-embed = np.concatenate(embed, axis=-1)
-
-lp_inds, rp_inds = get_paired_inds(meta)
-R, _, = orthogonal_procrustes(embed[lp_inds], embed[rp_inds])
-
-left_inds = meta[meta["left"]]["inds"]
-right_inds = meta[meta["right"]]["inds"]
-embed[left_inds] = embed[left_inds] @ R
-
-
-# %% [markdown]
-# ##
-
-joint = np.concatenate((embed, full_hop_hist.T), axis=1)
-
-from graspy.plot import pairplot
-from sklearn.decomposition import PCA
-from sklearn.decomposition import TruncatedSVD
-from sklearn.preprocessing import StandardScaler
-from src.visualization import screeplot
-
-joint = StandardScaler(with_mean=False, with_std=True).fit_transform(joint)
-screeplot(joint)
-embedder = TruncatedSVD(n_components=4)
-joint_embed = embedder.fit_transform(joint)
-
-
-pg = pairplot(joint_embed, labels=meta["merge_class"].values, palette=CLASS_COLOR_DICT)
-pg._legend.remove()
-
-
-# %%
-
+# ptr_adj = pass_to_ranks(adj)
 meta["inds"] = range(len(meta))
+
 left_inds = meta[meta["left"]]["inds"]
 right_inds = meta[meta["right"]]["inds"]
 lp_inds, rp_inds = get_paired_inds(meta)
-results = crossval_cluster(
-    joint_embed,
-    left_inds,
-    right_inds,
-    min_clusters=2,
-    max_clusters=20,
-    left_pair_inds=lp_inds,
-    right_pair_inds=rp_inds,
-)
+
+
+# Maybe tomorrow
+# TODO maybe look into my idea on subgraph + rest of graph embedding
+# TODO would be cool to take the best fitting model and see how it compares in terms of
+# signal flow and or cascades
+# TODO look into doing DCSBM?
+# TODO for masked embedding look into effect of d_hat
+# TODO run on the subgraph instead of just masked
+# TODO draw lines for pairs
+
+# Not tomorrow
+# TODO seedless procrustes investigations
+
 
 # %% [markdown]
 # ##
-plot_metrics(results)
-
-k = 5
-metric = "bic"
-ind = results[results["k"] == k][metric].idxmax()
-model = results.loc[ind, "model"]
-pred = predict(joint_embed, left_inds, right_inds, model, relabel=False)
-
-plot_cluster_pairs(
-    joint_embed,
-    left_inds,
-    right_inds,
-    model,
-    meta["merge_class"].values,
-    lp_inds,
-    rp_inds,
+np.random.seed(8888)
+mc = MaggotCluster(
+    "0",
+    adj=adj,
+    meta=meta,
+    n_init=50,
+    stashfig=stashfig,
+    max_clusters=8,
+    n_components=4,
+    embed="ase",
 )
+mc.fit_candidates()
+mc.plot_model(6)
+# mc.plot_model(7)  # TODO 7 might be better
+# mc.select_model(6)
 
 # %% [markdown]
 # ##
-stacked_barplot(pred, meta["merge_class"].values, color_dict=CLASS_COLOR_DICT)
+mc.select_model(6)
 
+np.random.seed(9999)
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    node.fit_candidates()
 
-# %%
-meta["inds"] = range(len(meta))
-left_inds = meta[meta["left"]]["inds"]
-right_inds = meta[meta["right"]]["inds"]
-lp_inds, rp_inds = get_paired_inds(meta)
-results = crossval_cluster(
-    embed,
-    left_inds,
-    right_inds,
-    min_clusters=2,
-    max_clusters=10,
-    left_pair_inds=lp_inds,
-    right_pair_inds=rp_inds,
-)
-k = 6
-metric = "bic"
-ind = results[results["k"] == k][metric].idxmax()
-model = results.loc[ind, "model"]
-pred = predict(embed, left_inds, right_inds, model, relabel=False)
+# %% [markdown]
+# ## Look at some models
 
+# seems to peak very early, 2 or 3, all look tied
+#
+# cant read curve. mbons. 4 seems to subdivide well by class...
+# 4 i guess. no intuition on these
+# no ituition here either
+# kcs
 
-# %%
-labels = meta["merge_class"].values
-uni_pred = np.unique(pred)
-for up in uni_pred:
-    plt.figure()
-    mask = pred == up
-    temp_labels = labels[mask]
-    uni_labels = np.unique(labels)
-    temp_hop_hist = fwd_hop_hist.T[mask]
-    matrixplot(
-        temp_hop_hist.T,
-        col_sort_class=temp_labels,
-        col_colors=temp_labels,
-        col_palette=CLASS_COLOR_DICT,
-        cbar=False,
-        col_ticks=False,
-    )
+# TODO look into whether to "rematch" here by learning a new R matrix
+
+sub_ks = [(2, 3, 4), (0,), (2, 3, 4), (2, 3, 4), (2, 3, 4), (2, 3, 4)]
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    for k in sub_ks[i]:
+        node.plot_model(k)
+
+# %% [markdown]
+# ## pick some models at level=1
+# sub_k = [3, 4, 2, 4, 3, 0]
+sub_k = [3, 0, 2, 2, 2, 3]
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    node.select_model(sub_k[i])
+
+np.random.seed(9999)
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    node.fit_candidates()
+
+# %% [markdown]
+# ## Observe at level=2
+sub_ks = [
+    (2, 3, 4),
+    (0,),
+    (2, 3),
+    (3, 4),  # or 0,
+    (2,),  # probably 0
+    (2,),
+    (2,),
+    (2, 6),  # probably 0,
+    (2,),  # probably 0,
+    (2, 3),  # maybe 0
+    (2, 3, 4),
+    (2, 3, 4),  # probably 0,
+]
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    for k in sub_ks[i]:
+        node.plot_model(k)
+# %% [markdown]
+# ## Select at level=2
+sub_k = [2, 0, 2, 0, 2, 2, 2, 0, 2, 2, 2, 0]
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    node.select_model(sub_k[i])
 
 # %% [markdown]
 # ##
-fig, ax = plt.subplots(1, 1, figsize=(20, 10))
-matrixplot(
-    full_hop_hist,
-    col_sort_class=pred,
-    col_colors=labels,
-    col_palette=CLASS_COLOR_DICT,
-    col_item_order=[labels],
-    cbar=False,
-    col_ticks=False,
+np.random.seed(1010101)
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    node.fit_candidates()
+
+# %% [markdown]
+# ##
+sub_ks = [
+    (2, 3, 4),
+    (2,),
+    (0,),
+    (2,),
+    (2, 3, 4),
+    (2, 3),
+    (0,),
+    (0,),
+    (0,),
+    (2,),
+    (2, 6),
+    (2, 3),
+    (2, 3),
+    (0,),
+    (2,),
+    (2, 3),
+]
+for i, node in enumerate(get_lowest_level(mc)):
+    print(node.name)
+    print()
+    for k in sub_ks[i]:
+        node.plot_model(k)
+
+
+# %% [markdown]
+# ##
+
+meta = mc.meta.copy()
+meta["rand"] = np.random.uniform(size=len(meta))
+sf = signal_flow(adj)
+meta["signal_flow"] = -sf
+meta["te"] = -meta["Total edgesum"]
+# %% [markdown]
+# ## plot by class and randomly within class
+fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+adjplot(
+    adj,
+    meta=meta,
+    sort_class=["0_pred_side"],
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    item_order=["merge_class", "rand"],
+    plot_type="scattermap",
+    sizes=(0.5, 1),
     ax=ax,
 )
+stashfig("adj-lvl0")
+fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+adjplot(
+    adj,
+    meta=meta,
+    sort_class=["0_pred_side", "1_pred_side"],
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    item_order=["merge_class", "rand"],
+    plot_type="scattermap",
+    sizes=(0.5, 1),
+    ax=ax,
+)
+stashfig("adj-lvl1")
+fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+adjplot(
+    adj,
+    meta=meta,
+    sort_class=["0_pred_side", "1_pred_side", "2_pred_side"],
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    item_order=["merge_class", "rand"],
+    plot_type="scattermap",
+    sizes=(0.5, 1),
+    ax=ax,
+)
+stashfig("adj-lvl2")
 
 
 # %% [markdown]
+# ## plot by class and signal flow within class
+fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+adjplot(
+    adj,
+    meta=meta,
+    sort_class=["0_pred_side"],
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    class_order=["signal_flow"],
+    item_order=["merge_class", "signal_flow"],
+    plot_type="scattermap",
+    sizes=(0.5, 1),
+    ax=ax,
+)
+stashfig("adj-lvl0-sf-class")
+fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+adjplot(
+    adj,
+    meta=meta,
+    sort_class=["0_pred_side", "1_pred_side"],
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    class_order=["signal_flow"],
+    item_order=["merge_class", "signal_flow"],
+    plot_type="scattermap",
+    sizes=(0.5, 1),
+    ax=ax,
+)
+stashfig("adj-lvl1-sf-class")
+fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+adjplot(
+    adj,
+    meta=meta,
+    sort_class=["0_pred_side", "1_pred_side", "2_pred_side"],
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    class_order=["signal_flow"],
+    item_order=["merge_class", "signal_flow"],
+    plot_type="scattermap",
+    sizes=(0.5, 1),
+    ax=ax,
+)
+stashfig("adj-lvl2-sf-class")
+# %% [markdown]
 # ##
+meta["lvl0_labels"] = meta["0_pred"] + meta["hemisphere"]
+meta["lvl1_labels"] = meta["0_pred"] + "-" + meta["1_pred"] + meta["hemisphere"]
+meta["lvl2_labels"] = (
+    meta["0_pred"] + "-" + meta["1_pred"] + "-" + meta["2_pred"] + meta["hemisphere"]
+)
 
-name = "122.1-BDP-silly-model-testing"
-load = True
-loc = f"maggot_models/notebooks/outs/{name}/csvs/stash-label-meta.csv"
-if load:
-    meta = pd.read_csv(loc, index_col=0)
+# %% [markdown]
+# ## plot by random within a group
 
-for col in ["0_pred", "1_pred", "2_pred", "hemisphere"]:
-    # meta[col] = meta[col].fillna("")
-    meta[col] = meta[col].astype(str)
-    meta[col] = meta[col].replace("nan", "")
-    meta[col] = meta[col].str.replace(".0", "")
-    # meta[col] = meta[col].astype(int).astype(str)
-    # meta[col] = meta[col].fillna("")
-    # vals =
-    # meta[col] = meta[col].astype(int).astype(str)
-    # meta[col].fillna("")
+from graspy.models import SBMEstimator, DCSBMEstimator
 
+fig, axs = plt.subplots(1, 2, figsize=(20, 10))
+ax = axs[1]
+adjplot(
+    adj,
+    meta=meta,
+    sort_class=["hemisphere", "lvl0_labels"],
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    class_order=["signal_flow"],
+    item_order=["te"],
+    plot_type="scattermap",
+    sizes=(0.5, 0.5),
+    ax=ax,
+    ticks=False,
+)
+
+estimator = DCSBMEstimator(degree_directed=True, directed=True, loops=False)
+estimator.fit(adj, meta["lvl0_labels"].values)
+sample = np.squeeze(estimator.sample())
+ax = axs[0]
+adjplot(
+    sample,
+    meta=meta,
+    sort_class=["hemisphere", "lvl0_labels"],
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    class_order=["signal_flow"],
+    item_order=["te"],
+    plot_type="scattermap",
+    sizes=(0.5, 0.5),
+    ax=ax,
+    ticks=False,
+)
+
+stashfig("adj-lvl0-rand-te-hemi")
+###
+fig, axs = plt.subplots(1, 2, figsize=(20, 10))
+ax = axs[0]
+adjplot(
+    adj,
+    meta=meta,
+    sort_class=["hemisphere", "lvl1_labels"],
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    class_order=["signal_flow"],
+    item_order=["te"],
+    plot_type="scattermap",
+    sizes=(0.5, 0.5),
+    ax=ax,
+    ticks=False,
+)
+
+estimator = DCSBMEstimator(degree_directed=True, directed=True, loops=False)
+estimator.fit(adj, meta["lvl1_labels"].values)
+sample = np.squeeze(estimator.sample())
+ax = axs[1]
+adjplot(
+    sample,
+    meta=meta,
+    sort_class=["hemisphere", "lvl1_labels"],
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    class_order=["signal_flow"],
+    item_order=["te"],
+    plot_type="scattermap",
+    sizes=(0.5, 0.5),
+    ax=ax,
+    ticks=False,
+)
+
+stashfig("adj-lvl1-rand-te-hemi")
+###
+fig, axs = plt.subplots(1, 2, figsize=(20, 10))
+ax = axs[1]
+adjplot(
+    adj,
+    meta=meta,
+    sort_class=["hemisphere", "lvl2_labels"],
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    class_order=["signal_flow"],
+    item_order=["te"],
+    plot_type="scattermap",
+    sizes=(0.5, 0.5),
+    ax=ax,
+    ticks=False,
+)
+
+estimator = DCSBMEstimator(degree_directed=True, directed=True, loops=False)
+estimator.fit(adj, meta["lvl2_labels"].values)
+sample = np.squeeze(estimator.sample())
+ax = axs[0]
+adjplot(
+    sample,
+    meta=meta,
+    sort_class=["hemisphere", "lvl2_labels"],
+    colors="merge_class",
+    palette=CLASS_COLOR_DICT,
+    class_order=["signal_flow"],
+    item_order=["te"],
+    plot_type="scattermap",
+    sizes=(0.5, 0.5),
+    ax=ax,
+    ticks=False,
+)
+
+stashfig("adj-lvl2-rand-te-hemi")
+# %% [markdown]
+# ##
+from src.graph import MetaGraph
+
+
+def upper_triu_prop(adj):
+    inds = np.triu_indices_from(adj, k=1)
+    prop = adj[inds].sum() / adj.sum()
+    return prop
+
+
+rows = []
+n_samples = 5
+lvls = ["lvl0_labels", "lvl1_labels", "lvl2_labels"]
+for lvl in lvls:
+    estimator = DCSBMEstimator(degree_directed=True, directed=True, loops=False)
+    estimator.fit(adj, meta[lvl].values)
+    for i in range(n_samples):
+        sample = np.squeeze(estimator.sample())
+        sample_meta = meta.copy()
+        sf = signal_flow(sample)
+        sample_meta["signal_flow"] = -sf
+        sample_mg = MetaGraph(sample, sample_meta)
+        sample_mg = sample_mg.sort_values("signal_flow", ascending=True)
+        prop = upper_triu_prop(sample_mg.adj)
+        print(prop)
+        row = {"level": lvl.replace("_labels", ""), "prop": prop}
+        rows.append(row)
+    print()
+
+bin_meta = meta.copy()
+bin_adj = binarize(adj)
+sf = signal_flow(bin_adj)
+bin_meta["signal_flow"] = -sf
+bin_mg = MetaGraph(bin_adj, bin_meta)
+bin_mb = bin_mg.sort_values("signal_flow", ascending=True)
+prop = upper_triu_prop(bin_mg.adj)
+print(prop)
+
+rows.append({"level": "data", "prop": prop})
+prop_df = pd.DataFrame(rows)
+
+fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+sns.stripplot(data=prop_df, x="level", y="prop", ax=ax)
+ax.set_ylabel("Prop. in upper triangle")
+ax.set_xlabel("Model")
+stashfig("ffwdness-by-model")
+
+# %% [markdown]
+# ## make barplots
+
+from src.visualization import barplot_text
+
+
+lvls = ["lvl0_labels", "lvl1_labels", "lvl2_labels"]
+for lvl in lvls:
+    pred_labels = meta[lvl]
+    true_labels = meta["merge_class"].values
+    fig, ax = plt.subplots(1, 1, figsize=(15, 20))
+    stacked_barplot(
+        pred_labels,
+        true_labels,
+        category_order=np.unique(pred_labels),
+        color_dict=CLASS_COLOR_DICT,
+        ax=ax,
+    )
+    stashfig(f"barplot-no-text-lvl-{lvl}", dpi=200)
+
+# %% [markdown]
+# ##
 meta["lvl0_labels"] = meta["0_pred"]
 meta["lvl1_labels"] = meta["0_pred"] + "-" + meta["1_pred"]
 meta["lvl2_labels"] = meta["0_pred"] + "-" + meta["1_pred"] + "-" + meta["2_pred"]
@@ -905,30 +1113,90 @@ meta["lvl1_labels_side"] = meta["lvl1_labels"] + meta["hemisphere"]
 meta["lvl2_labels_side"] = meta["lvl2_labels"] + meta["hemisphere"]
 
 
-# %%
-fig, ax = plt.subplots(1, 1, figsize=(20, 10))
-matrixplot(
-    full_hop_hist,
-    col_meta=meta,
-    col_sort_class="lvl2_labels",
-    col_colors="merge_class",
-    col_palette=CLASS_COLOR_DICT,
-    col_item_order=["merge_class", "signal_flow"],
-    col_class_order="signal_flow",
-    cbar=False,
-    col_ticks=True,
-    tick_rot=45,
-    ax=ax,
-)
-stashfig("cascade-spectral")
+stashcsv(meta, "stash-label-meta")
+# %% [markdown]
+# ##
+load = True
+loc = f"maggot_models/notebooks/outs/{FNAME}/csvs/stash-label-meta.csv"
+if load:
+    meta = pd.read_csv(loc, index_col=0)
+
 
 # %% [markdown]
 # ##
-inds = meta[meta["lvl2_labels"] == "2-1-0"].inds
-temp_meta = meta.iloc[inds]
-pairplot(embed[inds], labels=temp_meta["merge_class"].values, palette=CLASS_COLOR_DICT)
-# %% [markdown]
-# ##
-temp_meta[temp_meta["merge_class"] == "unk"]
+
+
+start_instance()
+# labels = meta["lvl2_labels"].values
+
+for tp in meta["lvl2_labels"].unique():
+    ids = list(meta[meta["lvl2_labels"] == tp].index.values)
+    ids = [int(i) for i in ids]
+    fig = plt.figure(figsize=(30, 10))
+
+    gs = plt.GridSpec(2, 3, figure=fig, wspace=0, hspace=0, height_ratios=[0.8, 0.2])
+
+    skeleton_color_dict = dict(
+        zip(meta.index, np.vectorize(CLASS_COLOR_DICT.get)(meta["merge_class"]))
+    )
+
+    # ax = fig.add_subplot(1, 3, 1, projection="3d")
+    ax = fig.add_subplot(gs[0, 0], projection="3d")
+
+    pymaid.plot2d(
+        ids,
+        color=skeleton_color_dict,
+        ax=ax,
+        connectors=False,
+        method="3d",
+        autoscale=True,
+    )
+    ax.azim = -90  # 0 for side view
+    ax.elev = 0
+    ax.dist = 6
+    set_axes_equal(ax)
+
+    # ax = fig.add_subplot(1, 3, 2, projection="3d")
+    ax = fig.add_subplot(gs[0, 1], projection="3d")
+    pymaid.plot2d(
+        ids,
+        color=skeleton_color_dict,
+        ax=ax,
+        connectors=False,
+        method="3d",
+        autoscale=True,
+    )
+    ax.azim = 0  # 0 for side view
+    ax.elev = 0
+    ax.dist = 6
+    set_axes_equal(ax)
+
+    # ax = fig.add_subplot(1, 3, 3, projection="3d")
+    ax = fig.add_subplot(gs[0, 2], projection="3d")
+    pymaid.plot2d(
+        ids,
+        color=skeleton_color_dict,
+        ax=ax,
+        connectors=False,
+        method="3d",
+        autoscale=True,
+    )
+    ax.azim = -90
+    ax.elev = 90
+    ax.dist = 6
+    set_axes_equal(ax)
+
+    ax = fig.add_subplot(gs[1, :])
+    temp_meta = meta[meta["lvl2_labels"] == tp]
+    cat = temp_meta["lvl2_labels_side"].values
+    subcat = temp_meta["merge_class"].values
+    stacked_barplot(cat, subcat, ax=ax, color_dict=CLASS_COLOR_DICT)
+    ax.get_legend().remove()
+
+    fig.suptitle(tp)
+
+    stashfig(f"plot3d-{tp}")
+    plt.close()
+
 
 # %%

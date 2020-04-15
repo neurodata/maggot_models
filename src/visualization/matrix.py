@@ -8,11 +8,9 @@ import matplotlib as mpl
 from matplotlib.colors import ListedColormap
 
 
-def sort_meta(meta, sort_class, sort_item=None, class_order="size"):
-    if sort_item is None:
-        sort_item = []
-    if isinstance(class_order, str):
-        class_order = [class_order]
+def sort_meta(length, meta, sort_class, sort_item=None, class_order="size"):
+    if meta is None or len(meta) == 0:
+        return np.arange(length), meta
     meta = meta.copy()
     total_sort_by = []
     for sc in sort_class:
@@ -21,7 +19,7 @@ def sort_meta(meta, sort_class, sort_item=None, class_order="size"):
             # negative so we can sort alphabetical still in one line
             meta[f"{sc}_size"] = -meta[sc].map(class_size)
             total_sort_by.append(f"{sc}_size")
-        elif class_order is not None:
+        elif len(class_order) > 0:
             for co in class_order:
                 class_value = meta.groupby(sc)[co].mean()
                 meta[f"{sc}_{co}_order"] = meta[sc].map(class_value)
@@ -65,16 +63,15 @@ def get_colors(labels, palette, desat=0.7):
 def draw_colors(
     ax, divider=None, ax_type="x", colors=None, palette="tab10", sort_meta=None
 ):
-    if colors is not None:
+    if len(colors) > 0:
         if ax_type == "x":
             cax = divider.append_axes("top", size="3%", pad=0, sharex=ax)
         elif ax_type == "y":
             cax = divider.append_axes("left", size="3%", pad=0, sharey=ax)
 
-        if isinstance(colors, str):  # string indexes a column in meta
-            classes = sort_meta[colors]
-        elif isinstance(colors, (list, np.ndarray, pd.Series)):
-            classes = colors  # TODO make sure this is a series
+        classes = sort_meta[
+            colors[0]
+        ]  # TODO eventually could allow for multiple sets of colors
 
         if isinstance(palette, dict):
             color_dict = palette
@@ -87,6 +84,7 @@ def draw_colors(
         class_map = dict(zip(uni_classes, range(len(uni_classes))))
         color_sorted = np.vectorize(color_dict.get)(uni_classes)
         # HACK fix the below 3 lines
+        # matrix is flipped when using color palette sometimes
         color_sorted = np.array(color_sorted)
         if len(color_sorted) != len(uni_classes):
             color_sorted = color_sorted.T
@@ -112,43 +110,12 @@ def draw_colors(
         return ax
 
 
-# def _get_tick_info(sort_meta, all_sort_class, level_sort_class):
-#     """ Assumes meta is already sorted
-#     """
-#     if sort_meta is not None and all_sort_class is not None:
-#         # get locations
-#         sort_meta["sort_idx"] = range(len(sort_meta))
-
-#         # for the gridlines
-#         first_df = sort_meta.groupby(all_sort_class, sort=False).first()
-#         first_df.reset_index(inplace=True)f
-#         first_df = first_df.groupby(level_sort_class, sort=False).first()
-#         first_inds = list(first_df["sort_idx"].values)
-#         last_df = sort_meta.groupby(all_sort_class, sort=False).last()
-#         last_df.reset_index(inplace=True)
-#         last_df = last_df.groupby(level_sort_class, sort=False).last()
-#         first_inds.append(last_df["sort_idx"].values[-1] + 1)
-
-#         # for the tic locs
-#         ind = np.where(np.array(all_sort_class) == level_sort_class)[0][0]
-#         middle_df = sort_meta.groupby(all_sort_class[: ind + 1], sort=False).mean()
-#         # middle_df.reset_index(inplace=True)
-#         # middle_df.groupby(level_sort_class, sort=False).mean()
-#         middle_inds = np.array(middle_df["sort_idx"].values) + 0.5
-
-#         # middle_labels = list(middle_df.index)
-#         middle_labels = list(middle_df.index.get_level_values(level_sort_class))
-#         return first_inds, middle_inds, middle_labels
-#     else:
-#         return None, None, None
-
-
 def _get_separator_info(sort_meta, sort_class):
     """ Assumes meta is already sorted
     """
     if sort_meta is None and sort_class is None:
         return None
-
+    # sort_meta[sort_class].fillna("", inplace=True)
     sort_meta["sort_idx"] = range(len(sort_meta))
     first_df = sort_meta.groupby(sort_class, sort=False).first()
     sep_inds = list(first_df["sort_idx"].values)
@@ -181,12 +148,14 @@ def draw_ticks(
 ):
     tick_inds, tick_labels = _get_tick_info(sort_meta, sort_class)
     if tick_rot != 0:
-        ha = "left"
+        ha = "center"
+        va = "bottom"
     else:
         ha = "center"
+        va = "bottom"
     if ax_type == "x":
         tick_ax.set_xticks(tick_inds)
-        tick_ax.set_xticklabels(tick_labels, rotation=tick_rot, ha=ha, va="bottom")
+        tick_ax.set_xticklabels(tick_labels, rotation=tick_rot, ha=ha, va=va)
         tick_ax.xaxis.tick_top()
     else:
         tick_ax.set_yticks(tick_inds)
@@ -245,66 +214,28 @@ def draw_separators(
     [type]
         [description]
     """
+    if len(sort_class) > 0:
+        if gridline_kws is None:
+            gridline_kws = dict(color="grey", linestyle="--", alpha=0.7, linewidth=1)
 
-    if gridline_kws is None:
-        gridline_kws = dict(color="grey", linestyle="--", alpha=0.7, linewidth=1)
+        if plot_type == "heatmap":
+            boost = 0
+        elif plot_type == "scattermap":
+            boost = 0.5
 
-    if plot_type == "heatmap":
-        boost = 0
-    elif plot_type == "scattermap":
-        boost = 0.5
+        sep_inds = _get_separator_info(sort_meta, sort_class)
 
-    # get info about the separators
-    # first_inds, middle_inds, middle_labels = _get_tick_info(
-    #     sort_meta, all_sort_class, level_sort_class
-    # )
+        if ax_type == "x":
+            lims = ax.get_xlim()
+            drawer = ax.axvline
+        else:
+            lims = ax.get_ylim()
+            drawer = ax.axhline
 
-    sep_inds = _get_separator_info(sort_meta, sort_class)
-
-    if ax_type == "x":
-        lims = ax.get_xlim()
-        drawer = ax.axvline
-        # if tick_ax_border:
-        #     tick_drawer = tick_ax.axvline
-    else:
-        lims = ax.get_ylim()
-        drawer = ax.axhline
-        # if tick_ax_border:
-        #     tick_drawer = tick_ax.axhline
-
-    # draw the border lines
-    for t in sep_inds:
-        if t not in lims:
-            drawer(t - boost, **gridline_kws)
-        # if tick_ax_border:
-        #     tick_drawer(t - boost, color="black", linestyle="-", alpha=1, linewidth=2)
-
-    # if use_ticks:
-    #     # add tick labels and locs
-    #     if ax_type == "x":
-    #         tick_ax.set_xticks(middle_inds)
-    #         if minor_ticking:
-    #             tick_ax.set_xticklabels(middle_labels[0::2])
-    #             tick_ax.set_xticklabels(middle_labels[1::2], minor=True)
-    #         else:
-    #             if tick_rot != 0:
-    #                 tick_ax.set_xticklabels(
-    #                     middle_labels, rotation=tick_rot, ha="left", va="bottom"
-    #                 )
-    #             else:
-    #                 tick_ax.set_xticklabels(
-    #                     middle_labels, rotation=tick_rot, ha="center", va="bottom"
-    #                 )
-    #         tick_ax.xaxis.tick_top()
-    #     elif ax_type == "y":
-    #         tick_ax.set_yticks(middle_inds)
-    #         if minor_ticking:
-    #             tick_ax.set_yticklabels(middle_labels[0::2])
-    #             tick_ax.set_yticklabels(middle_labels[1::2], minor=True)
-    #         else:
-    #             tick_ax.set_yticklabels(
-    #                 middle_labels, rotation=tick_rot, ha="right", va="center"
-    #             )
+        # draw the  lines
+        for t in sep_inds:
+            if t not in lims:  # avoid drawing lines on the borders
+                drawer(t - boost, **gridline_kws)
 
 
 def _process_meta(meta, sort_class):
@@ -313,7 +244,6 @@ def _process_meta(meta, sort_class):
     elif meta is not None and sort_class is None:
         return meta, []
     elif isinstance(meta, pd.DataFrame):
-        # TODO need to check if string first
         if isinstance(sort_class, str):
             sort_class = [sort_class]
         else:
@@ -333,6 +263,97 @@ def _process_meta(meta, sort_class):
     else:
         raise ValueError("Improper metadata spec for matrixplot")
     return meta, sort_class
+
+
+def _check_length(item, name, length):
+    if length != len(item):
+        raise ValueError(
+            f"Length of {name} must be the same as corresponding data axis"
+        )
+
+
+def _check_item_in_meta(meta, item, name):
+    if item is None:
+        return []
+    if isinstance(item, str):
+        item = [item]
+    else:
+        try:
+            iter(item)
+        except TypeError:
+            msg = (
+                f"{name} must be an iterable or string corresponding to columns in meta"
+            )
+            raise TypeError(msg)
+    for col_name in item:
+        if col_name not in meta.columns:
+            raise ValueError(f"{name} is not a column in the meta dataframe.")
+    return item
+
+
+def _item_to_df(item, name, length):
+    if item is None:
+        return None, []
+
+    if isinstance(item, pd.Series):
+        _check_length(item, name, length)
+        item_meta = item.to_frame(name=f"{name}_0")
+    elif isinstance(item, list):
+        if len(item) == length:  # assuming elements of list are metadata
+            item = [item]
+        for elem in item:
+            _check_length(elem, name, length)
+        item_meta = pd.DataFrame({f"{name}_{i}": elem for i, elem in enumerate(item)})
+    elif isinstance(item, np.ndarray):
+        if item.ndim > 2:
+            raise ValueError(f"Numpy array passed as {name} must be 1 or 2d.")
+        _check_length(item, name, length)
+        if item.ndim < 2:
+            item = np.atleast_2d(item).T
+        item_meta = pd.DataFrame(
+            data=item, columns=[f"{name}_{i}" for i in range(item.shape[1])]
+        )
+    else:
+        raise ValueError(f"{name} must be a pd.Series, np.array, or list.")
+
+    item = list(item_meta.columns.values)
+    return item_meta, item
+
+
+def _check_sorting_kws(length, meta, sort_class, class_order, item_order, colors):
+    if isinstance(meta, pd.DataFrame):
+        # if meta is here, than everything else must be column item in meta
+        _check_length(meta, "meta", length)
+        sort_class = _check_item_in_meta(meta, sort_class, "sort_class")
+        class_order = _check_item_in_meta(meta, class_order, "class_order")
+        item_order = _check_item_in_meta(meta, item_order, "item_order")
+        colors = _check_item_in_meta(meta, colors, "colors")
+    else:
+        # otherwise, arguments can be a hodgepodge of stuff
+        sort_class_meta, sort_class = _item_to_df(sort_class, "sort_class", length)
+        class_order_meta, class_order = _item_to_df(class_order, "class_order", length)
+        item_order_meta, item_order = _item_to_df(item_order, "item_order", length)
+        color_meta, colors = _item_to_df(colors, "colors", length)
+        metas = []
+        for m in [sort_class_meta, class_order_meta, item_order_meta, color_meta]:
+            if m is not None:
+                metas.append(m)
+        if len(metas) > 0:
+            meta = pd.concat(metas, axis=1)
+        else:
+            meta = pd.DataFrame()
+    return meta, sort_class, class_order, item_order, colors
+
+
+def _check_data(data):
+    if not isinstance(data, np.ndarray):
+        raise TypeError("data must be a np.ndarray.")
+    if data.ndim != 2:
+        raise ValueError("data must have dimension 2.")
+
+
+def _check_boolean_inputs(*args):
+    pass
 
 
 def matrixplot(
@@ -360,7 +381,7 @@ def matrixplot(
     tick_rot=0,
     center=0,
     cmap="RdBu_r",
-    sizes=(10, 40),
+    sizes=(5, 10),
     square=False,
     gridline_kws=None,
     spinestyle_kws=None,
@@ -423,56 +444,54 @@ def matrixplot(
     [type]
         [description]
     """
-    row_meta = row_meta.copy()
-    col_meta = col_meta.copy()
-    # TODO probably remove these
-    tick_fontsize = 10
-    tick_pad = [0, 0]
-    base_tick_pad = 5
+
+    _check_data(data)
 
     plot_type_opts = ["scattermap", "heatmap"]
     if plot_type not in plot_type_opts:
         raise ValueError(f"`plot_type` must be one of {plot_type_opts}")
 
-    if spinestyle_kws is None:
-        spinestyle_kws = dict(linestyle="-", linewidth=1, alpha=0.7, color="black")
+    row_meta, row_sort_class, row_class_order, row_item_order, row_colors = _check_sorting_kws(
+        data.shape[0],
+        row_meta,
+        row_sort_class,
+        row_class_order,
+        row_item_order,
+        row_colors,
+    )
 
-    # verify and convert inout
-    row_meta, row_sort_class = _process_meta(row_meta, row_sort_class)
-    col_meta, col_sort_class = _process_meta(col_meta, col_sort_class)
-
-    if isinstance(col_item_order, str):
-        col_item_order = [col_item_order]
-    if isinstance(row_item_order, str):
-        row_item_order = [row_item_order]
+    col_meta, col_sort_class, col_class_order, col_item_order, col_colors = _check_sorting_kws(
+        data.shape[1],
+        col_meta,
+        col_sort_class,
+        col_class_order,
+        col_item_order,
+        col_colors,
+    )
 
     # sort the data and metadata
-    if row_meta is not None:
-        row_perm_inds, row_meta = sort_meta(
-            row_meta,
-            row_sort_class,
-            class_order=row_class_order,
-            sort_item=row_item_order,
-        )
-    else:
-        row_perm_inds = np.arange(data.shape[0])
-    if col_meta is not None:
-        col_perm_inds, col_meta = sort_meta(
-            col_meta,
-            col_sort_class,
-            class_order=col_class_order,
-            sort_item=col_item_order,
-        )
-    else:
-        col_perm_inds = np.arange(data.shape[1])
+    row_perm_inds, row_meta = sort_meta(
+        data.shape[0],
+        row_meta,
+        row_sort_class,
+        class_order=row_class_order,
+        sort_item=row_item_order,
+    )
+    col_perm_inds, col_meta = sort_meta(
+        data.shape[1],
+        col_meta,
+        col_sort_class,
+        class_order=col_class_order,
+        sort_item=col_item_order,
+    )
     data = data[np.ix_(row_perm_inds, col_perm_inds)]
 
-    # do the actual plotting!
+    # draw the main heatmap/scattermap
     if ax is None:
         _, ax = plt.subplots(1, 1, figsize=(10, 10))
 
     if plot_type == "heatmap":
-        sns.heatmap(data, cmap=cmap, ax=ax, center=center, **kws)  # TODO stop hard code
+        sns.heatmap(data, cmap=cmap, ax=ax, center=center, **kws)
     elif plot_type == "scattermap":
         gridmap(data, ax=ax, sizes=sizes, border=False, **kws)
 
@@ -482,10 +501,11 @@ def matrixplot(
     ax.set_ylim(data.shape[0], 0)
     ax.set_xlim(0, data.shape[1])
 
+    # this will let us make axes for the colors and ticks as necessary
     divider = make_axes_locatable(ax)
 
     # draw colors
-    # note that top_cax and left_cax may = ax if no colors are required
+    # note that top_cax and left_cax may = ax if no colors are requested
     top_cax = draw_colors(
         ax,
         divider=divider,
@@ -494,6 +514,7 @@ def matrixplot(
         palette=col_palette,
         sort_meta=col_meta,
     )
+    top_cax.xaxis.set_label_position("top")
 
     left_cax = draw_colors(
         ax,
@@ -507,34 +528,31 @@ def matrixplot(
     remove_shared_ax(ax)
 
     # draw separators
-    if len(col_sort_class) > 0:
-        draw_separators(
-            ax,
-            ax_type="x",
-            sort_meta=col_meta,
-            sort_class=col_sort_class,
-            plot_type=plot_type,
-            gridline_kws=gridline_kws,
-        )
-    if len(col_sort_class) > 0:
-        draw_separators(
-            ax,
-            ax_type="y",
-            sort_meta=row_meta,
-            sort_class=row_sort_class,
-            plot_type=plot_type,
-            gridline_kws=gridline_kws,
-        )
+    draw_separators(
+        ax,
+        ax_type="x",
+        sort_meta=col_meta,
+        sort_class=col_sort_class,
+        plot_type=plot_type,
+        gridline_kws=gridline_kws,
+    )
+    draw_separators(
+        ax,
+        ax_type="y",
+        sort_meta=row_meta,
+        sort_class=row_sort_class,
+        plot_type=plot_type,
+        gridline_kws=gridline_kws,
+    )
 
     # draw ticks
-
-    if col_sort_class is not None and col_ticks:
-        tick_ax = top_cax  # prime the loop
+    if len(col_sort_class) > 0 and col_ticks:
+        tick_ax = top_cax  # start with the axes we already have
         tick_ax_border = False
         rev_col_sort_class = list(col_sort_class[::-1])
 
         for i, sc in enumerate(rev_col_sort_class):
-            if i > 0:
+            if i > 0:  # add a new axis for ticks
                 tick_ax = divider.append_axes("top", size="1%", pad=0.5, sharex=ax)
                 remove_shared_ax(tick_ax)
                 tick_ax.spines["right"].set_visible(True)
@@ -553,13 +571,13 @@ def matrixplot(
             )
             ax.xaxis.set_label_position("top")
 
-    if row_sort_class is not None and row_ticks:
-        tick_ax = left_cax  # prime the loop
+    if len(row_sort_class) > 0 and row_ticks:
+        tick_ax = left_cax  # start with the axes we already have
         tick_ax_border = False
         rev_row_sort_class = list(row_sort_class[::-1])
 
         for i, sc in enumerate(rev_row_sort_class):
-            if i > 0:
+            if i > 0:  # add a new axis for ticks
                 tick_ax = divider.append_axes("left", size="1%", pad=0.5, sharey=ax)
                 remove_shared_ax(tick_ax)
                 tick_ax.spines["right"].set_visible(False)
@@ -575,62 +593,6 @@ def matrixplot(
                 ax_type="y",
                 tick_ax_border=tick_ax_border,
             )
-
-        # if col_sort_class is not None:
-        #     tick_ax = top_cax  # prime the loop
-        #     tick_ax_border = False
-        #     rev_sc = col_sort_class[::-1]
-        #     for i, sc in enumerate(col_sort_class[::-1]):
-        #         if i > 0:
-        #             tick_ax = divider.append_axes("top", size="1%", pad=0.5, sharex=ax)
-        #             remove_shared_ax(tick_ax)
-        #             tick_ax.spines["right"].set_visible(True)
-        #             tick_ax.spines["top"].set_visible(True)
-        #             tick_ax.spines["left"].set_visible(True)
-        #             tick_ax.spines["bottom"].set_visible(False)
-        #             tick_ax_border = True
-        #         draw_separators(
-        #             ax,
-        #             divider=divider,
-        #             tick_ax=tick_ax,
-        #             ax_type="x",
-        #             sort_meta=col_meta,
-        #             all_sort_class=rev_sc,
-        #             level_sort_class=sc,
-        #             plot_type=plot_type,
-        #             use_ticks=col_ticks,
-        #             tick_rot=tick_rot,
-        #             gridline_kws=gridline_kws,
-        #             tick_ax_border=tick_ax_border,
-        #         )
-
-    # if row_sort_class is not None:
-    #     tick_ax = left_cax  # prime the loop
-    #     tick_ax_border = False
-    #     for i, sc in enumerate(row_sort_class[::-1]):
-    #         if i > 0:
-    #             tick_ax = divider.append_axes("left", size="1%", pad=0.5, sharey=ax)
-    #             remove_shared_ax(tick_ax)
-    #             # remove_spines(tick_ax)
-    #             tick_ax.spines["right"].set_visible(False)
-    #             tick_ax.spines["top"].set_visible(True)
-    #             tick_ax.spines["bottom"].set_visible(True)
-    #             tick_ax.spines["left"].set_visible(True)
-    #             tick_ax_border = True
-    #         draw_separators(
-    #             ax,
-    #             divider=divider,
-    #             tick_ax=tick_ax,
-    #             ax_type="y",
-    #             sort_meta=row_meta,
-    #             all_sort_class=row_sort_class,
-    #             level_sort_class=sc,
-    #             plot_type=plot_type,
-    #             use_ticks=row_ticks,
-    #             tick_rot=0,
-    #             gridline_kws=gridline_kws,
-    #             tick_ax_border=tick_ax_border,
-    #         )
 
     # if highlight_kws is None:
     #     highlight_kws = dict(color="black", linestyle="-", linewidth=1)
@@ -664,6 +626,8 @@ def matrixplot(
     #     )
 
     # spines
+    if spinestyle_kws is None:
+        spinestyle_kws = dict(linestyle="-", linewidth=1, alpha=0.7, color="black")
     if border:
         for spine in ax.spines.values():
             spine.set_visible(True)
@@ -688,11 +652,10 @@ def adjplot(
     palette="tab10",
     ticks=True,
     border=True,
-    minor_ticking=False,
     tick_rot=0,
     center=0,
     cmap="RdBu_r",
-    sizes=(10, 40),
+    sizes=(5, 10),
     square=True,
     gridline_kws=None,
     spinestyle_kws=None,

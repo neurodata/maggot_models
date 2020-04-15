@@ -954,7 +954,11 @@ def get_block_edgesums(adj, pred_labels, sort_blocks):
 
 
 def palplot(k, cmap="viridis", figsize=(1, 10), ax=None, start=0, stop=None):
-    pal = sns.color_palette(palette=cmap, n_colors=k)
+    if isinstance(k, int):
+        pal = sns.color_palette(palette=cmap, n_colors=k)
+    else:
+        pal = k
+    k = len(pal)
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
     pal = np.array(pal)
@@ -1436,14 +1440,14 @@ def gridmap(A, ax=None, legend=False, sizes=(5, 10), spines=False, border=True, 
     inds = np.nonzero(A)
     edges = A[inds]
     scatter_df = pd.DataFrame()
-    scatter_df["Weight"] = edges
+    scatter_df["weight"] = edges
     scatter_df["x"] = inds[1]
     scatter_df["y"] = inds[0]
     ax = sns.scatterplot(
         data=scatter_df,
         x="x",
         y="y",
-        size="Weight",
+        size="weight",
         legend=legend,
         sizes=sizes,
         ax=ax,
