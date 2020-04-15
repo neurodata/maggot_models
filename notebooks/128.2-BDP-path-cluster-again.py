@@ -45,7 +45,6 @@ from src.data import load_metagraph
 from src.graph import preprocess
 from src.hierarchy import signal_flow
 from src.io import savecsv, savefig
-from src.pymaid import start_instance
 from src.traverse import (
     Cascade,
     RandomWalk,

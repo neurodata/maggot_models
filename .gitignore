@@ -97,3 +97,13 @@ data/processed/*
 notebooks/outs/86.1-BDP-prob-path-cluster/csvs/prob-path-mat-c8-t1-Gad.csv
 
 src/pymaid/*
+
+notebooks/outs/129.0-BDP-multigraph-embed
+notebooks/outs/128.2-BDP-path-cluster-again
+notebooks/outs/128.1-BDP-path-cluster-again
+notebooks/outs/128.0-BDP-path-cluster-again
+notebooks/outs/127.2-BDP-more-silly-model
+notebooks/outs/127.1-BDP-more-silly-model
+notebooks/outs/127.0-BDP-more-silly-model
+notebooks/outs/124.0-BDP-spectral-cascades
+notebooks/outs/122.2-BDP-silly-model-testing
