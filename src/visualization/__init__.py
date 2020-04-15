@@ -18,6 +18,7 @@ from .visualize import (
     distplot,
     draw_networkx_nice,
     barplot_text,
+    set_axes_equal,
 )
 from .stack_seaborn import countplot, freqplot
 from .manual_colors import (
@@ -38,6 +39,6 @@ from .matrix import (
 )
 
 try:
-    from .neuron import set_axes_equal, plot_neurons
+    from .neuron import plot_neurons
 except ModuleNotFoundError:
     pass
