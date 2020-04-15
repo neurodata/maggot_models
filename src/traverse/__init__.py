@@ -1,9 +1,4 @@
-from .random_walk import (
-    generate_random_walks,
-    to_markov_matrix,
-    generate_random_walks_fast,
-    RandomWalk,
-)
+from .random_walk import generate_random_walks, to_markov_matrix, RandomWalk
 from .cascade import (
     generate_cascade_paths,
     generate_cascade_tree,
