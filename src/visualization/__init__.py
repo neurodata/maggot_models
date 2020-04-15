@@ -36,4 +36,8 @@ from .matrix import (
     draw_colors,
     adjplot,
 )
-from .neuron import set_axes_equal, plot_neurons
+
+try:
+    from .neuron import set_axes_equal, plot_neurons
+except ModuleNotFoundError:
+    pass
