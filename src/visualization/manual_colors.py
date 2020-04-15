@@ -5,7 +5,6 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-from src.data import load_metagraph
 
 CLASS_IND_DICT = {
     "KC": 0,
@@ -89,10 +88,10 @@ CLASS_COLOR_DICT["motor-AN"] = "#000000"
 CLASS_COLOR_DICT["motor-PaN"] = "#000000"
 CLASS_COLOR_DICT["motor-MN"] = "#000000"
 
-VERSION = "2020-03-26"
-mg = load_metagraph("G", VERSION)
-uni_class, counts = np.unique(mg["merge_class"], return_counts=True)
-count_map = dict(zip(uni_class, counts))
+# VERSION = "2020-03-26"
+# mg = load_metagraph("G", VERSION)
+# uni_class, counts = np.unique(mg["merge_class"], return_counts=True)
+# count_map = dict(zip(uni_class, counts))
 
 # print("Not in colors:\n")
 # for uc in uni_class:
@@ -113,7 +112,11 @@ def plot_colors():
 
 def plot_class_colormap():
     from src.visualization import palplot
+    from src.data import load_metagraph
 
+    mg = load_metagraph("G")
+    uni_class, counts = np.unique(mg["merge_class"], return_counts=True)
+    count_map = dict(zip(uni_class, counts))
     names = []
     colors = []
     for key, val in CLASS_COLOR_DICT.items():
