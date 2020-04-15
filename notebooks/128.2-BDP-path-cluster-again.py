@@ -93,7 +93,8 @@ def stashcsv(df, name, **kws):
     savecsv(df, name)
 
 
-mg = load_metagraph("G", version="2020-04-01")
+graph_type = "G"
+mg = load_metagraph(graph_type, version="2020-04-01")
 mg = preprocess(
     mg,
     threshold=0,
@@ -199,7 +200,7 @@ subsample = 2 ** 13
 path_len = 6
 paths = paths_by_len[path_len]
 
-basename = f"-subsample={subsample}-plen={path_len}"
+basename = f"-subsample={subsample}-plen={path_len}-graph={graph_type}"
 
 new_paths = []
 for p in paths:
@@ -290,7 +291,7 @@ stashfig("cmds-pairs-all" + basename)
 print("Running AGMM on CMDS embedding")
 n_components = 4
 
-agmm = AutoGMMCluster(max_components=40, n_jobs=-2, verbose=10)
+agmm = AutoGMMCluster(max_components=40, n_jobs=-2)
 pred = agmm.fit_predict(path_embed[:, :n_components])
 
 print(f"Number of clusters: {agmm.n_components_}")
@@ -347,15 +348,18 @@ meta["signal_flow"] = -signal_flow(adj)
 meta["class2"].fillna(" ", inplace=True)
 # %% [markdown]
 # ##
-fig, ax = plt.subplots(1, 1, figsize=(30, 20))
-
+fig, axs = plt.subplots(
+    1, 2, figsize=(30, 20), gridspec_kw=dict(width_ratios=[0.95, 0.02], wspace=0.02)
+)
+ax = axs[0]
 matrixplot(
     path_indicator_mat,
     ax=ax,
     plot_type="scattermap",
     col_sort_class=["class1", "class2"],
     col_class_order="signal_flow",
-    col_ticks=False,
+    col_ticks=True,
+    tick_rot=90,
     col_meta=meta,
     col_colors="merge_class",
     col_palette=CLASS_COLOR_DICT,
@@ -364,12 +368,19 @@ matrixplot(
     row_meta=path_meta,
     row_sort_class="cluster",
     row_item_order="dend_order",
-    row_ticks=False,
+    row_ticks=True,
     gridline_kws=dict(linewidth=0.3, color="grey", linestyle="--"),
     sizes=(2, 2),
     hue="weight",
     palette="tab10",
 )
+ax.set_ylabel("Cluster")
+
+ax = axs[1]
+palplot(path_len, cmap="tab10", ax=ax)
+ax.yaxis.tick_right()
+ax.set_title("Visit\norder")
+
 stashfig("path-indcator-GMMoCMDSoPathDist" + basename)
 
 # %% [markdown]
@@ -378,7 +389,7 @@ stashfig("path-indcator-GMMoCMDSoPathDist" + basename)
 uni_pred = np.unique(pred)
 
 
-for up in uni_pred:
+for up in uni_pred[:2]:
     mask = pred == up
     hop_hist = np.zeros((path_len, len(meta)))
     sub_path_mat = path_indicator_mat[mask]
@@ -388,21 +399,33 @@ for up in uni_pred:
 
     n_visits = hop_hist.sum(axis=0)
     sub_hop_hist = hop_hist[:, n_visits > 0]
+    sub_meta = meta[n_visits > 0].copy()
+    sum_visit = (sub_hop_hist * np.arange(1, path_len + 1)[:, None]).sum(axis=0)
+    sub_n_visits = sub_hop_hist.sum(axis=0)
+    mean_visit = sum_visit / sub_n_visits
+    sub_meta["mean_visit"] = mean_visit
+
     fig, ax = plt.subplots(1, 1, figsize=(16, 8))
-    matrixplot(
+    ax, div, top_ax, left_ax = matrixplot(
         np.log10(sub_hop_hist + 1),
         ax=ax,
         col_sort_class=["class1", "class2"],
-        col_class_order="signal_flow",
+        col_class_order="mean_visit",
         col_ticks=False,
-        col_meta=meta[n_visits > 0],
+        col_meta=sub_meta,
         col_colors="merge_class",
         col_palette=CLASS_COLOR_DICT,
-        col_item_order="signal_flow",
+        col_item_order="mean_visit",
         cbar=False,
         gridline_kws=dict(linewidth=0.3, color="grey", linestyle="--"),
     )
-    stashfig(f"hop_hist-cluster={up}")
+    ax.set_yticks(np.arange(1, path_len + 1) - 0.5)
+    ax.set_yticklabels(np.arange(1, path_len + 1))
+    ax.set_ylabel("Hops")
+    top_ax.set_title(
+        f"Cluster {up}, {len(sub_path_mat) / len(paths):0.2f} paths, {len(sub_meta)} neurons"
+    )
+    stashfig(f"hop_hist-cluster={up}" + basename)
 
 # %% [markdown]
 # ##

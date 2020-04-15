@@ -376,6 +376,7 @@ def matrixplot(
     col_palette="tab10",
     col_highlight=None,
     row_highlight=None,
+    col_tick_pad=None,
     border=True,
     minor_ticking=False,
     tick_rot=0,
@@ -547,13 +548,18 @@ def matrixplot(
 
     # draw ticks
     if len(col_sort_class) > 0 and col_ticks:
+        if col_tick_pad is None:
+            col_tick_pad = len(col_sort_class) * [0.5]
+
         tick_ax = top_cax  # start with the axes we already have
         tick_ax_border = False
         rev_col_sort_class = list(col_sort_class[::-1])
 
         for i, sc in enumerate(rev_col_sort_class):
             if i > 0:  # add a new axis for ticks
-                tick_ax = divider.append_axes("top", size="1%", pad=0.5, sharex=ax)
+                tick_ax = divider.append_axes(
+                    "top", size="1%", pad=col_tick_pad[i], sharex=ax
+                )
                 remove_shared_ax(tick_ax)
                 tick_ax.spines["right"].set_visible(True)
                 tick_ax.spines["top"].set_visible(True)
