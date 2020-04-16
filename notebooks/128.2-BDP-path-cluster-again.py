@@ -93,7 +93,17 @@ def stashcsv(df, name, **kws):
     savecsv(df, name)
 
 
-graph_type = "G"
+def invert_permutation(p):
+    """The argument p is assumed to be some permutation of 0, 1, ..., len(p)-1. 
+    Returns an array s, where s[i] gives the index of i in p.
+    """
+    p = np.asarray(p)
+    s = np.empty(p.size, p.dtype)
+    s[p] = np.arange(p.size)
+    return s
+
+
+graph_type = "Gad"
 mg = load_metagraph(graph_type, version="2020-04-01")
 mg = preprocess(
     mg,
@@ -188,7 +198,7 @@ for p in paths:
     path_lens.append(len(p))
 
 sns.distplot(path_lens, kde=False)
-stashfig("path-length-dist")
+stashfig(f"path-length-dist-graph={graph_type}")
 
 paths_by_len = {i: [] for i in range(1, max_hops + 1)}
 for p in paths:
@@ -197,7 +207,7 @@ for p in paths:
 # %% [markdown]
 # ## Subsampling and selecting paths
 subsample = 2 ** 13
-path_len = 6
+path_len = 7
 paths = paths_by_len[path_len]
 
 basename = f"-subsample={subsample}-plen={path_len}-graph={graph_type}"
@@ -331,17 +341,21 @@ stashfig("adjplot-GMMoCMDSoPathDist" + basename)
 
 from scipy.cluster.hierarchy import dendrogram
 
-Z = linkage(squareform(path_dist_mat), method="average")
-R = dendrogram(Z, truncate_mode=None, get_leaves=True, no_plot=True)
-order = R["leaves"]
+Z = linkage(squareform(path_dist_mat), method="average", optimal_ordering=False)
+R = dendrogram(
+    Z, truncate_mode=None, get_leaves=True, no_plot=True, color_threshold=-np.inf
+)
+order = invert_permutation(R["leaves"])
 
 path_meta = pd.DataFrame()
 path_meta["cluster"] = pred
 path_meta["dend_order"] = order
 
-Z = linkage(squareform(pdist), method="average")
-R = dendrogram(Z, truncate_mode=None, get_leaves=True, no_plot=True)
-order = R["leaves"]
+Z = linkage(squareform(pdist), method="average", optimal_ordering=False)
+R = dendrogram(
+    Z, truncate_mode=None, get_leaves=True, no_plot=True, color_threshold=-np.inf
+)
+order = invert_permutation(R["leaves"])
 
 meta["dend_order"] = order
 meta["signal_flow"] = -signal_flow(adj)
@@ -364,6 +378,7 @@ matrixplot(
     col_colors="merge_class",
     col_palette=CLASS_COLOR_DICT,
     col_item_order="dend_order",
+    col_tick_pad=[0.5, 1.5],
     # col_ticks=False,
     row_meta=path_meta,
     row_sort_class="cluster",
@@ -375,7 +390,7 @@ matrixplot(
     palette="tab10",
 )
 ax.set_ylabel("Cluster")
-
+# fig.suptitle("G")
 ax = axs[1]
 palplot(path_len, cmap="tab10", ax=ax)
 ax.yaxis.tick_right()
@@ -386,10 +401,16 @@ stashfig("path-indcator-GMMoCMDSoPathDist" + basename)
 # %% [markdown]
 # ##
 
+
+from src.traverse import to_path_graph
+import networkx as nx
+
+from src.visualization import draw_networkx_nice
+
 uni_pred = np.unique(pred)
 
 
-for up in uni_pred[:2]:
+for up in uni_pred[:1]:
     mask = pred == up
     hop_hist = np.zeros((path_len, len(meta)))
     sub_path_mat = path_indicator_mat[mask]
@@ -403,34 +424,135 @@ for up in uni_pred[:2]:
     sum_visit = (sub_hop_hist * np.arange(1, path_len + 1)[:, None]).sum(axis=0)
     sub_n_visits = sub_hop_hist.sum(axis=0)
     mean_visit = sum_visit / sub_n_visits
+    sub_meta["mean_visit_int"] = mean_visit.astype(int)
     sub_meta["mean_visit"] = mean_visit
 
-    fig, ax = plt.subplots(1, 1, figsize=(16, 8))
-    ax, div, top_ax, left_ax = matrixplot(
-        np.log10(sub_hop_hist + 1),
-        ax=ax,
-        col_sort_class=["class1", "class2"],
-        col_class_order="mean_visit",
-        col_ticks=False,
-        col_meta=sub_meta,
-        col_colors="merge_class",
-        col_palette=CLASS_COLOR_DICT,
-        col_item_order="mean_visit",
-        cbar=False,
-        gridline_kws=dict(linewidth=0.3, color="grey", linestyle="--"),
+    plot_mat = np.log10(sub_hop_hist + 1)
+
+    Z = linkage(plot_mat.T, metric="cosine", method="average")
+    R = dendrogram(Z, no_plot=True, color_threshold=-np.inf)
+    order = R["leaves"]
+
+    sub_meta["dend_order"] = invert_permutation(order)
+    # fig, ax = plt.subplots(1, 1, figsize=(16, 8))
+    # ax, div, top_ax, left_ax = matrixplot(
+    #     plot_mat,
+    #     ax=ax,
+    #     col_sort_class=["mean_visit_int"],
+    #     # col_class_order="mean_visit",
+    #     col_ticks=False,
+    #     col_meta=sub_meta,
+    #     col_colors="merge_class",
+    #     col_palette=CLASS_COLOR_DICT,
+    #     col_item_order=["merge_class", "dend_order"],
+    #     cbar=False,
+    #     gridline_kws=dict(linewidth=0.3, color="grey", linestyle="--"),
+    # )
+    # ax.set_yticks(np.arange(1, path_len + 1) - 0.5)
+    # ax.set_yticklabels(np.arange(1, path_len + 1))
+    # ax.set_ylabel("Hops")
+    # top_ax.set_title(
+    #     f"Cluster {up}, {len(sub_path_mat) / len(paths):0.2f} paths, {len(sub_meta)} neurons"
+    # )
+    # stashfig(f"hop_hist-class-cluster={up}" + basename)
+
+    # fig, ax = plt.subplots(1, 1, figsize=(16, 8))
+    # ax, div, top_ax, left_ax = matrixplot(
+    #     plot_mat,
+    #     ax=ax,
+    #     col_sort_class=["mean_visit_int"],
+    #     # col_class_order="mean_visit",
+    #     col_ticks=False,
+    #     col_meta=sub_meta,
+    #     col_colors="merge_class",
+    #     col_palette=CLASS_COLOR_DICT,
+    #     col_item_order=["dend_order"],
+    #     cbar=False,
+    #     gridline_kws=dict(linewidth=0.3, color="grey", linestyle="--"),
+    # )
+    # ax.set_yticks(np.arange(1, path_len + 1) - 0.5)
+    # ax.set_yticklabels(np.arange(1, path_len + 1))
+    # ax.set_ylabel("Hops")
+    # top_ax.set_title(
+    #     f"Cluster {up}, {len(sub_path_mat) / len(paths):0.2f} paths, {len(sub_meta)} neurons"
+    # )
+    # stashfig(f"hop_hist-cluster={up}" + basename)
+    sub_meta["colors"] = sub_meta["merge_class"].map(CLASS_COLOR_DICT)
+    sub_meta_dict = sub_meta.set_index("inds").to_dict(orient="index")
+
+    cluster_paths = []
+    for i, p in enumerate(paths):
+        if mask[i]:
+            cluster_paths.append(p)
+    path_graph = to_path_graph(cluster_paths)
+    nx.set_node_attributes(path_graph, sub_meta_dict)
+
+    for n, d in path_graph.degree():
+        path_graph.nodes[n]["degree"] = d
+
+    lc = draw_networkx_nice(
+        path_graph,
+        "dend_order",
+        "mean_visit",
+        colors="colors",
+        sizes="degree",
+        draw_labels=False,
+        size_scale=2,
+        weight_scale=0.5,
     )
-    ax.set_yticks(np.arange(1, path_len + 1) - 0.5)
-    ax.set_yticklabels(np.arange(1, path_len + 1))
-    ax.set_ylabel("Hops")
-    top_ax.set_title(
-        f"Cluster {up}, {len(sub_path_mat) / len(paths):0.2f} paths, {len(sub_meta)} neurons"
-    )
-    stashfig(f"hop_hist-cluster={up}" + basename)
+    plt.close()
+
+# %% [markdown]
+# # ## Find another way of plotting paths.
+# fig, ax = plt.subplots(1, 1, figsize=(16, 8))
+# ax, div, top_ax, left_ax = matrixplot(
+#     np.log10(sub_hop_hist + 1),
+#     ax=ax,
+#     col_sort_class=["class1", "class2"],
+#     col_class_order="mean_visit",
+#     col_ticks=False,
+#     col_meta=sub_meta,
+#     col_colors="merge_class",
+#     col_palette=CLASS_COLOR_DICT,
+#     col_item_order="mean_visit",
+#     cbar=False,
+#     gridline_kws=dict(linewidth=0.3, color="grey", linestyle="--"),
+# )
 
 # %% [markdown]
 # ##
 
+# %% [markdown]
+# ##
 
+# for up in uni_pred[:3]:
+#     mask = pred == up
+
+
+# %% [markdown]
+# ##
+# sns.heatmap(pdist)
+# %% [markdown]
+# ##
+
+# Z = linkage(squareform(pdist), method="average", optimal_ordering=True)
+
+# colors = np.vectorize(CLASS_COLOR_DICT.get)(meta["merge_class"])
+# sns.clustermap(
+#     pdist,
+#     figsize=(20, 20),
+#     row_linkage=Z,
+#     col_linkage=Z,
+#     row_colors=colors,
+#     col_colors=colors,
+#     xticklabels=False,
+#     yticklabels=False,
+# )
+
+# %% [markdown]
+# ##
+
+# sns.clustermap(plot_mat)
 # n_components = 8
 # metric = True
 # mds = MDS(
@@ -569,3 +691,6 @@ for up in uni_pred[:2]:
 #     colors=pred,
 #     palette=color_dict,
 # )
+
+
+# %%

@@ -1587,14 +1587,17 @@ def draw_networkx_nice(
     n_squared = len(nodelist) ** 2  # maximum z-order so far
     node_collection.set_zorder(n_squared)
 
-    edgelist = list(g.edges(data=True))
+    edgelist = np.array(list(g.edges(data=True)))
     weights = []
     for edge in edgelist:
         weight = edge[2]["weight"]
         weights.append(weight)
     weights = np.array(weights)
+    inds = np.argsort(weights)
+    weights = weights[inds]
+    edgelist = edgelist[inds]
 
-    nx.draw_networkx_edges(
+    lc = nx.draw_networkx_edges(
         g,
         pos,
         edgelist=edgelist,
@@ -1605,6 +1608,9 @@ def draw_networkx_nice(
         # width=1.5,
         ax=ax,
     )
+    print(lc)
+    for l in lc[:100]:
+        print(l)
 
     if draw_labels:
         text_items = nx.draw_networkx_labels(g, label_pos, ax=ax, font_size=20)
@@ -1617,7 +1623,7 @@ def draw_networkx_nice(
     ax.set_ylabel(y_pos)
     # plt.box(False)
     # fig.set_facecolor("w")
-    return ax
+    return lc
 
 
 def set_axes_equal(ax):
