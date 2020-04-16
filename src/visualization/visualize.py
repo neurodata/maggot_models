@@ -315,7 +315,7 @@ def screeplot(
     _check_common_inputs(
         figsize=figsize, title=title, context=context, font_scale=font_scale
     )
-    check_array(X)
+    # check_array(X)
     if show_first is not None:
         if not isinstance(show_first, int):
             msg = "show_first must be an int"
@@ -323,11 +323,15 @@ def screeplot(
     if not isinstance(cumulative, bool):
         msg = "cumulative must be a boolean"
         raise TypeError(msg)
-    n_components = min(X.shape) - 1
-    _, D, _ = selectSVD(X, n_components=n_components, algorithm="full")
+    # n_components = min(X.shape) - 1
+    # _, D, _ = selectSVD(X, n_components=n_components, algorithm="full")
+    if X.ndim == 1:
+        X = X.reshape()
     elbow_locs, elbow_vals = select_dimension(X, n_elbows=n_elbows)
     elbow_locs = np.array(elbow_locs)
-    D /= D.sum()
+    elbow_vals = np.array(elbow_vals)
+    # D /= D.sum()
+    D = elbow_vals / elbow_vals.sum()
     if cumulative:
         y = np.cumsum(D[:show_first])
     else:
@@ -1587,15 +1591,12 @@ def draw_networkx_nice(
     n_squared = len(nodelist) ** 2  # maximum z-order so far
     node_collection.set_zorder(n_squared)
 
-    edgelist = np.array(list(g.edges(data=True)))
+    edgelist = list(g.edges(data=True))
     weights = []
     for edge in edgelist:
         weight = edge[2]["weight"]
         weights.append(weight)
     weights = np.array(weights)
-    inds = np.argsort(weights)
-    weights = weights[inds]
-    edgelist = edgelist[inds]
 
     lc = nx.draw_networkx_edges(
         g,
@@ -1608,9 +1609,9 @@ def draw_networkx_nice(
         # width=1.5,
         ax=ax,
     )
-    print(lc)
-    for l in lc[:100]:
-        print(l)
+    # set z-order by weight
+    for i, l in enumerate(lc):
+        l.set_zorder(weights[i])
 
     if draw_labels:
         text_items = nx.draw_networkx_labels(g, label_pos, ax=ax, font_size=20)
@@ -1621,9 +1622,7 @@ def draw_networkx_nice(
 
     ax.set_xlabel(x_pos)
     ax.set_ylabel(y_pos)
-    # plt.box(False)
-    # fig.set_facecolor("w")
-    return lc
+    return ax
 
 
 def set_axes_equal(ax):

@@ -293,6 +293,12 @@ path_embed = cmds.fit_transform(path_dist_mat)
 plt.plot(cmds.singular_values_, "o")
 stashfig("cmds-screeplot" + basename)
 
+# %% [markdown]
+# ##
+screeplot(cmds.singular_values_)
+
+# %% [markdown]
+# ##
 
 pairplot(path_embed, alpha=0.02)
 stashfig("cmds-pairs-all" + basename)
@@ -401,16 +407,113 @@ stashfig("path-indcator-GMMoCMDSoPathDist" + basename)
 # %% [markdown]
 # ##
 
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import LogNorm
+
+
+def draw_networkx_nice(
+    g,
+    x_pos,
+    y_pos,
+    sizes=None,
+    colors=None,
+    nodelist=None,
+    cmap="Blues",
+    ax=None,
+    x_boost=0,
+    y_boost=0,
+    draw_axes_arrows=False,
+    vmin=None,
+    vmax=None,
+    weight_scale=1,
+    size_scale=1,
+    draw_labels=True,
+):
+    if nodelist is None:
+        nodelist = g.nodes()
+    weights = nx.get_edge_attributes(g, "weight")
+
+    x_attr_dict = nx.get_node_attributes(g, x_pos)
+    y_attr_dict = nx.get_node_attributes(g, y_pos)
+
+    pos = {}
+    label_pos = {}
+    for n in nodelist:
+        pos[n] = (x_attr_dict[n], y_attr_dict[n])
+        label_pos[n] = (x_attr_dict[n] + x_boost, y_attr_dict[n] + y_boost)
+
+    if sizes is not None:
+        size_attr_dict = nx.get_node_attributes(g, sizes)
+        node_size = []
+        for n in nodelist:
+            node_size.append(size_scale * size_attr_dict[n])
+
+    if colors is not None:
+        color_attr_dict = nx.get_node_attributes(g, colors)
+        node_color = []
+        for n in nodelist:
+            node_color.append(color_attr_dict[n])
+
+    weight_array = np.array(list(weights.values()))
+    norm = LogNorm(vmin=vmin, vmax=vmax, clip=True)
+
+    # norm = mplc.Normalize(vmin=0, vmax=weight_array.max())
+    sm = ScalarMappable(cmap=cmap, norm=norm)
+    cmap = sm.to_rgba(weight_array)
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(30, 30), frameon=False)
+
+    node_collection = nx.draw_networkx_nodes(
+        g, pos, node_color=node_color, node_size=node_size, with_labels=False, ax=ax
+    )
+    n_squared = len(nodelist) ** 2  # maximum z-order so far
+    node_collection.set_zorder(n_squared)
+
+    edgelist = list(g.edges(data=True))
+    weights = []
+    for edge in edgelist:
+        weight = edge[2]["weight"]
+        weights.append(weight)
+    weights = np.array(weights)
+
+    lc = nx.draw_networkx_edges(
+        g,
+        pos,
+        edgelist=edgelist,
+        edge_color=cmap,
+        width=weight_scale * weights + 0.1,
+        connectionstyle="arc3,rad=0.2",
+        arrows=True,
+        # width=1.5,
+        ax=ax,
+    )
+
+    for i, l in enumerate(lc):
+        l.set_zorder(weights[i])
+
+    if draw_labels:
+        text_items = nx.draw_networkx_labels(g, label_pos, ax=ax, font_size=20)
+
+        # make sure the labels are above all in z order
+        for _, t in text_items.items():
+            t.set_zorder(n_squared + 1)
+
+    ax.set_xlabel(x_pos)
+    ax.set_ylabel(y_pos)
+    # plt.box(False)
+    # fig.set_facecolor("w")
+    return ax
+
 
 from src.traverse import to_path_graph
 import networkx as nx
 
-from src.visualization import draw_networkx_nice
+# from src.visualization import draw_networkx_nice
 
 uni_pred = np.unique(pred)
 
-
-for up in uni_pred[:1]:
+for up in uni_pred:
     mask = pred == up
     hop_hist = np.zeros((path_len, len(meta)))
     sub_path_mat = path_indicator_mat[mask]
@@ -432,51 +535,50 @@ for up in uni_pred[:1]:
     Z = linkage(plot_mat.T, metric="cosine", method="average")
     R = dendrogram(Z, no_plot=True, color_threshold=-np.inf)
     order = R["leaves"]
-
     sub_meta["dend_order"] = invert_permutation(order)
-    # fig, ax = plt.subplots(1, 1, figsize=(16, 8))
-    # ax, div, top_ax, left_ax = matrixplot(
-    #     plot_mat,
-    #     ax=ax,
-    #     col_sort_class=["mean_visit_int"],
-    #     # col_class_order="mean_visit",
-    #     col_ticks=False,
-    #     col_meta=sub_meta,
-    #     col_colors="merge_class",
-    #     col_palette=CLASS_COLOR_DICT,
-    #     col_item_order=["merge_class", "dend_order"],
-    #     cbar=False,
-    #     gridline_kws=dict(linewidth=0.3, color="grey", linestyle="--"),
-    # )
-    # ax.set_yticks(np.arange(1, path_len + 1) - 0.5)
-    # ax.set_yticklabels(np.arange(1, path_len + 1))
-    # ax.set_ylabel("Hops")
-    # top_ax.set_title(
-    #     f"Cluster {up}, {len(sub_path_mat) / len(paths):0.2f} paths, {len(sub_meta)} neurons"
-    # )
-    # stashfig(f"hop_hist-class-cluster={up}" + basename)
 
-    # fig, ax = plt.subplots(1, 1, figsize=(16, 8))
-    # ax, div, top_ax, left_ax = matrixplot(
-    #     plot_mat,
-    #     ax=ax,
-    #     col_sort_class=["mean_visit_int"],
-    #     # col_class_order="mean_visit",
-    #     col_ticks=False,
-    #     col_meta=sub_meta,
-    #     col_colors="merge_class",
-    #     col_palette=CLASS_COLOR_DICT,
-    #     col_item_order=["dend_order"],
-    #     cbar=False,
-    #     gridline_kws=dict(linewidth=0.3, color="grey", linestyle="--"),
-    # )
-    # ax.set_yticks(np.arange(1, path_len + 1) - 0.5)
-    # ax.set_yticklabels(np.arange(1, path_len + 1))
-    # ax.set_ylabel("Hops")
-    # top_ax.set_title(
-    #     f"Cluster {up}, {len(sub_path_mat) / len(paths):0.2f} paths, {len(sub_meta)} neurons"
-    # )
-    # stashfig(f"hop_hist-cluster={up}" + basename)
+    title = f"Cluster {up}, {len(sub_path_mat) / len(paths):0.2f} paths, {len(sub_meta)} neurons"
+
+    fig, ax = plt.subplots(1, 1, figsize=(16, 8))
+    ax, div, top_ax, left_ax = matrixplot(
+        plot_mat,
+        ax=ax,
+        col_sort_class=["mean_visit_int"],
+        # col_class_order="mean_visit",
+        col_ticks=False,
+        col_meta=sub_meta,
+        col_colors="merge_class",
+        col_palette=CLASS_COLOR_DICT,
+        col_item_order=["merge_class", "dend_order"],
+        cbar=False,
+        gridline_kws=dict(linewidth=0.3, color="grey", linestyle="--"),
+    )
+    ax.set_yticks(np.arange(1, path_len + 1) - 0.5)
+    ax.set_yticklabels(np.arange(1, path_len + 1))
+    ax.set_ylabel("Hops")
+    top_ax.set_title(title)
+    stashfig(f"hop_hist-class-cluster={up}" + basename)
+
+    fig, ax = plt.subplots(1, 1, figsize=(16, 8))
+    ax, div, top_ax, left_ax = matrixplot(
+        plot_mat,
+        ax=ax,
+        col_sort_class=["mean_visit_int"],
+        # col_class_order="mean_visit",
+        col_ticks=False,
+        col_meta=sub_meta,
+        col_colors="merge_class",
+        col_palette=CLASS_COLOR_DICT,
+        col_item_order=["dend_order"],
+        cbar=False,
+        gridline_kws=dict(linewidth=0.3, color="grey", linestyle="--"),
+    )
+    ax.set_yticks(np.arange(1, path_len + 1) - 0.5)
+    ax.set_yticklabels(np.arange(1, path_len + 1))
+    ax.set_ylabel("Hops")
+    top_ax.set_title(title)
+    stashfig(f"hop_hist-cluster={up}" + basename)
+
     sub_meta["colors"] = sub_meta["merge_class"].map(CLASS_COLOR_DICT)
     sub_meta_dict = sub_meta.set_index("inds").to_dict(orient="index")
 
@@ -490,7 +592,7 @@ for up in uni_pred[:1]:
     for n, d in path_graph.degree():
         path_graph.nodes[n]["degree"] = d
 
-    lc = draw_networkx_nice(
+    ax = draw_networkx_nice(
         path_graph,
         "dend_order",
         "mean_visit",
@@ -498,9 +600,11 @@ for up in uni_pred[:1]:
         sizes="degree",
         draw_labels=False,
         size_scale=2,
-        weight_scale=0.5,
+        weight_scale=0.25,
     )
-    plt.close()
+    ax.invert_yaxis()
+    ax.set_title(title)
+    stashfig(f"path-graph-cluster={up}" + basename)
 
 # %% [markdown]
 # # ## Find another way of plotting paths.
