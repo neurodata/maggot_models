@@ -18,6 +18,7 @@ def hardy_weinberg(theta):
     """
     Maps a value from [0, 1] to the hardy weinberg curve.
     """
+    print("nojjjj!")
     hw = [theta ** 2, 2 * theta * (1 - theta), (1 - theta) ** 2]
     return np.array(hw).T
 
