@@ -19,6 +19,7 @@ from .visualize import (
     draw_networkx_nice,
     barplot_text,
     set_axes_equal,
+    add_connections
 )
 from .stack_seaborn import countplot, freqplot
 from .manual_colors import (

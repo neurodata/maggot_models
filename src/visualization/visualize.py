@@ -1653,3 +1653,20 @@ def set_axes_equal(ax):
     ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
     ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
     ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
+
+
+def add_connections(x1, x2, y1, y2, color="black", alpha=0.3, linewidth=0.3, ax=None):
+    x1 = np.array(x1)
+    x2 = np.array(x2)
+    y1 = np.array(y1)
+    y2 = np.array(y2)
+    if ax is None:
+        ax = plt.gca()
+    for i in range(len(x1)):
+        ax.plot(
+            [x1[i], x2[i]],
+            [y1[i], y2[i]],
+            color=color,
+            alpha=alpha,
+            linewidth=linewidth,
+        )
