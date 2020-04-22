@@ -326,7 +326,7 @@ def screeplot(
     # n_components = min(X.shape) - 1
     # _, D, _ = selectSVD(X, n_components=n_components, algorithm="full")
     if X.ndim == 1:
-        X = X.reshape()
+        X = X.reshape(-1, 1)
     elbow_locs, elbow_vals = select_dimension(X, n_elbows=n_elbows)
     elbow_locs = np.array(elbow_locs)
     elbow_vals = np.array(elbow_vals)
