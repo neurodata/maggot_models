@@ -183,7 +183,7 @@ out_inds = meta[meta[class_key].isin(og)]["inds"].values
 print(f"Running {n_init} random walks from each source node...")
 paths = []
 path_lens = []
-for s in tqdm(source_inds):
+for s in source_inds:
     rw = RandomWalk(
         transition_probs, stop_nodes=out_inds, max_hops=10, allow_loops=False
     )
@@ -206,9 +206,9 @@ for p in paths:
 
 # %% [markdown]
 # ## Subsampling and selecting paths
-subsample = 2 ** 13
-path_len = 7
+path_len = 5
 paths = paths_by_len[path_len]
+subsample = min(2 ** 13, len(paths))
 
 basename = f"-subsample={subsample}-plen={path_len}-graph={graph_type}"
 
@@ -251,7 +251,7 @@ pdist = pairwise_distances(embed, metric="cosine")
 # ## Compute distances between paths
 print("Computing pairwise distances between paths...")
 path_dist_mat = np.zeros((len(paths), len(paths)))
-for i in tqdm(range(len(paths))):
+for i in range(len(paths)):
     for j in range(len(paths)):
         p1 = paths[i]
         p2 = paths[j]
@@ -281,21 +281,29 @@ sns.clustermap(
     xticklabels=False,
     yticklabels=False,
 )
-stashfig("agglomerative-clustermap" + basename)
+stashfig("agglomerative-path-dist-mat" + basename)
 
 # %% [markdown]
 # ##
+
+from graspy.embed import select_dimension
 
 print("Running CMDS on path dissimilarity...")
-
-cmds = ClassicalMDS(dissimilarity="precomputed", n_components=10)
-path_embed = cmds.fit_transform(path_dist_mat)
-plt.plot(cmds.singular_values_, "o")
+X = path_dist_mat
+cmds = ClassicalMDS(
+    dissimilarity="precomputed", n_components=int(np.ceil(np.log2(np.min(X.shape))))
+)
+path_embed = cmds.fit_transform(X)
+elbows, elbow_vals = select_dimension(cmds.singular_values_, n_elbows=3)
+rng = np.arange(1, len(cmds.singular_values_) + 1)
+elbows = np.array(elbows)
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+pc = ax.scatter(elbows, elbow_vals, color="red", label="ZG")
+pc.set_zorder(10)
+ax.plot(rng, cmds.singular_values_, "o-")
+ax.legend()
 stashfig("cmds-screeplot" + basename)
 
-# %% [markdown]
-# ##
-screeplot(cmds.singular_values_)
 
 # %% [markdown]
 # ##
@@ -322,6 +330,48 @@ pairplot(
     legend_name="Cluster",
 )
 stashfig("pairplot-agmm-cmds" + basename)
+
+# %% [markdown]
+# ##
+from sklearn.manifold import Isomap
+
+iso = Isomap(n_components=int(np.ceil(np.log2(np.min(X.shape)))), metric="precomputed")
+iso_embed = iso.fit_transform(path_dist_mat)
+
+pairplot(iso_embed, alpha=0.02)
+stashfig("isomap-pairs-all" + basename)
+
+# %% [markdown]
+# ##
+svals = iso.kernel_pca_.lambdas_
+elbows, elbow_vals = select_dimension(svals, n_elbows=3)
+rng = np.arange(1, len(svals) + 1)
+elbows = np.array(elbows)
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+pc = ax.scatter(elbows, elbow_vals, color="red", label="ZG")
+pc.set_zorder(10)
+ax.plot(rng, svals, "o-")
+ax.legend()
+stashfig("iso-screeplot" + basename)
+n_components = elbows[2]
+
+print("Running AGMM on ISO embedding")
+
+
+agmm = AutoGMMCluster(max_components=50, n_jobs=-2)
+pred = agmm.fit_predict(iso_embed[:, :n_components])
+
+print(f"Number of clusters: {agmm.n_components_}")
+
+pairplot(
+    iso_embed[:, :n_components],
+    alpha=0.02,
+    labels=pred,
+    palette=cc.glasbey_light,
+    legend_name="Cluster",
+)
+stashfig("pairplot-agmm-iso" + basename)
+
 
 # %% [markdown]
 # ##
@@ -407,109 +457,10 @@ stashfig("path-indcator-GMMoCMDSoPathDist" + basename)
 # %% [markdown]
 # ##
 
-from matplotlib.cm import ScalarMappable
-from matplotlib.colors import LogNorm
-
-
-def draw_networkx_nice(
-    g,
-    x_pos,
-    y_pos,
-    sizes=None,
-    colors=None,
-    nodelist=None,
-    cmap="Blues",
-    ax=None,
-    x_boost=0,
-    y_boost=0,
-    draw_axes_arrows=False,
-    vmin=None,
-    vmax=None,
-    weight_scale=1,
-    size_scale=1,
-    draw_labels=True,
-):
-    if nodelist is None:
-        nodelist = g.nodes()
-    weights = nx.get_edge_attributes(g, "weight")
-
-    x_attr_dict = nx.get_node_attributes(g, x_pos)
-    y_attr_dict = nx.get_node_attributes(g, y_pos)
-
-    pos = {}
-    label_pos = {}
-    for n in nodelist:
-        pos[n] = (x_attr_dict[n], y_attr_dict[n])
-        label_pos[n] = (x_attr_dict[n] + x_boost, y_attr_dict[n] + y_boost)
-
-    if sizes is not None:
-        size_attr_dict = nx.get_node_attributes(g, sizes)
-        node_size = []
-        for n in nodelist:
-            node_size.append(size_scale * size_attr_dict[n])
-
-    if colors is not None:
-        color_attr_dict = nx.get_node_attributes(g, colors)
-        node_color = []
-        for n in nodelist:
-            node_color.append(color_attr_dict[n])
-
-    weight_array = np.array(list(weights.values()))
-    norm = LogNorm(vmin=vmin, vmax=vmax, clip=True)
-
-    # norm = mplc.Normalize(vmin=0, vmax=weight_array.max())
-    sm = ScalarMappable(cmap=cmap, norm=norm)
-    cmap = sm.to_rgba(weight_array)
-
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(30, 30), frameon=False)
-
-    node_collection = nx.draw_networkx_nodes(
-        g, pos, node_color=node_color, node_size=node_size, with_labels=False, ax=ax
-    )
-    n_squared = len(nodelist) ** 2  # maximum z-order so far
-    node_collection.set_zorder(n_squared)
-
-    edgelist = list(g.edges(data=True))
-    weights = []
-    for edge in edgelist:
-        weight = edge[2]["weight"]
-        weights.append(weight)
-    weights = np.array(weights)
-
-    lc = nx.draw_networkx_edges(
-        g,
-        pos,
-        edgelist=edgelist,
-        edge_color=cmap,
-        width=weight_scale * weights + 0.1,
-        connectionstyle="arc3,rad=0.2",
-        arrows=True,
-        # width=1.5,
-        ax=ax,
-    )
-
-    for i, l in enumerate(lc):
-        l.set_zorder(weights[i])
-
-    if draw_labels:
-        text_items = nx.draw_networkx_labels(g, label_pos, ax=ax, font_size=20)
-
-        # make sure the labels are above all in z order
-        for _, t in text_items.items():
-            t.set_zorder(n_squared + 1)
-
-    ax.set_xlabel(x_pos)
-    ax.set_ylabel(y_pos)
-    # plt.box(False)
-    # fig.set_facecolor("w")
-    return ax
-
-
 from src.traverse import to_path_graph
 import networkx as nx
 
-# from src.visualization import draw_networkx_nice
+from src.visualization import draw_networkx_nice
 
 uni_pred = np.unique(pred)
 
@@ -606,195 +557,3 @@ for up in uni_pred:
     ax.set_title(title)
     stashfig(f"path-graph-cluster={up}" + basename)
 
-# %% [markdown]
-# # ## Find another way of plotting paths.
-# fig, ax = plt.subplots(1, 1, figsize=(16, 8))
-# ax, div, top_ax, left_ax = matrixplot(
-#     np.log10(sub_hop_hist + 1),
-#     ax=ax,
-#     col_sort_class=["class1", "class2"],
-#     col_class_order="mean_visit",
-#     col_ticks=False,
-#     col_meta=sub_meta,
-#     col_colors="merge_class",
-#     col_palette=CLASS_COLOR_DICT,
-#     col_item_order="mean_visit",
-#     cbar=False,
-#     gridline_kws=dict(linewidth=0.3, color="grey", linestyle="--"),
-# )
-
-# %% [markdown]
-# ##
-
-# %% [markdown]
-# ##
-
-# for up in uni_pred[:3]:
-#     mask = pred == up
-
-
-# %% [markdown]
-# ##
-# sns.heatmap(pdist)
-# %% [markdown]
-# ##
-
-# Z = linkage(squareform(pdist), method="average", optimal_ordering=True)
-
-# colors = np.vectorize(CLASS_COLOR_DICT.get)(meta["merge_class"])
-# sns.clustermap(
-#     pdist,
-#     figsize=(20, 20),
-#     row_linkage=Z,
-#     col_linkage=Z,
-#     row_colors=colors,
-#     col_colors=colors,
-#     xticklabels=False,
-#     yticklabels=False,
-# )
-
-# %% [markdown]
-# ##
-
-# sns.clustermap(plot_mat)
-# n_components = 8
-# metric = True
-# mds = MDS(
-#     n_components=n_components,
-#     metric=True,
-#     n_init=16,
-#     n_jobs=-1,
-#     dissimilarity="precomputed",
-# )
-# embed = mds.fit_transform(pass_to_ranks(path_dist_mat))
-
-# pairplot(embed, alpha=0.1)
-
-
-# # %%
-# name = "122.1-BDP-silly-model-testing"
-# load = True
-# loc = f"maggot_models/notebooks/outs/{name}/csvs/stash-label-meta.csv"
-# if load:
-#     meta = pd.read_csv(loc, index_col=0)
-
-# for col in ["0_pred", "1_pred", "2_pred", "hemisphere"]:
-#     # meta[col] = meta[col].fillna("")
-#     meta[col] = meta[col].astype(str)
-#     meta[col] = meta[col].replace("nan", "")
-#     meta[col] = meta[col].str.replace(".0", "")
-#     # meta[col] = meta[col].astype(int).astype(str)
-#     # meta[col] = meta[col].fillna("")
-#     # vals =
-#     # meta[col] = meta[col].astype(int).astype(str)
-#     # meta[col].fillna("")
-
-# meta["lvl0_labels"] = meta["0_pred"]
-# meta["lvl1_labels"] = meta["0_pred"] + "-" + meta["1_pred"]
-# meta["lvl2_labels"] = meta["0_pred"] + "-" + meta["1_pred"] + "-" + meta["2_pred"]
-# meta["lvl0_labels_side"] = meta["lvl0_labels"] + meta["hemisphere"]
-# meta["lvl1_labels_side"] = meta["lvl1_labels"] + meta["hemisphere"]
-# meta["lvl2_labels_side"] = meta["lvl2_labels"] + meta["hemisphere"]
-
-
-# # %%
-# # %% [markdown]
-# # ##
-
-
-# # %% [markdown]
-# # ##
-# # inds = np.random.choice(len(path_dist_mat), replace=False, size=16000)
-
-
-# # sub_path_indicator_mat = path_indicator_mat[inds]
-
-# # %% [markdown]
-# # ##
-# fig, ax = plt.subplots(1, 1, figsize=(30, 20))
-# matrixplot(
-#     path_indicator_mat,
-#     ax=ax,
-#     plot_type="scattermap",
-#     col_sort_class=["lvl2_labels"],
-#     col_class_order="signal_flow",
-#     col_meta=meta,
-#     col_colors="merge_class",
-#     col_item_order=["merge_class", "signal_flow"],
-#     col_palette=CLASS_COLOR_DICT,
-#     col_ticks=False,
-#     row_sort_class=pred,
-#     # row_class_order="size",
-#     row_ticks=False,
-#     sizes=(1, 1),
-#     hue="weight",
-#     palette="Set1",
-#     gridline_kws=dict(linewidth=0.3, color="grey", linestyle="--"),
-# )
-# stashfig("path-indicator-map")
-# # %% [markdown]
-# # ## compute orders
-# mean_orders = []
-# for n in range(path_indicator_mat.shape[1]):
-#     nz = np.nonzero(path_indicator_mat[:, n])
-#     mean_order = np.mean(nz)
-#     mean_orders.append(mean_order)
-
-# meta["mean_order"] = mean_orders
-# # %% [markdown]
-# # ##
-
-
-# fig, axs = plt.subplots(
-#     1, 2, figsize=(30, 20), gridspec_kw=dict(width_ratios=[0.95, 0.02], wspace=0.02)
-# )
-# pal = sns.color_palette("Set1", n_colors=7)
-# pal = pal[:5] + pal[6:]
-# ax = axs[0]
-# matrixplot(
-#     path_indicator_mat,
-#     ax=ax,
-#     plot_type="scattermap",
-#     col_sort_class=["lvl2_labels"],
-#     col_class_order="signal_flow",
-#     col_meta=meta,
-#     col_colors="merge_class",
-#     col_item_order=["merge_class", "mean_order"],
-#     col_palette=CLASS_COLOR_DICT,
-#     col_ticks=True,
-#     tick_rot=90,
-#     row_sort_class=pred,
-#     # row_class_order="size",
-#     row_ticks=True,
-#     sizes=(1, 1),
-#     hue="weight",
-#     palette=pal,
-#     gridline_kws=dict(linewidth=0.3, color="grey", linestyle="--"),
-# )
-# ax = axs[1]
-# palplot(pal, cmap="Set1", ax=ax)
-# ax.set_title("Visit order")
-# stashfig("path-indicator-map")
-
-# # %% [markdown]
-# # ##
-
-
-# ag = AgglomerativeClustering(n_clusters=60, affinity="precomputed", linkage="average")
-# pred = ag.fit_predict(path_dist_mat)
-# fig, ax = plt.subplots(1, 1, figsize=(20, 20))
-# color_dict = dict(zip(np.unique(pred), cc.glasbey_light))
-# adjplot(
-#     path_dist_mat,
-#     sort_class=pred,
-#     cmap=None,
-#     center=None,
-#     ax=ax,
-#     gridline_kws=dict(linewidth=0.5, color="grey", linestyle="--"),
-#     ticks=False,
-#     colors=pred,
-#     palette=color_dict,
-# )
-
-
-# %%

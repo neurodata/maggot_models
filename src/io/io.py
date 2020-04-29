@@ -6,6 +6,7 @@ import numpy as np
 import seaborn as sns
 from operator import itemgetter
 import json
+import pandas as pd
 
 
 def _handle_dirs(pathname, foldername, subfoldername):
@@ -185,3 +186,15 @@ def readlol(
         for line in reader:
             outer_list.append([int(l) for l in line])
     return outer_list
+
+
+def readcsv(
+    name,
+    foldername=None,
+    subfoldername="csvs",
+    pathname="./maggot_models/notebooks/outs",
+    **kws,
+):
+    path = _handle_dirs(pathname, foldername, subfoldername)
+    savename = path / str(name + ".csv")
+    return pd.read_csv(savename, **kws)

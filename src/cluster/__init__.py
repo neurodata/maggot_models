@@ -10,5 +10,6 @@ from .spectral import (
     plot_cluster_pairs,
     plot_metrics,
     MaggotCluster,
+    BinaryCluster,
 )
 

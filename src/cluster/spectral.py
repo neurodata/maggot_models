@@ -9,7 +9,7 @@ import matplotlib.transforms as transforms
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from anytree import LevelOrderGroupIter, NodeMixin
+from anytree import LevelOrderGroupIter, NodeMixin, PostOrderIter
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.linalg import orthogonal_procrustes
 from scipy.optimize import linear_sum_assignment
@@ -38,6 +38,8 @@ from src.visualization import (
     set_axes_equal,
     stacked_barplot,
 )
+from anytree.util import leftsibling
+
 
 PLOT_MODELS = True
 
@@ -131,10 +133,10 @@ def crossval_cluster(
     right_embed = embed[right_inds]
     both_embed = np.concatenate((left_embed, right_embed), axis=0)
 
-    print("Running left/right clustering with cross-validation\n")
+    # print("Running left/right clustering with cross-validation\n")
     currtime = time.time()
     rows = []
-    for k in tqdm(range(min_clusters, max_clusters)):
+    for k in range(min_clusters, max_clusters):
         # TODO add option for AutoGMM as well, might as well check
         for i in range(n_init):
             left_row, left_gc = fit_and_score(left_embed, right_embed, k)
@@ -174,7 +176,7 @@ def crossval_cluster(
             rows.append(both_row)
 
     results = pd.DataFrame(rows)
-    print(f"{time.time() - currtime} elapsed")
+    # print(f"{time.time() - currtime} elapsed")
     return results
 
 
@@ -383,6 +385,8 @@ class MaggotCluster(NodeMixin):
         realign=False,
         plus_c=True,
         X=None,
+        bic_ratio=None,
+        min_split=10,
     ):
         super().__init__()
         self.name = name
@@ -406,6 +410,7 @@ class MaggotCluster(NodeMixin):
         self.regularizer = regularizer
         self.realign = realign
         self.plus_c = plus_c
+        self.min_split = min_split
         if X is not None and reembed == False:
             self.X = X
 
@@ -414,6 +419,7 @@ class MaggotCluster(NodeMixin):
             root_inds = meta["inds"].copy()
         self.root_inds = root_inds
         self.stashfig = stashfig
+        self.bic_ratio = bic_ratio
 
     def _stashfig(self, name):
         if self.stashfig is not None:
@@ -476,6 +482,9 @@ class MaggotCluster(NodeMixin):
         return X
 
     def fit_candidates(self, plot_all=True, show_plot=True):
+        if hasattr(self, "k_") and self.k_ == 0:
+            return
+
         root = self.root
 
         if hasattr(self, "X"):
@@ -493,6 +502,9 @@ class MaggotCluster(NodeMixin):
             masked_adj[mask] = self.root.adj[mask]
             X = self._embed(masked_adj)
             X = X[self.root_inds]
+
+        if np.linalg.norm(X) < 1:
+            X = X / np.linalg.norm(X)
 
         self.X_ = X
 
@@ -569,7 +581,18 @@ class MaggotCluster(NodeMixin):
         )
         return model, pred, pred_side
 
-    def select_model(self, k, metric="bic"):
+    def select_model(self, k=None, metric="bic"):
+        if k is None and self.bic_ratio is not None:
+            model1, _, _ = self._model_predict(1, metric=metric)
+            model2, _, _ = self._model_predict(2, metric=metric)
+            bic1 = -model1.bic(self.X_)
+            bic2 = -model2.bic(self.X_)
+            ratio = bic2 / bic1
+            if ratio > self.bic_ratio:
+                k = 2
+            else:
+                k = 0
+
         self.k_ = k
         self.children = []
         if k > 0:
@@ -601,7 +624,7 @@ class MaggotCluster(NodeMixin):
                 new_adj = self.root.adj[np.ix_(new_root_inds, new_root_inds)]
                 if (
                     len(new_meta[new_meta["Pair"].isin(new_meta.index)]) > 2
-                    and len(new_meta) > 10
+                    and len(new_meta) > self.min_split
                 ):
                     MaggotCluster(
                         new_name,
@@ -621,6 +644,8 @@ class MaggotCluster(NodeMixin):
                         normalize=self.normalize,
                         embed=self.embed,
                         plus_c=self.plus_c,
+                        bic_ratio=self.bic_ratio,
+                        min_split=self.min_split,
                     )
 
     def collect_labels(self):
@@ -639,3 +664,110 @@ class MaggotCluster(NodeMixin):
             last = nxt
             nxt = next(level_it, None)
         return last
+
+
+class BinaryCluster(MaggotCluster):
+    def __init__(
+        self,
+        name,
+        root_inds=None,
+        adj=None,
+        meta=None,
+        n_init=50,
+        reembed=False,
+        parent=None,
+        stashfig=None,
+        min_clusters=1,
+        max_clusters=15,
+        n_components=None,
+        n_elbows=2,
+        normalize=False,
+        embed="ase",
+        regularizer=None,
+        realign=False,
+        plus_c=True,
+        X=None,
+        bic_ratio=None,
+        min_split=10,
+    ):
+        super().__init__(
+            name,
+            root_inds=root_inds,
+            adj=adj,
+            meta=meta,
+            n_init=n_init,
+            reembed=False,
+            parent=parent,
+            stashfig=stashfig,
+            min_clusters=1,
+            max_clusters=3,
+            realign=False,
+            X=X,
+            bic_ratio=bic_ratio,
+            min_split=min_split,
+        )
+
+    def build_linkage(self):
+        # get a tuple of node at each level
+        levels = []
+        for group in LevelOrderGroupIter(self):
+            levels.append(group)
+
+        # just find how many nodes are leaves
+        # this is necessary only because we need to add n to non-leaf clusters
+        num_leaves = 0
+        for node in PostOrderIter(self):
+            if not node.children:
+                num_leaves += 1
+
+        link_count = 0
+        node_index = 0
+        linkages = []
+        labels = []
+
+        for g, group in enumerate(levels[::-1][:-1]):  # reversed and skip the last
+            for i in range(len(group) // 2):
+                # get partner nodes
+                left_node = group[2 * i]
+                right_node = group[2 * i + 1]
+                # just double check that these are always partners
+                assert leftsibling(right_node) == left_node
+
+                # check if leaves, need to add some new fields to track for linkage
+                if not left_node.children:
+                    left_node._ind = node_index
+                    left_node._n_clusters = 1
+                    node_index += 1
+                    labels.append(left_node.name)
+
+                if not right_node.children:
+                    right_node._ind = node_index
+                    right_node._n_clusters = 1
+                    node_index += 1
+                    labels.append(right_node.name)
+
+                # find the parent, count samples
+                parent_node = left_node.parent
+                n_clusters = left_node._n_clusters + right_node._n_clusters
+                parent_node._n_clusters = n_clusters
+
+                # assign an ind to this cluster for the dendrogram
+                parent_node._ind = link_count + num_leaves
+                link_count += 1
+
+                distance = g + 1  # equal height for all links
+
+                # add a row to the linkage matrix
+                linkages.append([left_node._ind, right_node._ind, distance, n_clusters])
+
+        labels = np.array(labels)
+        linkages = np.array(linkages, dtype=np.double)  # needs to be a double for scipy
+        return (linkages, labels)
+
+    def fit(self, n_levels=10, metric="bic"):
+        for i in range(n_levels):
+            for j, node in enumerate(self.get_lowest_level()):
+                node.fit_candidates(show_plot=False)
+            for j, node in enumerate(self.get_lowest_level()):
+                node.select_model(k=None, metric=metric)
+            self.collect_labels()

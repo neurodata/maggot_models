@@ -72,7 +72,7 @@ def load_june(graph_type):
     return graph
 
 
-def load_networkx(graph_type, version="2019-09-18-v2"):
+def load_networkx(graph_type, version="2020-04-23"):
     data_path = Path("maggot_models/data/processed")
     data_path = data_path / version
     file_path = data_path / (graph_type + ".graphml")
@@ -80,7 +80,7 @@ def load_networkx(graph_type, version="2019-09-18-v2"):
     return graph
 
 
-def load_metagraph(graph_type, version="2020-03-26"):
+def load_metagraph(graph_type, version="2020-04-23"):
     if graph_type == "non-Gaa":
         graph_types = ["Gad", "Gda", "Gdd"]
         g = load_networkx(graph_types[0], version)
