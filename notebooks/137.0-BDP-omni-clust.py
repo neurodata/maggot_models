@@ -377,7 +377,7 @@ def umapper(embed, metric="euclidean", n_neighbors=30, min_dist=1, **kws):
 # %% [markdown]
 # ## Load and preprocess data
 VERSION = "2020-04-23"
-graph_type = "G"
+graph_type = "Gad"
 master_mg = load_metagraph(graph_type, version="2020-04-23")
 mg = preprocess(
     master_mg,
@@ -551,19 +551,18 @@ labels = new_meta["merge_class"].values
 # %% [markdown]
 # ## Cluster
 
-
-n_levels = 10  # max # of splits
+n_levels = 12  # max # of splits
 metric = "bic"
 bic_ratio = 1
-d = 12  # embedding dimension
+d = 8  # embedding dimension
 method = "iso"
 if method == "aniso":
     X = svd_aniso_embed
 elif method == "iso":
     X = svd_iso_embed
 X = X[:, :d]
-basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}"
-title = f"Method={method}, d={d}, BIC ratio={bic_ratio}"
+basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}-Gad"
+title = f"Method={method}, d={d}, BIC ratio={bic_ratio}, Gad"
 
 np.random.seed(8888)
 mc = BinaryCluster(
@@ -582,7 +581,7 @@ mc.fit(n_levels=n_levels, metric=metric)
 
 n_levels = mc.height
 
-show_bars = True
+show_bars = False
 if show_bars:
     fig, axs = plt.subplots(1, n_levels, figsize=(8 * n_levels, 30))
     for i in range(n_levels):

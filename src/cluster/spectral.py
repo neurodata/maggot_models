@@ -602,11 +602,11 @@ class MaggotCluster(NodeMixin):
             self.pred_side_ = pred_side
             root_meta = self.root.meta
 
-            pred_name = f"{self.depth}_pred"
+            pred_name = f"{self.depth + 1}_pred"
             if pred_name not in root_meta.columns:
                 root_meta[pred_name] = ""
             root_meta.loc[self.root_inds.index, pred_name] = pred.astype(str)
-            pred_side_name = f"{self.depth}_pred_side"
+            pred_side_name = f"{self.depth + 1}_pred_side"
             if pred_side_name not in root_meta.columns:
                 root_meta[pred_side_name] = ""
             root_meta.loc[self.root_inds.index, pred_side_name] = pred_side
@@ -650,9 +650,9 @@ class MaggotCluster(NodeMixin):
 
     def collect_labels(self):
         meta = self.root.meta
-        meta[f"lvl0_labels"] = meta[f"0_pred"]
-        meta[f"lvl0_labels_side"] = meta[f"0_pred"] + meta[f"hemisphere"]
-        for i in range(1, self.height):
+        meta[f"lvl0_labels"] = "0"  # meta[f"0_pred"]
+        meta[f"lvl0_labels_side"] = meta[f"lvl0_labels"] + meta[f"hemisphere"]
+        for i in range(1, self.height + 1):
             meta[f"lvl{i}_labels"] = meta[f"lvl{i-1}_labels"] + "-" + meta[f"{i}_pred"]
             meta[f"lvl{i}_labels_side"] = meta[f"lvl{i}_labels"] + meta[f"hemisphere"]
 

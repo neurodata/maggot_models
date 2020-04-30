@@ -78,6 +78,7 @@ def saveskels(
     pathname="./maggot_models/notebooks/outs",
     multiout=False,
     save_on=True,
+    postfix="",
 ):
     """ Take a list of skeleton ids and output as json file for catmaid
     
@@ -103,7 +104,7 @@ def saveskels(
                 pal = pal.as_hex()
             else:
                 pal = palette
-            uni_labels = [int(i) for i in uni_labels]
+            # uni_labels = [int(i) for i in uni_labels]
             colormap = dict(zip(uni_labels, pal))
             colors = np.array(itemgetter(*colors)(colormap))
 
@@ -112,8 +113,9 @@ def saveskels(
         path = _handle_dirs(pathname, foldername, subfoldername)
 
         if multiout:
+
             for l in uni_labels:
-                filename = path / str(name + "_" + str(l) + ".json")
+                filename = path / str(name + "-" + str(l) + postfix + ".json")
 
                 inds = np.where(labels == l)[0]
 
@@ -133,7 +135,8 @@ def saveskels(
                 json.dump(spec_list, fout)
 
         if palette is not None:
-            return (spec_list, colormap, pal)
+            # return (spec_list, colormap, pal)
+            return spec_list
         else:
             return spec_list
 

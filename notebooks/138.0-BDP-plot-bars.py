@@ -45,8 +45,9 @@ from src.graph import preprocess
 from src.hierarchy import signal_flow
 from src.io import savecsv, savefig
 from src.pymaid import start_instance
+from src.io import readcsv
+from src.graph import MetaGraph
 
-# %%
 from src.visualization import (
     CLASS_COLOR_DICT,
     add_connections,
@@ -104,305 +105,219 @@ title = f"Method={method}, d={d}, BIC ratio={bic_ratio}"
 
 exp = "137.0-BDP-omni-clust"
 
-from src.io import readcsv
-from src.graph import MetaGraph
 
-meta = readcsv("meta" + basename, foldername=exp, index_col=0)
-adj = readcsv("adj" + basename, foldername=exp, index_col=0)
-mg = MetaGraph(adj.values, meta)
-
-# %% [markdown] 
-# ## 
-
-
-
-
-# %% [markdown]
-# ## Define what we want to look at
-n_pairs = len(mg) // 2
-new_lp_inds = np.arange(n_pairs)
-new_rp_inds = np.arange(n_pairs) + n_pairs
-names = ["iso", "aniso"]
-
-
-# %% [markdown]
-# ## Look at the best one! (ish)
-
-# new_meta = meta.iloc[np.concatenate((lp_inds, rp_inds), axis=0)].copy()
-# labels = new_meta["merge_class"].values
-# plot_pairs(
-#     ase_flat_embed[:, :8],
-#     labels,
-#     left_pair_inds=new_lp_inds,
-#     right_pair_inds=new_rp_inds,
-# )
-# stashfig("ase-flat-pairs")
-
-# quick_embed_viewer(
-#     ase_flat_embed[:, :8], labels=labels, lp_inds=new_lp_inds, rp_inds=new_rp_inds
-# )
-# stashfig("ase-flat-manifold")
-
-# %% [markdown]
-# ## Cluster
-
-
-n_levels = 10  # max # of splits
-metric = "bic"
-bic_ratio = 1
-d = 10  # embedding dimension
-method = "aniso"
-if method == "aniso":
-    X = svd_aniso_embed
-elif method == "iso":
-    X = svd_iso_embed
-X = X[:, :d]
-basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}"
-title = f"Method={method}, d={d}, BIC ratio={bic_ratio}"
-
-np.random.seed(8888)
-mc = BinaryCluster(
-    "0",
-    adj=adj,
-    n_init=25,
-    meta=new_meta,
-    stashfig=stashfig,
-    X=X,
-    bic_ratio=bic_ratio,
-    reembed=False,
-    min_split=4,
-)
-
-mc.fit(n_levels=n_levels, metric=metric)
-
-n_levels = mc.height
-
-fig, axs = plt.subplots(1, n_levels, figsize=(8 * n_levels, 30))
-for i in range(n_levels):
-    ax = axs[i]
-    stacked_barplot(
-        mc.meta[f"lvl{i}_labels_side"],
-        mc.meta["merge_class"],
-        category_order=np.unique(mc.meta[f"lvl{i}_labels_side"].values),
-        color_dict=CLASS_COLOR_DICT,
-        norm_bar_width=False,
-        ax=ax,
-    )
-    ax.set_yticks([])
-    ax.get_legend().remove()
-    ax.set_title(title)
-
-plt.tight_layout()
-
-stashfig(f"count-barplot-lvl{i}" + basename)
-plt.close()
-
-
-inds = np.concatenate((lp_inds, rp_inds))
-new_adj = adj[np.ix_(inds, inds)]
-new_meta = mc.meta
-new_meta["sf"] = -signal_flow(new_adj)
-
-for l in range(n_levels):
-    fig, ax = plt.subplots(1, 1, figsize=(20, 20))
-    sort_class = [f"lvl{i}_labels" for i in range(l)]
-    sort_class += [f"lvl{l}_labels_side"]
-    _, _, top, _ = adjplot(
-        new_adj,
-        meta=new_meta,
-        sort_class=sort_class,
-        item_order="merge_class",
-        plot_type="scattermap",
-        class_order="sf",
-        sizes=(0.5, 1),
-        ticks=False,
-        colors="merge_class",
-        ax=ax,
-        palette=CLASS_COLOR_DICT,
-        gridline_kws=dict(linewidth=0.2, color="grey", linestyle="--"),
-    )
-    top.set_title(title + f" level={l}")
-    stashfig(f"adj-lvl{l}" + basename)
-    plt.close()
-
-stashcsv(new_meta, "meta" + basename)
-adj_df = pd.DataFrame(new_adj, index=new_meta.index, columns=new_meta.columns)
-stashcsv(adj_df, "adj" + basename)
+full_meta = readcsv("meta" + basename, foldername=exp, index_col=0)
+full_meta["lvl0_labels"] = full_meta["lvl0_labels"].astype(str)
+full_adj = readcsv("adj" + basename, foldername=exp, index_col=0)
+full_mg = MetaGraph(full_adj.values, full_meta)
 
 # %% [markdown]
 # ##
-pairs = np.unique(new_meta["Pair ID"])
-p_same_clusters = []
-p_same_chance = []
-rows = []
-n_shuffles = 10
-for l in range(n_levels):
-    n_same = 0
-    pred_labels = new_meta[f"lvl{l}_labels"].values.copy()
-    left_labels = pred_labels[new_lp_inds]
-    right_labels = pred_labels[new_rp_inds]
-    n_same = (left_labels == right_labels).sum()
-    p_same = n_same / len(pairs)
-    rows.append(dict(p_same_cluster=p_same, labels="True", level=l))
+full_meta = full_mg.meta
 
-    # look at random chance
-    for i in range(n_shuffles):
-        np.random.shuffle(pred_labels)
-        left_labels = pred_labels[new_lp_inds]
-        right_labels = pred_labels[new_rp_inds]
-        n_same = (left_labels == right_labels).sum()
-        p_same = n_same / len(pairs)
-        rows.append(dict(p_same_cluster=p_same, labels="Shuffled", level=l))
+# parameters
+lowest_level = 7
 
-plot_df = pd.DataFrame(rows)
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-sns.lineplot(data=plot_df, x="level", y="p_same_cluster", ax=ax, hue="labels")
-ax.set_ylabel("P same cluster")
+width = 0.5
+gap = 10
+
+# this determines the sorting for everybody
+level_names = [f"lvl{i}_labels" for i in range(lowest_level + 1)]
+sort_class = level_names + ["merge_class"]
+class_order = ["sf"]
+total_sort_by = []
+for sc in sort_class:
+    for co in class_order:
+        class_value = full_meta.groupby(sc)[co].mean()
+        full_meta[f"{sc}_{co}_order"] = full_meta[sc].map(class_value)
+        total_sort_by.append(f"{sc}_{co}_order")
+    total_sort_by.append(sc)
+
+full_mg = full_mg.sort_values(total_sort_by, ascending=False)
+full_meta = full_mg.meta
+
+n_leaf = full_meta[f"lvl{lowest_level}_labels"].nunique()
+n_pairs = len(full_meta) // 2
+
+
+# Get positions for left and right simultaneously, so they'll line up ###
+# left
+meta = full_meta[full_meta["hemisphere"] == "L"].copy()
+
+level = lowest_level
+labels = meta[f"lvl{level}_labels"]
+classes = meta["merge_class"]
+sizes = meta.groupby([f"lvl{level}_labels", "merge_class"], sort=False).size()
+
+uni_labels = sizes.index.unique(0)
+
+mids = []
+offset = 0
+for ul in uni_labels:
+    x = level
+    heights = sizes.loc[ul]
+    starts = heights.cumsum() - heights + offset
+    offset += heights.sum() + gap
+    minimum = starts[0]
+    maximum = starts[-1] + heights[-1]
+    mid = (minimum + maximum) / 2
+    mids.append(mid)
+
+left_uni_labels = uni_labels
+left_mid_map = dict(zip(uni_labels, mids))
+
+# right
+meta = full_meta[full_meta["hemisphere"] == "R"].copy()
+
+level = lowest_level
+labels = meta[f"lvl{level}_labels"]
+classes = meta["merge_class"]
+sizes = meta.groupby([f"lvl{level}_labels", "merge_class"], sort=False).size()
+
+# uni_labels = np.unique(labels)
+uni_labels = sizes.index.unique(0)
+
+mids = []
+offset = 0
+for ul in uni_labels:
+    x = level
+    heights = sizes.loc[ul]
+    starts = heights.cumsum() - heights + offset
+    offset += heights.sum() + gap
+    minimum = starts[0]
+    maximum = starts[-1] + heights[-1]
+    mid = (minimum + maximum) / 2
+    mids.append(mid)
+
+right_uni_labels = uni_labels
+right_mid_map = dict(zip(uni_labels, mids))
+
+keys = list(set(list(left_mid_map.keys()) + list(right_mid_map.keys())))
+first_mid_map = {}
+for k in keys:
+    left_mid = left_mid_map[k]
+    right_mid = right_mid_map[k]
+    first_mid_map[k + "-"] = max(left_mid, right_mid)
+
+
+def calc_bar_params(sizes, label, mid):
+    heights = sizes.loc[label]
+    n_in_bar = heights.sum()
+    offset = mid - n_in_bar / 2
+    starts = heights.cumsum() - heights + offset
+    colors = np.vectorize(CLASS_COLOR_DICT.get)(heights.index)
+    return heights, starts, colors
+
+
+def get_last_mids(label, last_mid_map):
+    last_mids = []
+    if label + "-" in last_mid_map:
+        last_mids.append(last_mid_map[label + "-"])
+    if label + "-0" in last_mid_map:
+        last_mids.append(last_mid_map[label + "-0"])
+    if label + "-1" in last_mid_map:
+        last_mids.append(last_mid_map[label + "-1"])
+    if len(last_mids) == 0:
+        print(label + " has no anchor in mid-map")
+    return last_mids
+
+
+def draw_bar_dendrogram(meta, ax):
+    last_mid_map = first_mid_map
+    line_kws = dict(linewidth=1, color="k")
+    for level in np.arange(lowest_level + 1)[::-1]:
+        x = level
+        sizes = meta.groupby([f"lvl{level}_labels", "merge_class"], sort=False).size()
+
+        uni_labels = sizes.index.unique(0)  # these need to be in the right order
+
+        mids = []
+        for ul in uni_labels:
+            last_mids = get_last_mids(ul, last_mid_map)
+            grand_mid = np.mean(last_mids)
+
+            heights, starts, colors = calc_bar_params(sizes, ul, grand_mid)
+
+            minimum = starts[0]
+            maximum = starts[-1] + heights[-1]
+            mid = (minimum + maximum) / 2
+            mids.append(mid)
+
+            # draw the bars
+            for i in range(len(heights)):
+                ax.bar(
+                    x=x,
+                    height=heights[i],
+                    width=width,
+                    bottom=starts[i],
+                    color=colors[i],
+                )
+
+            # draw a horizontal line from the middle of this bar
+            if level != 0:  # dont plot dash on the last
+                ax.plot([x - 0.5 * width, x - width], [mid, mid], **line_kws)
+
+            # line connecting to children clusters
+            if level != lowest_level:  # don't plot first dash
+                ax.plot(
+                    [x + 0.5 * width, x + width], [grand_mid, grand_mid], **line_kws
+                )
+
+            # draw a vertical line connecting the two child clusters
+            if len(last_mids) == 2:
+                ax.plot([x + width, x + width], last_mids, **line_kws)
+
+        last_mid_map = dict(zip(uni_labels, mids))
+
+
+# left side
+# analysis, bars, graph graph graph...
+n_col = 1 + 2 + lowest_level + 1
+import matplotlib.gridspec as gridspec
+
+fig = plt.figure(constrained_layout=True, figsize=(5 * n_col, 20))
+gs = gridspec.GridSpec(nrows=2, ncols=n_col)
+fig, axs = plt.subplots(2, n_col)
+meta = full_meta[full_meta["hemisphere"] == "L"].copy()
+
+ax = axs[0]
+ax.set_title("Left")
+ax.set_ylim((-gap, (n_pairs + gap * n_leaf)))
+ax.set_xlim((-0.5, lowest_level + 0.5))
+
+draw_bar_dendrogram(meta, ax)
+
+ax.set_yticks([])
+ax.spines["left"].set_visible(False)
 ax.set_xlabel("Level")
-ax.set_title(title)
-stashfig("p_in_same_cluster" + basename)
+ax.set_xticks(np.arange(lowest_level + 1))
+ax.spines["bottom"].set_visible(False)
+ax.tick_params(axis="both", which="both", length=0)
 
-n_clusters = []
-for l in range(n_levels):
-    n_clusters.append(new_meta[f"lvl{l}_labels"].nunique())
+# add a scale bar in the bottom left
+ax.bar(x=0, height=100, bottom=0, width=width, color="k")
+ax.text(x=0.35, y=0, s="100 neurons")
 
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-sns.lineplot(x=range(n_levels), y=n_clusters, ax=ax)
-sns.scatterplot(x=range(n_levels), y=n_clusters, ax=ax)
-ax.set_ylabel("Clusters per side")
+# right side
+meta = full_meta[full_meta["hemisphere"] == "R"].copy()
+
+ax = axs[1, 1]
+ax.set_title("Right")
+ax.set_ylim((-gap, (n_pairs + gap * n_leaf)))
+ax.set_xlim((lowest_level + 0.5, -0.5))  # reversed x axis order to make them mirror
+
+draw_bar_dendrogram(meta, ax)
+
+ax.set_yticks([])
+ax.spines["left"].set_visible(False)
+ax.spines["bottom"].set_visible(False)
 ax.set_xlabel("Level")
-ax.set_title(title)
-stashfig("n_cluster" + basename)
+ax.set_xticks(np.arange(lowest_level + 1))
+ax.tick_params(axis="both", which="both", length=0)
 
-size_dfs = []
-for l in range(n_levels):
-    sizes = new_meta.groupby(f"lvl{l}_labels_side").size().values
-    sizes = pd.DataFrame(data=sizes, columns=["Size"])
-    sizes["Level"] = l
-    size_dfs.append(sizes)
+plt.tight_layout()
 
-size_df = pd.concat(size_dfs)
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-sns.stripplot(data=size_df, x="Level", y="Size", ax=ax, jitter=0.45, alpha=0.5)
-ax.set_yscale("log")
-ax.set_title(title)
-stashfig("log-sizes" + basename)
-
-# %% [markdown]
-# ## Fit models and compare L/R
-
-rows = []
-
-for l in range(n_levels):
-    labels = new_meta[f"lvl{l}_labels"].values
-    left_adj = binarize(new_adj[np.ix_(new_lp_inds, new_lp_inds)])
-    left_adj = remove_loops(left_adj)
-    right_adj = binarize(new_adj[np.ix_(new_rp_inds, new_rp_inds)])
-    right_adj = remove_loops(right_adj)
-    for model, name in zip([DCSBMEstimator, SBMEstimator], ["DCSBM", "SBM"]):
-        estimator = model(directed=True, loops=False)
-        uni_labels, inv = np.unique(labels, return_inverse=True)
-        estimator.fit(left_adj, inv[new_lp_inds])
-        train_left_p = estimator.p_mat_
-        train_left_p[train_left_p == 0] = 1 / train_left_p.size
-
-        score = poisson.logpmf(left_adj, train_left_p).sum()
-        rows.append(
-            dict(
-                train_side="left",
-                test="same",
-                test_side="left",
-                score=score,
-                level=l,
-                model=name,
-            )
-        )
-        score = poisson.logpmf(right_adj, train_left_p).sum()
-        rows.append(
-            dict(
-                train_side="left",
-                test="opposite",
-                test_side="right",
-                score=score,
-                level=l,
-                model=name,
-            )
-        )
-
-        estimator = model(directed=True, loops=False)
-        estimator.fit(right_adj, inv[new_rp_inds])
-        train_right_p = estimator.p_mat_
-        train_right_p[train_right_p == 0] = 1 / train_right_p.size
-
-        score = poisson.logpmf(left_adj, train_right_p).sum()
-        rows.append(
-            dict(
-                train_side="right",
-                test="opposite",
-                test_side="left",
-                score=score,
-                level=l,
-                model=name,
-            )
-        )
-        score = poisson.logpmf(right_adj, train_right_p).sum()
-        rows.append(
-            dict(
-                train_side="right",
-                test="same",
-                test_side="right",
-                score=score,
-                level=l,
-                model=name,
-            )
-        )
+stashfig(f"dendrobars-lowest={lowest_level}" + basename)
 
 
-# %% [markdown]
-# ## Plot model results
-
-plot_df = pd.DataFrame(rows)
-
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-model_name = "SBM"
-sns.lineplot(
-    data=plot_df[plot_df["model"] == model_name],
-    hue="test",
-    x="level",
-    y="score",
-    style="train_side",
-)
-ax.get_legend().remove()
-ax.legend(bbox_to_anchor=(1, 1), loc="upper left")
-ax.set_title(title)
-ax.set_ylabel(f"{model_name} log lik.")
-stashfig("sbm-lik-curves" + basename)
-
-model_name = "DCSBM"
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-sns.lineplot(
-    data=plot_df[plot_df["model"] == model_name],
-    hue="test",
-    x="level",
-    y="score",
-    style="train_side",
-)
-ax.get_legend().remove()
-ax.legend(bbox_to_anchor=(1, 1), loc="upper left")
-ax.set_title(title)
-ax.set_ylabel(f"{model_name} log lik.")
-stashfig("dcsbm-lik-curves" + basename)
-
-
-# %% [markdown]
-# ## Plot neurons
-lvl = 4
-show_neurons = False
-
-if show_neurons:
-    uni_labels = np.unique(new_meta[f"lvl{lvl}_labels"])
-    start_instance()
-
-    for label in uni_labels:
-        plot_neurons(new_meta, f"lvl{lvl}_labels", label=label, barplot=True)
-        stashfig(f"label{label}_lvl{lvl}" + basename)
+# %%
