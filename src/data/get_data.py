@@ -7,6 +7,9 @@ from src.utils import meta_to_array
 from src.graph import MetaGraph
 import numpy as np
 
+DATA_VERSION = "2020-04-23"
+DATA_DIR = "maggot_models/data/processed"
+
 
 def load_left():
     """
@@ -72,32 +75,18 @@ def load_june(graph_type):
     return graph
 
 
-def load_networkx(graph_type, version="2020-04-23"):
-    data_path = Path("maggot_models/data/processed")
+def load_networkx(graph_type, path=DATA_DIR, version=DATA_VERSION):
+    data_path = Path(path)
     data_path = data_path / version
     file_path = data_path / (graph_type + ".graphml")
     graph = nx.read_graphml(file_path, node_type=int)
     return graph
 
 
-def load_metagraph(graph_type, version="2020-04-23"):
-    if graph_type == "non-Gaa":
-        graph_types = ["Gad", "Gda", "Gdd"]
-        g = load_networkx(graph_types[0], version)
-        mg = MetaGraph(g)
-        adj = mg.adj
-        for gt in graph_types:
-            temp_g = load_networkx(gt, version)
-            temp_mg = MetaGraph(temp_g)
-            temp_mg.reindex(mg.meta.index, use_ids=True)
-            assert np.array_equal(temp_mg.meta.index, mg.meta.index)
-            adj += temp_mg.adj
-        mg = MetaGraph(adj, mg.meta)
-        return mg
-    else:
-        g = load_networkx(graph_type, version)
-        mg = MetaGraph(g)
-        return mg
+def load_metagraph(graph_type, path=DATA_DIR, version=DATA_VERSION):
+    g = load_networkx(graph_type, path=path, version=version)
+    mg = MetaGraph(g)
+    return mg
 
 
 def load_everything(
