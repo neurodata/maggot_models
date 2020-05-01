@@ -1,9 +1,9 @@
 import numpy as np
-from src.pymaid import start_instance
-import pymaid
 
 
 def plot_neurons(meta, key=None, label=None, barplot=False):
+    from src.pymaid import start_instance
+    import pymaid
     import matplotlib as mpl
 
     mpl.use("Agg")

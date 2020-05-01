@@ -100,7 +100,7 @@ bic_ratio = 1
 d = 8  # embedding dimension
 method = "iso"
 
-basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}"
+basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}-Gad"
 title = f"Method={method}, d={d}, BIC ratio={bic_ratio}"
 
 exp = "137.0-BDP-omni-clust"

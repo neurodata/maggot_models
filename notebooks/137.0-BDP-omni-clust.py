@@ -521,7 +521,7 @@ svd_aniso_embed = svd(omni_aniso_embed)
 
 # %% [markdown]
 # ## Define what we want to look at
-n_pairs = len(mg) // 2
+n_pairs = len(lp_inds) // 2
 new_lp_inds = np.arange(n_pairs)
 new_rp_inds = np.arange(n_pairs) + n_pairs
 names = ["iso", "aniso"]

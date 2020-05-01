@@ -377,6 +377,7 @@ def matrixplot(
     col_highlight=None,
     row_highlight=None,
     col_tick_pad=None,
+    row_tick_pad=None,
     border=True,
     minor_ticking=False,
     tick_rot=0,
@@ -581,10 +582,14 @@ def matrixplot(
         tick_ax = left_cax  # start with the axes we already have
         tick_ax_border = False
         rev_row_sort_class = list(row_sort_class[::-1])
+        if row_tick_pad is None:
+            row_tick_pad = len(row_sort_class) * [0.5]
 
         for i, sc in enumerate(rev_row_sort_class):
             if i > 0:  # add a new axis for ticks
-                tick_ax = divider.append_axes("left", size="1%", pad=0.5, sharey=ax)
+                tick_ax = divider.append_axes(
+                    "left", size="1%", pad=row_tick_pad[i], sharey=ax
+                )
                 remove_shared_ax(tick_ax)
                 tick_ax.spines["right"].set_visible(False)
                 tick_ax.spines["top"].set_visible(True)
@@ -666,6 +671,8 @@ def adjplot(
     gridline_kws=None,
     spinestyle_kws=None,
     highlight_kws=None,
+    col_tick_pad=None,
+    row_tick_pad=None,
     **kws,
 ):
     outs = matrixplot(
@@ -697,6 +704,8 @@ def adjplot(
         gridline_kws=gridline_kws,
         spinestyle_kws=spinestyle_kws,
         highlight_kws=highlight_kws,
+        row_tick_pad=row_tick_pad,
+        col_tick_pad=col_tick_pad,
         **kws,
     )
     return outs
