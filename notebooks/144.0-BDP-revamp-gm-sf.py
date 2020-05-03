@@ -162,7 +162,7 @@ for alpha in alphas:
 
     def run_gmp(seed):
         np.random.seed(seed)
-        sgm = GraphMatch(n_init=1, init_method="rand")
+        sgm = GraphMatch(n_init=1, init_method="rand", max_iter=100, eps=0.05)
         sgm.fit(match_mat, adj)
         return sgm.score_, sgm.perm_inds_
 
