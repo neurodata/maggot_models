@@ -144,7 +144,7 @@ def normalize_match(graph, match_mat):
 # ##
 
 
-alphas = np.geomspace(0.0005, 0.05, 20)
+alphas = np.geomspace(0.00005, 0.05, 20)
 
 n_init = 100
 basename = f"-n_init={n_init}-left-only"
