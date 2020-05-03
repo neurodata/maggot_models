@@ -1670,3 +1670,11 @@ def add_connections(x1, x2, y1, y2, color="black", alpha=0.3, linewidth=0.3, ax=
             alpha=alpha,
             linewidth=linewidth,
         )
+
+
+def remove_axis(ax):
+    remove_spines(ax)
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.set_xticks([])
+    ax.set_yticks([])
