@@ -89,7 +89,7 @@ left_inds = meta[meta["left"]]["inds"]
 
 adj = mg.adj
 adj = adj[np.ix_(left_inds, left_inds)]
-meta = mg.meta.iloc[left_inds].copy
+meta = mg.meta.iloc[left_inds].copy()
 meta["inds"] = range(len(meta))
 print(len(meta))
 
