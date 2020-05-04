@@ -35,7 +35,7 @@ print(FNAME)
 
 SAVESKELS = True
 SAVEFIGS = True
-BRAIN_VERSION = "2020-01-29"
+BRAIN_VERSION = "2020-04-23"
 
 sns.set_context("talk")
 
@@ -105,13 +105,13 @@ fake_edgelist = pd.DataFrame(
 out_df = threshold_sweep(fake_edgelist)
 
 #%%
-graph_type = "Gad"
+graph_type = "G"
 remove_pdiff = True
 input_thresh = 0
 
 mg = load_metagraph(graph_type, BRAIN_VERSION)
 
-use_subset = True
+use_subset = False
 if use_subset:
     meta = mg.meta
     meta["Original index"] = range(len(meta))

@@ -152,9 +152,9 @@ basename = f"-n_init={n_init}-left-only"
 
 perm_df = pd.DataFrame()
 for alpha in alphas:
+    alpha = np.round(alpha, decimals=5)
     print(alpha)
     print()
-    alpha = np.round(alpha, decimals=5)
     match_mat = make_exp_match(n_verts, alpha=alpha)
     match_mat = normalize_match(adj, match_mat)
 

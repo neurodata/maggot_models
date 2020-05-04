@@ -2,6 +2,7 @@
 # ##
 import os
 import warnings
+from itertools import chain
 
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
@@ -46,6 +47,7 @@ from src.graph import MetaGraph, preprocess
 from src.hierarchy import signal_flow
 from src.io import readcsv, savecsv, savefig
 from src.pymaid import start_instance
+from src.traverse import Cascade, RandomWalk, to_markov_matrix, to_transmission_matrix
 from src.visualization import (
     CLASS_COLOR_DICT,
     add_connections,
@@ -55,6 +57,7 @@ from src.visualization import (
     gridmap,
     matrixplot,
     palplot,
+    remove_spines,
     screeplot,
     set_axes_equal,
     stacked_barplot,
@@ -138,8 +141,6 @@ n_pairs = len(full_meta) // 2
 # %% [markdown]
 # ## Random walk stuff
 
-from src.traverse import RandomWalk, to_markov_matrix
-from itertools import chain
 
 ad_mg = load_metagraph("Gad")
 ad_mg = preprocess(ad_mg, sym_threshold=False, remove_pdiff=True, binarize=False)
@@ -183,7 +184,6 @@ max_hops = 10
 n_init = 2 ** 7
 p = 0.01
 
-from src.traverse import to_transmission_matrix, Cascade
 
 path_method = "cascade"
 
@@ -366,7 +366,51 @@ def draw_bar_dendrogram(meta, ax):
 
 # %% [markdown]
 # ##
-from src.visualization import remove_spines
+source_group_names = ["Odor", "MN", "AN", "Photo", "Thermo", "VTD"]
+
+max_hops = 3
+dfs = []
+
+collapse = True
+for i, sg_name in enumerate(source_group_names):
+    # extract the relevant columns from the above
+    cols = [f"{sg_name}_{t}_visits" for t in range(max_hops)]
+    # get the mean (or sum?) visits by cluster
+    visits = full_mg.meta.groupby(f"lvl{lowest_level}_labels")[cols].sum()
+    cluster_names = visits.index.copy()
+    cluster_names = np.vectorize(lambda x: x + "-")(cluster_names)
+    ys = np.vectorize(first_mid_map.get)(cluster_names)
+    if collapse:
+        xs = np.arange(1) + i
+    else:
+        xs = np.arange(max_hops) + max_hops * i
+    Y, X = np.meshgrid(ys, xs, indexing="ij")
+    sizes = visits.values
+    if collapse:
+        sizes = sizes.sum(axis=1)
+    temp_df = pd.DataFrame()
+    temp_df["x"] = X.ravel()
+    temp_df["y"] = Y.ravel()
+    temp_df["sizes"] = sizes.ravel()
+    temp_df["sg"] = sg_name
+    temp_df["cluster"] = cluster_names
+    dfs.append(temp_df)
+
+visit_df = pd.concat(dfs, axis=0)
+
+col_norm = True
+if col_norm:
+    for i, sg_name in enumerate(source_group_names):
+        inds = visit_df[visit_df["sg"] == sg_name].index
+        n_visits = visit_df.loc[inds, "sizes"].sum()
+        visit_df.loc[inds, "sizes"] /= n_visits
+
+row_norm = False
+if row_norm:
+    for i, cluster_name in enumerate(cluster_names):
+        inds = visit_df[visit_df["cluster"] == cluster_name].index
+        n_visits = visit_df.loc[inds, "sizes"].sum()
+        visit_df.loc[inds, "sizes"] /= n_visits
 
 
 def remove_axis(ax):
@@ -378,14 +422,19 @@ def remove_axis(ax):
 
 
 sns.set_context("talk")
-# left side
-# analysis, bars, graph graph graph...
+
 n_col = 3
 
 # width_ratios = 4 * [1] + (lowest_level + 1) * [1.5]
-width_ratios = [1, 2, 1]
-fig = plt.figure(constrained_layout=False, figsize=(20, 20))
-gs = gridspec.GridSpec(nrows=1, ncols=n_col, figure=fig, width_ratios=width_ratios)
+mid_width = len(source_group_names) * 0.1
+if not collapse:
+    mid_width *= max_hops
+
+width_ratios = [1, mid_width, 1]
+fig = plt.figure(constrained_layout=False, figsize=(10 + mid_width * 0.2, 20))
+gs = gridspec.GridSpec(
+    nrows=1, ncols=n_col, figure=fig, width_ratios=width_ratios, wspace=0
+)
 meta = full_meta[full_meta["hemisphere"] == "L"].copy()
 
 ax = fig.add_subplot(gs[:, 0])
@@ -424,59 +473,72 @@ ax.set_xticks(np.arange(lowest_level + 1))
 ax.tick_params(axis="both", which="both", length=0)
 
 # # center fig
-max_hops = 5
+
+if collapse:
+    n_inner_col = 1
+else:
+    n_inner_col = max_hops
 n_groups = len(source_group_names)
 
 ax = fig.add_subplot(gs[:, 1])
 # remove_axis(ax)
 ax.set_ylim((-gap, (n_pairs + gap * n_leaf)))
-ax.set_xlim((-1, (n_groups * max_hops) + 2))
+ax.set_xlim((-0.5, ((n_groups - 1) * n_inner_col) + 0.5))
 # # top_ax = ax.twinx()
 
 # top_ax.set_xticks(top_tick_locs)
 # # top_ax.set_xticklabels(source_group_names)
 
-collapse = True
-for i, sg_name in enumerate(source_group_names):
-    cols = [f"{sg_name}_{t}_visits" for t in range(max_hops)]
-    n_visits = full_mg.meta.groupby(f"lvl{lowest_level}_labels")[cols].mean()
-    cluster_names = n_visits.index.copy()
-    cluster_names = np.vectorize(lambda x: x + "-")(cluster_names)
-    ys = np.vectorize(first_mid_map.get)(cluster_names)
-    if collapse:
-        xs = np.arange(1) + max_hops * i
-    else:
-        xs = np.arange(max_hops) + max_hops * i
-    Y, X = np.meshgrid(ys, xs, indexing="ij")
-    sizes = n_visits.values
-    if collapse:
-        sizes = sizes.sum(axis=1)
-    plot_df = pd.DataFrame()
-    plot_df["x"] = X.ravel()
-    plot_df["y"] = Y.ravel()
-    plot_df["sizes"] = sizes.ravel()  # np.log(sizes.ravel() + 1)  #  #
+same_size_norm = True
+if same_size_norm:
     sns.scatterplot(
-        data=plot_df, x="x", y="y", size="sizes", sizes=(1, 50), ax=ax, legend=False
+        data=visit_df,
+        x="x",
+        y="y",
+        size="sizes",
+        hue="sg",
+        sizes=(1, 70),
+        ax=ax,
+        legend=False,
+        palette="tab10",
+    )
+else:
+    sns.set_palette(sns.color_palette("tab10"))
+    for i, sg in enumerate(source_group_names):
+        sns.scatterplot(
+            data=visit_df[visit_df["sg"] == sg],
+            x="x",
+            y="y",
+            size="sizes",
+            sizes=(1, 70),
+            ax=ax,
+            legend=False,
+        )
+
+top_tick_locs = np.arange(start=0, stop=n_groups * (n_inner_col), step=n_inner_col)
+
+for i, t in enumerate(top_tick_locs):
+    ax.text(
+        t, Y.max() + 3 * gap, source_group_names[i], rotation="vertical", ha="center"
     )
 
-if collapse:
-    max_hops = 1
-top_tick_locs = np.arange(start=0, stop=n_groups * (max_hops), step=max_hops)
-for i, t in enumerate(top_tick_locs):
-    ax.text(t, Y.max() + gap, source_group_names[i])
-
-ax.set_xticks(np.arange(n_groups * max_hops))
-ax.set_xticklabels(np.tile(np.arange(1, max_hops + 1), n_groups))
-ax.set_xlabel("Hops")
+if not collapse:
+    ax.set_xticks(np.arange(n_groups * n_inner_col))
+    ax.set_xticklabels(np.tile(np.arange(1, n_inner_col + 1), n_groups))
+    ax.set_xlabel("Hops")
+else:
+    ax.set_xticks([])
+    ax.set_xlabel("")
 ax.spines["left"].set_visible(False)
 ax.spines["bottom"].set_visible(False)
 ax.set_yticks([])
 ax.set_ylabel("")
 ax.tick_params(axis="both", which="both", length=0)
 
-
 plt.tight_layout()
-stashfig("test-bars-dots-log-cascades")
+
+basename = f"-max_hops={max_hops}-row_norm={row_norm}-col_norm={col_norm}-same_scale={same_size_norm}"
+stashfig("cascade-bars" + basename)
 
 # for t in range(max_hops):
 #     pass
@@ -496,3 +558,4 @@ stashfig("test-bars-dots-log-cascades")
 # palplot(len(colors), colors, ax=ax)
 # ax.yaxis.set_major_formatter(plt.FixedFormatter(names))
 
+# %%
