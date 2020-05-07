@@ -208,7 +208,7 @@ right_meta = mg.meta.iloc[rp_inds].copy()
 # ##
 np.random.seed(8888)
 # n_subsample = n_pairs // 2
-n_subsample = 200
+n_subsample = n_pairs
 
 subsample_inds = np.random.choice(n_pairs, n_subsample, replace=False)
 
@@ -270,207 +270,263 @@ def rank_corr_plot(left_sort, right_sort, ax=None, show_corr=True):
     ax.set_ylabel("Right rank")
     ax.set_xticks([])
     ax.set_yticks([])
-    return ax
+    return corr
 
 
 # %% [markdown]
 # ##
-alpha = 0.001  # 0.0001
-beta = 1  # 1
-c = 0
+
+from sklearn.model_selection import ParameterGrid
+
 n_init = 12 * 4
-norm = False
 n_jobs = -2
-basename = f"-n_subsample={n_subsample}-alpha={alpha}-beta={beta}-c={c}-norm={norm}"
 
 currtime = time.time()
-left_perms, left_scores = fit_gm_exp(
-    left_adj,
-    alpha=alpha,
-    beta=beta,
-    c=c,
-    n_init=n_init,
-    norm=norm,
-    n_jobs=n_jobs,
-    verbose=10,
-)
-right_perms, right_scores = fit_gm_exp(
-    right_adj,
-    alpha=alpha,
-    beta=beta,
-    c=c,
-    n_init=n_init,
-    norm=norm,
-    n_jobs=n_jobs,
-    verbose=10,
-)
+
+n_verts = len(left_adj)
+
+halfs = [0.1, 0.3, 0.5, 1, 5, 10]
+
+alphas = [np.round(np.log(2) / (h * n_verts), decimals=5) for h in halfs]
+print(alphas)
+
+param_grid = {
+    "alpha": alphas,
+    "beta": [1, 0.8, 0.6, 0.4, 0.2],
+    "norm": [False],
+    "c": [0],
+}
+params = list(ParameterGrid(param_grid))
+
+
+def get_basename(n_subsample=None, alpha=None, beta=None, c=None, norm=None):
+    return f"-n_subsample={n_subsample}-alpha={alpha}-beta={beta}-c={c}-norm={norm}"
+
+
+# %% [markdown]
+# ##
+# def calc_exp_lik()
+rows = []
+perm_df = []
+for p in params:
+    row = p.copy()
+    left_row = p.copy()
+    left_row["train_side"] = "left"
+    right_row = p.copy()
+    right_row["train_side"] = "right"
+    basename = get_basename(n_subsample=n_subsample, **p)
+
+    left_perms, left_scores = fit_gm_exp(
+        left_adj, n_init=n_init, n_jobs=n_jobs, verbose=10, **p
+    )
+    right_perms, right_scores = fit_gm_exp(
+        right_adj, n_init=n_init, n_jobs=n_jobs, verbose=10, **p
+    )
+    gm_left_perm, gm_left_score = get_best_run(left_perms, left_scores)
+    gm_right_perm, gm_right_score = get_best_run(right_perms, right_scores)
+    left_perm_series = pd.Series(data=gm_left_perm, name=str(left_row))
+    right_perm_series = pd.Series(data=gm_right_perm, name=str(right_row))
+    perm_df.append(left_perm_series)
+    perm_df.append(right_perm_series)
+
+    fig, axs = plt.subplots(1, 2, figsize=(20, 10))
+    double_adj_plot(gm_left_perm, gm_right_perm, axs=axs)
+    fig.suptitle(p, y=0.95)
+    # stashfig("adj-gm-flow" + basename)
+
+    gm_left_sort = np.argsort(gm_left_perm)
+    gm_right_sort = np.argsort(gm_right_perm)
+    fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+    corr = rank_corr_plot(gm_left_sort, gm_right_sort, ax=ax)
+    row["corr"] = corr
+    ax.set_title(p)
+    # stashfig("rank-gm-flow" + basename)
+    rows.append(row)
 
 time_mins = (time.time() - currtime) / 60
 print(f"{time_mins:.2f} minutes elapsed")
 
-# %% [markdown]
-# ##
-perms, scores = right_perms, right_scores
 
-rows = []
-n_tries = 100
-for n_opts in range(1, n_init + 1):
-    for i in range(n_tries):
-        best_perm, best_score = get_best_run(perms, scores, n_opts=n_opts)
-        row = {"score": best_score, "n_opts": n_opts}
-        rows.append(row)
+res_df = pd.DataFrame(rows)
+stashcsv(res_df, "res_df")
 
-score_df = pd.DataFrame(rows)
+# corr_df = res_df.melt(id_vars=["alpha", "beta"], value_vars='corr')
+basename = f"-n_subsample={n_subsample}"
+corr_df = res_df.pivot(index="alpha", columns="beta", values="corr")
+print(corr_df.head())
+fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+sns.heatmap(data=corr_df, cmap="Reds", ax=ax)
+stashfig("corr-heatmap")
 
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-sns.lineplot(x="n_opts", y="score", data=score_df)
-stashfig("n_init" + basename)
+perm_df = pd.DataFrame(perm_df)
+stashcsv(perm_df, "perm_df")
 
-# %% [markdown]
-# ##
-# need to look at the order in which each pair is given in the permutation indices
-# left_perm = np.array([2, 1, 0, 3, 4])
-# right_perm = np.array([2, 4, 0, 1, 3])
-# these you read as "put the 0th thing in position 3"
-# print(f"Items {np.sort(right_perm)} are ordered as:")
-# print(np.argsort(left_perm))
-# print(np.argsort(right_perm))
-# this you read as "thing at posiition i goes to arr[i]" so the rank of thing at i
+# # %% [markdown]
+# # ##
+# perms, scores = right_perms, right_scores
 
-gm_left_perm, gm_left_score = get_best_run(left_perms, left_scores)
-gm_right_perm, gm_right_score = get_best_run(right_perms, right_scores)
+# rows = []
+# n_tries = 100
+# for n_opts in range(1, n_init + 1):
+#     for i in range(n_tries):
+#         best_perm, best_score = get_best_run(perms, scores, n_opts=n_opts)
+#         row = {"score": best_score, "n_opts": n_opts}
+#         rows.append(row)
 
-double_adj_plot(gm_left_perm, gm_right_perm)
-stashfig("adj-gm-flow" + basename)
+# score_df = pd.DataFrame(rows)
 
-gm_left_sort = np.argsort(gm_left_perm)
-gm_right_sort = np.argsort(gm_right_perm)
-ax = rank_corr_plot(gm_left_sort, gm_right_sort)
-ax.set_title("Pair graph match flow")
-stashfig("rank-gm-flow" + basename)
+# fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+# sns.lineplot(x="n_opts", y="score", data=score_df)
+# stashfig("n_init" + basename)
 
-# signal flow
-left_sf = -signal_flow(left_adj)
-right_sf = -signal_flow(right_adj)
+# # %% [markdown]
+# # ##
+# # need to look at the order in which each pair is given in the permutation indices
+# # left_perm = np.array([2, 1, 0, 3, 4])
+# # right_perm = np.array([2, 4, 0, 1, 3])
+# # these you read as "put the 0th thing in position 3"
+# # print(f"Items {np.sort(right_perm)} are ordered as:")
+# # print(np.argsort(left_perm))
+# # print(np.argsort(right_perm))
+# # this you read as "thing at posiition i goes to arr[i]" so the rank of thing at i
 
-# how to permute the graph to sort in signal flow
-sf_left_perm = np.argsort(left_sf)
-sf_right_perm = np.argsort(right_sf)
-double_adj_plot(sf_left_perm, sf_right_perm)
-stashfig("adj-signal-flow" + basename)
-
-# how things get ranked in terms of the above
-sf_left_sort = np.argsort(sf_left_perm)
-sf_right_sort = np.argsort(sf_right_perm)
-ax = rank_corr_plot(sf_left_sort, sf_right_sort)
-ax.set_title("Pair signal flow")
-stashfig("rank-signal-flow" + basename)
-
-# %% [markdown]
-# ## plot all together
-scale = 8
-n_col = 4
-n_row = 2
-pad = 20
-
-from matplotlib.gridspec import GridSpec
-
-fig = plt.figure(figsize=(n_col * scale, n_row * scale))
-gs = GridSpec(n_row, n_col, figure=fig)
-axs = np.empty((n_row, n_col - 1), dtype="O")
-for i in range(n_row):
-    for j in range(n_col - 1):
-        axs[i, j] = fig.add_subplot(gs[i, j])
-
-double_adj_plot(sf_left_perm, sf_right_perm, axs=axs[0, :2], titles=False)
-double_adj_plot(gm_left_perm, gm_right_perm, axs=axs[1, :2], titles=False)
-rank_corr_plot(sf_left_sort, sf_right_sort, ax=axs[0, 2])
-rank_corr_plot(gm_left_sort, gm_right_sort, ax=axs[1, 2])
-axs[0, 0].set_ylabel("Signal flow", labelpad=pad)
-axs[1, 0].set_ylabel("Graph match flow", labelpad=pad)
-axs[0, 0].set_title(r"Left $\to$ left", pad=pad)
-axs[0, 1].set_title(r"Right $\to$ right", pad=pad)
-axs[0, 2].set_title("Ranks for pairs")
-
-ax = fig.add_subplot(gs[:, -1])
-sf_all_sort = np.concatenate((sf_left_sort, sf_right_sort))
-gm_all_sort = np.concatenate((gm_left_sort, gm_right_sort))
-rank_corr_plot(sf_all_sort, gm_all_sort, ax=ax)
-ax.set_xlabel("Signal flow rank")
-ax.set_ylabel("Graph match flow rank")
-ax.axis("square")
-ax.set_title("Ranks by method")
-
-plt.tight_layout()
-stashfig("combined" + basename)
-
-# %% [markdown]
-# ## look at the signal flow sorting in terms of diagonals
-from scipy.stats import gaussian_kde
-from scipy.ndimage import gaussian_filter1d
-
-ks = np.arange(-n_pairs + 1, n_pairs)
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-means_by_k = calc_mean_by_k(ks, left_adj[np.ix_(sf_left_perm, sf_left_perm)])
-kde_vals = gaussian_filter1d(means_by_k, sigma=25)
-sns.scatterplot(x=ks, y=means_by_k, s=10, alpha=0.4, linewidth=0, ax=ax, label="Left")
-sns.lineplot(x=ks, y=kde_vals, ax=ax)
-means_by_k = calc_mean_by_k(ks, right_adj[np.ix_(sf_right_perm, sf_right_perm)])
-kde_vals = gaussian_filter1d(means_by_k, sigma=25)
-sns.scatterplot(x=ks, y=means_by_k, s=10, alpha=0.4, linewidth=0, ax=ax, label="Right")
-sns.lineplot(x=ks, y=kde_vals, ax=ax)
-ax.set_xlabel("Diagonal index (k)")
-ax.set_ylabel("Mean")
-ax.set_title("Signal flow")
-stashfig("signal-flow-diagplot" + basename)
-
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-means_by_k = calc_mean_by_k(ks, left_adj[np.ix_(gm_left_perm, gm_left_perm)])
-kde_vals = gaussian_filter1d(means_by_k, sigma=25)
-sns.scatterplot(x=ks, y=means_by_k, s=10, alpha=0.4, linewidth=0, ax=ax, label="Left")
-sns.lineplot(x=ks, y=kde_vals, ax=ax)
-means_by_k = calc_mean_by_k(ks, right_adj[np.ix_(gm_right_perm, gm_right_perm)])
-kde_vals = gaussian_filter1d(means_by_k, sigma=25)
-sns.scatterplot(x=ks, y=means_by_k, s=10, alpha=0.4, linewidth=0, ax=ax, label="Right")
-sns.lineplot(x=ks, y=kde_vals, ax=ax)
-
-match_mat = make_exp_match(n_pairs, alpha=alpha, beta=beta, c=c)
-left_match_mat = normalize_match(left_adj, match_mat)
-right_match_mat = normalize_match(right_adj, match_mat)
-left_vals = calc_mean_by_k(ks, left_match_mat)
-right_vals = calc_mean_by_k(ks, right_match_mat)
-sns.lineplot(x=ks, y=left_vals, color="purple")
-sns.lineplot(x=ks, y=right_vals, color="red")
-ax.set_xlabel("Diagonal index (k)")
-ax.set_ylabel("Mean")
-ax.set_title("Graph match flow")
-stashfig("gm-flow-diagplot" + basename)
+# # basename = f"-n_subsample={n_subsample}-alpha={alpha}-beta={beta}-c={c}-norm={norm}"
 
 
-# %% [markdown]
-# ##
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+# gm_left_perm, gm_left_score = get_best_run(left_perms, left_scores)
+# gm_right_perm, gm_right_score = get_best_run(right_perms, right_scores)
 
-alpha_guess = alpha
-beta_guess = 1
-ks = np.arange(n_pairs)
-ys, xs = get_vals_by_k(ks, left_adj[np.ix_(gm_left_perm, gm_left_perm)])
-param_guess, _ = curve_fit(exp_func, xs, ys, p0=(alpha_guess, beta_guess))
+# double_adj_plot(gm_left_perm, gm_right_perm)
+# stashfig("adj-gm-flow" + basename)
 
-curve_proj = exp_func(ks, *param_guess)
+# gm_left_sort = np.argsort(gm_left_perm)
+# gm_right_sort = np.argsort(gm_right_perm)
+# ax = rank_corr_plot(gm_left_sort, gm_right_sort)
+# ax.set_title("Pair graph match flow")
+# stashfig("rank-gm-flow" + basename)
 
-means_by_k = calc_mean_by_k(ks, left_adj[np.ix_(gm_left_perm, gm_left_perm)])
-kde_vals = gaussian_filter1d(means_by_k, sigma=25)
-sns.scatterplot(x=ks, y=means_by_k, s=10, alpha=0.4, linewidth=0, ax=ax, label="Left")
-match_mat = make_exp_match(n_pairs, alpha=alpha, beta=beta, c=c)
-left_match_mat = normalize_match(left_adj, match_mat)
+# # signal flow
+# left_sf = -signal_flow(left_adj)
+# right_sf = -signal_flow(right_adj)
+
+# # how to permute the graph to sort in signal flow
+# sf_left_perm = np.argsort(left_sf)
+# sf_right_perm = np.argsort(right_sf)
+# double_adj_plot(sf_left_perm, sf_right_perm)
+# stashfig("adj-signal-flow" + basename)
+
+# # how things get ranked in terms of the above
+# sf_left_sort = np.argsort(sf_left_perm)
+# sf_right_sort = np.argsort(sf_right_perm)
+# ax = rank_corr_plot(sf_left_sort, sf_right_sort)
+# ax.set_title("Pair signal flow")
+# stashfig("rank-signal-flow" + basename)
+
+# # %% [markdown]
+# # ## plot all together
+# scale = 8
+# n_col = 4
+# n_row = 2
+# pad = 20
+
+# from matplotlib.gridspec import GridSpec
+
+# fig = plt.figure(figsize=(n_col * scale, n_row * scale))
+# gs = GridSpec(n_row, n_col, figure=fig)
+# axs = np.empty((n_row, n_col - 1), dtype="O")
+# for i in range(n_row):
+#     for j in range(n_col - 1):
+#         axs[i, j] = fig.add_subplot(gs[i, j])
+
+# double_adj_plot(sf_left_perm, sf_right_perm, axs=axs[0, :2], titles=False)
+# double_adj_plot(gm_left_perm, gm_right_perm, axs=axs[1, :2], titles=False)
+# rank_corr_plot(sf_left_sort, sf_right_sort, ax=axs[0, 2])
+# rank_corr_plot(gm_left_sort, gm_right_sort, ax=axs[1, 2])
+# axs[0, 0].set_ylabel("Signal flow", labelpad=pad)
+# axs[1, 0].set_ylabel("Graph match flow", labelpad=pad)
+# axs[0, 0].set_title(r"Left $\to$ left", pad=pad)
+# axs[0, 1].set_title(r"Right $\to$ right", pad=pad)
+# axs[0, 2].set_title("Ranks for pairs")
+
+# ax = fig.add_subplot(gs[:, -1])
+# sf_all_sort = np.concatenate((sf_left_sort, sf_right_sort))
+# gm_all_sort = np.concatenate((gm_left_sort, gm_right_sort))
+# rank_corr_plot(sf_all_sort, gm_all_sort, ax=ax)
+# ax.set_xlabel("Signal flow rank")
+# ax.set_ylabel("Graph match flow rank")
+# ax.axis("square")
+# ax.set_title("Ranks by method")
+
+# plt.tight_layout()
+# stashfig("combined" + basename)
+
+# # %% [markdown]
+# # ## look at the signal flow sorting in terms of diagonals
+# from scipy.stats import gaussian_kde
+# from scipy.ndimage import gaussian_filter1d
+
+# ks = np.arange(-n_pairs + 1, n_pairs)
+# fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+# means_by_k = calc_mean_by_k(ks, left_adj[np.ix_(sf_left_perm, sf_left_perm)])
+# kde_vals = gaussian_filter1d(means_by_k, sigma=25)
+# sns.scatterplot(x=ks, y=means_by_k, s=10, alpha=0.4, linewidth=0, ax=ax, label="Left")
+# sns.lineplot(x=ks, y=kde_vals, ax=ax)
+# means_by_k = calc_mean_by_k(ks, right_adj[np.ix_(sf_right_perm, sf_right_perm)])
+# kde_vals = gaussian_filter1d(means_by_k, sigma=25)
+# sns.scatterplot(x=ks, y=means_by_k, s=10, alpha=0.4, linewidth=0, ax=ax, label="Right")
+# sns.lineplot(x=ks, y=kde_vals, ax=ax)
+# ax.set_xlabel("Diagonal index (k)")
+# ax.set_ylabel("Mean")
+# ax.set_title("Signal flow")
+# stashfig("signal-flow-diagplot" + basename)
+
+# fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+# means_by_k = calc_mean_by_k(ks, left_adj[np.ix_(gm_left_perm, gm_left_perm)])
+# kde_vals = gaussian_filter1d(means_by_k, sigma=25)
+# sns.scatterplot(x=ks, y=means_by_k, s=10, alpha=0.4, linewidth=0, ax=ax, label="Left")
+# sns.lineplot(x=ks, y=kde_vals, ax=ax)
+# means_by_k = calc_mean_by_k(ks, right_adj[np.ix_(gm_right_perm, gm_right_perm)])
+# kde_vals = gaussian_filter1d(means_by_k, sigma=25)
+# sns.scatterplot(x=ks, y=means_by_k, s=10, alpha=0.4, linewidth=0, ax=ax, label="Right")
+# sns.lineplot(x=ks, y=kde_vals, ax=ax)
+
+# match_mat = make_exp_match(n_pairs, alpha=alpha, beta=beta, c=c)
+# left_match_mat = normalize_match(left_adj, match_mat)
 # right_match_mat = normalize_match(right_adj, match_mat)
-left_vals = calc_mean_by_k(ks, left_match_mat)
+# left_vals = calc_mean_by_k(ks, left_match_mat)
 # right_vals = calc_mean_by_k(ks, right_match_mat)
-sns.lineplot(x=ks, y=left_vals, color="purple")
+# sns.lineplot(x=ks, y=left_vals, color="purple")
 # sns.lineplot(x=ks, y=right_vals, color="red")
-sns.lineplot(x=ks, y=curve_proj, color="red")
-ax.set_xlabel("Diagonal index (k)")
-ax.set_ylabel("Mean")
-ax.set_title("Graph match flow")
+# ax.set_xlabel("Diagonal index (k)")
+# ax.set_ylabel("Mean")
+# ax.set_title("Graph match flow")
+# stashfig("gm-flow-diagplot" + basename)
+
+
+# # %% [markdown]
+# # ##
+# fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+
+# alpha_guess = alpha
+# beta_guess = 1
+# ks = np.arange(n_pairs)
+# ys, xs = get_vals_by_k(ks, left_adj[np.ix_(gm_left_perm, gm_left_perm)])
+# param_guess, _ = curve_fit(exp_func, xs, ys, p0=(alpha_guess, beta_guess))
+
+# curve_proj = exp_func(ks, *param_guess)
+
+# means_by_k = calc_mean_by_k(ks, left_adj[np.ix_(gm_left_perm, gm_left_perm)])
+# kde_vals = gaussian_filter1d(means_by_k, sigma=25)
+# sns.scatterplot(x=ks, y=means_by_k, s=10, alpha=0.4, linewidth=0, ax=ax, label="Left")
+# match_mat = make_exp_match(n_pairs, alpha=alpha, beta=beta, c=c)
+# left_match_mat = normalize_match(left_adj, match_mat)
+# # right_match_mat = normalize_match(right_adj, match_mat)
+# left_vals = calc_mean_by_k(ks, left_match_mat)
+# # right_vals = calc_mean_by_k(ks, right_match_mat)
+# sns.lineplot(x=ks, y=left_vals, color="purple")
+# # sns.lineplot(x=ks, y=right_vals, color="red")
+# sns.lineplot(x=ks, y=curve_proj, color="red")
+# ax.set_xlabel("Diagonal index (k)")
+# ax.set_ylabel("Mean")
+# ax.set_title("Graph match flow")
 
