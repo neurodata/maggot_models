@@ -1017,6 +1017,8 @@ def stacked_barplot(
         uni_cat = np.array(category_order)
     if subcategory_order is None:
         uni_subcat = np.unique(subcategory)
+    else:
+        uni_subcat = np.array(subcategory_order)
     if color_dict == "class":
         color_dict = CLASS_COLOR_DICT
 

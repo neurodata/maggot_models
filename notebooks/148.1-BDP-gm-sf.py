@@ -275,8 +275,8 @@ def rank_corr_plot(left_sort, right_sort, ax=None, show_corr=True):
 
 # %% [markdown]
 # ##
-alpha = 0.013  # 0.0001
-beta = 0.72  # 1
+alpha = 0.001  # 0.0001
+beta = 1  # 1
 c = 0
 n_init = 12 * 4
 norm = False
