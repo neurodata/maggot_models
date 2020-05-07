@@ -71,6 +71,13 @@ CLASS_IND_DICT = {
     "vPN": 33,
     "LON": 159,
     "CX": 228,
+    "AN2": 125,
+    "AN2;MN2": 215,
+    "FB2N;AN2": 21,
+    "FBN;AN2": 50,
+    "MN2": 112,
+    "vtd2;AN2": 125,
+    "vtd2": 54,
 }
 
 
@@ -87,17 +94,6 @@ CLASS_COLOR_DICT["motor-VAN"] = "#000000"
 CLASS_COLOR_DICT["motor-AN"] = "#000000"
 CLASS_COLOR_DICT["motor-PaN"] = "#000000"
 CLASS_COLOR_DICT["motor-MN"] = "#000000"
-
-# VERSION = "2020-03-26"
-# mg = load_metagraph("G", VERSION)
-# uni_class, counts = np.unique(mg["merge_class"], return_counts=True)
-# count_map = dict(zip(uni_class, counts))
-
-# print("Not in colors:\n")
-# for uc in uni_class:
-#     if uc not in CLASS_COLOR_DICT:
-#         print(uc)
-# print()
 
 
 def plot_colors():
