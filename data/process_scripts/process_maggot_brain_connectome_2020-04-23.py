@@ -71,10 +71,13 @@ priority_map = {
     "dUnk": 2,
     "FBN": 3,
     "FAN": 3,
-    "LHN2": 4,
-    "CN2": 5,
+    "LHN2": 5,  # used to be 4
+    "CN2": 6,  # used to be 5
     "FB2N": 3,
-    "FFN": 3,
+    "FFN": 4,  # used to be 4
+    "MN2": 3,
+    "AN2": 3,
+    "vtd2": 3,
 }
 
 
@@ -169,6 +172,9 @@ class1_name_map = {
     "tPN": "tPN",
     "uPN": "uPN",
     "vPN": "vPN",
+    "vtd_2ndOrder": "vtd2",
+    "AN_2nd_order": "AN2",
+    "MN_2nd_order": "MN2",
 }
 
 

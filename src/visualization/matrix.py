@@ -28,7 +28,7 @@ def sort_meta(length, meta, sort_class, sort_item=None, class_order="size"):
     total_sort_by += sort_item
     meta["sort_idx"] = range(len(meta))
     if len(total_sort_by) > 0:
-        meta.sort_values(total_sort_by, inplace=True)
+        meta.sort_values(total_sort_by, inplace=True, kind="mergesort")
     perm_inds = meta["sort_idx"].values
     return perm_inds, meta
 
@@ -500,8 +500,12 @@ def matrixplot(
     if square:
         ax.axis("square")
 
-    ax.set_ylim(data.shape[0], 0)
-    ax.set_xlim(0, data.shape[1])
+    if plot_type == "scattermap":
+        ax_pad = 0.5
+    else:
+        ax_pad = 0
+    ax.set_ylim(data.shape[0] + ax_pad, 0 - ax_pad)
+    ax.set_xlim(0 - ax_pad, data.shape[1] + ax_pad)
 
     # this will let us make axes for the colors and ticks as necessary
     divider = make_axes_locatable(ax)
