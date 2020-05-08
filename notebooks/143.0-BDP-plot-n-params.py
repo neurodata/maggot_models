@@ -119,7 +119,7 @@ bic_ratio = 1
 d = 8  # embedding dimension
 method = "iso"
 
-basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}"
+basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}-G"
 title = f"Method={method}, d={d}, BIC ratio={bic_ratio}"
 
 exp = "137.0-BDP-omni-clust"
@@ -241,8 +241,8 @@ plot_df = pd.DataFrame(rows)
 
 sns.set_palette(sns.color_palette("deep"))
 model_name = "DCSBM"
-fig, axs = plt.subplots(2, 2, figsize=(12, 12), sharey=True)
-ax = axs[0, 0]
+fig, axs = plt.subplots(1, 3, figsize=(15, 5), sharey=True)
+ax = axs[0]
 sns.lineplot(
     data=plot_df[plot_df["model"] == model_name],
     hue="test",
@@ -255,7 +255,7 @@ sns.lineplot(
 ax.get_legend().remove()
 ax.set_ylabel("Normalized log likelihood")
 
-ax = axs[0, 1]
+ax = axs[1]
 sns.lineplot(
     data=plot_df[plot_df["model"] == model_name],
     hue="test",
@@ -266,9 +266,9 @@ sns.lineplot(
     markers=True,
 )
 ax.get_legend().remove()
-ax.legend(bbox_to_anchor=(1, 1), loc="upper left")
 
-ax = axs[1, 0]
+
+ax = axs[2]
 sns.lineplot(
     data=plot_df[plot_df["model"] == model_name],
     hue="test",
@@ -279,12 +279,15 @@ sns.lineplot(
     markers=True,
 )
 ax.get_legend().remove()
+ax.legend(bbox_to_anchor=(1, 1), loc="upper left")
 ax.set_ylabel("Normalized log likelihood")
 n_edges = np.mean((left_adj.sum(), right_adj.sum()))
 ax.axvline(n_edges, linestyle="--", color="red")
+stashfig("dcsbm-log-likelihood")
+# ax.axis("off")
 
-ax = axs[1, 1]
-ax.axis("off")
+# ax = axs[1, 1]
+
 # sns.lineplot(
 #     data=plot_df[plot_df["model"] == model_name],
 #     hue="test",
@@ -311,6 +314,7 @@ sns.lineplot(
 ax.get_legend().remove()
 ax.legend(bbox_to_anchor=(1, 1), loc="upper left")
 ax.axvline(n_edges, linestyle="--", color="red")
+stashfig("param-comparison")
 
 fig, ax = plt.subplots(1, 1, figsize=(8, 4))
 sns.lineplot(
@@ -340,6 +344,7 @@ sns.lineplot(
 ax.get_legend().remove()
 ax.legend(bbox_to_anchor=(1, 1), loc="upper left")
 ax.axhline(n_edges, linestyle="--", color="red")
+stashfig("n_params")
 
 fig, ax = plt.subplots(1, 1, figsize=(8, 4))
 sns.lineplot(

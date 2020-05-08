@@ -40,6 +40,9 @@ from graspy.utils import (
     symmetrize,
     to_laplace,
 )
+
+import matplotlib.patches as patches
+
 from src.align import Procrustes
 from src.cluster import BinaryCluster, MaggotCluster, get_paired_inds
 from src.data import load_metagraph
@@ -100,7 +103,7 @@ bic_ratio = 1
 d = 8  # embedding dimension
 method = "iso"
 
-basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}"
+basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}-G"
 title = f"Method={method}, d={d}, BIC ratio={bic_ratio}"
 
 exp = "137.0-BDP-omni-clust"
@@ -112,12 +115,15 @@ pair_adj = readcsv("adj" + basename, foldername=exp, index_col=0)
 pair_mg = MetaGraph(pair_adj.values, pair_meta)
 pair_meta = pair_mg.meta
 
-full_mg = load_metagraph("G")
-full_mg.meta[]
-
+# full_mg = load_metagraph("G")
+# full_mg.meta[]
+# full_meta = pair_meta
+# full_adj = pair_adjs
+full_meta = pair_meta
+full_mg = pair_mg
 
 # parameters
-lowest_level = 5
+lowest_level = 6
 
 width = 0.5
 gap = 10
@@ -233,7 +239,7 @@ def get_last_mids(label, last_mid_map):
     return last_mids
 
 
-def draw_bar_dendrogram(meta, ax, orientation="vertical"):
+def draw_bar_dendrogram(meta, ax, orientation="vertical", width=0.5):
     last_mid_map = first_mid_map
     line_kws = dict(linewidth=1, color="k")
     for level in np.arange(lowest_level + 1)[::-1]:
@@ -309,63 +315,6 @@ def draw_bar_dendrogram(meta, ax, orientation="vertical"):
 
 # %% [markdown]
 # ##
-source_group_names = ["Odor", "MN", "AN", "Photo", "Thermo", "VTD"]
-
-max_hops = 3
-dfs = []
-
-collapse = True
-for i, sg_name in enumerate(source_group_names):
-    # extract the relevant columns from the above
-    cols = [f"{sg_name}_{t}_visits" for t in range(max_hops)]
-    # get the mean (or sum?) visits by cluster
-    visits = full_mg.meta.groupby(f"lvl{lowest_level}_labels")[cols].sum()
-    cluster_names = visits.index.copy()
-    cluster_names = np.vectorize(lambda x: x + "-")(cluster_names)
-    ys = np.vectorize(first_mid_map.get)(cluster_names)
-    if collapse:
-        xs = np.arange(1) + i
-    else:
-        xs = np.arange(max_hops) + max_hops * i
-    Y, X = np.meshgrid(ys, xs, indexing="ij")
-    sizes = visits.values
-    if collapse:
-        sizes = sizes.sum(axis=1)
-    temp_df = pd.DataFrame()
-    temp_df["x"] = X.ravel()
-    temp_df["y"] = Y.ravel()
-    temp_df["sizes"] = sizes.ravel()
-    temp_df["sg"] = sg_name
-    temp_df["cluster"] = cluster_names
-    dfs.append(temp_df)
-
-visit_df = pd.concat(dfs, axis=0)
-
-col_norm = True
-if col_norm:
-    for i, sg_name in enumerate(source_group_names):
-        inds = visit_df[visit_df["sg"] == sg_name].index
-        n_visits = visit_df.loc[inds, "sizes"].sum()
-        visit_df.loc[inds, "sizes"] /= n_visits
-
-row_norm = False
-if row_norm:
-    for i, cluster_name in enumerate(cluster_names):
-        inds = visit_df[visit_df["cluster"] == cluster_name].index
-        n_visits = visit_df.loc[inds, "sizes"].sum()
-        visit_df.loc[inds, "sizes"] /= n_visits
-
-
-def remove_axis(ax):
-    remove_spines(ax)
-    ax.set_xlabel("")
-    ax.set_ylabel("")
-    ax.set_xticks([])
-    ax.set_yticks([])
-
-
-# %% [markdown]
-# ##
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from src.utils import get_blockmodel_df
@@ -396,6 +345,14 @@ blockmodel_edges["source_n_out"] = blockmodel_edges["source"].map(
 blockmodel_edges["out_weight"] = (
     blockmodel_edges["weight"] / blockmodel_edges["source_n_out"]
 )
+
+blockmodel_edges["target_n_in"] = blockmodel_edges["target"].map(
+    blockmodel_edges.groupby("target")["weight"].sum()
+)
+
+blockmodel_edges["in_weight"] = (
+    blockmodel_edges["weight"] / blockmodel_edges["target_n_in"]
+)
 blockmodel_edges["norm_weight"] = blockmodel_edges["weight"] / np.sqrt(
     (blockmodel_edges["source_size"] * blockmodel_edges["target_size"])
 )
@@ -405,17 +362,57 @@ sns.set_context("talk")
 fig, main_ax = plt.subplots(1, 1, figsize=(30, 30))
 main_ax.set_ylim((-gap, (2 * n_pairs + gap * n_leaf)))
 main_ax.set_xlim(((2 * n_pairs + gap * n_leaf), -gap))
-sns.scatterplot(
-    data=blockmodel_edges,
-    x="x",
-    y="y",
-    size="out_weight",
-    legend=False,
-    sizes=(0, 600),
-    # hue="out_weight",
-    # palette="Blues",
-    # marker="s",
-)
+# sns.scatterplot(
+#     data=blockmodel_edges,
+#     x="x",
+#     y="y",
+#     size="in_weight",
+#     legend=False,
+#     sizes=(0, 600),
+#     # hue="out_weight",
+#     # palette="Blues",
+#     # marker="s",
+# )
+
+meta = full_meta.copy()
+last_mid_map = first_mid_map
+sizes = meta.groupby([f"lvl{lowest_level}_labels", "merge_class"], sort=False).size()
+uni_labels = sizes.index.unique(0)  # these need to be in the right order
+mins = []
+maxs = []
+for ul in uni_labels:
+    last_mids = get_last_mids(ul, last_mid_map)
+    grand_mid = np.mean(last_mids)
+
+    heights, starts, colors = calc_bar_params(sizes, ul, grand_mid)
+
+    minimum = starts[0]
+    maximum = starts[-1] + heights[-1]
+    xs = [minimum, maximum, maximum, minimum, minimum]
+    ys = [minimum, minimum, maximum, maximum, minimum]
+    #     plt.plot(xs, ys)
+    mins.append(minimum)
+    maxs.append(maximum)
+bound_df = pd.DataFrame(data=[mins, maxs], columns=uni_labels).T
+for x in range(len(bound_df)):
+    for y in range(len(bound_df)):
+        min_x = bound_df.iloc[x, 0]
+        min_y = bound_df.iloc[y, 0]
+        max_x = bound_df.iloc[x, 1]
+        max_y = bound_df.iloc[y, 1]
+        width = max_x - min_x
+        height = max_y - min_y
+        x_label = bound_df.index[x]
+        y_label = bound_df.index[y]
+
+        edge = blockmodel_edges[
+            (blockmodel_edges["source"] == y_label)
+            & (blockmodel_edges["target"] == x_label)
+        ]
+        rect = patches.Rectangle((min_x, min_y), width, height)
+        main_ax.add_patch(rect)
+
+
 main_ax.set_xlabel("")
 main_ax.set_ylabel("")
 
@@ -438,6 +435,7 @@ ax.spines["bottom"].set_visible(False)
 ax.tick_params(axis="both", which="both", length=0)
 
 # add a scale bar in the bottom left
+width = 0.5
 ax.bar(x=0, height=100, bottom=0, width=width, color="k")
 ax.text(x=0.35, y=0, s="100 neurons")
 
@@ -455,113 +453,5 @@ ax.yaxis.set_label_position("right")
 ax.yaxis.tick_right()
 ax.tick_params(axis="both", which="both", length=0)
 
-stashfig(f"sbm-out-probs-dendrogram-lowest={lowest_level}")
+stashfig(f"sbm-test-dendrogram-lowest={lowest_level}")
 
-# %% [markdown]
-# ##
-
-
-# right side
-# meta = full_meta[full_meta["hemisphere"] == "R"].copy()
-#%%
-ax = fig.add_subplot(gs[:, 2])
-ax.set_title("Right")
-ax.set_ylim((-gap, (n_pairs + gap * n_leaf)))
-ax.set_xlim((lowest_level + 0.5, -0.5))  # reversed x axis order to make them mirror
-
-draw_bar_dendrogram(meta, ax)
-
-ax.set_yticks([])
-ax.spines["left"].set_visible(False)
-ax.spines["bottom"].set_visible(False)
-ax.set_xlabel("Level")
-ax.set_xticks(np.arange(lowest_level + 1))
-ax.tick_params(axis="both", which="both", length=0)
-
-# # center fig
-
-if collapse:
-    n_inner_col = 1
-else:
-    n_inner_col = max_hops
-n_groups = len(source_group_names)
-
-ax = fig.add_subplot(gs[:, 1])
-# remove_axis(ax)
-ax.set_ylim((-gap, (n_pairs + gap * n_leaf)))
-ax.set_xlim((-0.5, ((n_groups - 1) * n_inner_col) + 0.5))
-# # top_ax = ax.twinx()
-
-# top_ax.set_xticks(top_tick_locs)
-# # top_ax.set_xticklabels(source_group_names)
-
-same_size_norm = True
-if same_size_norm:
-    sns.scatterplot(
-        data=visit_df,
-        x="x",
-        y="y",
-        size="sizes",
-        hue="sg",
-        sizes=(1, 70),
-        ax=ax,
-        legend=False,
-        palette="tab10",
-    )
-else:
-    sns.set_palette(sns.color_palette("tab10"))
-    for i, sg in enumerate(source_group_names):
-        sns.scatterplot(
-            data=visit_df[visit_df["sg"] == sg],
-            x="x",
-            y="y",
-            size="sizes",
-            sizes=(1, 70),
-            ax=ax,
-            legend=False,
-        )
-
-top_tick_locs = np.arange(start=0, stop=n_groups * (n_inner_col), step=n_inner_col)
-
-for i, t in enumerate(top_tick_locs):
-    ax.text(
-        t, Y.max() + 3 * gap, source_group_names[i], rotation="vertical", ha="center"
-    )
-
-if not collapse:
-    ax.set_xticks(np.arange(n_groups * n_inner_col))
-    ax.set_xticklabels(np.tile(np.arange(1, n_inner_col + 1), n_groups))
-    ax.set_xlabel("Hops")
-else:
-    ax.set_xticks([])
-    ax.set_xlabel("")
-ax.spines["left"].set_visible(False)
-ax.spines["bottom"].set_visible(False)
-ax.set_yticks([])
-ax.set_ylabel("")
-ax.tick_params(axis="both", which="both", length=0)
-
-plt.tight_layout()
-
-basename = f"-max_hops={max_hops}-row_norm={row_norm}-col_norm={col_norm}-same_scale={same_size_norm}"
-stashfig("cascade-bars" + basename)
-
-# for t in range(max_hops):
-#     pass
-
-# ax = fig.add_subplot(gs[:, 3])
-# full_sizes = full_meta.groupby(["merge_class"], sort=False).size()
-# uni_class = full_sizes.index.unique()
-# counts = full_sizes.values
-# count_map = dict(zip(uni_class, counts))
-# names = []
-# colors = []
-# for key, val in count_map.items():
-#     names.append(f"{key} ({count_map[key]})")
-#     colors.append(CLASS_COLOR_DICT[key])
-# colors = colors[::-1]  # reverse because of signal flow sorting
-# names = names[::-1]
-# palplot(len(colors), colors, ax=ax)
-# ax.yaxis.set_major_formatter(plt.FixedFormatter(names))
-
-# %%

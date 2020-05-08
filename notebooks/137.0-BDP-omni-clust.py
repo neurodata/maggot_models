@@ -377,8 +377,8 @@ def umapper(embed, metric="euclidean", n_neighbors=30, min_dist=1, **kws):
 # %% [markdown]
 # ## Load and preprocess data
 VERSION = "2020-04-23"
-graph_type = "Gad"
-master_mg = load_metagraph(graph_type, version="2020-04-23")
+graph_type = "G"
+master_mg = load_metagraph(graph_type, version=VERSION)
 mg = preprocess(
     master_mg,
     threshold=0,
@@ -561,8 +561,8 @@ if method == "aniso":
 elif method == "iso":
     X = svd_iso_embed
 X = X[:, :d]
-basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}-Gad"
-title = f"Method={method}, d={d}, BIC ratio={bic_ratio}, Gad"
+basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}-G"
+title = f"Method={method}, d={d}, BIC ratio={bic_ratio}, G"
 
 np.random.seed(8888)
 mc = BinaryCluster(

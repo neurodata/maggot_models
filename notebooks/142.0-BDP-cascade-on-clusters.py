@@ -100,7 +100,7 @@ bic_ratio = 1
 d = 8  # embedding dimension
 method = "iso"
 
-basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}"
+basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}-G"
 title = f"Method={method}, d={d}, BIC ratio={bic_ratio}"
 
 exp = "137.0-BDP-omni-clust"
@@ -367,8 +367,8 @@ def draw_bar_dendrogram(meta, ax):
 # %% [markdown]
 # ##
 source_group_names = ["Odor", "MN", "AN", "Photo", "Thermo", "VTD"]
-
-max_hops = 3
+# source_group_names = ["dVNC", "dSEZ", "RG"]
+# max_hops = 2
 dfs = []
 
 collapse = True
@@ -378,8 +378,8 @@ for i, sg_name in enumerate(source_group_names):
     # get the mean (or sum?) visits by cluster
     visits = full_mg.meta.groupby(f"lvl{lowest_level}_labels")[cols].sum()
     cluster_names = visits.index.copy()
-    cluster_names = np.vectorize(lambda x: x + "-")(cluster_names)
-    ys = np.vectorize(first_mid_map.get)(cluster_names)
+    dash_cluster_names = np.vectorize(lambda x: x + "-")(cluster_names)
+    ys = np.vectorize(first_mid_map.get)(dash_cluster_names)
     if collapse:
         xs = np.arange(1) + i
     else:
@@ -394,11 +394,13 @@ for i, sg_name in enumerate(source_group_names):
     temp_df["sizes"] = sizes.ravel()
     temp_df["sg"] = sg_name
     temp_df["cluster"] = cluster_names
+    n_in_cluster = full_mg.meta.groupby(f"lvl{lowest_level}_labels").size()
+    temp_df["n_cluster"] = cluster_names.map(n_in_cluster)
     dfs.append(temp_df)
 
 visit_df = pd.concat(dfs, axis=0)
 
-col_norm = True
+col_norm = False
 if col_norm:
     for i, sg_name in enumerate(source_group_names):
         inds = visit_df[visit_df["sg"] == sg_name].index
@@ -411,6 +413,11 @@ if row_norm:
         inds = visit_df[visit_df["cluster"] == cluster_name].index
         n_visits = visit_df.loc[inds, "sizes"].sum()
         visit_df.loc[inds, "sizes"] /= n_visits
+
+count_norm = True
+if count_norm:
+    visit_df["sizes"] = visit_df["sizes"] / visit_df["n_cluster"]
+    # f
 
 
 def remove_axis(ax):
@@ -497,7 +504,7 @@ if same_size_norm:
         y="y",
         size="sizes",
         hue="sg",
-        sizes=(1, 70),
+        sizes=(1, 100),
         ax=ax,
         legend=False,
         palette="tab10",
@@ -510,7 +517,7 @@ else:
             x="x",
             y="y",
             size="sizes",
-            sizes=(1, 70),
+            sizes=(1, 100),
             ax=ax,
             legend=False,
         )
@@ -537,25 +544,5 @@ ax.tick_params(axis="both", which="both", length=0)
 
 plt.tight_layout()
 
-basename = f"-max_hops={max_hops}-row_norm={row_norm}-col_norm={col_norm}-same_scale={same_size_norm}"
+basename = f"-max_hops={max_hops}-row_norm={row_norm}-col_norm={col_norm}-same_scale={same_size_norm}-count_norm={count_norm}"
 stashfig("cascade-bars" + basename)
-
-# for t in range(max_hops):
-#     pass
-
-# ax = fig.add_subplot(gs[:, 3])
-# full_sizes = full_meta.groupby(["merge_class"], sort=False).size()
-# uni_class = full_sizes.index.unique()
-# counts = full_sizes.values
-# count_map = dict(zip(uni_class, counts))
-# names = []
-# colors = []
-# for key, val in count_map.items():
-#     names.append(f"{key} ({count_map[key]})")
-#     colors.append(CLASS_COLOR_DICT[key])
-# colors = colors[::-1]  # reverse because of signal flow sorting
-# names = names[::-1]
-# palplot(len(colors), colors, ax=ax)
-# ax.yaxis.set_major_formatter(plt.FixedFormatter(names))
-
-# %%
