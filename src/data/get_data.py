@@ -7,7 +7,7 @@ from src.utils import meta_to_array
 from src.graph import MetaGraph
 import numpy as np
 
-DATA_VERSION = "2020-04-23"
+DATA_VERSION = "2020-05-08"
 DATA_DIR = "maggot_models/data/processed"
 
 

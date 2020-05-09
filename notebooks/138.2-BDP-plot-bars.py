@@ -6,11 +6,9 @@ import warnings
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
-import matplotlib.transforms as transforms
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from joblib import Parallel, delayed
 from scipy.stats import poisson
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.manifold import MDS, TSNE, Isomap
@@ -89,19 +87,15 @@ def stashcsv(df, name, **kws):
     savecsv(df, name, foldername=FNAME, **kws)
 
 
-# %% [markdown]
-# ##
-
-
 metric = "bic"
 bic_ratio = 1
 d = 8  # embedding dimension
 method = "iso"
 
-basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}-Gad"
+basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}-G"
 title = f"Method={method}, d={d}, BIC ratio={bic_ratio}"
 
-exp = "137.0-BDP-omni-clust"
+exp = "137.1-BDP-omni-clust"
 
 # load data
 full_meta = readcsv("meta" + basename, foldername=exp, index_col=0)
@@ -369,14 +363,14 @@ for level in np.arange(lowest_level + 1):
     )
     top.set_title(f"Level {level} - DCSBM sample")
 
-full_mg = full_mg.sort_values(["hemisphere", "Pair ID"], ascending=True)
+full_mg = full_mg.sort_values(["hemisphere", "pair_id"], ascending=True)
 meta = full_mg.meta
 adj = full_mg.adj
 lp_inds = np.arange(n_pairs)
 rp_inds = np.arange(n_pairs) + n_pairs
 n_levels = 10
 
-pairs = np.unique(meta["Pair ID"])
+pairs = np.unique(meta["pair_id"])
 p_same_clusters = []
 p_same_chance = []
 rows = []
@@ -401,7 +395,15 @@ for l in range(n_levels + 1):
 
 plot_df = pd.DataFrame(rows)
 ax = fig.add_subplot(gs[:2, 0])
-sns.lineplot(data=plot_df, x="level", y="p_same_cluster", ax=ax, hue="labels")
+sns.lineplot(
+    data=plot_df,
+    x="level",
+    y="p_same_cluster",
+    ax=ax,
+    hue="labels",
+    markers=True,
+    style="labels",
+)
 ax.set_ylabel("P same cluster")
 ax.set_xlabel("Level")
 
@@ -420,6 +422,8 @@ for l in range(n_levels + 1):
         train_left_p = estimator.p_mat_
         train_left_p[train_left_p == 0] = 1 / train_left_p.size
 
+        n_params = estimator._n_parameters() + len(uni_labels)
+
         score = poisson.logpmf(left_adj, train_left_p).sum()
         rows.append(
             dict(
@@ -429,7 +433,8 @@ for l in range(n_levels + 1):
                 score=score,
                 level=l,
                 model=name,
-                n_params=estimator._n_parameters(),
+                n_params=n_params,
+                norm_score=score / left_adj.sum(),
             )
         )
         score = poisson.logpmf(right_adj, train_left_p).sum()
@@ -441,7 +446,8 @@ for l in range(n_levels + 1):
                 score=score,
                 level=l,
                 model=name,
-                n_params=estimator._n_parameters(),
+                n_params=n_params,
+                norm_score=score / right_adj.sum(),
             )
         )
 
@@ -449,6 +455,8 @@ for l in range(n_levels + 1):
         estimator.fit(right_adj, inv[rp_inds])
         train_right_p = estimator.p_mat_
         train_right_p[train_right_p == 0] = 1 / train_right_p.size
+
+        n_params = estimator._n_parameters() + len(uni_labels)
 
         score = poisson.logpmf(left_adj, train_right_p).sum()
         rows.append(
@@ -459,7 +467,8 @@ for l in range(n_levels + 1):
                 score=score,
                 level=l,
                 model=name,
-                n_params=estimator._n_parameters(),
+                n_params=n_params,
+                norm_score=score / left_adj.sum(),
             )
         )
         score = poisson.logpmf(right_adj, train_right_p).sum()
@@ -471,14 +480,15 @@ for l in range(n_levels + 1):
                 score=score,
                 level=l,
                 model=name,
-                n_params=estimator._n_parameters(),
+                n_params=n_params,
+                norm_score=score / right_adj.sum(),
             )
         )
 
 plot_df = pd.DataFrame(rows)
 
 model_name = "DCSBM"
-palette = sns.color_palette()
+palette = sns.color_palette("deep")
 palette = [palette[2], palette[4]]
 sns.set_palette(palette)
 ax = fig.add_subplot(gs[2:4, 0])
@@ -486,26 +496,23 @@ sns.lineplot(
     data=plot_df[plot_df["model"] == model_name],
     hue="test",
     x="level",
-    y="score",
+    y="norm_score",
     style="train_side",
+    markers=True,
 )
 
-ax.set_ylabel(f"{model_name} log lik.")
+ax.set_ylabel(f"{model_name} normalized log lik.")
 
 palette = sns.color_palette("deep")
 palette = [palette[5]]
 sns.set_palette(palette)
 ax = fig.add_subplot(gs[4:6, 0])
 
-# sns.lineplot(data=plot_df[plot_df["model"] == model_name], x="level", y="n_params")
-# ax.set_yscale("log")
-# ax.set_yticks([2.3e3, 1e4])
-# ax.set_ylabel(f"{model_name} # parameters")
-
 n_clusters = []
 for l in range(n_levels + 1):
     n_clusters.append(meta[f"lvl{l}_labels"].nunique())
 sns.lineplot(x=range(n_levels + 1), y=n_clusters, ax=ax)
+sns.scatterplot(x=range(n_levels + 1), y=n_clusters, ax=ax)
 ax.set_ylabel("Clusters per side")
 ax.set_xlabel("Level")
 
@@ -513,3 +520,4 @@ plt.tight_layout()
 
 stashfig(f"megafig-lowest={lowest_level}" + basename)
 plt.close()
+

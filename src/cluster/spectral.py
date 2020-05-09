@@ -45,16 +45,16 @@ PLOT_MODELS = True
 
 
 def get_paired_inds(meta):
-    pair_meta = meta[meta["Pair"].isin(meta.index)]
-    pair_group_size = pair_meta.groupby("Pair ID").size()
+    pair_meta = meta[meta["pair"].isin(meta.index)]
+    pair_group_size = pair_meta.groupby("pair_id").size()
     remove_pairs = pair_group_size[pair_group_size == 1].index
-    pair_meta = pair_meta[~pair_meta["Pair ID"].isin(remove_pairs)]
-    assert pair_meta.groupby("Pair ID").size().min() == 2
-    pair_meta.sort_values(["Pair ID", "hemisphere"], inplace=True)
+    pair_meta = pair_meta[~pair_meta["pair_id"].isin(remove_pairs)]
+    assert pair_meta.groupby("pair_id").size().min() == 2
+    pair_meta.sort_values(["pair_id", "hemisphere"], inplace=True)
     lp_inds = pair_meta[pair_meta["hemisphere"] == "L"]["inds"]
     rp_inds = pair_meta[pair_meta["hemisphere"] == "R"]["inds"]
     assert (
-        meta.iloc[lp_inds]["Pair ID"].values == meta.iloc[rp_inds]["Pair ID"].values
+        meta.iloc[lp_inds]["pair_id"].values == meta.iloc[rp_inds]["pair_id"].values
     ).all()
     return lp_inds, rp_inds
 
@@ -623,7 +623,7 @@ class MaggotCluster(NodeMixin):
                 new_name = self.name + "-" + str(ul)
                 new_adj = self.root.adj[np.ix_(new_root_inds, new_root_inds)]
                 if (
-                    len(new_meta[new_meta["Pair"].isin(new_meta.index)]) > 2
+                    len(new_meta[new_meta["pair"].isin(new_meta.index)]) > 2
                     and len(new_meta) > self.min_split
                 ):
                     MaggotCluster(

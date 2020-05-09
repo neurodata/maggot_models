@@ -184,7 +184,7 @@ class MetaGraph:
         )
         # add column of which pairs are incident to each edges
         edgelist_df["edge pairs"] = list(
-            zip(edgelist_df["source Pair ID"], edgelist_df["target Pair ID"])
+            zip(edgelist_df["source pair_id"], edgelist_df["target pair_id"])
         )
         # specify whether this is ipsilateral or contralateral
         edgelist_df["is_ipsi"] = (
@@ -198,8 +198,8 @@ class MetaGraph:
         # remove edges incident to an unpaired node
 
         if remove_unpaired:
-            edgelist_df = edgelist_df[edgelist_df["target Pair ID"] != -1]
-            edgelist_df = edgelist_df[edgelist_df["source Pair ID"] != -1]
+            edgelist_df = edgelist_df[edgelist_df["target pair_id"] != -1]
+            edgelist_df = edgelist_df[edgelist_df["source pair_id"] != -1]
 
         uni_edge_pairs, uni_edge_counts = np.unique(
             edgelist_df["edge pairs"], return_counts=True
@@ -207,7 +207,7 @@ class MetaGraph:
 
         # give each edge pair an ID
         edge_pair_map = dict(zip(uni_edge_pairs, range(len(uni_edge_pairs))))
-        edgelist_df["edge pair ID"] = itemgetter(*edgelist_df["edge pairs"])(
+        edgelist_df["edge pair_id"] = itemgetter(*edgelist_df["edge pairs"])(
             edge_pair_map
         )
 
@@ -222,11 +222,11 @@ class MetaGraph:
 
         inds = np.where(
             np.logical_or(
-                edgelist_df["target Pair ID"] == -1, edgelist_df["source Pair ID"] == -1
+                edgelist_df["target pair_id"] == -1, edgelist_df["source pair_id"] == -1
             )
         )
         inds = edgelist_df.index[inds]
-        edgelist_df.loc[inds, ["edge pair ID", "edge pair counts"]] = -1
+        edgelist_df.loc[inds, ["edge pair_id", "edge pair counts"]] = -1
 
         return edgelist_df
 

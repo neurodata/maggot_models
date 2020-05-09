@@ -109,3 +109,5 @@ notebooks/outs/122.2-BDP-silly-model-testing
 notebooks/outs/137.0-BDP-omni-clust
 notebooks/outs/144.0-BDP-revamp-gm-sf/csvs
 # notebooks/outs/13.0-BDP-omni-clust
+
+*adj*.csv
