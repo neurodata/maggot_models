@@ -388,6 +388,7 @@ def matrixplot(
     gridline_kws=None,
     spinestyle_kws=None,
     highlight_kws=None,
+    # dot_color=None,
     **kws,
 ):
     """Plotting matrices
@@ -642,11 +643,11 @@ def matrixplot(
 
     # spines
     if spinestyle_kws is None:
-        spinestyle_kws = dict(linestyle="-", linewidth=1, alpha=0.7, color="black")
+        spinestyle_kws = dict(linestyle="-", linewidth=1, alpha=0.7)
     if border:
         for spine in ax.spines.values():
             spine.set_visible(True)
-            spine.set_color(spinestyle_kws["color"])
+            # spine.set_color(spinestyle_kws["color"])
             spine.set_linewidth(spinestyle_kws["linewidth"])
             spine.set_linestyle(spinestyle_kws["linestyle"])
             spine.set_alpha(spinestyle_kws["alpha"])
