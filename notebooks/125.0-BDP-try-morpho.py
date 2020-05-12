@@ -17,7 +17,7 @@ from src.visualization import (
     stacked_barplot,
 )
 
-mg = load_metagraph("G", version="2020-04-01")
+mg = load_metagraph("G")
 mg = preprocess(
     mg,
     threshold=0,
