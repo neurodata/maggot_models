@@ -31,7 +31,6 @@ from graspy.embed import (
 )
 from graspy.models import DCSBMEstimator, SBMEstimator
 from graspy.plot import pairplot
-from graspy.simulations import sbm
 from graspy.utils import (
     augment_diagonal,
     binarize,
@@ -106,7 +105,7 @@ method = "iso"
 basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}-G"
 title = f"Method={method}, d={d}, BIC ratio={bic_ratio}"
 
-exp = "137.0-BDP-omni-clust"
+exp = "137.1-BDP-omni-clust"
 
 # load data
 pair_meta = readcsv("meta" + basename, foldername=exp, index_col=0)
@@ -123,7 +122,7 @@ full_meta = pair_meta
 full_mg = pair_mg
 
 # parameters
-lowest_level = 6
+lowest_level = 8
 
 width = 0.5
 gap = 10
@@ -148,7 +147,38 @@ full_adj = full_mg.adj
 n_leaf = full_meta[f"lvl{lowest_level}_labels"].nunique()
 n_pairs = len(full_meta) // 2
 
+# %% [markdown]
+# ##
 
+from graspy.models import SBMEstimator
+
+level = 2
+
+n_row = 3
+n_col = 7
+scale = 10
+fig, axs = plt.subplots(n_row, n_col, figsize=(n_row * scale, n_col * scale))
+
+for level in range(8):
+    label_name = f"lvl{level}_labels_side"
+    sbm = SBMEstimator(directed=True, loops=True)
+    sbm.fit(binarize(full_adj), full_meta[label_name].values)
+    ax = axs[1, level]
+    _, _, top, _ = adjplot(
+        sbm.p_mat_,
+        ax=ax,
+        plot_type="heatmap",
+        sort_class=["hemisphere"] + level_names[: level + 1],
+        item_order=["merge_class_sf_order", "merge_class", "sf"],
+        class_order="sf",
+        meta=full_mg.meta,
+        palette=CLASS_COLOR_DICT,
+        colors="merge_class",
+        ticks=False,
+        gridline_kws=dict(linewidth=0.05, color="grey", linestyle="--"),
+        cbar_kws=dict(shrink=0.6),
+    )
+stashfig("big-bhat-fig")
 # %% [markdown]
 # ##
 # Get positions for left and right simultaneously, so they'll line up ###

@@ -108,6 +108,10 @@ notebooks/outs/124.0-BDP-spectral-cascades
 notebooks/outs/122.2-BDP-silly-model-testing
 notebooks/outs/137.0-BDP-omni-clust
 notebooks/outs/144.0-BDP-revamp-gm-sf/csvs
-# notebooks/outs/13.0-BDP-omni-clust
+notebooks/outs/156.0-BDP-plot-all-neurons
+notebooks/outs/158.0-BDP-plot_morpho
+notebooks/outs/158.1-BDP-plot_morpho
+notebooks/outs/154.3-BDP-morpho-diff
+
 
 *adj*.csv

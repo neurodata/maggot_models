@@ -994,6 +994,7 @@ def stacked_barplot(
     hatch_dict=None,
     return_order=False,
     plot_names=False,
+    text_color="black",
 ):
     """
     Parameters
@@ -1086,7 +1087,7 @@ def stacked_barplot(
         new_labels.append(str(labels[i]) + f" ({sums[i]})")
     labels = np.array(new_labels)
 
-    ax.set_yticklabels(labels)
+    ax.set_yticklabels(labels, color=text_color)
 
     for i, (colname, color) in enumerate(zip(uni_subcat, subcategory_colors)):
         widths = norm_data[:, i]
@@ -1117,7 +1118,7 @@ def stacked_barplot(
         # doesn't work great
         if plot_proportions:
             xcenters = starts + widths / 2
-            r, g, b = color
+            # r, g, b = color
             text_color = "black"
             for y, (x, c) in enumerate(zip(xcenters, widths)):
                 if c != 0:
@@ -1132,18 +1133,20 @@ def stacked_barplot(
 
         if plot_names:
             xcenters = starts + widths / 2
-            r, g, b = color
-            text_color = "black"
-            for y, (x, c) in enumerate(zip(xcenters, colname)):
-                text_color = "black"  # TODO
+            # r, g, b = color
+            for y, (x, c) in enumerate(zip(xcenters, widths)):
                 if c != 0:
                     ax.text(
                         x,
-                        y - bar_height / 2 - i % 2 * bar_height / 4,
-                        f"{c:.2f}",
+                        y
+                        - bar_height / 2
+                        - bar_height / 10,  # - i % 2 * bar_height / 4,
+                        colname,
                         ha="center",
                         va="bottom",
                         color=text_color,
+                        rotation=90,
+                        fontsize=10,
                     )
 
     # this places the legend outside of the axes and in the lower left corner

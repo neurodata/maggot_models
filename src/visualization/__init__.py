@@ -40,8 +40,9 @@ from .matrix import (
     draw_colors,
     adjplot,
 )
+from .dendrogram import get_mid_map, plot_single_dendrogram, draw_bar_dendrogram
 
 try:
-    from .neuron import plot_neurons
+    from .neuron import plot_neurons, plot_3view
 except ModuleNotFoundError:
     pass
