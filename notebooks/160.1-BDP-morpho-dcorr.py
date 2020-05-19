@@ -85,7 +85,7 @@ connectors = pd.read_csv(connector_path)
 
 compartment = "dendrite"
 direction = "postsynaptic"
-max_samples = 1000
+max_samples = 500
 n_subsamples = 48
 method = "subsample"
 
