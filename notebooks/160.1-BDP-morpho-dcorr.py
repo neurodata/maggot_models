@@ -86,7 +86,7 @@ connectors = pd.read_csv(connector_path)
 compartment = "dendrite"
 direction = "postsynaptic"
 max_samples = 1000
-n_subsamples = 10
+n_subsamples = 48
 method = "subsample"
 
 
@@ -156,7 +156,7 @@ def spatial_dcorr(data1, data2, method="full", max_samples=1000, n_subsamples=5)
 # %% [markdown]
 # ##
 
-class_labels = meta[class_key].unique()[:5]
+class_labels = meta[class_key].unique()
 p_vals = np.zeros((len(class_labels), len(class_labels)))
 stats = np.zeros_like(p_vals)
 cluster_meta = pd.DataFrame(index=class_labels)
