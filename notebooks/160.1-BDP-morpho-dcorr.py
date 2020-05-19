@@ -23,7 +23,6 @@ from src.data import load_metagraph
 from src.graph import MetaGraph, preprocess
 from src.hierarchy import signal_flow
 from src.io import readcsv, savecsv, savefig
-from src.pymaid import start_instance
 from src.visualization import (
     CLASS_COLOR_DICT,
     adjplot,
