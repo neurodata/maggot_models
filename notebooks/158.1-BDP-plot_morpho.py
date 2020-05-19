@@ -173,25 +173,25 @@ label1_outputs = label1_outputs[
 ]
 
 axs = morpho_axs
-# plot_3view(label1_ids, axs[0, :], palette=skeleton_color_dict, row_title="Skeletons")
-# plot_3view(
-#     label1_inputs,
-#     axs[1, :],
-#     palette=skeleton_color_dict,
-#     label_by="postsynaptic_to",
-#     alpha=0.6,
-#     s=2,
-#     row_title="Input",
-# )
-# plot_3view(
-#     label1_outputs,
-#     axs[2, :],
-#     palette=skeleton_color_dict,
-#     label_by="presynaptic_to",
-#     alpha=0.6,
-#     s=2,
-#     row_title="Output",
-# )
+plot_3view(label1_ids, axs[0, :], palette=skeleton_color_dict, row_title="Skeletons")
+plot_3view(
+    label1_inputs,
+    axs[1, :],
+    palette=skeleton_color_dict,
+    label_by="postsynaptic_to",
+    alpha=0.6,
+    s=2,
+    row_title="Input",
+)
+plot_3view(
+    label1_outputs,
+    axs[2, :],
+    palette=skeleton_color_dict,
+    label_by="presynaptic_to",
+    alpha=0.6,
+    s=2,
+    row_title="Output",
+)
 
 mid_gs = plt.GridSpec(
     n_row,
@@ -233,7 +233,7 @@ _, _, top, _ = adjplot(
     colors="merge_class",
     palette=CLASS_COLOR_DICT,
 )
-top.set_title("Intra-cluster connectivity")
+top.set_title("Intra-cluster connectivity", color="dimgrey")
 
 
 dend_gs = plt.GridSpec(
@@ -267,7 +267,23 @@ stacked_barplot(
 )
 ax.set_ylim(-0.5, len(uni_cat) - 0.5)
 ax.get_legend().remove()
+# print(ax.get_yticks().tolist())
+for t in ax.get_yticklabels():
+    text = t.get_text()
+    text = text.split(" ")[0]
+    if text == label:
+        t.set_color("black")
+        print("here")
+    # print(text)
+
 ax = fig.add_subplot(dend_gs[0, 2])
+
+
+# ax.get_yticklabels()[3].set_color("red")
+# plt.draw()
+# print(len(ax.get_yticklabels()))
+
+# print([t for t in ax.get_yticklabels(which="both")])
 
 this_inds = meta[meta[key] == label]["inds"].values
 max_bar = 0
@@ -303,7 +319,7 @@ _, _, top, _ = matrixplot(
 )
 # ax.invert_yaxis()
 ax.set_yticks([])
-top.set_title("Input")
+top.set_title("Input", color="dimgrey")
 
 
 # ax.set_yticklabels(other_class)
@@ -334,12 +350,8 @@ _, _, top, _ = matrixplot(
     ax=ax,
 )
 ax.set_yticks([])
-top.set_title("Output")
+top.set_title("Output", color="dimgrey")
 
-# TODO add title
-# fig.suptitle(label, y=0.93)
+fig.suptitle("Cluster " + label, y=1.01, color="black", fontsize=30)
 
 stashfig(f"morpho-lvl{level}_{label}")
-
-
-# %%

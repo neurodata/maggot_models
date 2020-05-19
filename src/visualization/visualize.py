@@ -1087,7 +1087,14 @@ def stacked_barplot(
         new_labels.append(str(labels[i]) + f" ({sums[i]})")
     labels = np.array(new_labels)
 
+    # ax.yaxis.set_major_locator(plt.FixedLocator(np.arange(0, len(labels))))
+    # ax.yaxis.set_major_formatter(plt.FixedFormatter(labels))
     ax.set_yticklabels(labels, color=text_color)
+    # # print(labels)
+    # ax.set_yticks())
+    # print(ax.get_yticklabels(which="both"))
+    # for t in ax.get_yticklabels():
+    #     print(t)
 
     for i, (colname, color) in enumerate(zip(uni_subcat, subcategory_colors)):
         widths = norm_data[:, i]
@@ -1138,9 +1145,8 @@ def stacked_barplot(
                 if c != 0:
                     ax.text(
                         x,
-                        y
-                        - bar_height / 2
-                        - bar_height / 10,  # - i % 2 * bar_height / 4,
+                        y + bar_height * 0.6,
+                        # - bar_height / 10,  # - i % 2 * bar_height / 4,
                         colname,
                         ha="center",
                         va="bottom",

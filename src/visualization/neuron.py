@@ -101,9 +101,9 @@ def plot_neurons(meta, key=None, label=None, barplot=False):
 
 views = ["front", "side", "top"]
 view_params = [
-    dict(azim=-90, elev=0, dist=5),
-    dict(azim=0, elev=0, dist=5),
-    dict(azim=-45, elev=90, dist=5),
+    dict(azim=-90, elev=0, dist=6),
+    dict(azim=0, elev=0, dist=6),
+    dict(azim=-45, elev=90, dist=6),
 ]
 view_dict = dict(zip(views, view_params))
 volume_names = ["PS_Neuropil_manual"]
