@@ -2,7 +2,6 @@
 # ##
 import os
 import time
-from scipy.special import comb
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -13,7 +12,9 @@ from matplotlib.patches import Circle
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from scipy.integrate import tplquad
+from scipy.special import comb
 from scipy.stats import gaussian_kde
+from sklearn.metrics import pairwise_distances
 
 import pymaid
 from graspy.utils import pass_to_ranks
@@ -35,6 +36,8 @@ from src.visualization import (
     set_axes_equal,
     stacked_barplot,
 )
+
+np.random.seed(8888)
 
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
@@ -78,37 +81,13 @@ connector_path = "maggot_models/data/processed/2020-05-08/connectors.csv"
 connectors = pd.read_csv(connector_path)
 
 
-# %% [markdown]
-# ##
-
-# plot params
-scale = 5
-n_col = 10
-n_row = 3
-margin = 0.01
-gap = 0.02
-
-rc_dict = {
-    "axes.spines.right": False,
-    "axes.spines.top": False,
-    "axes.formatter.limits": (-3, 3),
-    "figure.figsize": (6, 3),
-    "figure.dpi": 100,
-    "axes.edgecolor": "grey",
-    "ytick.color": "dimgrey",
-    "xtick.color": "dimgrey",
-    "axes.labelcolor": "dimgrey",
-    "text.color": "dimgrey",
-}
-for k, val in rc_dict.items():
-    mpl.rcParams[k] = val
-context = sns.plotting_context(context="talk", font_scale=1, rc=rc_dict)
-sns.set_context(context)
-
 # compare dendrite inputs
 
 compartment = "dendrite"
 direction = "postsynaptic"
+max_samples = 1000
+n_subsamples = 10
+method = "full"
 
 
 def filter_connectors(connectors, ids, direction, compartment):
@@ -120,9 +99,6 @@ def filter_connectors(connectors, ids, direction, compartment):
         ~label_connectors["connector_id"].duplicated(keep="first")
     ]
     return label_connectors
-
-
-from sklearn.metrics import pairwise_distances
 
 
 def euclidean(x):
@@ -175,14 +151,15 @@ def spatial_dcorr(data1, data2, method="full", max_samples=1000, n_subsamples=5)
 # %% [markdown]
 # ##
 
-first = 10
-class_labels = meta[class_key].unique()[::-1][:first]
+class_labels = meta[class_key].unique()
 p_vals = np.zeros((len(class_labels), len(class_labels)))
 stats = np.zeros_like(p_vals)
 cluster_meta = pd.DataFrame(index=class_labels)
 
 total = comb(len(class_labels), k=2, exact=True)
 count = 0
+currtime = time.time()
+
 for i, label1 in enumerate(class_labels):
     label1_meta = meta[meta[class_key] == label1]
     label1_ids = label1_meta.index.values
@@ -200,20 +177,33 @@ for i, label1 in enumerate(class_labels):
             )
             data1 = label1_connectors[["x", "y", "z"]].values
             data2 = label2_connectors[["x", "y", "z"]].values
-            stat, p_val = spatial_dcorr(data1, data2, method="full")
+            stat, p_val = spatial_dcorr(
+                data1,
+                data2,
+                method=method,
+                max_samples=max_samples,
+                n_subsamples=n_subsamples,
+            )
             stats[i, j] = stat
             p_vals[i, j] = p_val
             count += 1
 
+print(f"\n{time.time() - currtime} elapsed\n")
+
+
+basename = f"method={method}"
+if method == "subsample":
+    basename += f"-n_subsample={n_subsamples}-max_samples={max_samples}"
+
 p_val_df = pd.DataFrame(
     data=p_vals, index=cluster_meta.index, columns=cluster_meta.index
 )
-stashcsv(p_val_df, "p-vals")
+stashcsv(p_val_df, "p-vals" + basename)
 
 stats_df = pd.DataFrame(
     data=stats, index=cluster_meta.index, columns=cluster_meta.index
 )
-stashcsv(stats_df, "test-stats")
+stashcsv(stats_df, "test-stats" + basename)
 
 plot_p_vals = -np.log10(p_vals)
 plt.figure()
@@ -225,7 +215,7 @@ adjplot(
     cbar=True,
     cmap="Reds",
 )
-stashfig("p-val-plot")
+stashfig("p-val-plot" + basename)
 
 plt.figure(figsize=(10, 10))
 sns.heatmap(
@@ -236,4 +226,4 @@ sns.heatmap(
     xticklabels=False,
     yticklabels=False,
 )
-stashfig("stats-plot")
+stashfig("stats-plot" + basename)
