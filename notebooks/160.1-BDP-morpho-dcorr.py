@@ -191,7 +191,7 @@ for i, label1 in enumerate(class_labels):
 print(f"\n{time.time() - currtime} elapsed\n")
 
 
-basename = f"method={method}"
+basename = f"-method={method}"
 if method == "subsample":
     basename += f"-n_subsample={n_subsamples}-max_samples={max_samples}"
 
