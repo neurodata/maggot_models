@@ -35,6 +35,7 @@ from src.visualization import (
     set_axes_equal,
     stacked_barplot,
 )
+from joblib import Parallel, delayed
 
 np.random.seed(8888)
 
@@ -86,7 +87,7 @@ compartment = "dendrite"
 direction = "postsynaptic"
 max_samples = 1000
 n_subsamples = 10
-method = "full"
+method = "subsample"
 
 
 def filter_connectors(connectors, ids, direction, compartment):
@@ -107,7 +108,7 @@ def euclidean(x):
 
 def run_dcorr(data1, data2):
     ksamp = KSample("Dcorr", compute_distance=euclidean)
-    stat, pval = ksamp.test(data1, data2, auto=True)
+    stat, pval = ksamp.test(data1, data2, auto=True, workers=-1)
     return stat, pval
 
 
@@ -115,23 +116,29 @@ def spatial_dcorr(data1, data2, method="full", max_samples=1000, n_subsamples=5)
     if (len(data1) == 0) or (len(data2) == 0):
         return np.nan, np.nan
 
-    if method == "full":
-        stat, p_val = run_dcorr(data1, data2)
-    elif method == "subsample":
-        stats = np.empty(n_subsamples)
-        p_vals = np.empty(n_subsamples)
-        for i in range(n_subsamples):
-            subsampled_data = []
-            for data in [data1, data2]:
-                n_subsamples = min(len(data), max_samples)
-                inds = np.random.choice(n_subsamples, size=n_subsamples, replace=False)
-                subsampled_data.append(data[inds])
-            stat, p_val = run_dcorr(*subsampled_data)
-            stats[i] = stat
-            p_vals[i] = p_val
-        stat = np.median(stats)
-        p_val = np.median(p_vals)
-    elif method == "max-d":
+    if method == "subsample":
+        if max(len(data1), len(data2)) < max_samples:
+            method = "full"
+        else:
+            stats = np.empty(n_subsamples)
+            p_vals = np.empty(n_subsamples)
+            all_shuffles = []
+            for i in range(n_subsamples):
+                subsampled_data = []
+                for data in [data1, data2]:
+                    n_subsamples = min(len(data), max_samples)
+                    inds = np.random.choice(
+                        n_subsamples, size=n_subsamples, replace=False
+                    )
+                    subsampled_data.append(data[inds])
+                all_shuffles.append(subsampled_data)
+            outs = Parallel(n_jobs=-1)(delayed(run_dcorr)(*s) for s in all_shuffles)
+            outs = list(zip(*outs))
+            stats = outs[0]
+            p_vals = outs[1]
+            stat = np.median(stats)
+            p_val = np.median(p_vals)
+    if method == "max-d":
         max_dim_stat = -np.inf
         best_p_val = np.nan
         for dim in range(data1.shape[1]):
@@ -141,16 +148,15 @@ def spatial_dcorr(data1, data2, method="full", max_samples=1000, n_subsamples=5)
                 best_p_val = dim_p_val
         stat = max_dim_stat
         p_val = best_p_val
-    else:
-        raise ValueError()
-
+    if method == "full":
+        stat, p_val = run_dcorr(data1, data2)
     return stat, p_val
 
 
 # %% [markdown]
 # ##
 
-class_labels = meta[class_key].unique()[:10]
+class_labels = meta[class_key].unique()[:5]
 p_vals = np.zeros((len(class_labels), len(class_labels)))
 stats = np.zeros_like(p_vals)
 cluster_meta = pd.DataFrame(index=class_labels)
