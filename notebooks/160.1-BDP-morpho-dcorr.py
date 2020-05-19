@@ -2,6 +2,7 @@
 # ##
 import os
 import time
+from scipy.special import comb
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -71,48 +72,6 @@ pair_adj = pair_adj.values
 mg = MetaGraph(pair_adj, pair_meta)
 meta = mg.meta
 
-level_names = [f"lvl{i}_labels" for i in range(level + 1)]
-
-
-def sort_mg(mg, level_names):
-    meta = mg.meta
-    sort_class = level_names + ["merge_class"]
-    class_order = ["sf"]
-    total_sort_by = []
-    for sc in sort_class:
-        for co in class_order:
-            class_value = meta.groupby(sc)[co].mean()
-            meta[f"{sc}_{co}_order"] = meta[sc].map(class_value)
-            total_sort_by.append(f"{sc}_{co}_order")
-        total_sort_by.append(sc)
-    mg = mg.sort_values(total_sort_by, ascending=False)
-    return mg
-
-
-# def calc_ego_connectivity(adj, meta, label, axis=0):
-#     this_inds = meta[meta[class_key] == label]["inds"].values
-#     uni_cat = meta[key].unique()
-#     connect_mat = []
-#     for other_label in uni_cat:
-#         other_inds = meta[meta[key] == other_label]["inds"].values
-#         if axis == 0:
-#             sum_vec = adj[np.ix_(other_inds, this_inds)].sum(axis=axis)
-#         elif axis == 1:
-#             sum_vec = adj[np.ix_(this_inds, other_inds)].sum(axis=axis)
-#         connect_mat.append(sum_vec)
-#     return np.array(connect_mat)
-
-
-mg = sort_mg(mg, level_names)
-meta = mg.meta
-meta["inds"] = range(len(meta))
-adj = mg.adj
-
-
-skeleton_color_dict = dict(
-    zip(meta.index, np.vectorize(CLASS_COLOR_DICT.get)(meta["merge_class"]))
-)
-
 
 # load connectors
 connector_path = "maggot_models/data/processed/2020-05-08/connectors.csv"
@@ -163,13 +122,21 @@ def filter_connectors(connectors, ids, direction, compartment):
     return label_connectors
 
 
+from sklearn.metrics import pairwise_distances
+
+
+def euclidean(x):
+    """Default euclidean distance function calculation"""
+    return pairwise_distances(X=x, metric="euclidean", n_jobs=-1)
+
+
 def run_dcorr(data1, data2):
-    ksamp = KSample("Dcorr")
-    stat, pval = ksamp.test(data1, data2, auto=True, workers=-1)
+    ksamp = KSample("Dcorr", compute_distance=euclidean)
+    stat, pval = ksamp.test(data1, data2, auto=True)
     return stat, pval
 
 
-def spatial_dcorr(data1, data2, method="full", max_samples=1000, n_subsamples=10):
+def spatial_dcorr(data1, data2, method="full", max_samples=1000, n_subsamples=5):
     if (len(data1) == 0) or (len(data2) == 0):
         return np.nan, np.nan
 
@@ -208,83 +175,14 @@ def spatial_dcorr(data1, data2, method="full", max_samples=1000, n_subsamples=10
 # %% [markdown]
 # ##
 
-
-currtime = time.time()
-
-n_reps = 5
-labels = ["uPN", "mPN", "KC"]
-class_keys = 3 * ["class1"]
-
-rows = []
-
-for _ in range(n_reps):
-    class_ids = []
-    class_names = []
-    for label, class_key in zip(labels, class_keys):
-        # split the class in half
-        all_ids = meta[meta[class_key] == label].index.values
-        label1_ids = np.random.choice(all_ids, size=len(all_ids) // 2, replace=False)
-        label2_ids = np.setdiff1d(all_ids, label1_ids)
-        class_ids.append(label1_ids)
-        class_ids.append(label2_ids)
-        class_names.append(label + "_1")
-        class_names.append(label + "_2")
-
-    for i, (label1_ids, label1) in enumerate(zip(class_ids, class_names)):
-        for j, (label2_ids, label2) in enumerate(zip(class_ids, class_names)):
-            if i < j:
-                label1_connectors = filter_connectors(
-                    connectors, label1_ids, direction, compartment
-                )
-                label2_connectors = filter_connectors(
-                    connectors, label2_ids, direction, compartment
-                )
-                data1 = label1_connectors[["x", "y", "z"]].values
-                data2 = label2_connectors[["x", "y", "z"]].values
-                print(len(data1))
-                print(len(data2))
-                stat, p_val = spatial_dcorr(data1, data2, method="full")
-                same = label1[:-2] == label2[:-2]
-                row = {
-                    "stat": stat,
-                    "p_val": p_val,
-                    "label": f"{label1} vs {label2}",
-                    "same": same,
-                }
-                rows.append(row)
-
-print(f"{time.time() - currtime} elapsed")
-
-
-res_df = pd.DataFrame(rows)
-res_df["-log10_p_val"] = -np.log10(res_df["p_val"])
-fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-sns.stripplot(data=res_df, x="label", y="stat", hue="same")
-plt.xticks(rotation=90)
-ax.get_legend().remove()
-ax.legend(bbox_to_anchor=(1, 1), loc="upper left", title="Same class")
-ax.set_title("Axon outputs")
-stashfig("spatial-dcorr-dendrite-inputs-max-d")
-
-# print(stats)
-# print(p_vals)
-
-# plot_p_vals = -np.log10(p_vals)
-# adjplot(
-#     plot_p_vals,
-#     meta=cluster_meta,
-#     center=0,
-#     vmax=np.nanmax(plot_p_vals[~np.isinf(plot_p_vals)]),
-#     cbar_kws=dict(shrink=0.7),
-# )
-# %% [markdown]
-# ##
-first = 3
-class_labels = meta[class_key].unique()[::-1][10:15]
+first = 10
+class_labels = meta[class_key].unique()[::-1][:first]
 p_vals = np.zeros((len(class_labels), len(class_labels)))
 stats = np.zeros_like(p_vals)
 cluster_meta = pd.DataFrame(index=class_labels)
 
+total = comb(len(class_labels), k=2, exact=True)
+count = 0
 for i, label1 in enumerate(class_labels):
     label1_meta = meta[meta[class_key] == label1]
     label1_ids = label1_meta.index.values
@@ -294,6 +192,7 @@ for i, label1 in enumerate(class_labels):
     cluster_meta.loc[label1, "n_samples"] = len(label1_connectors)
     for j, label2 in enumerate(class_labels):
         if i < j:
+            print(f"Progress: {count / total:.2f}")
             label2_meta = meta[meta[class_key] == label2]
             label2_ids = label2_meta.index.values
             label2_connectors = filter_connectors(
@@ -304,16 +203,37 @@ for i, label1 in enumerate(class_labels):
             stat, p_val = spatial_dcorr(data1, data2, method="full")
             stats[i, j] = stat
             p_vals[i, j] = p_val
+            count += 1
 
+p_val_df = pd.DataFrame(
+    data=p_vals, index=cluster_meta.index, columns=cluster_meta.index
+)
+stashcsv(p_val_df, "p-vals")
 
-print(stats)
-print(p_vals)
+stats_df = pd.DataFrame(
+    data=stats, index=cluster_meta.index, columns=cluster_meta.index
+)
+stashcsv(stats_df, "test-stats")
 
 plot_p_vals = -np.log10(p_vals)
+plt.figure()
 adjplot(
     plot_p_vals,
     meta=cluster_meta,
-    center=0,
     vmax=np.nanmax(plot_p_vals[~np.isinf(plot_p_vals)]),
     cbar_kws=dict(shrink=0.7),
+    cbar=True,
+    cmap="Reds",
 )
+stashfig("p-val-plot")
+
+plt.figure(figsize=(10, 10))
+sns.heatmap(
+    stats,
+    cmap="Reds",
+    cbar_kws=dict(shrink=0.7),
+    square=True,
+    xticklabels=False,
+    yticklabels=False,
+)
+stashfig("stats-plot")
