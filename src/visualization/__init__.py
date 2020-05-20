@@ -40,7 +40,12 @@ from .matrix import (
     draw_colors,
     adjplot,
 )
-from .dendrogram import get_mid_map, plot_single_dendrogram, draw_bar_dendrogram
+from .dendrogram import (
+    get_mid_map,
+    plot_single_dendrogram,
+    draw_bar_dendrogram,
+    draw_leaf_dendrogram,
+)
 
 try:
     from .neuron import plot_neurons, plot_3view

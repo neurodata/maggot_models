@@ -83,8 +83,8 @@ connectors = pd.read_csv(connector_path)
 
 # compare dendrite inputs
 
-compartment = "dendrite"
-direction = "postsynaptic"
+compartment = "axon"
+direction = "presynaptic"
 max_samples = 500
 n_subsamples = 48
 method = "subsample"
@@ -196,9 +196,9 @@ for i, label1 in enumerate(class_labels):
 print(f"\n{time.time() - currtime} elapsed\n")
 
 
-basename = f"-method={method}"
+basename = f"-compartment={compartment}-direction={direction}-method={method}"
 if method == "subsample":
-    basename += f"-n_subsample={n_subsamples}-max_samples={max_samples}"
+    basename += f"-n_sub={n_subsamples}-max_samp={max_samples}"
 
 p_val_df = pd.DataFrame(
     data=p_vals, index=cluster_meta.index, columns=cluster_meta.index

@@ -84,6 +84,8 @@ def get_last_mids(label, last_mid_map):
         last_mids.append(last_mid_map[label + "-0"])
     if label + "-1" in last_mid_map:
         last_mids.append(last_mid_map[label + "-1"])
+    if label in last_mid_map:
+        last_mids.append(last_mid_map[label])
     if len(last_mids) == 0:
         print(label + " has no anchor in mid-map")
     return last_mids
@@ -144,8 +146,79 @@ def draw_bar_dendrogram(
     remove_spines(ax)
 
 
+def draw_leaf_dendrogram(meta, ax, lowest_level=7, width=0.5, draw_labels=False):
+    leaf_sizes = meta.groupby(
+        [f"lvl{lowest_level}_labels", "merge_class"], sort=False
+    ).size()
+    uni_labels = leaf_sizes.index.unique(0)
+    # uni_labels = "u"
+
+    first_mid_map = dict(zip(uni_labels, np.arange(len(uni_labels)) + 0.5))
+    last_mid_map = first_mid_map
+    line_kws = dict(linewidth=1, color="k")
+    for level in np.arange(lowest_level + 1)[::-1]:
+        x = level
+        sizes = meta.groupby([f"lvl{level}_labels", "merge_class"], sort=False).size()
+
+        uni_labels = sizes.index.unique(0)  # these need to be in the right order
+
+        mids = []
+        for ul in uni_labels:
+            last_mids = get_last_mids(ul, last_mid_map)
+            grand_mid = np.mean(last_mids)
+
+            heights, starts, colors = calc_bar_params(sizes, ul, grand_mid)
+
+            minimum = starts[0]
+            maximum = starts[-1] + heights[-1]
+            mid = (minimum + maximum) / 2
+            mids.append(mid)
+
+            if level == lowest_level:
+                # draw the bars
+                for i in range(len(heights)):
+                    draw_heights = heights / heights.sum()
+                    draw_starts = starts / heights.sum()
+                    ax.barh(
+                        y=mid,
+                        width=draw_heights[i],
+                        height=0.5,
+                        left=draw_starts[i] - draw_starts[0] + level,
+                        color=colors[i],
+                    )
+                    if draw_labels:
+                        ax.text(
+                            x=lowest_level + 0.5,
+                            y=mid,
+                            s=ul,
+                            verticalalignment="center",
+                        )
+
+            # draw a horizontal line from the middle of this bar
+            if level != 0:  # dont plot dash on the last
+                # ax.plot([x - 0.5 * width, x - width], [mid, mid], **line_kws)
+                ax.plot([x, x - width], [mid, mid], **line_kws)
+
+            # line connecting to children clusters
+            if level != lowest_level:  # don't plot first dash
+                # ax.plot(
+                #     [x + 0.5 * width, x + width], [grand_mid, grand_mid], **line_kws
+                # )
+                ax.plot([x, x + width], [grand_mid, grand_mid], **line_kws)
+
+            # draw a vertical line connecting the two child clusters
+            if len(last_mids) == 2:
+                ax.plot([x + width, x + width], last_mids, **line_kws)
+
+        last_mid_map = dict(zip(uni_labels, mids))
+    remove_spines(ax)
+    ax.set_yticks([])
+    ax.set_xticks(np.arange(lowest_level + 1))
+    return first_mid_map
+
+
 def plot_single_dendrogram(
-    meta, ax, lowest_level=7, gap=10, width=0.5, draw_labels=False
+    meta, ax, lowest_level=7, gap=10, width=0.5, draw_labels=False, bars=True
 ):
     leaf_key = f"lvl{lowest_level}_labels"
     n_leaf = meta[leaf_key].nunique()
@@ -156,9 +229,14 @@ def plot_single_dendrogram(
     ax.set_ylim((-gap, (n_cells + gap * n_leaf)))
     ax.set_xlim((-0.5, lowest_level + 1 + 0.5))
 
-    draw_bar_dendrogram(
-        meta, ax, first_mid_map, lowest_level=lowest_level, draw_labels=draw_labels
-    )
+    if bars:
+        draw_bar_dendrogram(
+            meta, ax, first_mid_map, lowest_level=lowest_level, draw_labels=draw_labels
+        )
+    else:
+        draw_leaf_dendrogram(
+            meta, ax, first_mid_map, lowest_level=7, draw_labels=draw_labels
+        )
 
     ax.set_yticks([])
     ax.set_xticks(np.arange(lowest_level + 1))
