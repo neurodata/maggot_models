@@ -83,10 +83,10 @@ connectors = pd.read_csv(connector_path)
 
 # compare dendrite inputs
 
-compartment = "axon"
-direction = "presynaptic"
+compartment = "dendrite"
+direction = "postsynaptic"
 max_samples = 500
-n_subsamples = 48
+n_subsamples = 48 * 2
 method = "subsample"
 
 

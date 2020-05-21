@@ -98,7 +98,8 @@ def sort_mg(mg, level_names):
     return mg
 
 
-lowest_level = 7
+level = 4
+lowest_level = level
 level_names = [f"lvl{i}_labels" for i in range(lowest_level + 1)]
 mg = sort_mg(mg, level_names)
 
@@ -115,10 +116,11 @@ mid_map = draw_leaf_dendrogram(
 )
 key_order = list(mid_map.keys())
 
+
 compartment = "axon"
 direction = "presynaptic"
 foldername = "160.1-BDP-morpho-dcorr"
-filename = f"test-stats-compartment={compartment}-direction={direction }-method=subsample-n_sub=48-max_samp=500"
+filename = f"test-statslvl={level}-compartment={compartment}-direction={direction }-method=subsample-n_sub=48-max_samp=500"
 stat_df = readcsv(filename, foldername=foldername, index_col=0)
 sym_vals = symmetrize(stat_df.values, method="triu")
 stat_df = pd.DataFrame(data=sym_vals, index=stat_df.index, columns=stat_df.index)
@@ -140,7 +142,7 @@ axs[1].set_title(
     f"DCorr test statistic, compartment = {compartment}, direction = {direction}"
 )
 # plt.tight_layout()
-basename = f"-test-stats-compartment={compartment}-direction={direction}"
+basename = f"-test-stats-lvl={level}-compartment={compartment}-direction={direction}"
 stashfig("dcorr-heatmap-bar-dendrogram" + basename)
 
 
