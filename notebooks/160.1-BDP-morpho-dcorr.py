@@ -53,7 +53,7 @@ def stashcsv(df, name, **kws):
 
 # params
 
-level = 7
+level = 4
 class_key = f"lvl{level}_labels"
 
 metric = "bic"
@@ -196,7 +196,9 @@ for i, label1 in enumerate(class_labels):
 print(f"\n{time.time() - currtime} elapsed\n")
 
 
-basename = f"-compartment={compartment}-direction={direction}-method={method}"
+basename = (
+    f"lvl={level}-compartment={compartment}-direction={direction}-method={method}"
+)
 if method == "subsample":
     basename += f"-n_sub={n_subsamples}-max_samp={max_samples}"
 

@@ -99,12 +99,12 @@ def stashskels(name, ids, labels, **kws):
 metric = "bic"
 bic_ratio = 1
 d = 8  # embedding dimension
-method = "iso"
+method = "color_iso"
 
-basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}-Gad"
+basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}"
 title = f"Method={method}, d={d}, BIC ratio={bic_ratio}"
 
-exp = "137.0-BDP-omni-clust"
+exp = "137.2-BDP-omni-clust"
 
 
 full_meta = readcsv("meta" + basename, foldername=exp, index_col=0)

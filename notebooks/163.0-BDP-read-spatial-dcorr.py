@@ -8,16 +8,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from joblib import Parallel, delayed
 from matplotlib.patches import Circle
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from src.visualization import remove_shared_ax
+
+from scipy.cluster.hierarchy import linkage
 from scipy.integrate import tplquad
+from scipy.spatial.distance import squareform
 from scipy.special import comb
 from scipy.stats import gaussian_kde
 from sklearn.metrics import pairwise_distances
 
 import pymaid
-from graspy.utils import pass_to_ranks
+from graspy.utils import is_symmetric, pass_to_ranks, symmetrize
 from hyppo.ksample import KSample
 from src.data import load_metagraph
 from src.graph import MetaGraph, preprocess
@@ -27,16 +32,17 @@ from src.visualization import (
     CLASS_COLOR_DICT,
     adjplot,
     barplot_text,
+    draw_leaf_dendrogram,
     get_mid_map,
     gridmap,
     matrixplot,
+    plot_single_dendrogram,
     remove_axis,
     remove_spines,
     set_axes_equal,
     stacked_barplot,
 )
-from joblib import Parallel, delayed
-from graspy.utils import symmetrize
+
 
 np.random.seed(8888)
 
@@ -96,8 +102,6 @@ lowest_level = 7
 level_names = [f"lvl{i}_labels" for i in range(lowest_level + 1)]
 mg = sort_mg(mg, level_names)
 
-from src.visualization import plot_single_dendrogram, draw_leaf_dendrogram
-from graspy.utils import is_symmetric
 
 fig, axs = plt.subplots(
     1,
@@ -111,33 +115,40 @@ mid_map = draw_leaf_dendrogram(
 )
 key_order = list(mid_map.keys())
 
+compartment = "axon"
+direction = "presynaptic"
 foldername = "160.1-BDP-morpho-dcorr"
-filename = "test-stats-method=subsample-n_subsample=48-max_samples=500"
+filename = f"test-stats-compartment={compartment}-direction={direction }-method=subsample-n_sub=48-max_samp=500"
 stat_df = readcsv(filename, foldername=foldername, index_col=0)
 sym_vals = symmetrize(stat_df.values, method="triu")
 stat_df = pd.DataFrame(data=sym_vals, index=stat_df.index, columns=stat_df.index)
 ordered_stat_df = stat_df.loc[key_order, key_order]
-sns.heatmap(ordered_stat_df, ax=axs[1], cbar=False)
+sns.set_context("talk")
+sns.heatmap(ordered_stat_df, ax=axs[1], cbar=False, cmap="RdBu_r", center=0)
 axs[1].invert_yaxis()
 axs[1].invert_xaxis()
 axs[1].set_xticklabels([])
-axs[1].set_yticklabels([])
-plt.tight_layout()
-stashfig("dcorr-heatmap-dendrogram-test-stats")
 
-# %% [markdown]
-# ##
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import squareform
-
-sym_vals[~np.isfinite(sym_vals)] = 1
-pdist = squareform(sym_vals)
-Z = linkage(pdist, method="average", metric="euclidean")
-
-sns.clustermap(
-    sym_vals, row_linkage=Z, col_linkage=Z, xticklabels=False, yticklabels=False
+remove_shared_ax(axs[0])
+remove_shared_ax(axs[1])
+axs[1].set_yticks(np.arange(len(key_order)) + 0.5)
+axs[1].set_yticklabels(key_order)
+axs[1].yaxis.tick_right()
+plt.tick_params(labelright="on", rotation=0, color="grey", labelsize=8)
+axs[1].set_xticks([])
+axs[1].set_title(
+    f"DCorr test statistic, compartment = {compartment}, direction = {direction}"
 )
-stashfig("test-stat-clustered")
+# plt.tight_layout()
+basename = f"-test-stats-compartment={compartment}-direction={direction}"
+stashfig("dcorr-heatmap-bar-dendrogram" + basename)
 
 
-# %%
+# sym_vals[~np.isfinite(sym_vals)] = 1
+# pdist = squareform(sym_vals)
+# Z = linkage(pdist, method="average", metric="euclidean")
+
+# sns.clustermap(
+#     sym_vals, row_linkage=Z, col_linkage=Z, xticklabels=False, yticklabels=False
+# )
+# stashfig("test-stat-clustered")

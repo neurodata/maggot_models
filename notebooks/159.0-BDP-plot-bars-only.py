@@ -96,15 +96,15 @@ def stashcsv(df, name, **kws):
 metric = "bic"
 bic_ratio = 1
 d = 8  # embedding dimension
-method = "iso"
+method = "color_iso"
 
-basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}-G"
+basename = f"-method={method}-d={d}-bic_ratio={bic_ratio}"
 title = f"Method={method}, d={d}, BIC ratio={bic_ratio}"
 
-exp = "137.1-BDP-omni-clust"
+exp = "137.2-BDP-omni-clust"
 
 # parameters
-permute_prop = 0.2
+permute_prop = 0
 
 lowest_level = 6
 
