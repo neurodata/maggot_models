@@ -106,7 +106,7 @@ exp = "137.2-BDP-omni-clust"
 # parameters
 permute_prop = 0
 
-lowest_level = 6
+lowest_level = 3
 
 width = 0.5
 gap = 15
