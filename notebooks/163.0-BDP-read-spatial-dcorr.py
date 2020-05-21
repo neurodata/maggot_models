@@ -117,10 +117,10 @@ mid_map = draw_leaf_dendrogram(
 key_order = list(mid_map.keys())
 
 
-compartment = "axon"
-direction = "presynaptic"
+compartment = "dendrite"
+direction = "postsynaptic"
 foldername = "160.1-BDP-morpho-dcorr"
-filename = f"test-statslvl={level}-compartment={compartment}-direction={direction }-method=subsample-n_sub=48-max_samp=500"
+filename = f"test-statslvl={level}-compartment={compartment}-direction={direction }-method=subsample-n_sub=96-max_samp=500"
 stat_df = readcsv(filename, foldername=foldername, index_col=0)
 sym_vals = symmetrize(stat_df.values, method="triu")
 stat_df = pd.DataFrame(data=sym_vals, index=stat_df.index, columns=stat_df.index)
