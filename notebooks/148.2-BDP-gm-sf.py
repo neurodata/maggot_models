@@ -319,7 +319,7 @@ def plot_diag_vals(adj, ax, color="steelblue", kde=True, **kws):
 # ##
 
 
-n_init = 20  # * 8
+n_init = 12 * 4
 n_jobs = -2
 
 currtime = time.time()
