@@ -1,5 +1,13 @@
 # %% [markdown]
 # ##
+import warnings
+
+
+def noop(*args, **kargs):
+    pass
+
+
+warnings.warn = noop
 import os
 import time
 
@@ -17,13 +25,12 @@ from tqdm import tqdm
 
 from graspy.match import GraphMatch
 from graspy.plot import heatmap
-from src.cluster import get_paired_inds  # TODO fix the location of this func
+from src.utils import get_paired_inds
 from src.data import load_metagraph
-from src.graph import preprocess
 from src.hierarchy import signal_flow
 from src.io import savecsv, savefig
-from src.utils import invert_permutation
 from src.visualization import CLASS_COLOR_DICT, adjplot
+
 
 print(scipy.__version__)
 
@@ -134,11 +141,12 @@ def fit_gm_exp(
     c=0,
     n_init=5,
     norm=False,
-    max_iter=80,
+    max_iter=50,
     eps=0.05,
     n_jobs=1,
     verbose=0,
 ):
+    warnings.filterwarnings("ignore")
     gm = GraphMatch(
         n_init=1, init_method="rand", max_iter=max_iter, eps=eps, shuffle_input=True
     )
@@ -216,8 +224,7 @@ right_meta = mg.meta.iloc[rp_inds].copy()
 # ##
 np.random.seed(8888)
 
-# n_subsample = n_pairs
-n_subsample = n_pairs // 4
+n_subsample = n_pairs
 
 subsample_inds = np.random.choice(n_pairs, n_subsample, replace=False)
 
@@ -312,25 +319,27 @@ def plot_diag_vals(adj, ax, color="steelblue", kde=True, **kws):
 # ##
 
 
-n_init = 12 * 8
+n_init = 20  # * 8
 n_jobs = -2
 
 currtime = time.time()
 
 n_verts = len(left_adj)
 
-halfs = [0.5, 1, 5, 10, 50, 100]
+# halfs = [0.5, 1, 5, 10, 50, 100]
+halfs = [5, 10]
 
 alphas = [np.round(np.log(2) / (h * n_verts), decimals=5) for h in halfs]
 print(alphas)
 
 param_grid = {
     "alpha": alphas,
-    "beta": [1, 0.9, 0.7, 0.5, 0.3, 0.1],
+    "beta": [1, 0.5],  # [1, 0.9, 0.7, 0.5, 0.3, 0.1],
     "norm": [False, "fro", "sum"],
     "c": [0],
 }
 params = list(ParameterGrid(param_grid))
+basename = f"-n_subsample={n_subsample}"
 
 
 def get_basename(n_subsample=None, alpha=None, beta=None, c=None, norm=None):
@@ -364,6 +373,7 @@ for p in tqdm(params):
     )
     gm_left_perm, gm_left_score = get_best_run(left_perms, left_scores)
     gm_right_perm, gm_right_score = get_best_run(right_perms, right_scores)
+
     left_perm_series = pd.Series(data=gm_left_perm, name=str(left_row))
     right_perm_series = pd.Series(data=gm_right_perm, name=str(right_row))
     perm_df.append(left_perm_series)
@@ -389,7 +399,11 @@ for p in tqdm(params):
     set_legend_alpha(leg)
 
     fig.suptitle(p, y=0.95)
-    stashfig(f"double-adj-{p}")
+    stashfig(f"match-profile-{p}" + basename)
+
+    row["score"] = gm_left_score
+    row["norm_score"] = gm_left_score / np.linalg.norm(match)
+    row["match_fro"] = np.linalg.norm(match)
     rows.append(row)
 
 time_mins = (time.time() - currtime) / 60
@@ -397,12 +411,11 @@ print(f"{time_mins:.2f} minutes elapsed")
 
 
 res_df = pd.DataFrame(rows)
-stashcsv(res_df, "res_df")
+stashcsv(res_df, "res_df" + basename)
 
 perm_df = pd.DataFrame(perm_df)
-stashcsv(perm_df, "perm_df")
+stashcsv(perm_df, "perm_df" + basename)
 
-basename = f"-n_subsample={n_subsample}"
 heatmap_kws = dict(annot=True, annot_kws={"size": 8}, cmap="Reds", vmin=0, vmax=1)
 fig, axs = plt.subplots(1, 3, figsize=(24, 8), sharey=True)
 ax = axs[0]
@@ -421,7 +434,23 @@ corr_df = sum_df.pivot(index="alpha", columns="beta", values="corr")
 sns.heatmap(data=corr_df, ax=ax, **heatmap_kws)
 ax.set_title("Norm = sum")
 plt.yticks(rotation=0)
-stashfig("corr-heatmaps")
+stashfig("corr-heatmaps" + basename)
 
-
-# %%
+fig, axs = plt.subplots(1, 3, figsize=(24, 8), sharey=True)
+ax = axs[0]
+unnorm_df = res_df[res_df["norm"] == False]
+corr_df = unnorm_df.pivot(index="alpha", columns="beta", values="score")
+sns.heatmap(data=corr_df, ax=ax, **heatmap_kws)
+ax.set_title("Norm = False")
+ax = axs[1]
+fro_df = res_df[res_df["norm"] == "fro"]
+corr_df = fro_df.pivot(index="alpha", columns="beta", values="score")
+sns.heatmap(data=corr_df, ax=ax, **heatmap_kws)
+ax.set_title("Norm = fro")
+ax = axs[2]
+sum_df = res_df[res_df["norm"] == "sum"]
+corr_df = sum_df.pivot(index="alpha", columns="beta", values="score")
+sns.heatmap(data=corr_df, ax=ax, **heatmap_kws)
+ax.set_title("Norm = sum")
+plt.yticks(rotation=0)
+stashfig("score-heatmaps" + basename)

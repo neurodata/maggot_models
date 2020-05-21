@@ -28,5 +28,6 @@ from .utils import (
     get_sbm_prob,
     get_blockmodel_df,
     invert_permutation,
+    get_paired_inds,
 )
 
