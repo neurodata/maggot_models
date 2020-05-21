@@ -329,7 +329,7 @@ n_verts = len(left_adj)
 halfs = [0.5, 1, 5, 10, 50, 100]
 # halfs = [5, 10]
 
-alphas = [np.round(np.log(2) / (h * n_verts), decimals=5) for h in halfs]
+alphas = [np.round(np.log(2) / (h * n_verts), decimals=7) for h in halfs]
 print(alphas)
 
 param_grid = {
