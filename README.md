@@ -48,8 +48,10 @@ Project Organization
     ├── models             <- Trained and serialized models, model predictions, or model summaries
     │
     ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                         the creator's initials, and a short `-` delimited description, e.g.
-    │                         `1.0-jqp-initial-data-exploration`.
+    │   |                      the creator's initials, and a short `-` delimited description, e.g.
+    │   |                      `1.0-jqp-initial-data-exploration`.
+    |   |
+    |   └── outs           <- figures and intermediate results labeled by notebook that generated them.
     │
     ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
     │
