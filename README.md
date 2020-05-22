@@ -3,6 +3,34 @@ maggot_models
 
 Modeling the Drosophila larva connectome
 
+Installation and setup
+--------
+
+Recommended setup 
+
+Currently, the recommended setup is to use conda or miniconda to create a virtual
+environment: https://docs.conda.io/en/latest/miniconda.html
+
+conda environments are recommended. To create a new conda environment for this project, 
+navigate to this directory in a terminal and run
+
+``$ conda create -f environment.yml``
+
+a conda virtual environment will be created with the name ``maggot_models``. To verify
+that the environment was created run 
+
+``$ conda info --envs``
+
+
+To activate the virtual environment run
+
+``$ conda activate maggot_models``
+
+Using this package is also possible with ``pip`` and a virtual environment manager. 
+If you would like to use ``pip`` please contact @bdpedigo and I can make sure the pip
+``requirements.txt`` is up to date (it isn't right now)
+
+
 Project Organization
 ------------
 
@@ -54,32 +82,5 @@ Project Organization
     │
     └── tox.ini            <- tox file with settings for running tox; see tox.testrun.org
 
---------
-# Installation and setup
-Recommended setup 
-
-Currently, the recommended setup is to use conda or miniconda to create a virtual
-environment: https://docs.conda.io/en/latest/miniconda.html
-
-conda environments are recommended. To create a new conda environment for this project, 
-navigate to this directory in a terminal and run
-
-``$ conda create -f environment.yml``
-
-a conda virtual environment will be created with the name ``maggot_models``. To verify
-that the environment was created run 
-
-``$ conda info --envs``
-
-
-To activate the virtual environment run
-
-``$ conda activate maggot_models``
-
-Using this package is also possible with ``pip`` and a virtual environment manager. 
-If you would like to use ``pip`` please contact @bdpedigo and I can make sure the pip
-``requirements.txt`` is up to date (it isn't right now)
-
---------
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
