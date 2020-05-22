@@ -1,10 +1,16 @@
 # local package
--e .
+# -e .
 
 # external requirements
-graspy>=0.1.1
-networkx>=2.3
-scikit-learn>=0.22
+# graspy>=0.1.1
+# networkx>=2.3
+# scikit-learn>=0.22
+# scipy>=1.4
+# colorcet
+# tqdm
+
 scipy>=1.4
-colorcet
+scikit-learn>=0.22
+networkx>=2.3
 tqdm
+colorcet
