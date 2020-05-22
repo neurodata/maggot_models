@@ -6,7 +6,7 @@ Modeling the Drosophila larva connectome
 Installation and setup
 --------
 
-Recommended setup 
+If you are new to Python development, my recommended practives are [here](https://github.com/bdpedigo/giskard/blob/master/python_start.md) 
 
 Currently, the recommended setup is to use conda or miniconda to create a virtual
 environment: https://docs.conda.io/en/latest/miniconda.html
