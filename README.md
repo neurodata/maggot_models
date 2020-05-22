@@ -6,57 +6,119 @@ Modeling the Drosophila larva connectome
 Installation and setup
 --------
 
-If you are new to Python development, my recommended practives are [here](https://github.com/bdpedigo/giskard/blob/master/python_start.md) 
+If you are new to Python development, my recommended practices are [here](https://github.com/bdpedigo/giskard/blob/master/python_start.md).
 
-Currently, the recommended setup is to use conda or miniconda to create a virtual
-environment: https://docs.conda.io/en/latest/miniconda.html
+Currently, the recommended setup is to use conda or [miniconda](https://docs.conda.io/en/latest/miniconda.html) to create a virtual
+environment.
 
-conda environments are recommended. To create a new conda environment for this project, 
-navigate to this directory in a terminal and run
+The following will assume some familiarity with the command line, `git`, `Github`, and `conda`.
 
 ## Recommended setup for development 
 
-Fork the repo
+### Fork the repo
 
 - Hit "Fork" in the upper left corner on Github
 
+### Create a folder for everything
+- We'll be downloading a few repos, so I'd recommend having a dedicated folder to store them all. I'll refer to this folder as the "top-level directory" throughout.
 
-Clone the repo
+### Clone the repo 
 
-- Click clone or download
-- Copy the `link` provided
-- From the folder where you would like this repo to live, 
+- Click "Clone or download" button in the top right
+- Copy the <link> provided
+- From the top-level directory, 
     - (Recommended) Clone just the most recent version of master:
     
-        ``git clone --depth 1 -b master https://github.com/neurodata/maggot_models.git``
+        ``git clone --depth 1 -b master <link>``
     
-    - To clone the whole repo and all history (large) do
+    - OR to clone the whole repo and all history (large) do
     
-        ``git clone {link}``
+        ``git clone <link>``
 
-Add conda-forge as a channel if you haven't already
+### Add conda-forge as a channel if you haven't already
 
 ``conda config --append channels conda-forge``
 
 ``conda config --set channel_priority strict``
 
-Create a new conda environment
+### Create a new conda environment
 
 ``conda create -n {insert name} python==3.7``
 
-
-To verify that the environment was created run 
+### To verify that the environment was created run 
 ``conda info --envs``
 
-Activate the environment
+### Activate the environment
 
 ``conda activate {insert name}``
 
+### Install (most of) the dependencies
 
+``conda install --file requirements.txt``
 
-Using this package is also possible with ``pip`` and a virtual environment manager. 
+### Install conda-build
+
+``conda install conda-build``
+
+### Install GraSPy and Hyppo
+Both of these packages, while available on `PyPI`, are still undergoing development. For now, I recommend installing these two packages via cloning and installing locally
+rather than doing so via `pip` or similar. 
+
+From the directory where you would like to store GraSPy and Hyppo, do
+
+``git clone https://github.com/neurodata/graspy.git``
+
+``cd graspy``
+
+``conda develop .``
+
+Rather than installing a "static" version of `GraSPy`, the command above will install the
+package located in the current folder (in this case, `GraSPy`) while tracking any changes
+made to those files. 
+
+Similarly for Hyppo, navigate to the top level directory for this project, and do
+
+``git clone https://github.com/neurodata/hyppo.git``
+
+``cd hyppo``
+
+``conda develop .``
+
+Now you should have `GraSPy` and `Hyppo` installed, and if you need to get the latest version, 
+this is as simple as
+
+``cd graspy``
+
+``git pull``
+
+### Install `src`, a.k.a. the maggot_models package itself
+From the top level directory for this project, do
+
+``cd maggot_models``
+
+``conda develop .``
+
+### Get the data
+The data is not yet public, talk to @bdpedigo about how to find and store the data.
+
+### Store the data 
+Place the `.graphml` files in `maggot_models/data/processed/<data>/`
+
+### See if it all worked
+From the top-level directory, do
+
+``python`` <-- Start python in the terminal
+
+``from src.data import load_metagraph`` <-- Import a function to load data
+
+``mg = load_metagraph("G")`` <-- Load the "sum" graph
+
+``print(mg.adj)`` <-- Access and print the adjacency matrix
+
+``print(mg.meta.head())`` <-- Access and print the first few rows of metadata
+<!-- Using this package is also possible with ``pip`` and a virtual environment manager. 
 If you would like to use ``pip`` please contact @bdpedigo and I can make sure the pip
-``requirements.txt`` is up to date (it isn't right now)
+``requirements.txt`` is up to date (it isn't right now) -->
 
 
 Project Organization
