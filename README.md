@@ -14,17 +14,45 @@ environment: https://docs.conda.io/en/latest/miniconda.html
 conda environments are recommended. To create a new conda environment for this project, 
 navigate to this directory in a terminal and run
 
-``$ conda create -f environment.yml``
+## Recommended setup for development 
 
-a conda virtual environment will be created with the name ``maggot_models``. To verify
-that the environment was created run 
+Fork the repo
 
-``$ conda info --envs``
+- Hit "Fork" in the upper left corner on Github
 
 
-To activate the virtual environment run
+Clone the repo
 
-``$ conda activate maggot_models``
+- Click clone or download
+- Copy the `link` provided
+- From the folder where you would like this repo to live, 
+    - (Recommended) Clone just the most recent version of master:
+    
+        ``git clone --depth 1 -b master https://github.com/neurodata/maggot_models.git``
+    
+    - To clone the whole repo and all history (large) do
+    
+        ``git clone {link}``
+
+Add conda-forge as a channel if you haven't already
+
+``conda config --append channels conda-forge``
+
+``conda config --set channel_priority strict``
+
+Create a new conda environment
+
+``conda create -n {insert name} python==3.7``
+
+
+To verify that the environment was created run 
+``conda info --envs``
+
+Activate the environment
+
+``conda activate {insert name}``
+
+
 
 Using this package is also possible with ``pip`` and a virtual environment manager. 
 If you would like to use ``pip`` please contact @bdpedigo and I can make sure the pip
