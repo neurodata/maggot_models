@@ -10,7 +10,7 @@ from src.visualization import CLASS_COLOR_DICT, adjplot
 
 sns.set_context("talk")
 
-mg = load_metagraph("G", version="2020-04-23")
+mg = load_metagraph("G")
 mg.calculate_degrees(inplace=True)
 
 adj = mg.adj  # adjacency matrix from the "mg" object
