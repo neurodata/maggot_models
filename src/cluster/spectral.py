@@ -650,7 +650,7 @@ class MaggotCluster(NodeMixin):
 
     def collect_labels(self):
         meta = self.root.meta
-        meta[f"lvl0_labels"] = "0"  # meta[f"0_pred"]
+        meta[f"lvl0_labels"] = "0"
         meta[f"lvl0_labels_side"] = meta[f"lvl0_labels"] + meta[f"hemisphere"]
         for i in range(1, self.height + 1):
             meta[f"lvl{i}_labels"] = meta[f"lvl{i-1}_labels"] + "-" + meta[f"{i}_pred"]
