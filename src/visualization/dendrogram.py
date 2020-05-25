@@ -250,3 +250,67 @@ def plot_single_dendrogram(
     ax.text(x=0.35, y=0, s="100 neurons")
 
     return first_mid_map
+
+
+def plot_double_dendrogram(meta, axs, lowest_level=7, gap=10, width=0.5):
+    n_leaf = meta[f"lvl{lowest_level}_labels"].nunique()
+    n_pairs = len(meta) // 2
+
+    first_mid_map = get_mid_map(meta)
+
+    # left side
+    meta = meta[meta["hemisphere"] == "L"].copy()
+
+    ax = axs[0]
+    ax.set_title("Left")
+    ax.set_ylim((-gap, (n_pairs + gap * n_leaf)))
+    ax.set_xlim((-0.5, lowest_level + 0.5))
+
+    draw_bar_dendrogram(meta, ax, first_mid_map)
+
+    ax.set_yticks([])
+    ax.set_xticks(np.arange(lowest_level + 1))
+    ax.tick_params(axis="both", which="both", length=0)
+    ax.spines["left"].set_visible(False)
+    ax.spines["bottom"].set_visible(False)
+    ax.set_xlabel("Level")
+
+    # add a scale bar in the bottom left
+    ax.bar(x=0, height=100, bottom=0, width=width, color="k")
+    ax.text(x=0.35, y=0, s="100 neurons")
+
+    # right side
+    meta = meta[meta["hemisphere"] == "R"].copy()
+
+    ax = axs[1]
+    ax.set_title("Right")
+    ax.set_ylim((-gap, (n_pairs + gap * n_leaf)))
+    ax.set_xlim((lowest_level + 0.5, -0.5))  # reversed x axis order to make them mirror
+
+    draw_bar_dendrogram(meta, ax, first_mid_map)
+
+    ax.set_yticks([])
+    ax.tick_params(axis="both", which="both", length=0)
+    ax.spines["left"].set_visible(False)
+    ax.spines["bottom"].set_visible(False)
+    ax.set_xlabel("Level")
+    ax.set_xticks(np.arange(lowest_level + 1))
+
+
+import matplotlib.pyplot as plt
+from .visualize import palplot
+
+def plot_color_labels(meta, ax):
+    sizes = meta.groupby(["merge_class"], sort=False).size()
+    uni_class = sizes.index.unique()
+    counts = sizes.values
+    count_map = dict(zip(uni_class, counts))
+    names = []
+    colors = []
+    for key, val in count_map.items():
+        names.append(f"{key} ({count_map[key]})")
+        colors.append(CLASS_COLOR_DICT[key])
+    colors = colors[::-1]  # reverse because of signal flow sorting
+    names = names[::-1]
+    palplot(len(colors), colors, ax=ax)
+    ax.yaxis.set_major_formatter(plt.FixedFormatter(names))

@@ -45,6 +45,8 @@ from .dendrogram import (
     plot_single_dendrogram,
     draw_bar_dendrogram,
     draw_leaf_dendrogram,
+    plot_double_dendrogram,
+    plot_color_labels,
 )
 
 try:
