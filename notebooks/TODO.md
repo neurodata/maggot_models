@@ -34,3 +34,8 @@
   the model I generate. 
 
 - could try dcorr for identifying PNs
+
+---
+
+- "ball and stick" plots at level 3 and 4, with a variety of edge thresholds
+- clean plots of Bhat in a few different ways, few different color mappings (log or not, pass to ranks or not), few different sortings (dendrogram sorting, leaf node signal flow sorting, leaf node graph match flow sorting), respect cluster size or not
