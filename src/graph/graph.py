@@ -91,7 +91,7 @@ class MetaGraph:
         else:
             adj = self.adj.copy()
             adj = adj[np.ix_(perm_inds, perm_inds)]
-            meta = self.meta.iloc[perm_inds, :]
+            meta = self.meta.iloc[perm_inds, :].copy()
             if inplace:
                 self.adj = adj
                 self.meta = meta

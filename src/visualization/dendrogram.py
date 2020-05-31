@@ -61,8 +61,13 @@ def get_mid_map(full_meta, leaf_key=None, bilat=False, gap=10):
     keys = list(set(list(left_mid_map.keys()) + list(right_mid_map.keys())))
     first_mid_map = {}
     for k in keys:
-        left_mid = left_mid_map[k]
-        right_mid = right_mid_map[k]
+        left_mid = -1
+        right_mid = -1
+        if k in left_mid_map:
+            left_mid = left_mid_map[k]
+        if k in right_mid_map:
+            right_mid = right_mid_map[k]
+        
         first_mid_map[k + "-"] = max(left_mid, right_mid)
     return first_mid_map
 

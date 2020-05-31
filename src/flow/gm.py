@@ -52,6 +52,15 @@ def make_linear_match(length, offset=0, **kws):
     return match_mat
 
 
+def make_exp_match(adj, alpha=0.5, beta=1, c=0, norm=False, **kws):
+    length = len(adj)
+    match_mat = np.zeros((length, length))
+    for k in np.arange(1, length):
+        match_mat[diag_indices(length, k)] = exp_func(k, alpha, beta, c)
+    match_mat = normalize_match(adj, match_mat, method=norm)
+    return match_mat
+
+
 def normalize_match(graph, match_mat, method="fro"):
     if method == "fro":
         match_mat = match_mat / np.linalg.norm(match_mat) * np.linalg.norm(graph)
@@ -61,15 +70,6 @@ def normalize_match(graph, match_mat, method="fro"):
         pass
     else:
         raise ValueError("invalid method")
-    return match_mat
-
-
-def make_exp_match(adj, alpha=0.5, beta=1, c=0, norm=False, **kws):
-    length = len(adj)
-    match_mat = np.zeros((length, length))
-    for k in np.arange(1, length):
-        match_mat[diag_indices(length, k)] = exp_func(k, alpha, beta, c)
-    match_mat = normalize_match(adj, match_mat, method=norm)
     return match_mat
 
 
@@ -84,6 +84,7 @@ def fit_gm_exp(
     eps=0.05,
     n_jobs=1,
     verbose=0,
+    return_best=False,
 ):
     gm = GraphMatch(
         n_init=1, init_method="rand", max_iter=max_iter, eps=eps, shuffle_input=True
@@ -101,6 +102,11 @@ def fit_gm_exp(
     outs = list(zip(*outs))
     perms = np.array(outs[0])
     scores = np.array(outs[1])
+    if return_best:
+        ind = np.argmax(scores)
+        perm = perms[ind]
+        score = scores[ind]
+        return perm, score
     return perms, scores
 
 

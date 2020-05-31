@@ -3,7 +3,7 @@ from src.pymaid import start_instance
 import pymaid
 import matplotlib as mpl
 
-mpl.use("Agg")
+# mpl.use("Agg")
 import matplotlib.pyplot as plt
 from src.visualization import CLASS_COLOR_DICT, stacked_barplot, set_axes_equal
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection

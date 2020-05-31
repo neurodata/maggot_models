@@ -78,6 +78,10 @@ CLASS_IND_DICT = {
     "MN2": 112,
     "vtd2;AN2": 125,
     "vtd2": 54,
+    "A00c": 37,
+    "super-brain": 80,
+    "super-sez": 137,
+    "super-vnc": 161,
 }
 
 
@@ -104,6 +108,9 @@ def plot_colors():
     for i, ax in enumerate(axs):
         pal = cc.glasbey_light[i * n_per_col : (i + 1) * n_per_col]
         palplot(n_per_col, pal, figsize=(1, 10), ax=ax, start=i * n_per_col)
+    plt.savefig(
+        "./maggot_models/notebooks/outs/colors.png", dpi=300, bbox_inches="tight"
+    )
 
 
 def plot_class_colormap():
@@ -119,6 +126,9 @@ def plot_class_colormap():
         if key in uni_class:
             names.append(f"{key} ({count_map[key]})")
             colors.append(val)
+    for uc in uni_class:
+        if uc not in CLASS_COLOR_DICT:
+            print(f"{uc} not in colormap")
     fig, ax = plt.subplots(1, 1, figsize=(3, 15))
     palplot(len(colors), colors, ax=ax)
     ax.yaxis.set_major_formatter(plt.FixedFormatter(names))
@@ -130,5 +140,5 @@ def plot_class_colormap():
 if __name__ == "__main__":
     plot_colors()
     plot_class_colormap()
-    plt.show()
+    # plt.show()
 

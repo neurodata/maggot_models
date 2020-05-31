@@ -51,15 +51,15 @@ def stashcsv(df, name, **kws):
 
 
 graph_type = "G"
-master_mg = load_metagraph(graph_type, version="2020-04-23")
-mg = preprocess(
-    master_mg,
-    threshold=0,
-    sym_threshold=False,
-    remove_pdiff=True,
-    binarize=False,
-    weight="weight",
-)
+mg = load_metagraph(graph_type, version="2020-05-26")
+# mg = preprocess(
+#     master_mg,
+#     threshold=0,
+#     sym_threshold=False,
+#     remove_pdiff=True,
+#     binarize=False,
+#     weight="weight",
+# )
 meta = mg.meta
 
 
@@ -70,7 +70,7 @@ labels = meta["merge_class"].values
 uni_labels, counts = np.unique(labels, return_counts=True)
 inds = np.argsort(-counts)
 
-paired = meta["Pair ID"] != -1
+paired = meta["pair_id"] != -1
 
 fig, axs = plt.subplots(1, 2, figsize=(20, 20))
 ax = axs[0]

@@ -599,9 +599,7 @@ def _calculate_p(block, use_weights=False, return_counts=False):
 
 
 def get_blockmodel_df(graph, labels, return_counts=False, use_weights=False):
-    uni_labels, counts = np.unique(labels, return_counts=True)
-    label_map = dict(zip(uni_labels, range(len(uni_labels))))
-    y = np.array(itemgetter(*labels)(label_map))
+    uni_labels, y = np.unique(labels, return_inverse=True)
 
     block_vert_inds, block_inds, block_inv = _get_block_indices(y)
 
@@ -627,8 +625,11 @@ def invert_permutation(p):
     return s
 
 
-def get_paired_inds(meta):
-    pair_meta = meta[meta["pair"].isin(meta.index)]
+def get_paired_inds(meta, check_in=True):
+    if check_in:
+        pair_meta = meta[meta["pair"].isin(meta.index)]
+    else: 
+        pair_meta = meta
     pair_group_size = pair_meta.groupby("pair_id").size()
     remove_pairs = pair_group_size[pair_group_size == 1].index
     pair_meta = pair_meta[~pair_meta["pair_id"].isin(remove_pairs)]

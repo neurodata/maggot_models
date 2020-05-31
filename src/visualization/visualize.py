@@ -1560,6 +1560,7 @@ def draw_networkx_nice(
     weight_scale=1,
     size_scale=1,
     draw_labels=True,
+    font_size=14,
 ):
     if nodelist is None:
         nodelist = g.nodes()
@@ -1594,7 +1595,7 @@ def draw_networkx_nice(
     cmap = sm.to_rgba(weight_array)
 
     if ax is None:
-        fig, ax = plt.subplots(figsize=(30, 30), frameon=False)
+        fig, ax = plt.subplots(figsize=(10, 10), frameon=False)
 
     node_collection = nx.draw_networkx_nodes(
         g, pos, node_color=node_color, node_size=node_size, with_labels=False, ax=ax
@@ -1614,18 +1615,21 @@ def draw_networkx_nice(
         pos,
         edgelist=edgelist,
         edge_color=cmap,
-        width=weight_scale * weights + 0.1,
+        width=weight_scale * weights,
         connectionstyle="arc3,rad=0.2",
         arrows=True,
         # width=1.5,
         ax=ax,
     )
+
     # set z-order by weight
+    weight_inds = np.argsort(weights)
+    weight_rank = np.argsort(weight_inds)
     for i, l in enumerate(lc):
-        l.set_zorder(weights[i])
+        l.set_zorder(weight_rank[i])
 
     if draw_labels:
-        text_items = nx.draw_networkx_labels(g, label_pos, ax=ax, font_size=20)
+        text_items = nx.draw_networkx_labels(g, label_pos, ax=ax, font_size=font_size)
 
         # make sure the labels are above all in z order
         for _, t in text_items.items():
