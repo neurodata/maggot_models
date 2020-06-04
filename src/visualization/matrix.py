@@ -385,6 +385,7 @@ def matrixplot(
     cmap="RdBu_r",
     sizes=(5, 10),
     square=False,
+    title="",
     gridline_kws=None,
     spinestyle_kws=None,
     highlight_kws=None,
@@ -553,14 +554,13 @@ def matrixplot(
     )
 
     # draw ticks
+    tick_ax = top_cax  # start with the axes we already have
     if len(col_sort_class) > 0 and col_ticks:
         if col_tick_pad is None:
             col_tick_pad = len(col_sort_class) * [0.5]
 
-        tick_ax = top_cax  # start with the axes we already have
         tick_ax_border = False
         rev_col_sort_class = list(col_sort_class[::-1])
-
         for i, sc in enumerate(rev_col_sort_class):
             if i > 0:  # add a new axis for ticks
                 tick_ax = divider.append_axes(
@@ -582,6 +582,7 @@ def matrixplot(
                 tick_ax_border=tick_ax_border,
             )
             ax.xaxis.set_label_position("top")
+    tick_ax.set_title(title)
 
     if len(row_sort_class) > 0 and row_ticks:
         tick_ax = left_cax  # start with the axes we already have
@@ -673,6 +674,7 @@ def adjplot(
     cmap="RdBu_r",
     sizes=(5, 10),
     square=True,
+    title="",
     gridline_kws=None,
     spinestyle_kws=None,
     highlight_kws=None,
