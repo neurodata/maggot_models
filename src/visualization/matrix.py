@@ -708,6 +708,7 @@ def adjplot(
         cmap=cmap,
         sizes=sizes,
         square=square,
+        title=title,
         gridline_kws=gridline_kws,
         spinestyle_kws=spinestyle_kws,
         highlight_kws=highlight_kws,
