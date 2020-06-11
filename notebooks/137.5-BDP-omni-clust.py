@@ -806,17 +806,22 @@ params = [
     {"d": 8, "bic_ratio": 1},
     {"d": 9, "bic_ratio": 1},
     {"d": 10, "bic_ratio": 1},
+    {"d": 6, "bic_ratio": 0.9},
+    {"d": 8, "bic_ratio": 0.9},
     {"d": 8, "bic_ratio": 0.95},
     {"d": 8, "bic_ratio": 0.97},
 ]
+min_split = 16
 
 for p in params:
     print(p)
     d = p["d"]
     bic_ratio = p["bic_ratio"]
     X = svd_embed[:, :d]
-    basename = f"-method={omni_method}-d={d}-bic_ratio={bic_ratio}"
-    title = f"Method={omni_method}, d={d}, BIC ratio={bic_ratio}"
+    basename = (
+        f"-method={omni_method}-d={d}-bic_ratio={bic_ratio}-min_split={min_split}"
+    )
+    title = f"Method={omni_method}, d={d}, BIC ratio={bic_ratio}-min_split={min_split}"
 
     currtime = time.time()
 
@@ -830,7 +835,7 @@ for p in params:
         X=X,  # input data that actually matters
         bic_ratio=bic_ratio,
         reembed=False,
-        min_split=8,
+        min_split=min_split,
     )
 
     mc.fit(n_levels=n_levels, metric=metric)

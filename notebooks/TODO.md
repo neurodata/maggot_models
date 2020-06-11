@@ -45,3 +45,5 @@
 
 ---
 
+- for distribution of degrees, put on log scale, draw lines for median
+- plot the overall distribution of edge weights on a log scale with line at median. may need to be log log plot

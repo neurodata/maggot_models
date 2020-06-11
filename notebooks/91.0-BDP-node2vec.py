@@ -53,47 +53,15 @@ def stashcsv(df, name, **kws):
 
 #%% Load and preprocess the data
 
-VERSION = "2020-01-29"
+VERSION = "2020-05-28"
 print(f"Using version {VERSION}")
 
-graph_type = "Gad"
-threshold = 1
-weight = "weight"
-mg = load_metagraph("Gad", VERSION)
-mg = preprocess(
-    mg,
-    threshold=threshold,
-    sym_threshold=True,
-    remove_pdiff=False,
-    binarize=False,
-    weight=weight,
-)
-print(f"Preprocessed graph {graph_type} with threshold={threshold}, weight={weight}")
+graph_type = "G"
 
-out_classes = [
-    "O_dVNC",
-    "O_dSEZ",
-    "O_IPC",
-    "O_ITP",
-    "O_dSEZ;FFN",
-    "O_CA-LP",
-    "O_dSEZ;FB2N",
-]
-sens_classes = ["sens"]
+mg = load_metagraph(graph_type, VERSION)
+mg = mg.make_lcc()
 
-adj = nx.to_numpy_array(mg.g, weight=weight, nodelist=mg.meta.index.values)
-prob_mat = adj.copy()
-row_sums = prob_mat.sum(axis=1)
-dead_inds = np.where(row_sums == 0)[0]
-row_sums[row_sums == 0] = 1
-prob_mat = prob_mat / row_sums[:, np.newaxis]
-
-n_verts = len(prob_mat)
-meta = mg.meta.copy()
 g = mg.g.copy()
-meta["idx"] = range(len(meta))
-from_inds = meta[meta["Class 1"].isin(sens_classes)]["idx"].values
-out_inds = meta[meta["Class 1"].isin(out_classes)]["idx"].values
 
 ind_map = dict(zip(meta.index, meta["idx"]))
 g = nx.relabel_nodes(g, ind_map, copy=True)

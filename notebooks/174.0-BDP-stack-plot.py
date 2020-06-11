@@ -40,14 +40,14 @@ for gt in graph_types:
     adjs.append(temp_adj)
 
 
-def scatter_adj_3d(A, x, scale=1, ax=None, c="grey"):
+def scatter_adj_3d(A, x, scale=1, ax=None, c="grey", zorder=1):
     inds = np.nonzero(A)
     edges = A[inds]
     xs = len(edges) * [x]  # dummy variable for the "pane" x position
     ys = inds[1]  # target
     zs = inds[0]  # source
     ax.scatter(
-        xs, ys, zs, s=scale * edges, c=c, zorder=1000
+        xs, ys, zs, s=scale * edges, c=c, zorder=zorder
     )  # note: zorder doesn't work
     return ax
 
@@ -58,36 +58,71 @@ def scatter_adj_3d(A, x, scale=1, ax=None, c="grey"):
 
 fig = plt.figure(figsize=(10, 10))
 ax = fig.add_subplot(1, 1, 1, projection="3d")
+ax.force_zorder = True
 
 n_verts = len(adjs[0])
 n_graphs = len(adjs)
-step = n_verts / 2
+step = n_verts
 
+pal = sns.color_palette("deep", 4)
 for i, temp_adj in enumerate(adjs):
     x = i * step - 5  # try moving the points just in front of the pane
     # note this doesn't quite work til MPL bug is fixed
     # REF: open PR https://github.com/matplotlib/matplotlib/pull/14508
-    ax = scatter_adj_3d(binarize(temp_adj), x, ax=ax, scale=0.5)
+    ax = scatter_adj_3d(
+        binarize(temp_adj),
+        x,
+        ax=ax,
+        scale=0.05,
+        c=[pal[i]],
+        zorder=n_graphs * 2 - i * 2 + 1,
+    )
+    vert_list = [get_square_verts(i * step, n_verts)]
+    pc = Poly3DCollection(
+        vert_list, edgecolors="dimgrey", facecolors="white", linewidths=1, alpha=0.85
+    )
+    pc.set_zorder(n_graphs * 2 - i * 2)
+    ax.add_collection3d(pc)
 
-vert_list = [get_square_verts(i * step, n_verts) for i in range(n_graphs)]
-pc = Poly3DCollection(
-    vert_list, edgecolors="black", facecolors="white", linewidths=1, alpha=0.9
-)
-ax.add_collection3d(pc)
+
 # x will index the graphs
-ax.set_xlim((0, step * n_graphs))
+ax.set_xlim((-10, step * (n_graphs - 1)))
 ax.set_ylim((0, n_verts))
 ax.set_zlim((0, n_verts))
 
 # set camera position
-ax.azim = -45
+ax.azim = 135  # -45
 ax.elev = 20
 
 # # for testing
 # ax.set_xlabel("x")
 # ax.set_ylabel("y")
 # ax.set_zlabel("z")
-ax.invert_zaxis()
-ax.invert_xaxis()
+ylim = ax.get_ylim()
+ax.set_ylim(ylim[::-1])
+zlim = ax.get_zlim()
+ax.set_zlim(zlim[::-1])
+# xlim = ax.get_xlim()
+# ax.set_xlim(xlim[::-1])
+# ax.invert_zaxis()
+# ax.invert_yaxis()
+# ax.invert_xaxis()
+
+pad = 0.01
+label_loc = "bottom"
+names = [r"A $\to$ D", r"A $\to$ A", r"D $\to$ D", r"D $\to$ A"]
+for i, name in enumerate(names):
+    if label_loc == "top":
+        ax.text(i * step, n_verts + pad * n_verts, 0 - pad * n_verts, name, ha="center")
+    elif label_loc == "bottom":
+        ax.text(
+            i * step,
+            0 - pad * n_verts,
+            n_verts + pad * n_verts,
+            name,
+            ha="center",
+            va="top",
+        )
 ax.axis("off")
 stashfig("stacked-adj")
+
