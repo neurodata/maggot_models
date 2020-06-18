@@ -45,5 +45,18 @@
 
 ---
 
-- for distribution of degrees, put on log scale, draw lines for median
 - plot the overall distribution of edge weights on a log scale with line at median. may need to be log log plot
+
+--- 
+- Rerun that whole flow figure (basically)
+- Michael wants the connectors CSV
+- Is each polyadic synapse of one or multiple types 
+- MBON-i1 is wild!
+
+--- 
+### Weekend 6/13
+- Regenerate the data, may have a new annotation type (probably ignore super nodes)
+- Regenerate the connectors 
+- Regenerate the clustering 
+- Regenerate the flow stuff 
+- Figures... 

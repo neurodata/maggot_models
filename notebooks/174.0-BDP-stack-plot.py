@@ -58,7 +58,7 @@ def scatter_adj_3d(A, x, scale=1, ax=None, c="grey", zorder=1):
 
 fig = plt.figure(figsize=(10, 10))
 ax = fig.add_subplot(1, 1, 1, projection="3d")
-ax.force_zorder = True
+ax.force_zorder = True  # key to make this look right
 
 n_verts = len(adjs[0])
 n_graphs = len(adjs)
@@ -73,7 +73,7 @@ for i, temp_adj in enumerate(adjs):
         binarize(temp_adj),
         x,
         ax=ax,
-        scale=0.05,
+        scale=0.05,  # size of the dots
         c=[pal[i]],
         zorder=n_graphs * 2 - i * 2 + 1,
     )

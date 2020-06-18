@@ -101,7 +101,7 @@ fig, ax = plt.subplots(2, 2, figsize=(20, 20))
 graph_types = ["Gad", "Gaa", "Gdd", "Gda"]
 adjs = []
 for g in graph_types:
-    temp_mg = load_metagraph(g, version=VERSION)
+    temp_mg = load_metagraph(g)
     temp_mg.reindex(mg.meta.index, use_ids=True)
     temp_adj = temp_mg.adj
     adjs.append(temp_adj)
@@ -142,4 +142,6 @@ adjplot(
 stashfig("double-adj")
 
 
-# %%
+#%%
+# more simply, plot the two hemispheres
+

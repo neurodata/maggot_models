@@ -10,7 +10,7 @@ import seaborn as sns
 from src.data import load_metagraph
 from src.hierarchy import signal_flow
 from src.visualization import adjplot, CLASS_COLOR_DICT
-from src.cluster import get_paired_inds
+from src.utils import get_paired_inds
 
 from src.io import savefig
 import os
@@ -80,11 +80,9 @@ for g in graph_types:
         temp_mg = temp_mg.make_lcc()
     mg_dict[g] = temp_mg
 
-
-graph_type_colors = dict(
-    zip(graph_types, sns.color_palette("deep", n_colors=len(graph_types)))
-)
-
+colors = sns.color_palette("deep", n_colors=len(graph_types))
+graph_type_colors = dict(zip(graph_types[1:], colors))
+graph_type_colors[graph_types[0]] = colors[-1]
 
 # for mg, g in zip(adjs, graph_types):
 #     sf = -signal_flow(adj)  # TODO replace with GM flow
@@ -110,7 +108,12 @@ rc_dict = {
     "ytick.color": "grey",
     "xtick.color": "grey",
     "axes.labelcolor": "grey",
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Arial"],
 }
+
 for key, val in rc_dict.items():
     mpl.rcParams[key] = val
 context = sns.plotting_context(context="talk", font_scale=1, rc=rc_dict)
