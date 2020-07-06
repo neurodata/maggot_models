@@ -626,14 +626,15 @@ def invert_permutation(p):
 
 
 def get_paired_inds(meta, check_in=True):
+    pair_meta = meta.copy()
+    pair_meta = pair_meta[pair_meta["hemisphere"].isin(["L", "R"])]
     if check_in:
-        pair_meta = meta[meta["pair"].isin(meta.index)]
-    else: 
-        pair_meta = meta
+        pair_meta = pair_meta[pair_meta["pair"].isin(pair_meta.index)]
     pair_group_size = pair_meta.groupby("pair_id").size()
     remove_pairs = pair_group_size[pair_group_size == 1].index
     pair_meta = pair_meta[~pair_meta["pair_id"].isin(remove_pairs)]
     assert pair_meta.groupby("pair_id").size().min() == 2
+    assert pair_meta.groupby("pair_id").size().max() == 2
     pair_meta.sort_values(["pair_id", "hemisphere"], inplace=True)
     lp_inds = pair_meta[pair_meta["hemisphere"] == "L"]["inds"]
     rp_inds = pair_meta[pair_meta["hemisphere"] == "R"]["inds"]

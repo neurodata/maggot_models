@@ -87,7 +87,7 @@ class MetaGraph:
             meta["idx"] = range(len(meta))
             meta = meta.reindex(perm_inds)
             idx_perm_inds = meta["idx"]
-            return self.reindex(idx_perm_inds, use_ids=False)
+            return self.reindex(idx_perm_inds, use_ids=False, inplace=inplace)
         else:
             adj = self.adj.copy()
             adj = adj[np.ix_(perm_inds, perm_inds)]

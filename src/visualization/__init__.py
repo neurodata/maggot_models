@@ -22,6 +22,7 @@ from .visualize import (
     add_connections,
     remove_spines,
     remove_axis,
+    set_style,
 )
 from .stack_seaborn import countplot, freqplot
 from .manual_colors import (

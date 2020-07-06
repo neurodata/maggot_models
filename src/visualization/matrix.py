@@ -145,29 +145,38 @@ def draw_ticks(
     ax_type="x",
     tick_rot=0,
     tick_ax_border=True,
+    fontsize=20,
 ):
     tick_inds, tick_labels = _get_tick_info(sort_meta, sort_class)
     if tick_rot != 0:
-        ha = "center"
-        va = "bottom"
+        ha = "left"
+        va = "center"
     else:
         ha = "center"
         va = "bottom"
     if ax_type == "x":
         tick_ax.set_xticks(tick_inds)
-        tick_ax.set_xticklabels(tick_labels, rotation=tick_rot, ha=ha, va=va)
+        tick_ax.set_xticklabels(
+            tick_labels,
+            rotation=tick_rot,
+            ha=ha,
+            va=va,
+            fontsize=fontsize,
+            rotation_mode="anchor",
+        )
         tick_ax.xaxis.tick_top()
     else:
         tick_ax.set_yticks(tick_inds)
-        tick_ax.set_yticklabels(tick_labels, ha="right", va="center")
+        tick_ax.set_yticklabels(tick_labels, ha="right", va="center", fontsize=fontsize)
 
     if tick_ax_border:
         sep_inds = _get_separator_info(sort_meta, sort_class)
+        color = mpl.rcParams["axes.edgecolor"]
         for t in sep_inds:
             if ax_type == "x":
-                tick_ax.axvline(t, color="black", linestyle="-", alpha=1, linewidth=2)
+                tick_ax.axvline(t, color=color, linestyle="-", alpha=1, linewidth=2)
             else:
-                tick_ax.axhline(t, color="black", linestyle="-", alpha=1, linewidth=2)
+                tick_ax.axhline(t, color=color, linestyle="-", alpha=1, linewidth=2)
 
 
 def draw_separators(
@@ -381,6 +390,7 @@ def matrixplot(
     border=True,
     minor_ticking=False,
     tick_rot=0,
+    tick_fontsize=10,
     center=0,
     cmap="RdBu_r",
     sizes=(5, 10),
@@ -580,6 +590,7 @@ def matrixplot(
                 ax_type="x",
                 tick_rot=tick_rot,
                 tick_ax_border=tick_ax_border,
+                fontsize=tick_fontsize,
             )
             ax.xaxis.set_label_position("top")
     tick_ax.set_title(title)
@@ -609,6 +620,7 @@ def matrixplot(
                 rev_row_sort_class[i:],
                 ax_type="y",
                 tick_ax_border=tick_ax_border,
+                fontsize=tick_fontsize,
             )
 
     # if highlight_kws is None:
@@ -675,6 +687,7 @@ def adjplot(
     sizes=(5, 10),
     square=True,
     title="",
+    tick_fontsize=10,
     gridline_kws=None,
     spinestyle_kws=None,
     highlight_kws=None,
@@ -700,6 +713,7 @@ def adjplot(
         col_palette=palette,
         row_highlight=highlight,
         col_highlight=highlight,
+        tick_fontsize=tick_fontsize,
         row_ticks=ticks,
         col_ticks=ticks,
         border=border,

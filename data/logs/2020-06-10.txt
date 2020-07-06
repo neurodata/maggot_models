@@ -1,0 +1,808 @@
+Data will save to: maggot_models/data/processed/2020-06-10
+Data for adjacency matrices: 2020-06-10
+Data for pairs: pairs/pairs-2020-05-08.csv
+
+Getting annotations under mw neuron groups:
+
+	mw brain neurons
+	mw left
+	mw right
+	mw dSEZ
+	mw dVNC
+	mw RG
+	mw APL
+	mw sink
+	mw preliminary LN
+	mw partially differentiated
+	mw unsplittable
+	mw picky LN
+	mw choosy LN
+	mw CN
+	mw CN2
+	mw CX
+	mw FAN
+	mw FB2N
+	mw FBN
+	mw FFN
+	mw KC_subclass_1claw
+	mw KC_subclass_2claw
+	mw KC_subclass_3claw
+	mw KC_subclass_4claw
+	mw KC_subclass_5claw
+	mw KC_subclass_6claw
+	mw KC
+	mw keystone
+	mw LHN
+	mw LHN2
+	mw LON
+	mw MBIN
+	mw MBON
+	mw motor subclass_AN
+	mw motor subclass_MN
+	mw motor subclass_PaN
+	mw motor subclass_VAN
+	mw motor
+	mw mPN
+	mw dUnk
+	mw sens subclass_AN
+	mw sens subclass_MN
+	mw sens subclass_ORN
+	mw sens subclass_PaN
+	mw sens subclass_photoRh5
+	mw sens subclass_photoRh6
+	mw sens subclass_thermo
+	mw sens subclass_vtd
+	mw sens
+	mw tPN
+	mw uPN
+	mw vPN
+	mw RG subclass_CA-LP
+	mw MBIN subclass_DAN
+	mw RG subclass_IPC
+	mw RG subclass_ITP
+	mw mPN subclass_multi
+	mw MBIN subclass_OAN
+	mw mPN subclass_olfactory
+	mw broad LN
+	mw broad LN subclass_Duet
+	mw broad LN subclass_Trio
+	mw MBON subclass_appetitive
+	mw MBON subclass_aversive
+	mw MBON subclass_neither
+	mw AN 2nd_order
+	mw MN 2nd_order
+	mw A00c
+
+Getting annotations under mw brain outputs:
+
+	mw dSEZ
+	mw dVNC
+	mw RG
+
+Getting annotations under mw brain inputs:
+
+	mw ORN
+	mw thermosensories
+	mw photoreceptors
+	mw AN sensories
+	mw MN sensories
+	mw v'td
+	mw A00c
+
+
+Class 1 unique values:
+{"['A00c']": 6,
+ "['AN2' 'MN2']": 42,
+ "['AN2']": 20,
+ "['APL']": 2,
+ "['CN' 'FAN' 'LHN2']": 6,
+ "['CN' 'FAN']": 6,
+ "['CN' 'FBN' 'LHN']": 2,
+ "['CN' 'FBN' 'LHN2']": 4,
+ "['CN' 'FBN']": 20,
+ "['CN' 'LHN']": 30,
+ "['CN' 'LHN2' 'MN2']": 2,
+ "['CN' 'LHN2']": 26,
+ "['CN' 'MBON']": 4,
+ "['CN']": 32,
+ "['CN2' 'CX' 'FBN']": 4,
+ "['CN2' 'CX']": 8,
+ "['CN2' 'FAN']": 2,
+ "['CN2' 'FBN']": 10,
+ "['CN2' 'MBIN']": 2,
+ "['CN2']": 28,
+ "['CX' 'FB2N']": 4,
+ "['CX' 'FBN']": 4,
+ "['CX' 'LHN2']": 2,
+ "['CX']": 84,
+ "['FAN' 'LHN']": 2,
+ "['FAN' 'LHN2']": 2,
+ "['FAN']": 6,
+ "['FB2N' 'AN2']": 2,
+ "['FB2N' 'LHN']": 2,
+ "['FB2N' 'LHN2']": 4,
+ "['FB2N']": 28,
+ "['FBN' 'AN2']": 2,
+ "['FBN' 'LHN']": 2,
+ "['FBN' 'LHN2']": 4,
+ "['FBN']": 4,
+ "['KC']": 222,
+ "['LHN' 'vPN']": 2,
+ "['LHN']": 170,
+ "['LHN2' 'MBON']": 2,
+ "['LHN2' 'MN2']": 2,
+ "['LHN2']": 157,
+ "['LON']": 15,
+ "['MBIN']": 28,
+ "['MBON']": 40,
+ "['MN2']": 36,
+ "['RG' 'AN2']": 22,
+ "['RG']": 32,
+ "['bLN']": 10,
+ "['cLN']": 4,
+ "['dSEZ' 'AN2' 'MN2']": 34,
+ "['dSEZ' 'AN2']": 26,
+ "['dSEZ' 'CN' 'LHN2']": 4,
+ "['dSEZ' 'CN']": 2,
+ "['dSEZ' 'CN2']": 6,
+ "['dSEZ' 'FB2N']": 2,
+ "['dSEZ' 'LHN']": 2,
+ "['dSEZ' 'LHN2']": 4,
+ "['dSEZ' 'MBON']": 2,
+ "['dSEZ' 'MN2']": 24,
+ "['dSEZ' 'dVNC' 'CN2']": 2,
+ "['dSEZ' 'dVNC']": 6,
+ "['dSEZ']": 79,
+ "['dUnk']": 8,
+ "['dVNC' 'AN2']": 2,
+ "['dVNC' 'CN']": 2,
+ "['dVNC' 'CN2' 'LHN2']": 2,
+ "['dVNC' 'CX']": 19,
+ "['dVNC' 'LHN2']": 10,
+ "['dVNC' 'MN2']": 2,
+ "['dVNC' 'RG']": 2,
+ "['dVNC']": 135,
+ "['keystone' 'MN2']": 2,
+ "['mPN' 'AN2' 'MN2']": 8,
+ "['mPN' 'AN2']": 2,
+ "['mPN' 'MN2']": 14,
+ "['mPN']": 4,
+ "['motor']": 56,
+ "['pLN' 'AN2' 'MN2']": 2,
+ "['pLN' 'AN2']": 2,
+ "['pLN' 'MN2']": 2,
+ "['pLN']": 4,
+ "['sens']": 445,
+ "['tPN']": 10,
+ "['uPN' 'AN2' 'MN2']": 2,
+ "['uPN']": 40,
+ "['vPN']": 8,
+ '[]': 1002}
+
+Class 2 unique values:
+{"['KC_subclass_1claw']": 36,
+ "['KC_subclass_2claw']": 19,
+ "['KC_subclass_3claw']": 34,
+ "['KC_subclass_4claw']": 34,
+ "['KC_subclass_5claw']": 15,
+ "['KC_subclass_6claw']": 7,
+ "['MBIN_subclass_DAN']": 14,
+ "['MBIN_subclass_OAN']": 6,
+ "['MBON_subclass_appetitive']": 16,
+ "['MBON_subclass_aversive']": 12,
+ "['MBON_subclass_neither']": 8,
+ "['RG_subclass_CA-LP']": 6,
+ "['RG_subclass_IPC']": 14,
+ "['RG_subclass_ITP']": 8,
+ "['broad_LN_subclass_Duet']": 4,
+ "['broad_LN_subclass_Trio']": 6,
+ "['mPN_subclass_multi']": 16,
+ "['mPN_subclass_olfactory']": 12,
+ "['motor_subclass_AN']": 28,
+ "['motor_subclass_MN']": 18,
+ "['motor_subclass_PaN']": 4,
+ "['motor_subclass_VAN']": 6,
+ "['sens_subclass_AN']": 176,
+ "['sens_subclass_MN']": 155,
+ "['sens_subclass_ORN']": 42,
+ "['sens_subclass_PaN']": 12,
+ "['sens_subclass_photoRh5']": 10,
+ "['sens_subclass_photoRh6']": 19,
+ "['sens_subclass_thermo']": 6,
+ "['sens_subclass_vtd']": 25,
+ '[]': 2360}
+
+
+
+
+Center neurons:
+          brain_neurons   left  right   dSEZ   dVNC     RG    APL   sink  preliminary_LN  ...  output  input  class1  all_class1  n_class1  class2             all_class2  n_class2  hemisphere
+3813487           False  False  False  False  False  False  False  False           False  ...   False  False    MBIN    ['MBIN']         1     OAN  ['MBIN_subclass_OAN']         1           C
+17068730          False  False  False  False  False  False  False  False           False  ...   False  False    MBIN    ['MBIN']         1     OAN  ['MBIN_subclass_OAN']         1           C
+
+[2 rows x 77 columns]
+
+
+
+
+
+
+Duplicate pairs right:
+[8598886]
+
+
+
+
+
+
+Dropping pairs:
+       leftid  rightid  pair_id
+130   5289042  8598886      130
+1120  4926999  8598886     1120
+
+
+
+
+
+Finding asymmetric L/R labels
+9612903 had asymmetric class label CX, fixed
+13028455 had asymmetric class label CX, fixed
+13365464 had asymmetric class label LHN2, fixed
+16561429 had asymmetric class label CX, fixed
+17334530 had asymmetric class label CX, fixed
+18267838 had asymmetric class label CX, fixed
+18551732 had asymmetric class label CX, fixed
+
+
+Merge class unique values:
+{'A00c': 6,
+ 'AN2': 22,
+ 'AN2;MN2': 44,
+ 'APL': 2,
+ 'CN': 96,
+ 'CN2': 36,
+ 'CN;LHN': 32,
+ 'CX': 90,
+ 'FAN': 10,
+ 'FB2N': 36,
+ 'FB2N;AN2': 2,
+ 'FBN': 26,
+ 'FBN;AN2': 2,
+ 'KC': 77,
+ 'KC-1claw': 36,
+ 'KC-2claw': 19,
+ 'KC-3claw': 34,
+ 'KC-4claw': 34,
+ 'KC-5claw': 15,
+ 'KC-6claw': 7,
+ 'LHN': 176,
+ 'LHN2': 160,
+ 'LON': 15,
+ 'MBIN': 10,
+ 'MBIN-DAN': 14,
+ 'MBIN-OAN': 6,
+ 'MBON': 12,
+ 'MBON-app': 16,
+ 'MBON-av': 12,
+ 'MBON-neith': 8,
+ 'MN2': 42,
+ 'RG': 26,
+ 'RG-CA-LP': 6,
+ 'RG-IPC': 14,
+ 'RG-ITP': 8,
+ 'bLN-Duet': 4,
+ 'bLN-Trio': 6,
+ 'cLN': 4,
+ 'dSEZ': 175,
+ 'dSEZ;CN': 6,
+ 'dSEZ;LHN': 2,
+ 'dSEZ;dVNC': 8,
+ 'dUnk': 8,
+ 'dVNC': 170,
+ 'dVNC;CN': 2,
+ 'dVNC;RG': 2,
+ 'mPN-multi': 16,
+ 'mPN-olfac': 12,
+ 'motor-AN': 28,
+ 'motor-MN': 18,
+ 'motor-PaN': 4,
+ 'motor-VAN': 6,
+ 'pLN': 4,
+ 'sens-AN': 176,
+ 'sens-MN': 155,
+ 'sens-ORN': 42,
+ 'sens-PaN': 12,
+ 'sens-photoRh5': 10,
+ 'sens-photoRh6': 19,
+ 'sens-thermo': 6,
+ 'sens-vtd': 25,
+ 'tPN': 10,
+ 'uPN': 42,
+ 'unk': 995,
+ 'vPN': 10}
+
+Getting annotations under Volker:
+
+	DPLal
+	Lineage MBNB A right
+	Lineage MBNB B right
+	Lineage MBNB C right
+	Lineage MBNB D right
+	Lineage MBNB A left
+	Lineage MBNB B left
+	Lineage MBNB C left
+	Lineage MBNB D left
+	BLP1/2_l akira
+	BLAd_l akira
+	BLD5/6_l akira
+	ni-neurons MB_r akira
+	ni-neurons MB_l akira
+	*DPLl_r akira
+	*DPLp_r akira
+	*DPLm_r akira
+	*BLAl_r akira
+	*DPLal1-3_r akira
+	*BLP34_r akira
+	*DALd_r akira
+	*BLDc_r akira
+	*BLDd_r akira
+	*BLP12_r akira
+	*BLVa12_r akira
+	*BLVa34_r akira
+	*BLVp1_r akira
+	*BLVp2_r akira
+	*BLAd-vm_r akira
+	*BLAd-vl_r akira
+	*BLAd-OL_r akira
+	*CPa_r akira
+	*CPb_r akira
+	*CPbl_r akira
+	*CPc_r akira
+	*CPd_r akira
+	*CPe_r akira
+	*CPf_r akira
+	*DALcl12-v_r akira
+	*DALcl12-d_r akira
+	*DALcm12-v_r akira
+	*DALcm12-m_r akira
+	*DPMpm1_r akira
+	*DPMpm2_r akira
+	*CM4-dm_r akira
+	*CM4-vm_r akira
+	*DALv1_r akira
+	*DALv23_r akira
+	*TRdl ant_r akira
+	*TRdl post_r akira
+	*BAla12_r akira
+	*BAla34_r akira
+	*BAlc post_r akira
+	*BAlc ant_r akira
+	*BAlp4_r akira
+	*BLAvm post_r akira
+	*BLAvm ant_r akira
+	*BAla12_l akira
+	*BAla34_l akira
+	*BAlc ant_l akira
+	*BAlc post_l akira
+	*BAlp4_l akira
+	*BLAd-OL_l akira
+	*BLAl_l akira
+	*BLAvm post_l akira
+	*BLAvm ant_l akira
+	*BLDc_l akira
+	*BLP12_l akira
+	*BLP34_l akira
+	*BLVa34_l akira
+	*BLVa12_l akira
+	*BLVp1_l akira
+	*DALcm12-m_l akira
+	*DALcm12-v_l akira
+	*DALd_l akira
+	*DALcl12-v_l akira
+	*DALcl12-d_l akira
+	*DALv1_l akira
+	*DALv23_l akira
+	*DPMpm1_l akira
+	*DPMpm2_l akira
+	*CPbl_l akira
+	*CPc_l akira
+	*CPb_l akira
+	*CPf_l akira
+	*CPd_l akira
+	*CPe_l akira
+	*CPa_l akira
+	*TRdl post_l akira
+	*TRdl ant_l akira
+	*BAmas12_dor_r akira
+	*BAmas12_ven_r akira
+	*TRdm_r akira
+	*BAmd2_d_r akira
+	*BAmd2_v_r akira
+	*BAmd1_r akira
+	*BAmv12_dor_r akira
+	*BAmv12_ven_r akira
+	*BAmv3_r akira
+	*DALl1_r akira
+	*DPLd_r akira
+	*DPLam_r akira
+	*DPlal1-3_ant_r akira
+	*DPlal1-3_lat_r akira
+	*DPLm1_r akira
+	*DPLm2_r akira
+	*ncc_d_r akira
+	*DPLc5_r akira
+	*DPLc_post_int_r akira
+	*DPLc_post_med_r akira
+	*DPLc_ant_med_r akira
+	*DPLc_post_lat_r akira
+	*DPMl_ant_dor_r akira
+	*DPMl_ant_ven_r akira
+	*DPMm2_r akira
+	*DPMpl12_r akira
+	*DPMpl3_r akira
+	*DPMm1_r akira
+	*Dilp_r akira
+	*DALv3_r akira
+	*DALv3_l akira
+	*DPLd_l akira
+	*BAmd2_d_l akira
+	*DPMpl12_l akira
+	*BAmd1_l akira
+	*DPMm1_l akira
+	*DPMl_ant_ven_l akira
+	*CM4-dm_l akira
+	*DPLc5_l akira
+	*BAmv12_ven_l akira
+	*DPLam_l akira
+	*DPMm2_l akira
+	*DPLc_post_med_l akira
+	*BAmd2_v_l akira
+	*TRdm_l akira
+	*DPLm2_l akira
+	*DPLc_ant_lat_r akira
+	*DPLc_ant_lat_l akira
+	*CM4-vm_l akira
+	*DAMd23_r akira
+	*DAMd23_l akira
+	*DAMv12_med_r akira
+	*DAMv12_med_l akira
+	*CM13_lat_r akira
+	*CM13_lat_l akira
+	*CM13_med_r akira
+	*CM13_med_l akira
+	*DPMl12_r akira
+	*DPMl12_l akira
+	*BAlp_ant_r akira
+	*DPLc_post_lat_l akira
+	*DPLl_l akira
+	*BAlp_ant_l akira
+	*DAMv12_lat_r akira
+	*DAMv12_lat_l akira
+	*DPLc_post_int_l akira
+	*BAmas12_ven_l akira
+	*DPLm1_l akira
+	*BLVp2_l akira
+	*BAmas12_dor_l akira
+	*DPlal1-3_ant_l akira
+	*BLDd_l akira
+	*DAMd1_r akira
+	*BAmv3_l akira
+	*DAMd1_l akira
+	*DPMl34_ant_r akira
+	*DPMl34_post_r akira
+	*DPMl12_post_r akira
+	*BLAv12_lat_r akira
+	*BLAv12_ant_r akira
+	*BLAv12_post_r akira
+	*BAmv12_dor_l akira
+	*DPlal1-3_med_l akira
+	*DPlal1-3_lat_l akira
+	*BLAd-vl_l akira
+	*DPMl_ant_dor_l akira
+	*Dilp_l akira
+	*BLAv12_ant_l akira
+	*BLAv12_lat_l akira
+	DPMl_l
+	*BLAv12_post_l akira
+	*DPLp_l akira
+	*BLAd-vm_l akira
+	*DPLal1-3_l akira
+	*BLVa_t_r akira
+	*BLVa_t_l akira
+	unknown lineage
+	*ncc_d_l akira
+	unknown ventral lineage
+	*OLP_l
+	*OLP_r
+	*DALl1_l akira
+	unknown ventral lineage 2
+	ni-neurons 2 MB_l akira
+	ni-neurons 2 MB_r akira
+	*DPMl34_post_l akira
+	*DPMl34_ant_l akira
+	unknown ventral lineage 3
+	unknown ventral lineage 4
+
+['CPd' 'CPf'] mismatch
+['DPLp' 'DPLl'] mismatch
+['DPlal1-3_med' 'unk'] unk
+['DALv1' 'DALl1'] mismatch
+['DPLam' 'DPLd'] mismatch
+['DPLc_postat' 'ncc_d'] mismatch
+['DPLm2' 'unk'] unk
+['BAmd1' 'BAmd2_v'] mismatch
+['DAMv12_med' 'DAMv12at'] mismatch
+['unk' 'BLP12'] unk
+['DPLp' 'DPLl'] mismatch
+['BLVa12' 'BLVa34'] mismatch
+['DPLm1' 'unk'] unk
+['unk' 'BLP34'] unk
+['DPLm2' 'DPLm'] mismatch
+['DAMv12at' 'DAMv12_med'] mismatch
+['unk' 'CM13at'] unk
+['BLAv12_post' 'BLAvm post'] mismatch
+['BLAd-vm' 'BLAl'] mismatch
+['DPlal1-3_ant' 'DPlal1-3at'] mismatch
+['CPe' 'CPd'] mismatch
+['BLVp1' 'BLVa34'] mismatch
+['unk' 'BLAvm ant'] unk
+['BLVp1' 'BLP34'] mismatch
+['BLVp1' 'BLVp2'] mismatch
+['unk' 'BLP34'] unk
+['CM4-dm' 'DPMpl3'] mismatch
+['MBNB C ' 'MBNB B '] mismatch
+['DPMm2' 'unk'] unk
+['ni-neurons MB' 'CM4-dm'] mismatch
+['BLVa12' 'BLVa34'] mismatch
+['BLAd' 'BLDc'] mismatch
+['CM4-vm' 'CM4-dm'] mismatch
+['ncc_d' 'unk'] unk
+['BLAd-vm' 'BLAd-vl'] mismatch
+['BLAd-OL' 'unk'] unk
+['unk' 'BLP12'] unk
+['DPlal1-3_ant' 'unk'] unk
+['MBNB C ' 'MBNB A '] mismatch
+['unk' 'BLP12'] unk
+['DPLm2' 'unk'] unk
+['unk' 'BLP12'] unk
+['DPMl_ant_dor' 'DPMm2'] mismatch
+['DPMl_ant_dor' 'DPMpm1'] mismatch
+['unk' 'BLP34'] unk
+['DALv23' 'unk'] unk
+['DALv23' 'unk'] unk
+['DALv23' 'unk'] unk
+['BLVa34' 'BLVa12'] mismatch
+['unk' 'BLP12'] unk
+['CM4-dm' 'unk'] unk
+['unk' 'BLDc'] unk
+['unk' 'BLP34'] unk
+['BAmas12_dor' 'BAmas12_ven'] mismatch
+['CM4-vm' 'unk'] unk
+['BLD5/6' 'BLAd-vm'] mismatch
+['unk' 'CPbl'] unk
+['CM4-dm' 'unk'] unk
+['CM13_med' 'CM13at'] mismatch
+['CM13_med' 'CM13at'] mismatch
+['CM13_med' 'CM13at'] mismatch
+['CM13_med' 'CM13at'] mismatch
+['unk' 'CM13at'] unk
+['CM13_med' 'CM4-dm'] mismatch
+['CM4-vm' 'CM4-dm'] mismatch
+['CPa' 'CPf'] mismatch
+['BLVp1' 'BLVp2'] mismatch
+['CPe' 'CPf'] mismatch
+['unk' 'BLP12'] unk
+['CM4-dm' 'unk'] unk
+['CM4-dm' 'unk'] unk
+['CM4-dm' 'unk'] unk
+['DALv1' 'DALl1'] mismatch
+['CPa' 'unk'] unk
+['DALv1' 'DALl1'] mismatch
+['CM13_med' 'CM13at'] mismatch
+['unk' 'BLAvm post'] unk
+['CM4-dm' 'CM4-vm'] mismatch
+['BLDd' 'BLAvm ant'] mismatch
+['BLVa34' 'BLVa12'] mismatch
+['BLAvm ant' 'BLAvm post'] mismatch
+['DPMpl12' 'DPMpl3'] mismatch
+['DPMpl12' 'DPMpl3'] mismatch
+['DPMpl12' 'DPMl12_post'] mismatch
+['DPLl' 'DPLp'] mismatch
+['BLAd-vm' 'BLAd-vl'] mismatch
+['BLVa34' 'BLVa12'] mismatch
+['unk' 'DPMl_ant_dor'] unk
+['DPMl' 'DPMl12_post'] mismatch
+['unk' 'DPMm1'] unk
+['CPbl' 'CPb'] mismatch
+['MBNB B ' 'MBNB A '] mismatch
+['DPlal1-3_ant' 'unk'] unk
+['BAmas12_dor' 'BAmas12_ven'] mismatch
+['unk' 'BLAl'] unk
+['ni-neurons MB' 'DPMpl12'] mismatch
+['unk' 'ni-neurons MB'] unk
+['DPLam' 'DPLd'] mismatch
+['BLP12' 'CPb'] mismatch
+['unk' 'BAmv12_ven'] unk
+['unk' 'BLAl'] unk
+['CM13at' 'unk'] unk
+['CPe' 'CPf'] mismatch
+['BAmd2_v' 'BAmd2_d'] mismatch
+['unk' 'DPMl12_post'] unk
+['BLAd' 'BLDc'] mismatch
+['unk' 'BLAd-vl'] unk
+['CM4-dm' 'DPMpl3'] mismatch
+['TRdl post' 'BAla34'] mismatch
+['unk' 'DPMl12_post'] unk
+['DPlal1-3at' 'DPLal1-3'] mismatch
+['BLDc' 'DPLl'] mismatch
+['MBNB B ' 'MBNB A '] mismatch
+['CM4-vm' 'unk'] unk
+['CM4-dm' 'DPMpl3'] mismatch
+['unk' 'DPMl12_post'] unk
+['BLVa12' 'BLVa34'] mismatch
+['BAmd2_v' 'BAmd2_d'] mismatch
+['BLVp1' 'BLVp2'] mismatch
+['DALv1' 'DALl1'] mismatch
+['DPlal1-3_ant' 'unk'] unk
+['DPlal1-3_ant' 'unk'] unk
+['DPlal1-3_med' 'unk'] unk
+['BAmd2_v' 'BAmd2_d'] mismatch
+['BLDc' 'BLDd'] mismatch
+['unk' 'BLAl'] unk
+['BLAd' 'BLDc'] mismatch
+['BLVa12' 'BLAd-OL'] mismatch
+['DPLm2' 'unk'] unk
+['DPMpm1' 'DPMl_ant_ven'] mismatch
+['DALv1' 'DALl1'] mismatch
+['CPbl' 'BLP12'] mismatch
+['unk' 'BLP34'] unk
+['unk' 'DPLc5'] unk
+['DPLc_post_med' 'unk'] unk
+['TRdl post' 'BAla34'] mismatch
+['CM4-vm' 'DPMpm2'] mismatch
+['BLAd' 'BLDc'] mismatch
+['BLAv12_post' 'BLAv12_ant'] mismatch
+['BAmv12_ven' 'BAmv12_dor'] mismatch
+['BAmv12_dor' 'BAmv12_ven'] mismatch
+['unk' 'BLP12'] unk
+['unk' 'BLP34'] unk
+['DALv1' 'DALl1'] mismatch
+['DPlal1-3_ant' 'DPLal1-3'] mismatch
+['unk' 'BLP12'] unk
+['unk' 'CPf'] unk
+['BAmv12_dor' 'BAmv12_ven'] mismatch
+['BAmas12_dor' 'BAmas12_ven'] mismatch
+['BLAd' 'BLDc'] mismatch
+['DPLm2' 'unk'] unk
+['CM4-vm' 'unk'] unk
+['DPlal1-3_med' 'DPlal1-3_ant'] mismatch
+['DPMl_ant_dor' 'DPMm2'] mismatch
+['BAmd1' 'BAmd2_v'] mismatch
+['DPlal1-3_ant' 'DPLal1-3'] mismatch
+['DPlal1-3at' 'unk'] unk
+['DPlal1-3_ant' 'unk'] unk
+['DPlal1-3_ant' 'unk'] unk
+['DPlal1-3at' 'unk'] unk
+['DPlal1-3_ant' 'unk'] unk
+['DPlal1-3_ant' 'unk'] unk
+['DPlal1-3_ant' 'unk'] unk
+['DPLm2' 'unk'] unk
+['BAla34' 'BAla12'] mismatch
+['BLVp1' 'BLVp2'] mismatch
+['DPLm2' 'unk'] unk
+['BAla12' 'BAla34'] mismatch
+['BLAd' 'BLDc'] mismatch
+['DPLal1-3' 'unk'] unk
+['DPlal1-3_ant' 'DPlal1-3at'] mismatch
+['DPlal1-3_ant' 'DPLal1-3'] mismatch
+['CM4-dm' 'unk'] unk
+['DPMl' 'DPMl12_post'] mismatch
+['DPMl' 'DPMl12_post'] mismatch
+['DPMl' 'DPMl12_post'] mismatch
+['CM13_med' 'CM13at'] mismatch
+['BAla34' 'BAla12'] mismatch
+['CM4-dm' 'unk'] unk
+['CM13_med' 'CM13at'] mismatch
+['ni-neurons MB' 'CM4-dm'] mismatch
+['unk' 'BLP34'] unk
+['CM4-dm' 'DPMpl3'] mismatch
+['DPlal1-3_ant' 'DPlal1-3at'] mismatch
+['DALv1' 'DALl1'] mismatch
+['DPlal1-3at' 'unk'] unk
+['DPMl12' 'DPMl34_post'] mismatch
+['DPlal1-3_med' 'unk'] unk
+['BLAd-vm' 'BLAl'] mismatch
+['CPd' 'CPf'] mismatch
+['BLVp1' 'BLVp2'] mismatch
+['CM4-dm' 'CM4-vm'] mismatch
+['BLAd' 'BLDc'] mismatch
+['unk' 'BLP12'] unk
+['DPMpl12' 'DPMl12_post'] mismatch
+['TRdl post' 'BAlp_ant'] mismatch
+['DPMl' 'DPMl12_post'] mismatch
+['DPMpl12' 'DPMpl3'] mismatch
+['BLP12' 'BLP34'] mismatch
+['unk' 'BAmas12_ven'] unk
+['unk' 'BLP34'] unk
+['DPMpm1' 'DPMl_ant_ven'] mismatch
+['DPLm2' 'unk'] unk
+['DPMl' 'DPMl12_post'] mismatch
+['DPMl12' 'DPMl34_post'] mismatch
+['CPbl' 'CPb'] mismatch
+['CPe' 'CPd'] mismatch
+['BLAv12at' 'BLAv12_ant'] mismatch
+['DPMl12' 'DPMl34_post'] mismatch
+['DPMl_ant_dor' 'DPMm2'] mismatch
+['BLAvm ant' 'BLVa34'] mismatch
+['unk' 'BLP34'] unk
+['TRdl post' 'unk'] unk
+Saved DataFrame to maggot_models/notebooks/outs/mismatch.csv
+Saved DataFrame to maggot_models/notebooks/outs/unk.csv
+Importing raw adjacency matrices:
+
+axon-axon
+
+axon-dendrite
+
+dendrite-axon
+
+dendrite-dendrite
+
+
+
+Checking for rows with Nan values
+
+These skeletons have missing values in the metadata
+[]
+
+
+
+Saving graphs:
+
+axon-axon
+axon-dendrite
+dendrite-axon
+dendrite-dendrite
+
+
+Checking graphs are the same when saved
+maggot_models/data/processed/2020-06-10
+Gaa
+True
+True
+
+Gad
+True
+True
+
+Gda
+True
+True
+
+Gdd
+True
+True
+
+G
+True
+True
+
+
+
+
+
+
+Getting connectors
+
+Exploding connector DataFrame
+
+Connectors with errors: 0
+
+Getting treenode compartment types
+
+Cutting neurons...
+Applying treenode types to connectors
+
+Saving
+
+Done!

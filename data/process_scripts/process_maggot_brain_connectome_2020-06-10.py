@@ -655,7 +655,11 @@ save_names.append("G")
 for name, graph in zip(save_names, out_graphs):
     nx.write_graphml(graph, output_path / (name + ".graphml"))
 
+for name, graph in zip(save_names, out_graphs):
+    nx.write_weighted_edgelist(graph, output_path / (name + ".edgelist"))
+
 meta.to_csv(output_path / "meta_data.csv")
+meta.to_csv(output_path / "meta_data.tsv", sep="\t")
 
 #%% verify things are right
 print("\n\nChecking graphs are the same when saved")
