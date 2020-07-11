@@ -54,7 +54,7 @@ def add_subplot(row, col, axs, projection=None):
 
 # params
 
-level = 6
+level = 7
 key = f"lvl{level}_labels"
 
 metric = "bic"
