@@ -52,10 +52,9 @@ sns.set_context(context)
 
 mg = load_metagraph("G")
 
-# %% [markdown]
-# ##
-class1_types = ["KC", "MBON", "MBIN", "uPN", "mPN", "APL"]
-class2_types = ["sens-ORN"]
+
+class1_types = ["KC", "MBON", "MBIN", "uPN", "mPN", "APL", "sens-ORN"]
+class2_types = ["ORN"]
 
 meta = mg.meta
 mb_meta = meta[meta["class1"].isin(class1_types) | meta["class2"].isin(class2_types)]
@@ -252,31 +251,226 @@ stashfig("left-right-predicted-adj", fmt="pdf")
 from graspy.embed import AdjacencySpectralEmbed
 from umap import UMAP
 from src.visualization import CLASS_COLOR_DICT
+from sklearn.decomposition import PCA
+from matplotlib.patches import ConnectionPatch
 
-ase = AdjacencySpectralEmbed(n_components=3, check_lcc=False)
+
+ase = AdjacencySpectralEmbed(n_components=5, check_lcc=False)
+
+fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+ax = axs[0]
 embed = ase.fit_transform(pass_to_ranks(left_adj))
 embed = np.concatenate(embed, axis=1)
-
-umap_embed = UMAP(n_neighbors=5, min_dist=1).fit_transform(embed)
-
-plot_df = pd.DataFrame(data=umap_embed)
-plot_df.index = mb_mg.meta.iloc[left_inds].index
-plot_df = pd.concat((plot_df, mb_mg.meta.iloc[left_inds]), axis=1)
-fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+pca_embed = PCA(n_components=2).fit_transform(embed)
+left_plot_df = pd.DataFrame(data=pca_embed)
+left_plot_df.index = mb_mg.meta.iloc[left_inds].index
+left_plot_df = pd.concat((left_plot_df, mb_mg.meta.iloc[left_inds]), axis=1)
 sns.scatterplot(
-    data=plot_df,
+    data=left_plot_df,
     x=0,
     y=1,
     hue="merge_class",
     palette=CLASS_COLOR_DICT,
     legend=False,
     ax=ax,
+    s=20,
+    linewidth=0,
+)
+ax.set(xticks=[], yticks=[], xlabel="", ylabel="", title="Left")
+
+
+ax = axs[1]
+embed = ase.fit_transform(pass_to_ranks(right_adj))
+embed = np.concatenate(embed, axis=1)
+pca_embed = PCA(n_components=2).fit_transform(embed)
+right_plot_df = pd.DataFrame(data=pca_embed)
+right_plot_df.index = mb_mg.meta.iloc[right_inds].index
+right_plot_df = pd.concat((right_plot_df, mb_mg.meta.iloc[right_inds]), axis=1)
+sns.scatterplot(
+    data=right_plot_df,
+    x=0,
+    y=1,
+    hue="merge_class",
+    palette=CLASS_COLOR_DICT,
+    legend=False,
+    ax=ax,
+    s=20,
+    linewidth=0,
+)
+ax.set(xticks=[], yticks=[], xlabel="", ylabel="", title="Right")
+
+colors = sns.color_palette("deep", 10)
+palette = {True: colors[2], False: colors[5]}
+for idx, row in joint_meta.iterrows():
+    try:
+        left_idx = row["left_index"]
+        right_idx = row["right_index"]
+        left_xy = tuple(left_plot_df.loc[left_idx, [0, 1]].values)
+        right_xy = tuple(right_plot_df.loc[right_idx, [0, 1]].values)
+        con = ConnectionPatch(
+            xyA=right_xy,
+            xyB=left_xy,
+            coordsA="data",
+            coordsB="data",
+            axesA=axs[1],
+            axesB=axs[0],
+            color=palette[row["correct_match"]],
+            linewidth=0.2,
+            zorder=-1,
+        )
+        axs[1].add_artist(con)
+    except:
+        continue
+
+stashfig("left-right-match-on-spectal", fmt="pdf")
+
+# %%
+ase = AdjacencySpectralEmbed(n_components=5, check_lcc=False)
+
+correct_left = joint_meta[joint_meta["correct_match"]]["left_index"]
+correct_right = joint_meta[joint_meta["correct_match"]]["right_index"]
+
+
+fig, axs = plt.subplots(2, 2, figsize=(10, 10))
+embed = ase.fit_transform(pass_to_ranks(left_adj))
+embed = np.concatenate(embed, axis=1)
+pca_embed = PCA(n_components=2).fit_transform(embed)
+left_plot_df = pd.DataFrame(data=pca_embed)
+left_plot_df.index = mb_mg.meta.iloc[left_inds].index
+left_plot_df = pd.concat((left_plot_df, mb_mg.meta.iloc[left_inds]), axis=1)
+ax = axs[0, 0]
+
+sns.scatterplot(
+    data=left_plot_df[left_plot_df.index.isin(correct_left)],
+    x=0,
+    y=1,
+    hue="merge_class",
+    palette=CLASS_COLOR_DICT,
+    legend=False,
+    ax=ax,
+    s=20,
+    linewidth=0,
+    zorder=20,
+)
+ax.set(xticks=[], yticks=[], xlabel="", ylabel="Correct", title="Left")
+ax = axs[1, 0]
+
+sns.scatterplot(
+    data=left_plot_df[~left_plot_df.index.isin(correct_left)],
+    x=0,
+    y=1,
+    hue="merge_class",
+    palette=CLASS_COLOR_DICT,
+    legend=False,
+    ax=ax,
+    s=20,
+    linewidth=0,
+)
+ax.set(
+    xticks=[], yticks=[], xlabel="", ylabel="Incorrect",
 )
 
-# sns.scatterplot(x=umap_embed[:, 0], y=umap_embed[:, 1])
-# %% [markdown]
-# ##
-match_df = pd.read_csv("maggot_models/notebooks/matched_metadata.csv", index_col=0)
-paired_df = match_df[match_df["pair_id"] != -1]
-print((paired_df["pair"] == paired_df["predicted pair"]).mean())
+ax = axs[0, 1]
 
+sns.scatterplot(
+    data=right_plot_df[right_plot_df.index.isin(correct_right)],
+    x=0,
+    y=1,
+    hue="merge_class",
+    palette=CLASS_COLOR_DICT,
+    legend=False,
+    ax=ax,
+    s=20,
+    linewidth=0,
+    zorder=20,
+)
+ax.set(xticks=[], yticks=[], xlabel="", ylabel="", title="Right")
+ax = axs[1, 1]
+sns.scatterplot(
+    data=right_plot_df[~right_plot_df.index.isin(correct_right)],
+    x=0,
+    y=1,
+    hue="merge_class",
+    palette=CLASS_COLOR_DICT,
+    legend=False,
+    ax=ax,
+    s=20,
+    linewidth=0,
+)
+ax.set(
+    xticks=[], yticks=[], xlabel="", ylabel="",
+)
+
+colors = sns.color_palette("deep", 10)
+palette = {True: colors[2], False: colors[5]}
+for idx, row in joint_meta.iterrows():
+    try:
+        left_idx = row["left_index"]
+        right_idx = row["right_index"]
+        left_xy = tuple(left_plot_df.loc[left_idx, [0, 1]].values)
+        right_xy = tuple(right_plot_df.loc[right_idx, [0, 1]].values)
+        correct = row["correct_match"]
+        row_ind = 1 - int(correct)
+        con = ConnectionPatch(
+            xyA=right_xy,
+            xyB=left_xy,
+            coordsA="data",
+            coordsB="data",
+            axesA=axs[row_ind, 1],
+            axesB=axs[row_ind, 0],
+            color=palette[correct],
+            linewidth=0.2,
+            zorder=-1,
+        )
+        axs[row_ind, 1].add_artist(con)
+    except:
+        continue
+
+stashfig("left-right-match-on-spectal-split", fmt="pdf")
+
+# ax = axs[0, 1]
+# embed = ase.fit_transform(pass_to_ranks(right_adj))
+# embed = np.concatenate(embed, axis=1)
+# pca_embed = PCA(n_components=2).fit_transform(embed)
+# right_plot_df = pd.DataFrame(data=pca_embed)
+# right_plot_df.index = mb_mg.meta.iloc[right_inds].index
+# right_plot_df = pd.concat((right_plot_df, mb_mg.meta.iloc[right_inds]), axis=1)
+# sns.scatterplot(
+#     data=right_plot_df,
+#     x=0,
+#     y=1,
+#     hue="merge_class",
+#     palette=CLASS_COLOR_DICT,
+#     legend=False,
+#     ax=ax,
+#     s=20,
+#     linewidth=0,
+# )
+# ax.set(xticks=[], yticks=[], xlabel="", ylabel="", title="Right")
+
+
+# i = 10
+# xy = (x[i], y[i])
+# con = ConnectionPatch(
+#     xyA=xy, xyB=xy, coordsA="data", coordsB="data", axesA=ax2, axesB=ax1, color="red"
+# )
+# ax2.add_artist(con)
+
+# umap_embed = UMAP(n_neighbors=5, min_dist=1, random_state=8888, negative_sample_rate=20).fit_transform(embed)
+
+# plot_df = pd.DataFrame(data=umap_embed)
+# plot_df.index = mb_mg.meta.iloc[right_inds].index
+# plot_df = pd.concat((plot_df, mb_mg.meta.iloc[right_inds]), axis=1)
+# fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+# sns.scatterplot(
+#     data=plot_df,
+#     x=0,
+#     y=1,
+#     hue="merge_class",
+#     palette=CLASS_COLOR_DICT,
+#     legend=False,
+#     ax=ax,
+# )
+
+
+# %%
