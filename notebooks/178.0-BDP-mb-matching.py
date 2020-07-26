@@ -30,14 +30,14 @@ def stashfig(name, **kws):
 rc_dict = {
     "axes.spines.right": False,
     "axes.spines.top": False,
-    "axes.formatter.limits": (-3, 3),
-    "figure.figsize": (6, 3),
-    "figure.dpi": 100,
+    # "axes.formatter.limits": (-3, 3),
+    # "figure.figsize": (6, 3),
+    # "figure.dpi": 100,
     "axes.edgecolor": "lightgrey",
-    "ytick.color": "grey",
-    "xtick.color": "grey",
-    "axes.labelcolor": "dimgrey",
-    "text.color": "dimgrey",
+    # "ytick.color": "grey",
+    # "xtick.color": "grey",
+    # "axes.labelcolor": "dimgrey",
+    # "text.color": "dimgrey",
     "xtick.major.size": 0,
     "ytick.major.size": 0,
 }
@@ -53,8 +53,8 @@ sns.set_context(context)
 mg = load_metagraph("G")
 
 
-class1_types = ["KC", "MBON", "MBIN", "uPN", "mPN", "APL", "sens-ORN"]
-class2_types = ["ORN"]
+class1_types = ["KC", "MBON", "MBIN", "uPN", "mPN", "vPN", "tPN", "APL"]
+class2_types = []
 
 meta = mg.meta
 mb_meta = meta[meta["class1"].isin(class1_types) | meta["class2"].isin(class2_types)]
@@ -248,6 +248,7 @@ stashfig("left-right-predicted-adj", fmt="pdf")
 # %% [markdown]
 # ##
 
+
 from graspy.embed import AdjacencySpectralEmbed
 from umap import UMAP
 from src.visualization import CLASS_COLOR_DICT
@@ -325,84 +326,45 @@ for idx, row in joint_meta.iterrows():
 stashfig("left-right-match-on-spectal", fmt="pdf")
 
 # %%
-ase = AdjacencySpectralEmbed(n_components=5, check_lcc=False)
+
+cluster_colors = sns.color_palette("deep", 10)
+cluster_palette = dict(zip(range(10), cluster_colors))
+
+label_map = {
+    "vPN": "PN",
+    "tPN": "PN",
+    "mPN": "PN",
+    "uPN": "PN",
+    "KC": "KC",
+    "MBON": "MBON",
+    "MBIN": "MBIN",
+    "APL": "MBIN",
+    "sens": "ORN",
+}
+
+# labels = side_mb_mg.meta["class1"].values
+# labels = np.vectorize(label_map.get)(labels)
+
+left_plot_df["labels"] = left_plot_df["class1"].map(label_map)
+right_plot_df["labels"] = right_plot_df["class1"].map(label_map)
+
+
+colors = sns.color_palette("deep", 10)
+palette = {
+    "KC": colors[3],
+    "PN": colors[0],
+    "MBON": colors[2],
+    "MBIN": colors[1],
+}
+
 
 correct_left = joint_meta[joint_meta["correct_match"]]["left_index"]
 correct_right = joint_meta[joint_meta["correct_match"]]["right_index"]
 
 
-fig, axs = plt.subplots(2, 2, figsize=(10, 10))
-embed = ase.fit_transform(pass_to_ranks(left_adj))
-embed = np.concatenate(embed, axis=1)
-pca_embed = PCA(n_components=2).fit_transform(embed)
-left_plot_df = pd.DataFrame(data=pca_embed)
-left_plot_df.index = mb_mg.meta.iloc[left_inds].index
-left_plot_df = pd.concat((left_plot_df, mb_mg.meta.iloc[left_inds]), axis=1)
-ax = axs[0, 0]
+fig, axs = plt.subplots(2, 2, figsize=(16, 16))
 
-sns.scatterplot(
-    data=left_plot_df[left_plot_df.index.isin(correct_left)],
-    x=0,
-    y=1,
-    hue="merge_class",
-    palette=CLASS_COLOR_DICT,
-    legend=False,
-    ax=ax,
-    s=20,
-    linewidth=0,
-    zorder=20,
-)
-ax.set(xticks=[], yticks=[], xlabel="", ylabel="Correct", title="Left")
-ax = axs[1, 0]
-
-sns.scatterplot(
-    data=left_plot_df[~left_plot_df.index.isin(correct_left)],
-    x=0,
-    y=1,
-    hue="merge_class",
-    palette=CLASS_COLOR_DICT,
-    legend=False,
-    ax=ax,
-    s=20,
-    linewidth=0,
-)
-ax.set(
-    xticks=[], yticks=[], xlabel="", ylabel="Incorrect",
-)
-
-ax = axs[0, 1]
-
-sns.scatterplot(
-    data=right_plot_df[right_plot_df.index.isin(correct_right)],
-    x=0,
-    y=1,
-    hue="merge_class",
-    palette=CLASS_COLOR_DICT,
-    legend=False,
-    ax=ax,
-    s=20,
-    linewidth=0,
-    zorder=20,
-)
-ax.set(xticks=[], yticks=[], xlabel="", ylabel="", title="Right")
-ax = axs[1, 1]
-sns.scatterplot(
-    data=right_plot_df[~right_plot_df.index.isin(correct_right)],
-    x=0,
-    y=1,
-    hue="merge_class",
-    palette=CLASS_COLOR_DICT,
-    legend=False,
-    ax=ax,
-    s=20,
-    linewidth=0,
-)
-ax.set(
-    xticks=[], yticks=[], xlabel="", ylabel="",
-)
-
-colors = sns.color_palette("deep", 10)
-palette = {True: colors[2], False: colors[5]}
+line_palette = {True: colors[2], False: colors[5]}
 for idx, row in joint_meta.iterrows():
     try:
         left_idx = row["left_index"]
@@ -418,15 +380,100 @@ for idx, row in joint_meta.iterrows():
             coordsB="data",
             axesA=axs[row_ind, 1],
             axesB=axs[row_ind, 0],
-            color=palette[correct],
+            color="lightgrey",  # line_palette[correct],
             linewidth=0.2,
-            zorder=-1,
+            zorder=30,
         )
+        con.set_zorder(-200)
         axs[row_ind, 1].add_artist(con)
     except:
         continue
 
+
+ax = axs[0, 0]
+ax.set_zorder(2000)
+ax.patch.set_alpha(0)
+# ax.Axes.set_zorder(50)
+scatter_kws = dict(
+    x=0,
+    y=1,
+    hue="labels",
+    palette=palette,
+    legend="full",
+    s=30,
+    linewidth=0,
+    zorder=20,
+)
+
+sns.scatterplot(
+    data=left_plot_df[left_plot_df.index.isin(correct_left)], ax=ax, **scatter_kws
+)
+handles, labels = ax.get_legend_handles_labels()
+ax.get_legend().remove()
+ax.set(xticks=[], yticks=[], xlabel="", ylabel="Correct", title="Left")
+ax.set_ylabel("Correct", fontsize="x-large")
+
+ax = axs[1, 0]
+ax.set_zorder(2000)
+ax.patch.set_alpha(0)
+sns.scatterplot(
+    data=left_plot_df[~left_plot_df.index.isin(correct_left)], ax=ax, **scatter_kws,
+)
+ax.get_legend().remove()
+
+ax.set(
+    xticks=[], yticks=[], xlabel="",
+)
+ax.set_ylabel("Incorrect", fontsize="x-large")
+
+ax = axs[0, 1]
+
+sns.scatterplot(
+    data=right_plot_df[right_plot_df.index.isin(correct_right)], ax=ax, **scatter_kws
+)
+ax.get_legend().remove()
+
+ax.set(xticks=[], yticks=[], xlabel="", ylabel="", title="Right")
+ax = axs[1, 1]
+sns.scatterplot(
+    data=right_plot_df[~right_plot_df.index.isin(correct_right)], ax=ax, **scatter_kws
+)
+ax.get_legend().remove()
+ax.set(
+    xticks=[], yticks=[], xlabel="", ylabel="",
+)
+axs[0, 0].set_title("Left", fontsize="x-large")
+axs[0, 1].set_title("Right", fontsize="x-large")
+axs[0, 1].legend(
+    handles=handles[1:], labels=labels[1:], bbox_to_anchor=(1, 1), loc="upper right"
+)
+fig.text(
+    s="A)",
+    x=-0.08,
+    y=1.01,
+    ha="left",
+    color="black",
+    fontsize="xx-large",
+    transform=axs[0, 0].transAxes,
+)
+fig.text(
+    s="B)",
+    x=-0.08,
+    y=1.03,
+    ha="left",
+    color="black",
+    fontsize="xx-large",
+    transform=axs[1, 0].transAxes,
+)
 stashfig("left-right-match-on-spectal-split", fmt="pdf")
+
+#%%
+best_idx = results["score"].idxmax()
+best_idx = results["score"].idxmax()
+print(match_ratio)
+print(match_ratio * len(left_inds))
+print((1 - match_ratio) * len(left_inds))
+
 
 # ax = axs[0, 1]
 # embed = ase.fit_transform(pass_to_ranks(right_adj))

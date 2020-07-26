@@ -1074,7 +1074,7 @@ def stacked_barplot(
     if ax is None:
         fig, ax = plt.subplots(figsize=(15, 10))
 
-    ax.set_ylim(-1, len(labels))
+    ax.set_ylim(-0.5, len(labels) - 0.5)
     ax.invert_yaxis()
     ax.xaxis.set_visible(False)
     max_size = np.sum(norm_data, axis=1).max()
