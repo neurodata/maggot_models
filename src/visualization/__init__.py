@@ -49,6 +49,7 @@ from .dendrogram import (
     plot_double_dendrogram,
     plot_color_labels,
 )
+from .settings import set_theme
 
 try:
     from .neuron import plot_neurons, plot_3view

@@ -7,7 +7,7 @@ from src.utils import meta_to_array
 from src.graph import MetaGraph
 import numpy as np
 
-DATA_VERSION = "2020-06-10"
+DATA_VERSION = "2020-09-23"
 DATA_DIR = "maggot_models/data/processed"
 
 
@@ -97,7 +97,7 @@ def load_everything(
     return_ids=False,
 ):
 
-    """Function to load an adjacency matrix and optionally return some associated 
+    """Function to load an adjacency matrix and optionally return some associated
     metadata
 
     Parameters

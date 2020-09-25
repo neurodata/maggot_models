@@ -564,8 +564,98 @@ def plot_clustering_results(adj, meta, basename, lowest_level=7):
 # ## Load and preprocess data
 graph_type = "G"
 VERSION = "2020-06-10"
-master_mg = load_metagraph(graph_type, version=VERSION)
+mg = load_metagraph(graph_type, version=VERSION)
+
+#%%
+
+from src.io import readcsv
+
+pair_meta = readcsv(
+    "pair_meta", pathname="maggot_models/experiments/graph_match/outs/", index_col=0
+)
+n_pairs = len(pair_meta) // 2
+left_inds = np.arange(n_pairs)
+right_inds = left_inds.copy() + n_pairs
+assert (
+    pair_meta.iloc[left_inds]["predicted_pair_id"].values
+    == pair_meta.iloc[right_inds]["predicted_pair_id"].values
+).all()
+
+mg = mg.reindex(pair_meta.index, use_ids=True)
+adj = mg.adj
+# adj = pass_to_ranks(adj)
+ll_adj, lr_adj, rr_adj, rl_adj = (
+    adj[np.ix_(left_inds, left_inds)],
+    adj[np.ix_(left_inds, right_inds)],
+    adj[np.ix_(right_inds, right_inds)],
+    adj[np.ix_(right_inds, left_inds)],
+)
+ipsi_adjs = [ll_adj, rr_adj]
+contra_adjs = [lr_adj, rl_adj]
+# %% [markdown]
+# ##
+from graspy.embed import LaplacianSpectralEmbed
+
+lse = LaplacianSpectralEmbed(form="R-DAD", n_components=16, check_lcc=False)
+
+out_ll_embed, in_ll_embed = lse.fit_transform(ll_adj)
+out_rr_embed, in_rr_embed = lse.fit_transform(rr_adj)
+out_lr_embed, in_lr_embed = lse.fit_transform(lr_adj)
+out_rl_embed, in_rl_embed = lse.fit_transform(rl_adj)
+
+# %% [markdown]
+# ##
+
+from factor_analyzer import Rotator
+from graspy.plot import pairplot
+
+meta = pair_meta
+left_labels = meta.iloc[left_inds]["merge_class"].values
+right_labels = meta.iloc[right_inds]["merge_class"].values
+
+rotator = Rotator(normalize=False)
+
+embeds = [
+    out_ll_embed,  # left
+    in_ll_embed,  # left
+    out_rr_embed,  # right
+    in_rr_embed,  # right
+    out_lr_embed,  # left
+    in_lr_embed,  # right
+    out_rl_embed,  # right
+    in_rl_embed,  # left
+]
+sides = ["left", "left", "right", "right", "left", "right", "right", "left"]
+in_outs = ["out", "in", "out", "in", "out", "in", "out", "in"]
+hemis = ["ipsi", "ipsi", "ipsi", "ipsi", "contra", "contra", "contra", "contra"]
+varimax_embeds = []
+for i, embed in enumerate(embeds):
+    side = sides[i]
+    in_out = in_outs[i]
+    hemi = hemis[i]
+    title = f"{side} {hemi} {in_out} varimax embed"
+    savename = f"{side}-{hemi}-{in_out}-varimax-embed"
+    varimax_embed = rotator.fit_transform(embed)
+    fig, ax = plot_pairs(varimax_embed, left_labels)
+    fig.suptitle(title, y=1.02)
+    stashfig(savename)
+    varimax_embeds.append(varimax_embed)
+
+# %% [markdown]
+# ##
+
+concat_embeds = np.concatenate(varimax_embeds, axis=1)
+from sklearn.decomposition import TruncatedSVD
+
+concat_embed = TruncatedSVD(n_components=16).fit_transform(concat_embeds)
+varimax_concat_embed = rotator.fit_transform(concat_embed)
+plot_pairs(varimax_concat_embed, labels=left_labels)
+stashfig("concat-varimax-embeds")
+
+#%%
 mg = MetaGraph(master_mg.adj, master_mg.meta)
+
+
 mg = mg.remove_pdiff()
 meta = mg.meta.copy()
 
@@ -781,6 +871,66 @@ elif omni_method == "color_iso":
     svd_embed = svd(omni_color_embed)
 
 print(f"{(time.time() - currtime)/60:0.2f} minutes elapsed for embedding")
+#%%
+
+from factor_analyzer.rotator import Rotator
+from graspy.plot import pairplot
+
+curr_time = time.time()
+rot = Rotator()
+rot_embed = rot.fit_transform(svd_embed)
+print(f"{(time.time() - curr_time) / 60} minutes elapsed (wall time).")
+# %%
+
+pg = pairplot(rot_embed, labels=meta["merge_class"].values, palette=CLASS_COLOR_DICT)
+pg._legend.remove()
+stashfig("varimax-embedding")
+
+# %%
+
+curr_time = time.time()
+rot = Rotator()
+rot_embed = rot.fit_transform(svd_embed)
+print(f"{(time.time() - curr_time) / 60} minutes elapsed (wall time).")
+plot_log = True
+for i, dim in enumerate(rot_embed.T):
+    sort_inds = np.argsort(dim)
+    plot_df = pd.DataFrame()
+    if plot_log:
+        dim = np.log(np.abs(dim))
+    plot_df["dim"] = dim[sort_inds]
+    plot_df["labels"] = meta["merge_class"].values[sort_inds]
+    plot_df["ind"] = range(len(plot_df))
+    fig, axs = plt.subplots(
+        1, 2, figsize=(10, 4), gridspec_kw=dict(width_ratios=[2, 1]), sharey=True
+    )
+    ax = axs[0]
+    sns.scatterplot(
+        x="ind",
+        y="dim",
+        hue="labels",
+        data=plot_df,
+        ax=ax,
+        palette=CLASS_COLOR_DICT,
+        legend=False,
+        s=5,
+        alpha=0.8,
+        linewidth=0,
+    )
+    ax.set(
+        xticks=[], yticks=[], ylabel=f"Component {i}", xlabel="Index (sorted)",
+    )
+    if not plot_log:
+        ax.axhline(0, color="grey", linewidth=1, linestyle="--")
+
+    is_zero = np.isclose(dim, 0, atol=1e-5)
+    print(is_zero.mean())
+
+    ax = axs[1]
+    sns.distplot(dim, ax=ax, vertical=True)
+    ax.set(xticks=[], yticks=[], ylabel="", xlabel="Frequency")
+    stashfig(f"component{i}-varimax-plot_log={plot_log}")
+    # ax.set_xscale("log")
 
 # %% [markdown]
 # ##
@@ -838,8 +988,8 @@ params = [
     # {"d": 6, "bic_ratio": 0.9, "min_split": 32},
     # {"d": 8, "bic_ratio": 0.8, "min_split": 32},
     # {"d": 8, "bic_ratio": 0.9, "min_split": 32},
-    {"d": 8, "bic_ratio": 0.95, "min_split": 32},
-    # {"d": 8, "bic_ratio": 1, "min_split": 32},
+    # {"d": 8, "bic_ratio": 0.95, "min_split": 32},
+    {"d": 8, "bic_ratio": 1, "min_split": 32},
     # {"d": 10, "bic_ratio": 0.9, "min_split": 32},
 ]
 

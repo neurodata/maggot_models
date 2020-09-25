@@ -2,6 +2,7 @@
 # ##
 import os
 import time
+from pathlib import Path
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -11,7 +12,6 @@ import seaborn as sns
 from scipy.stats import poisson
 
 from graspy.embed import OmnibusEmbed, selectSVD
-from graspy.match import GraphMatch
 from graspy.models import DCSBMEstimator, SBMEstimator
 from graspy.utils import (
     augment_diagonal,
@@ -33,107 +33,28 @@ from src.visualization import (
     plot_color_labels,
     plot_double_dendrogram,
     plot_single_dendrogram,
+    set_theme,
 )
+from topologic.io import tensor_projection_writer
 
 # For saving outputs
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
 
-# plotting settings
-rc_dict = {
-    "axes.spines.right": False,
-    "axes.spines.top": False,
-    "axes.formatter.limits": (-3, 3),
-    "figure.figsize": (6, 3),
-    "figure.dpi": 100,
-    "axes.edgecolor": "lightgrey",
-    "ytick.color": "grey",
-    "xtick.color": "grey",
-    "axes.labelcolor": "dimgrey",
-    "text.color": "dimgrey",
-    "pdf.fonttype": 42,
-    "ps.fonttype": 42,
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Arial"],
-}
-for key, val in rc_dict.items():
-    mpl.rcParams[key] = val
-context = sns.plotting_context(context="talk", font_scale=1, rc=rc_dict)
-sns.set_context(context)
+
+set_theme()
 
 np.random.seed(8888)
 
+save_path = Path("maggot_models/experiments/evaluate_clustering/")
+
 
 def stashfig(name, **kws):
-    savefig(name, foldername=FNAME, save_on=True, **kws)
+    savefig(name, pathname=save_path / "figs", fmt="pdf", save_on=True, **kws)
 
 
 def stashcsv(df, name, **kws):
-    savecsv(df, name, foldername=FNAME, **kws)
-
-
-def plot_pairs(
-    X, labels, model=None, left_pair_inds=None, right_pair_inds=None, equal=False
-):
-    """ Plots pairwise dimensional projections, and draws lines between known pair neurons
-
-    Parameters
-    ----------
-    X : [type]
-        [description]
-    labels : [type]
-        [description]
-    model : [type], optional
-        [description], by default None
-    left_pair_inds : [type], optional
-        [description], by default None
-    right_pair_inds : [type], optional
-        [description], by default None
-    equal : bool, optional
-        [description], by default False
-
-    Returns
-    -------
-    [type]
-        [description]
-    """
-
-    n_dims = X.shape[1]
-
-    fig, axs = plt.subplots(
-        n_dims, n_dims, sharex=False, sharey=False, figsize=(20, 20)
-    )
-    data = pd.DataFrame(data=X)
-    data["label"] = labels
-
-    for i in range(n_dims):
-        for j in range(n_dims):
-            ax = axs[i, j]
-            ax.axis("off")
-            if i < j:
-                sns.scatterplot(
-                    data=data,
-                    x=j,
-                    y=i,
-                    ax=ax,
-                    alpha=0.7,
-                    linewidth=0,
-                    s=8,
-                    legend=False,
-                    hue="label",
-                    palette=CLASS_COLOR_DICT,
-                )
-                if left_pair_inds is not None and right_pair_inds is not None:
-                    add_connections(
-                        data.iloc[left_pair_inds, j],
-                        data.iloc[right_pair_inds, j],
-                        data.iloc[left_pair_inds, i],
-                        data.iloc[right_pair_inds, i],
-                        ax=ax,
-                    )
-
-    plt.tight_layout()
-    return fig, axs
+    savecsv(df, name, pathname=save_path / "outs", **kws)
 
 
 def preprocess_adjs(adjs, method="ase"):
@@ -509,9 +430,23 @@ def plot_clustering_results(adj, meta, basename, lowest_level=7):
         adj_axs[1, level] = ax
     plot_adjacencies(mg, adj_axs, lowest_level=lowest_level)
 
-    mg = mg.sort_values(["hemisphere", "pair_id"], ascending=True)
-    meta = mg.meta
-    adj = mg.adj
+    # TODO this should only deal with TRUE PAIRS
+    temp_meta = mg.meta.copy()
+    # all valid TRUE pairs
+    temp_meta = temp_meta[temp_meta["pair_id"] != -1]
+    # throw out anywhere the TRUE pair on other hemisphere doesn't exist
+    temp_meta = temp_meta[temp_meta["pair"].isin(mg.meta.index)]
+    temp_meta = temp_meta.sort_values(["hemisphere", "pair_id"], ascending=True)
+    n_true_pairs = len(temp_meta) // 2
+    assert (
+        temp_meta.iloc[:n_true_pairs]["pair_id"].values
+        == temp_meta.iloc[n_true_pairs:]["pair_id"].values
+    ).all()
+    temp_mg = mg.copy()
+    temp_mg = temp_mg.reindex(temp_meta.index, use_ids=True)
+    # mg = mg.sort_values(["hemisphere", "pair_id"], ascending=True)
+    meta = temp_mg.meta
+    adj = temp_mg.adj
     n_pairs = len(meta) // 2
     lp_inds = np.arange(n_pairs)
     rp_inds = np.arange(n_pairs) + n_pairs
@@ -563,100 +498,41 @@ def plot_clustering_results(adj, meta, basename, lowest_level=7):
 # %% [markdown]
 # ## Load and preprocess data
 graph_type = "G"
-VERSION = "2020-06-10"
-master_mg = load_metagraph(graph_type, version=VERSION)
-mg = MetaGraph(master_mg.adj, master_mg.meta)
+# VERSION = "2020-06-10"
+
+pair_meta = pd.read_csv(
+    "maggot_models/experiments/graph_match/outs/pair_meta.csv", index_col=0
+)
+
+master_mg = load_metagraph(graph_type)
+master_mg = master_mg.reindex(pair_meta.index, use_ids=True)
+master_mg = MetaGraph(master_mg.adj, pair_meta)
+
+# mg = MetaGraph(master_mg.adj, master_mg.meta)
+mg = master_mg.copy()
 mg = mg.remove_pdiff()
-meta = mg.meta.copy()
-
-# remove low degree neurons
-degrees = mg.calculate_degrees()
-quant_val = np.quantile(degrees["Total edgesum"], 0.05)
-idx = meta[degrees["Total edgesum"] > quant_val].index
-print(quant_val)
-mg = mg.reindex(idx, use_ids=True)
 mg = mg.make_lcc()
-meta = mg.meta
 
-# TODO the following block needs to be cleaned up, should make this easy to do with
-# MetaGraph class
-temp_meta = meta[meta["left"] | meta["right"]]
-unpair_idx = temp_meta[~temp_meta["pair"].isin(temp_meta.index)].index
-meta.loc[unpair_idx, ["pair", "pair_id"]] = -1
+remove_low_degree = False
+if remove_low_degree:
+    meta = mg.meta.copy()
+    degrees = mg.calculate_degrees()
+    quant_val = np.quantile(degrees["Total edgesum"], 0.05)
+    idx = meta[degrees["Total edgesum"] > quant_val].index
+    print(quant_val)
+    mg = mg.reindex(idx, use_ids=True)
+    mg = mg.make_lcc()
+    meta = mg.meta
 
-left_idx = meta[meta["left"]].index
-left_mg = MetaGraph(mg.adj, mg.meta)
-left_mg = left_mg.reindex(left_idx, use_ids=True)
-left_mg = left_mg.sort_values(["pair_id"], ascending=False)
-print(len(left_mg))
-right_idx = meta[meta["right"]].index
-right_mg = MetaGraph(mg.adj, mg.meta)
-right_mg = right_mg.reindex(right_idx, use_ids=True)
-right_mg = right_mg.sort_values(["pair_id"], ascending=False)
-right_mg = right_mg.reindex(right_mg.meta.index[: len(left_mg)], use_ids=True)
-print(len(right_mg))
-
-assert (right_mg.meta["pair_id"].values == left_mg.meta["pair_id"].values).all()
-
-# %% [markdown]
-# ## Pair the unpaired neurons using graph matching
-
-n_pairs = len(right_mg.meta[right_mg.meta["pair_id"] != -1])
-left_adj = left_mg.adj
-right_adj = right_mg.adj
-left_seeds = right_seeds = np.arange(n_pairs)
-currtime = time.time()
-gm = GraphMatch(n_init=50, init_method="rand", eps=1.0, shuffle_input=False)
-gm.fit(left_adj, right_adj, seeds_A=left_seeds, seeds_B=right_seeds)
-print(f"{(time.time() - currtime)/60:0.2f} minutes elapsed for graph matching")
-
-fig, axs = plt.subplots(1, 2, figsize=(20, 10))
-perm_inds = gm.perm_inds_
-true_pairs = n_pairs * ["paired"] + (len(left_adj) - n_pairs) * ["unpaired"]
-pal = sns.color_palette("deep", 3)
-color_dict = dict(zip(["unpaired", "paired"], pal[1:]))
-_, _, top, _ = adjplot(
-    left_adj,
-    ax=axs[0],
-    plot_type="scattermap",
-    sizes=(1, 1),
-    colors=true_pairs,
-    palette=color_dict,
-    color=pal[0],
-    ticks=True,
-)
-top.set_title("Left")
-_, _, top, _ = adjplot(
-    right_adj[np.ix_(perm_inds, perm_inds)],
-    ax=axs[1],
-    plot_type="scattermap",
-    sizes=(1, 1),
-    colors=true_pairs,
-    palette=color_dict,
-    color=pal[0],
-    ticks=True,
-)
-top.set_title("Right")
-plt.tight_layout()
-stashfig("gm-results-adj")
-
-# %% [markdown]
-# ## Apply the pairs
-
-left_pair_id = pd.Series(index=left_mg.meta.index, data=np.arange(len(left_mg)))
-right_pair_idx = right_mg.meta.index[perm_inds]
-right_pair_id = pd.Series(index=right_pair_idx, data=np.arange(len(right_mg)))
-pair_id = pd.concat((left_pair_id, right_pair_id))
-mg = load_metagraph(graph_type, version=VERSION)
-mg = mg.reindex(pair_id.index, use_ids=True)
-mg.meta["pair_id"] = pair_id
-
-
-meta = mg.meta
+meta = mg.meta.copy()
 meta["inds"] = range(len(meta))
 adj = mg.adj.copy()
+
 # inds on left and right that correspond to the bilateral pairs
-lp_inds, rp_inds = get_paired_inds(meta, check_in=False)
+# here these are the union of true and predicted paris, though
+pseudo_lp_inds, pseudo_rp_inds = get_paired_inds(
+    meta, check_in=False, pair_key="predicted_pair", pair_id_key="predicted_pair_id"
+)
 left_inds = meta[meta["left"]]["inds"]
 
 print(f"Neurons left after preprocessing: {len(mg)}")
@@ -668,7 +544,7 @@ print(f"Neurons left after preprocessing: {len(mg)}")
 graph_types = ["Gad", "Gaa", "Gdd", "Gda"]  # "Gs"]
 adjs = []
 for g in graph_types:
-    temp_mg = load_metagraph(g, version=VERSION)
+    temp_mg = load_metagraph(g)
     # this line is important, to make the graphs aligned
     temp_mg.reindex(mg.meta.index, use_ids=True)
     temp_adj = temp_mg.adj
@@ -690,6 +566,9 @@ def svd(X, n_components=n_svd_components):
 # # Run Omni and deal with latent positions appropriately
 
 omni_method = "color_iso"
+# use the predicted pairs for this part
+lp_inds = pseudo_lp_inds
+rp_inds = pseudo_rp_inds
 currtime = time.time()
 
 if omni_method == "iso":
@@ -785,6 +664,7 @@ print(f"{(time.time() - currtime)/60:0.2f} minutes elapsed for embedding")
 # %% [markdown]
 # ##
 
+# since we used lp_inds and rp_inds to index the adjs, we need to reindex the meta
 n_pairs = len(lp_inds)
 new_lp_inds = np.arange(n_pairs)
 new_rp_inds = np.arange(n_pairs) + n_pairs
@@ -801,9 +681,8 @@ columns = [
     "lineage",
     "name",
 ]
-embedding_out = f"maggot_models/notebooks/outs/{FNAME}/tsvs/omni_"
+embedding_out = "maggot_models/experiments/matched_subgraph_omni/outs/omni_"
 
-from topologic.io import tensor_projection_writer
 
 save_meta = new_meta[columns].copy()
 save_meta.index.name = "skid"

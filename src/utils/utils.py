@@ -625,20 +625,20 @@ def invert_permutation(p):
     return s
 
 
-def get_paired_inds(meta, check_in=True):
+def get_paired_inds(meta, check_in=True, pair_key="pair", pair_id_key="pair_id"):
     pair_meta = meta.copy()
     pair_meta = pair_meta[pair_meta["hemisphere"].isin(["L", "R"])]
     if check_in:
-        pair_meta = pair_meta[pair_meta["pair"].isin(pair_meta.index)]
-    pair_group_size = pair_meta.groupby("pair_id").size()
+        pair_meta = pair_meta[pair_meta[pair_key].isin(pair_meta.index)]
+    pair_group_size = pair_meta.groupby(pair_id_key).size()
     remove_pairs = pair_group_size[pair_group_size == 1].index
-    pair_meta = pair_meta[~pair_meta["pair_id"].isin(remove_pairs)]
-    assert pair_meta.groupby("pair_id").size().min() == 2
-    assert pair_meta.groupby("pair_id").size().max() == 2
-    pair_meta.sort_values(["pair_id", "hemisphere"], inplace=True)
+    pair_meta = pair_meta[~pair_meta[pair_id_key].isin(remove_pairs)]
+    assert pair_meta.groupby(pair_id_key).size().min() == 2
+    assert pair_meta.groupby(pair_id_key).size().max() == 2
+    pair_meta.sort_values([pair_id_key, "hemisphere"], inplace=True)
     lp_inds = pair_meta[pair_meta["hemisphere"] == "L"]["inds"]
     rp_inds = pair_meta[pair_meta["hemisphere"] == "R"]["inds"]
     assert (
-        meta.iloc[lp_inds]["pair_id"].values == meta.iloc[rp_inds]["pair_id"].values
+        meta.iloc[lp_inds][pair_id_key].values == meta.iloc[rp_inds][pair_id_key].values
     ).all()
     return lp_inds, rp_inds
