@@ -745,7 +745,7 @@ columns = [
     "lineage",
     "name",
 ]
-embedding_out = "maggot_models/experiments/matched_subgraph_omni/outs/omni_"
+embedding_out = "maggot_models/experiments/matched_subgraph_omni_cluster/outs/omni_"
 
 
 save_meta = new_meta[columns].copy()

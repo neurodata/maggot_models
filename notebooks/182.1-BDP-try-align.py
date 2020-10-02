@@ -1,4 +1,14 @@
+#%% [markdown]
+## Maggot embedding alignment
+# > Investigating alignments of the maggot data embeddings
+#
+# - toc: false
+# - badges: false
+# - categories: [pedigo, graspologic, maggot]
+# - hide: false
+# - search_exclude: false
 # %%
+# collapse
 import os
 import time
 
@@ -7,29 +17,25 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy.stats import ortho_group
-from sklearn.model_selection import ParameterGrid
 from sklearn.neighbors import NearestNeighbors
-from tqdm import tqdm
 
+import graspologic as gl
 from graspologic.align import OrthogonalProcrustes, SeedlessProcrustes
-from graspologic.embed import AdjacencySpectralEmbed
-from graspologic.inference import LatentDistributionTest
+from graspologic.embed import AdjacencySpectralEmbed, select_dimension
 from graspologic.plot import pairplot
-from graspologic.utils import pass_to_ranks, augment_diagonal
-
-# screeplot(pass_to_ranks(left_mg.adj), cumulative=False, show_first=40)
-from graspologic.embed import select_dimension
-
-# from grasp.plot import screeplot
+from graspologic.utils import augment_diagonal, pass_to_ranks
 from src.data import load_metagraph
 from src.graph import MetaGraph
 from src.io import savefig
 from src.visualization import adjplot, set_theme
 
+print(f"graspologic version: {gl.__version__}")
+print(f"seaborn version: {sns.__version__}")
+
 set_theme()
+palette = dict(zip(["Left", "Right", "OP", "SP"], sns.color_palette("Set1")))
 
 FNAME = os.path.basename(__file__)[:-3]
-print(FNAME)
 
 
 def stashfig(name, **kws):
@@ -37,9 +43,11 @@ def stashfig(name, **kws):
     savefig(name, foldername=FNAME, save_on=True, fmt="png", dpi=300, **kws)
 
 
+#%% [markdown]
+### Load in the data, use only the known pairs
 # %%
+# collapse
 mg = load_metagraph("G")
-
 pair_meta = pd.read_csv(
     "maggot_models/experiments/graph_match/outs/pair_meta.csv", index_col=0
 )
@@ -53,14 +61,14 @@ left_inds = np.arange(n_pairs)
 right_inds = left_inds.copy() + n_pairs
 left_mg = MetaGraph(mg.adj[np.ix_(left_inds, left_inds)], mg.meta.iloc[left_inds])
 right_mg = MetaGraph(mg.adj[np.ix_(right_inds, right_inds)], mg.meta.iloc[right_inds])
-
 assert (left_mg.meta[pair_key].values == right_mg.meta[pair_key].values).all()
 
 print(f"Working with {n_pairs} pairs.")
 
-palette = dict(zip(["Left", "Right", "OP", "SP"], sns.color_palette("Set1")))
-
+#%%[markdown]
+### Plot the adjacency matrices, sorted by known pairs
 # %%
+# collapse
 fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 adjplot(
     left_mg.adj,
@@ -79,7 +87,12 @@ adjplot(
 )
 stashfig("left-right-adjs")
 
+#%% [markdown]
+### Embed the ipsilateral subgraphs
+# - Computations are happening in `n_components` dimensions, where `n_components = 8` (dashed line in screeplot)
+# - In many plots, I only show the first 4 dimensions just for clarity
 #%%
+# collapse
 
 
 def plot_latents(left, right, title=""):
@@ -96,6 +109,7 @@ def screeplot(sing_vals, elbow_inds, color=None, ax=None, label=None):
     plt.scatter(
         elbow_inds, sing_vals[elbow_inds - 1], marker="x", s=50, zorder=10, color=color
     )
+    ax.set(ylabel="Singular value", xlabel="Index")
     return ax
 
 
@@ -138,7 +152,12 @@ plot_latents(
 )
 stashfig("in-latent-no-align")
 
+#%% [markdown]
+### Align the embeddings
+# Here I align first using Procrustes, and then using Seedless Procrustes initialized at
+# the Procrustes solution. I will refer to this as "oracle initialization".
 # %%
+# collapse
 
 
 def run_alignments(X, Y):
@@ -160,8 +179,11 @@ op_diff_norm = calc_diff_norm(op_left_out_latent, right_out_latent)
 sp_diff_norm = calc_diff_norm(sp_left_out_latent, right_out_latent)
 
 print(f"Procrustes diff. norm using true pairs: {op_diff_norm}")
-print(f"Seedless Procrustes diff. norm using true pairs: {op_diff_norm}")
+print(f"Seedless Procrustes diff. norm using true pairs: {sp_diff_norm}")
+
 #%%
+# collapse
+
 plot_latents(
     op_left_out_latent, right_out_latent, "Out latent positions (Procrustes alignment)"
 )
@@ -176,10 +198,21 @@ stashfig("out-latent-seedless-oracle")
 
 
 # %%
+# collapse
+
 op_left_in_latent, sp_left_in_latent = run_alignments(left_in_latent, right_in_latent)
 
-# %% [markdown]
-# ##
+#%%[markdown]
+### Looking at nearest neighbors in the aligned embeddings
+# - I am concatenating the in and out embeddings *after* learning the alignments separately for each
+# - "P by K" (short for precision by K) is the proportion of nodes for which their true pair is
+# within its K nearest neighbors
+# - I plot the cumulative density of the measure described above. So for a point `x, y` on the plot below,
+# the result can be read as "`y` of all nodes have their true pair within their `x` nearest neighbors in
+# the aligned embedded space".
+# - I perform the experiment above using both orthogonal Procrustes (OP) and Seedless Procrustes (SP) with oracale initialization
+# %%
+# collapse
 
 
 def calc_nn_ranks(target, query):
@@ -218,142 +251,4 @@ fig, ax = plt.subplots(1, 1, figsize=(8, 4))
 plot_rank_cdf(op_ranks, color=palette["OP"], ax=ax, label="OP")
 plot_rank_cdf(sp_ranks, color=palette["SP"], ax=ax, label="SP")
 ax.legend()
-
-
-# %% [markdown]
-# ##
-
-
-def run_alignments(X, Y, n_random=10):
-    n_components = X.shape[1]
-    rows = []
-
-    for i in range(n_random):
-        Q = ortho_group.rvs(n_components)
-        diff_norm = calc_diff_norm(X @ Q, Y)
-        row = {"diff_norm": diff_norm, "method": "random"}
-        rows.append(row)
-
-    op = OrthogonalProcrustes()
-    X_trans_op = op.fit_transform(X, Y)
-    diff_norm = calc_diff_norm(X_trans_op, Y)
-    row = {"diff_norm": diff_norm, "method": "orthogonal_procrustes"}
-    rows.append(row)
-
-    sp = SeedlessProcrustes(init="custom", initial_Q=op.Q_)
-    X_trans_sp = sp.fit_transform(X, Y)
-    diff_norm = calc_diff_norm(X_trans_sp, Y)
-    row = {"diff_norm": diff_norm, "method": "orthogonal_procrustes"}
-    rows.append(row)
-
-
-# %% [markdown]
-# ##
-
-
-#
-# ldt = LatentDistributionTest(input_graph=False)
-# ldt.fit(trans_left_out_latent, right_out_latent)
-# print(ldt.p_value_)
-
-
-# %% [markdown]
-## parameters of the experiment
-# - dimension:
-# - ipsi / contra
-# - ptr-pre / ptr-post / no ptr
-# - direction: in / out
-# - alignment: OP / sP
-# - test on: all / known pairs only
-
-#%%
-max_n_components = 40
-ase = AdjacencySpectralEmbed(n_components=max_n_components)
-left_out_latent, left_in_latent = ase.fit_transform(pass_to_ranks(left_mg.adj))
-right_out_latent, right_in_latent = ase.fit_transform(pass_to_ranks(right_mg.adj))
-
-
-def align(X, Y, method="procrustes"):
-    if method == "procrustes":
-        op = OrthogonalProcrustes()
-        X_trans = op.fit_transform(X, Y)
-    return X_trans
-
-
-def test(X, Y):
-    ldt = LatentDistributionTest(input_graph=False)
-    ldt.fit(X, Y)
-    return ldt.p_value_, ldt.sample_T_statistic_
-
-
-def run_align_and_test(X, Y, n_components=None):
-    if n_components is not None:
-        X = X[:, :n_components]
-        Y = Y[:, :n_components]
-    start_time = time.time()
-    X = align(X, Y)
-    p_value, test_statistic = test(X, Y)
-    elapsed = time.time() - start_time
-    return {
-        "p_value": p_value,
-        "test_statistic": test_statistic,
-        "time": elapsed,
-        "log_p_value": np.log10(p_value),
-    }
-
-
-#%%
-
-
-rows = []
-n_components_range = np.arange(1, max_n_components)
-in_outs = ["in", "out"]
-in_out_to_latent = {
-    "in": (left_in_latent, right_in_latent),
-    "out": (left_out_latent, right_out_latent),
-}
-n_tests = len(n_components_range) * len(in_outs)
-
-i = 0
-for in_out in in_outs:
-    for n_components in n_components_range:
-        print(f"{i / (n_tests - 1):.02f}")
-        left_latent, right_latent = in_out_to_latent[in_out]
-        row = run_align_and_test(left_latent, right_latent, n_components=n_components)
-        row["n_components"] = n_components
-        row["in_out"] = in_out
-        rows.append(row)
-        i += 1
-
-result_df = pd.DataFrame(rows)
-
-# %% [markdown]
-# ##
-
-
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-sns.lineplot(
-    x="n_components", y="log_p_value", hue="in_out", data=result_df, ax=ax, marker="o"
-)
-# sns.scatterplot(
-#     x="n_components", y="log_p_value", hue="in_out", data=result_df, s=30, ax=ax
-# )
-handles, labels = ax.get_legend_handles_labels()
-ax.get_legend().remove()
-ax.legend(
-    bbox_to_anchor=(1, 1), loc="upper left", handles=handles[1:], labels=labels[1:]
-)
-ax.set(
-    ylabel="Log10(p-value)",
-    xlabel="# dimensions",
-    title="Latent distribution test (known + predicted pair procrustes)",
-)
-stashfig("p-val-sweep")
-# %% [markdown]
-# ##
-# plt.plot(ase.singular_values_)
-
-
-# print(calc_diff_norm(op_left_out_latent, right_out_latent))
-# print(calc_diff_norm(sp_left_out_latent, right_out_latent))
-# print(calc_diff_norm(left_out_latent, right_out_latent))
+stashfig("rank-cdf")

@@ -100,7 +100,7 @@ def get_single_class(classes):
     return str(single_class)
 
 
-def get_classes(meta, class_cols, fill_unk=False):
+def get_classes(meta, class_cols, fill_unk=False, check_priority=check_priority):
     all_class = []
     single_class = []
     n_class = []
@@ -296,6 +296,12 @@ simple_class_map = {
         "mw A00c 2nd_order PN",
         "mw ORN 2nd_order PN",
     ],
+    "LN": [
+        "mw MN 2nd_order LN",
+        "mw ORN 2nd_order LN",
+        "mw ORN_AN_MN 2nd_order LN",
+        "mw photo 2nd_order LN",
+    ],
     "LHN": ["mw LHN"],
     "MBIN": ["mw MBIN"],
     "KC": ["mw KC"],
@@ -303,9 +309,17 @@ simple_class_map = {
     "FBN": ["mw FBN", "mw FB2N", "mw FAN"],
     "CN": ["mw CN"],
     "motorneuron": ["mw motor"],
-    "dVNC": ["mw dVNC"],
-    "dSEZ": ["mw dSEZ"],
-    "RGN": ["mw RGN"],
+    "pre-outputs": ["mw pre-dVNC", "mw pre-dSEZ", "mw pre-RGN"],
+    "outputs": ["mw dVNC", "mw dSEZ", "mw RGN"],
+    "sensory_2nd_order": [
+        "mw A00c 2nd_order",
+        "mw AN 2nd_order",
+        "mw MN 2nd_order",
+        "mw ORN 2nd_order",
+        "mw photo 2nd_order",
+        "mw thermo 2nd_order",
+        "mw vtd 2nd_order",
+    ],
 }
 
 # print("hi")
@@ -320,35 +334,61 @@ simple_class_df = pd.DataFrame(cols).T
 simple_class_df = simple_class_df.reindex(meta.index)
 simple_class_df.fillna(False, inplace=True)
 
-simple_name_map = {"sensory": "Sens", "motorneuron": "Motr"}
+simple_name_map = {
+    "sensory": "Sens",
+    "motorneuron": "Motr",
+    "pre-outputs": "PreO",
+    "outputs": "Outs",
+    "sensory_2nd_order": "Sens2o",
+}
 simple_class_df.rename(simple_name_map, axis=1, inplace=True)
 
 priority_map = {
-    "sensory": 1,
-    "PN": 1,
-    "MBIN": 1,
-    "KC": 1,
-    "MBON": 1,
-    "motorneuron": 1,
-    "LHN": 2,
-    "FBN": 2,
-    "CN": 3,
-    "dVNC": 3,
-    "dSEZ": 4,
-    "RGN": 4,
+    "Sens": 1,
+    "PN": 2,
+    "MBIN": 3,
+    "KC": 4,
+    "MBON": 5,
+    "Motr": 6,
+    "LHN": 7,
+    "FBN": 8,
+    "CN": 9,
+    "dVNC": 10,
+    "dSEZ": 11,
+    "RGN": 12,
+}
+priority_map = {
+    "Sens": 1,
+    "LN": 2,
+    "PN": 3,
+    "MBIN": 4,
+    "KC": 5,
+    "MBON": 6,
+    "Motr": 7,
+    "LHN": 8,
+    "FBN": 9,
+    "CN": 10,
+    "PreO": 11,
+    "Out": 12,
+    "Sens2o": 13,
 }
 
-check_priority = np.vectorize(priority)
+check_priority = np.vectorize(lambda x: priority(x, priority_map=priority_map))
 
 simple_class, all_simple_class, n_simple_class = get_classes(
-    simple_class_df, simple_class_df.columns.values, fill_unk=True
+    simple_class_df,
+    simple_class_df.columns.values,
+    fill_unk=True,
+    check_priority=check_priority,
 )
 
 meta["simple_class"] = simple_class
 meta["all_simple_class"] = all_simple_class
 meta["n_simple_class"] = n_simple_class
-
-
+#%%
+meta.sort_values("n_simple_class", ascending=False)[
+    ["simple_class", "all_simple_class"]
+].head(20)
 # %% [markdown]
 # ##
 print()

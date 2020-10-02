@@ -48,6 +48,8 @@ np.random.seed(8888)
 
 save_path = Path("maggot_models/experiments/evaluate_clustering/")
 
+CLASS_KEY = "simple_class"
+
 
 def stashfig(name, **kws):
     savefig(name, pathname=save_path / "figs", fmt="pdf", save_on=True, **kws)
@@ -55,74 +57,6 @@ def stashfig(name, **kws):
 
 def stashcsv(df, name, **kws):
     savecsv(df, name, pathname=save_path / "outs", **kws)
-
-
-def preprocess_adjs(adjs, method="ase"):
-    """Preprocessing necessary prior to embedding a graph, opetates on a list
-
-    Parameters
-    ----------
-    adjs : list of adjacency matrices
-        [description]
-    method : str, optional
-        [description], by default "ase"
-
-    Returns
-    -------
-    [type]
-        [description]
-    """
-    adjs = [pass_to_ranks(a) for a in adjs]
-    adjs = [a + 1 / a.size for a in adjs]
-    if method == "ase":
-        adjs = [augment_diagonal(a) for a in adjs]
-    elif method == "lse":  # haven't really used much. a few params to look at here
-        adjs = [to_laplace(a) for a in adjs]
-    return adjs
-
-
-def omni(
-    adjs,
-    n_components=4,
-    remove_first=None,
-    concat_graphs=True,
-    concat_directed=True,
-    method="ase",
-):
-    """Omni with a few extra (optional) bells and whistles for concatenation post embed
-
-    Parameters
-    ----------
-    adjs : [type]
-        [description]
-    n_components : int, optional
-        [description], by default 4
-    remove_first : [type], optional
-        [description], by default None
-    concat_graphs : bool, optional
-        [description], by default True
-    concat_directed : bool, optional
-        [description], by default True
-    method : str, optional
-        [description], by default "ase"
-
-    Returns
-    -------
-    [type]
-        [description]
-    """
-    adjs = preprocess_adjs(adjs, method=method)
-    omni = OmnibusEmbed(n_components=n_components, check_lcc=False, n_iter=10)
-    embed = omni.fit_transform(adjs)
-    if concat_directed:
-        embed = np.concatenate(
-            embed, axis=-1
-        )  # this is for left/right latent positions
-    if remove_first is not None:
-        embed = embed[remove_first:]
-    if concat_graphs:
-        embed = np.concatenate(embed, axis=0)
-    return embed
 
 
 def sort_mg(mg, level_names):
@@ -141,7 +75,7 @@ def sort_mg(mg, level_names):
         [description]
     """
     meta = mg.meta
-    sort_class = level_names + ["merge_class"]
+    sort_class = level_names + [CLASS_KEY]
     class_order = ["sf"]
     total_sort_by = []
     for sc in sort_class:
@@ -167,11 +101,11 @@ def plot_adjacencies(full_mg, axs, lowest_level=7):
             plot_type="scattermap",
             sizes=(0.5, 0.5),
             sort_class=["hemisphere"] + level_names[: level + 1],
-            item_order=["merge_class_sf_order", "merge_class", "sf"],
+            item_order=[f"{CLASS_KEY}_sf_order", CLASS_KEY, "sf"],
             class_order="sf",
             meta=full_mg.meta,
             palette=CLASS_COLOR_DICT,
-            colors="merge_class",
+            colors=CLASS_KEY,
             ticks=False,
             gridline_kws=dict(linewidth=0.2, color="grey", linestyle="--"),
             color=pal[0],
@@ -190,11 +124,11 @@ def plot_adjacencies(full_mg, axs, lowest_level=7):
             plot_type="scattermap",
             sizes=(0.5, 0.5),
             sort_class=["hemisphere"] + level_names[: level + 1],
-            item_order=["merge_class_sf_order", "merge_class", "sf"],
+            item_order=[f"{CLASS_KEY}_sf_order", CLASS_KEY, "sf"],
             class_order="sf",
             meta=full_mg.meta,
             palette=CLASS_COLOR_DICT,
-            colors="merge_class",
+            colors=CLASS_KEY,
             ticks=False,
             gridline_kws=dict(linewidth=0.2, color="grey", linestyle="--"),
             color=pal[0],
@@ -430,7 +364,6 @@ def plot_clustering_results(adj, meta, basename, lowest_level=7):
         adj_axs[1, level] = ax
     plot_adjacencies(mg, adj_axs, lowest_level=lowest_level)
 
-    # TODO this should only deal with TRUE PAIRS
     temp_meta = mg.meta.copy()
     # all valid TRUE pairs
     temp_meta = temp_meta[temp_meta["pair_id"] != -1]
@@ -496,276 +429,24 @@ def plot_clustering_results(adj, meta, basename, lowest_level=7):
 
 
 # %% [markdown]
-# ## Load and preprocess data
-graph_type = "G"
-# VERSION = "2020-06-10"
-
-pair_meta = pd.read_csv(
-    "maggot_models/experiments/graph_match/outs/pair_meta.csv", index_col=0
-)
-
-master_mg = load_metagraph(graph_type)
-master_mg = master_mg.reindex(pair_meta.index, use_ids=True)
-master_mg = MetaGraph(master_mg.adj, pair_meta)
-
-# mg = MetaGraph(master_mg.adj, master_mg.meta)
-mg = master_mg.copy()
-mg = mg.remove_pdiff()
-mg = mg.make_lcc()
-
-remove_low_degree = False
-if remove_low_degree:
-    meta = mg.meta.copy()
-    degrees = mg.calculate_degrees()
-    quant_val = np.quantile(degrees["Total edgesum"], 0.05)
-    idx = meta[degrees["Total edgesum"] > quant_val].index
-    print(quant_val)
-    mg = mg.reindex(idx, use_ids=True)
-    mg = mg.make_lcc()
-    meta = mg.meta
-
-meta = mg.meta.copy()
-meta["inds"] = range(len(meta))
-adj = mg.adj.copy()
-
-# inds on left and right that correspond to the bilateral pairs
-# here these are the union of true and predicted paris, though
-pseudo_lp_inds, pseudo_rp_inds = get_paired_inds(
-    meta, check_in=False, pair_key="predicted_pair", pair_id_key="predicted_pair_id"
-)
-left_inds = meta[meta["left"]]["inds"]
-
-print(f"Neurons left after preprocessing: {len(mg)}")
-
-
-# %% [markdown]
-# ## Load the 4-color graphs
-# convention is "ad" = axon -> dendrite and so on...
-graph_types = ["Gad", "Gaa", "Gdd", "Gda"]  # "Gs"]
-adjs = []
-for g in graph_types:
-    temp_mg = load_metagraph(g)
-    # this line is important, to make the graphs aligned
-    temp_mg.reindex(mg.meta.index, use_ids=True)
-    temp_adj = temp_mg.adj
-    adjs.append(temp_adj)
-
-# %% [markdown]
-# ## SVDer
-# 8, 16 seems to work
-n_omni_components = 8  # this is used for all of the embedings initially
-n_svd_components = 16  # this is for the last step
-method = "ase"  # one could also do LSE
-
-
-def svd(X, n_components=n_svd_components):
-    return selectSVD(X, n_components=n_components, algorithm="full")[0]
-
-
-# %% [markdown]
-# # Run Omni and deal with latent positions appropriately
-
-omni_method = "color_iso"
-# use the predicted pairs for this part
-lp_inds = pseudo_lp_inds
-rp_inds = pseudo_rp_inds
-currtime = time.time()
-
-if omni_method == "iso":
-    full_adjs = [
-        adj[np.ix_(lp_inds, lp_inds)],
-        adj[np.ix_(lp_inds, rp_inds)],
-        adj[np.ix_(rp_inds, rp_inds)],
-        adj[np.ix_(rp_inds, lp_inds)],
-    ]
-    out_embed, in_embed = omni(
-        full_adjs,
-        n_components=n_omni_components,
-        remove_first=None,
-        concat_graphs=False,
-        concat_directed=False,
-        method=method,
-    )
-
-    # this step is weird to explain - for the omnibus embedding I've jointly embedded
-    # the left ipsilateral, left-to-right contralateral, right ipsilateral, and
-    # right-to-left contralateral subgraphs (so taken together, it's everything).
-    # ipsi out, contra out, ipsi in, contra in
-    left_embed = np.concatenate(
-        (out_embed[0], out_embed[1], in_embed[0], in_embed[3]), axis=1
-    )
-    right_embed = np.concatenate(
-        (out_embed[2], out_embed[3], in_embed[2], in_embed[1]), axis=1
-    )
-    omni_iso_embed = np.concatenate((left_embed, right_embed), axis=0)
-
-    svd_embed = svd(omni_iso_embed)
-
-elif omni_method == "color_iso":
-    # break up all 4 color graphs by left/right contra/ipsi as described above
-    all_sub_adjs = []
-    for a in adjs:
-        sub_adjs = [
-            a[np.ix_(lp_inds, lp_inds)],
-            a[np.ix_(lp_inds, rp_inds)],
-            a[np.ix_(rp_inds, rp_inds)],
-            a[np.ix_(rp_inds, lp_inds)],
-        ]
-        all_sub_adjs += sub_adjs
-
-    # embed all of them jointly using omni
-    out_embed, in_embed = omni(
-        all_sub_adjs,
-        n_components=n_omni_components,
-        remove_first=None,
-        concat_graphs=False,
-        concat_directed=False,
-        method=method,
-    )
-
-    # again, this part is tricky. have to get the right embeddings corresponding to the
-    # correct colors/graphs/directions
-    # note that for the left side I am grabbing the in and out latent positions for the
-    # left-left subgraph, the out latent positions for the left-to-right subgraph, and
-    # the in latent positions for the right-to-left subgraph. This code just does that
-    # for each color and then concatenates them all together
-    color_embeds = []
-    for i in range(len(adjs)):
-        start = i * 4  # 4 is for contra/ipsi left/right
-        left_embed = np.concatenate(
-            (
-                out_embed[0 + start],
-                out_embed[1 + start],
-                in_embed[0 + start],
-                in_embed[3 + start],
-            ),
-            axis=1,
-        )
-        right_embed = np.concatenate(
-            (
-                out_embed[2 + start],
-                out_embed[3 + start],
-                in_embed[2 + start],
-                in_embed[1 + start],
-            ),
-            axis=1,
-        )
-        color_embed = np.concatenate((left_embed, right_embed), axis=0)
-        color_embeds.append(color_embed)
-
-    omni_color_embed = np.concatenate(color_embeds, axis=1)
-    # after concatenating, SVD them all down to a lower dimension again
-    # this step may be suspect...
-    # but don't want to run GMM in very high d
-    svd_embed = svd(omni_color_embed)
-
-print(f"{(time.time() - currtime)/60:0.2f} minutes elapsed for embedding")
-
-# %% [markdown]
 # ##
+omni_method = "color_iso"
+d = 8
+bic_ratio = 0.95
+min_split = 32
 
-# since we used lp_inds and rp_inds to index the adjs, we need to reindex the meta
-n_pairs = len(lp_inds)
-new_lp_inds = np.arange(n_pairs)
-new_rp_inds = np.arange(n_pairs) + n_pairs
-new_meta = meta.iloc[np.concatenate((lp_inds, rp_inds), axis=0)].copy()
-labels = new_meta["merge_class"].values
-
-columns = [
-    "hemisphere",
-    "class1",
-    "class2",
-    "merge_class",
-    "pair",
-    "pair_id",
-    "lineage",
-    "name",
-]
-embedding_out = "maggot_models/experiments/matched_subgraph_omni/outs/omni_"
-
-
-save_meta = new_meta[columns].copy()
-save_meta.index.name = "skid"
-save_meta = save_meta.reset_index()
-# save_meta.set_index("name")
-
-tensor_projection_writer(
-    embedding_out + "embed",
-    embedding_out + "labels",
-    svd_embed,
-    save_meta.values.tolist(),
+basename = f"-method={omni_method}-d={d}-bic_ratio={bic_ratio}-min_split={min_split}"
+meta = pd.read_csv(
+    f"maggot_models/experiments/matched_subgraph_omni_cluster/outs/meta{basename}.csv",
+    index_col=0,
 )
-save_meta.to_csv(embedding_out + "labels", sep="\t")
-
-
-plot_pairs(
-    svd_embed[:, :8], labels, left_pair_inds=new_lp_inds, right_pair_inds=new_rp_inds
+meta["lvl0_labels"] = meta["lvl0_labels"].astype(str)
+adj_df = pd.read_csv(
+    f"maggot_models/experiments/matched_subgraph_omni_cluster/outs/adj{basename}.csv",
+    index_col=0,
 )
-stashfig(f"pairs-method={omni_method}")
-
-# %% [markdown]
-# ## Clustering
-
-# parameters
-n_levels = 10  # max # of splits in the recursive clustering
-metric = "bic"  # metric on which to decide best split
-# bic_ratio = 1  # ratio used for whether or not to split
-# d = 8  # embedding dimension
-
-params = [
-    # {"d": 6, "bic_ratio": 0.8, "min_split": 32},
-    # {"d": 6, "bic_ratio": 0.9, "min_split": 32},
-    # {"d": 8, "bic_ratio": 0.8, "min_split": 32},
-    # {"d": 8, "bic_ratio": 0.9, "min_split": 32},
-    {"d": 8, "bic_ratio": 0.95, "min_split": 32},
-    # {"d": 8, "bic_ratio": 1, "min_split": 32},
-    # {"d": 10, "bic_ratio": 0.9, "min_split": 32},
-]
-
-for p in params:
-    print(p)
-    d = p["d"]
-    bic_ratio = p["bic_ratio"]
-    min_split = p["min_split"]
-    X = svd_embed[:, :d]
-    basename = (
-        f"-method={omni_method}-d={d}-bic_ratio={bic_ratio}-min_split={min_split}"
-    )
-    title = f"Method={omni_method}, d={d}, BIC ratio={bic_ratio}-min_split={min_split}"
-
-    currtime = time.time()
-
-    np.random.seed(8888)
-    mc = BinaryCluster(
-        "0",
-        adj=adj,  # stored for plotting, basically
-        n_init=50,  # number of initializations for GMM at each stage
-        meta=new_meta,  # stored for plotting and adding labels
-        stashfig=stashfig,  # for saving figures along the way
-        X=X,  # input data that actually matters
-        bic_ratio=bic_ratio,
-        reembed=False,
-        min_split=min_split,
-    )
-
-    mc.fit(n_levels=n_levels, metric=metric)
-    print(f"{(time.time() - currtime)/60:0.2f} minutes elapsed for clustering")
-
-    inds = np.concatenate((lp_inds, rp_inds))
-    cluster_adj = adj[np.ix_(inds, inds)]
-    cluster_meta = mc.meta
-    cluster_meta["sf"] = -signal_flow(cluster_adj)  # for some of the sorting
-
-    # save results
-    stashcsv(cluster_meta, "meta" + basename)
-    adj_df = pd.DataFrame(
-        cluster_adj, index=cluster_meta.index, columns=cluster_meta.index
-    )
-    stashcsv(adj_df, "adj" + basename)
-
-    # plot results
-    lowest_level = 7  # last level to show for dendrograms, adjacencies
-    plot_clustering_results(
-        cluster_adj, cluster_meta, basename, lowest_level=lowest_level
-    )
-    print()
+adj = adj_df.values
+meta["merge_class"] = meta["simple_class"]  # HACK
+# plot results
+lowest_level = 7  # last level to show for dendrograms, adjacencies
+plot_clustering_results(adj, meta, basename, lowest_level=lowest_level)
