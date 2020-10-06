@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from sklearn.metrics import pairwise_distances
-
 from graspy.embed import ClassicalMDS, LaplacianSpectralEmbed, OmnibusEmbed, selectSVD
 from graspy.match import GraphMatch
 from graspy.models import DCSBMEstimator, SBMEstimator
@@ -21,6 +19,10 @@ from graspy.utils import (
     symmetrize,
     to_laplace,
 )
+from matplotlib.collections import LineCollection
+from sklearn.metrics import pairwise_distances
+from tqdm import tqdm
+
 from src.cluster import BinaryCluster
 from src.data import load_metagraph
 from src.graph import MetaGraph
@@ -78,7 +80,11 @@ cmds_embed = cmds.fit_transform(symmetrize(embed_dists))
 set_theme()
 sort_meta = order_meta
 # sns.set_context("talk")
-fig, ax = plt.subplots(1, 1, figsize=(20, 10),)
+fig, ax = plt.subplots(
+    1,
+    1,
+    figsize=(20, 10),
+)
 sort_meta["rand"] = np.random.uniform(size=len(sort_meta))
 sort_meta["median_node_visits_jitter"] = sort_meta[
     "median_node_visits"
@@ -110,7 +116,25 @@ ax.set(
     ylabel=r"$\leftarrow$ Motor $\quad \quad$ Sensory $\rightarrow$",
     xlabel="",
 )
+
+
+xs = []
+ys = []
+segments = []
+x_key = "cmds-1"
+y_key = "median_node_visits_jitter"
+for pre, post in mg.g.edges():
+    pre_x = sort_meta.loc[pre, x_key]
+    pre_y = sort_meta.loc[pre, y_key]
+    post_x = sort_meta.loc[post, x_key]
+    post_y = sort_meta.loc[post, y_key]
+    segments.append([(pre_x, pre_y), (post_x, post_y)])
+lc = LineCollection(segments, colors="lightgrey", alpha=0.02, linewidths=0.1)
+ax.add_collection(lc)
+#
 stashfig("sm-cmds-layout")
+
+
 #%%
 
 time_pos = order_meta["median_node_visits"].values
@@ -131,7 +155,11 @@ cmds = ClassicalMDS(n_components=2, dissimilarity="precomputed")
 cmds_embed = cmds.fit_transform(symmetrize(embed_dists))
 sort_meta = order_meta
 # sns.set_context("talk")
-fig, ax = plt.subplots(1, 1, figsize=(20, 10),)
+fig, ax = plt.subplots(
+    1,
+    1,
+    figsize=(20, 10),
+)
 sort_meta["rand"] = np.random.uniform(size=len(sort_meta))
 sort_meta["median_node_visits_jitter"] = sort_meta[
     "median_node_visits"
@@ -190,7 +218,11 @@ cmds = ClassicalMDS(n_components=2, dissimilarity="precomputed")
 cmds_embed = cmds.fit_transform(symmetrize(dists))
 sort_meta = order_meta
 # sns.set_context("talk")
-fig, ax = plt.subplots(1, 1, figsize=(20, 10),)
+fig, ax = plt.subplots(
+    1,
+    1,
+    figsize=(20, 10),
+)
 sort_meta["rand"] = np.random.uniform(size=len(sort_meta))
 sort_meta["median_node_visits_jitter"] = sort_meta[
     "median_node_visits"
@@ -230,4 +262,3 @@ stashfig("sm-cmds-layout-experimental-2")
 #%%
 
 cluster_meta_loc = "maggot_models/notebooks/outs/137.8-BDP-omni-clust/csvs/meta-method=color_iso-d=8-bic_ratio=0.95-min_split=32.csv"
-
