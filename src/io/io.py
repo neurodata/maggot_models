@@ -33,6 +33,7 @@ def savefig(
     pad_inches=0.5,
     save_on=True,
     transparent=False,
+    print_out=True,
     **kws,
 ):
     if save_on:
@@ -48,7 +49,8 @@ def savefig(
             dpi=dpi,
             **kws,
         )
-        print(f"Saved figure to {savename}")
+        if print_out:
+            print(f"Saved figure to {savename}")
 
 
 def saveobj(
@@ -80,8 +82,8 @@ def saveskels(
     save_on=True,
     postfix="",
 ):
-    """ Take a list of skeleton ids and output as json file for catmaid
-    
+    """Take a list of skeleton ids and output as json file for catmaid
+
     Parameters
     ----------
     name : str
@@ -89,7 +91,7 @@ def saveskels(
     ids : list or array
         skeleton ids
     colors : list or array
-        either a hexadecimal color for each skeleton or a label for each skeleton to be 
+        either a hexadecimal color for each skeleton or a label for each skeleton to be
         colored by palette
     palette : str or None, optional
         if not None, this is a palette specification to use to color skeletons

@@ -67,7 +67,7 @@ def get_mid_map(full_meta, leaf_key=None, bilat=False, gap=10):
             left_mid = left_mid_map[k]
         if k in right_mid_map:
             right_mid = right_mid_map[k]
-        
+
         first_mid_map[k + "-"] = max(left_mid, right_mid)
     return first_mid_map
 
@@ -99,18 +99,26 @@ def get_last_mids(label, last_mid_map):
 
 
 def draw_bar_dendrogram(
-    meta, ax, first_mid_map, lowest_level=7, width=0.5, draw_labels=False
+    meta,
+    ax,
+    first_mid_map,
+    lowest_level=7,
+    width=0.5,
+    draw_labels=False,
+    color_key="merge_class",
 ):
     last_mid_map = first_mid_map
     line_kws = dict(linewidth=1, color="k")
     for level in np.arange(lowest_level + 1)[::-1]:
         x = level
-        sizes = meta.groupby([f"lvl{level}_labels", "merge_class"], sort=False).size()
+        sizes = meta.groupby([f"lvl{level}_labels", color_key], sort=False).size()
 
         uni_labels = sizes.index.unique(0)  # these need to be in the right order
 
         mids = []
         for ul in uni_labels:
+            if not isinstance(ul, str):
+                ul = str(ul)  # HACK
             last_mids = get_last_mids(ul, last_mid_map)
             grand_mid = np.mean(last_mids)
 

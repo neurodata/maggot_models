@@ -7,4 +7,6 @@ from .get_data import (
     load_networkx,
     load_everything,
     load_metagraph,
+    DATA_VERSION,
+    DATA_DIR,
 )

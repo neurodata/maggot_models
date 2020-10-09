@@ -25,6 +25,7 @@ CLASS_IND_DICT = {
     "sens-AN": 1,
     "sens-MN": 12,
     "sens-ORN": 51,
+    "Sens": 51,
     "sens-PaN": 76,
     "sens-photoRh5": 84,
     "sens-photoRh6": 106,
@@ -35,6 +36,7 @@ CLASS_IND_DICT = {
     "mPN;FFN-multi": 3,
     "tPN": 186,
     "uPN": 36,
+    "PN": 36,
     "pLN": 57,
     "bLN-Duet": 216,
     "bLN-Trio": 8,
@@ -47,9 +49,13 @@ CLASS_IND_DICT = {
     "dSEZ;FB2N": 21,
     "dSEZ;FFN": 52,
     "RG-CA-LP": 42,
+    "RGN-CA-LP": 42,
     "RG-IPC": 42,
+    "RGN-IPC": 42,
     "RG-ITP": 42,
+    "RGN-ITP": 42,
     "RG": 42,
+    "RGN": 42,
     "dSEZ": 124,
     "dSEZ;CN": 124,
     "dSEZ;LHN": 124,
@@ -57,9 +63,12 @@ CLASS_IND_DICT = {
     "dVNC": 38,
     "dVNC;CN": 38,
     "dVNC;RG": 38,
+    "dVNC;RGN": 38,
     "RG;dVNC": 38,
     "dVNC;dSEZ": 38,
     "dSEZ;dVNC": 38,
+    "Outs": 124,
+    "PreO": 114,
     "dUnk": 105,
     "unk": 190,
     "LHN": 123,
@@ -82,6 +91,23 @@ CLASS_IND_DICT = {
     "super-brain": 80,
     "super-sez": 137,
     "super-vnc": 161,
+    "Sens2o": 33,
+    "LN": 49,
+}
+
+SIMPLE_IND_DICT = {
+    "Sens": 51,
+    "PN": 36,
+    "MBIN": 121,
+    "KC": 0,
+    "MBON": 172,
+    "LHN": 123,
+    "FBN": 50,
+    "CN": 206,
+    "dVNC": 38,
+    "dSEZ": 124,
+    "RGN": 42,
+    "Outs": 124,
 }
 
 
@@ -98,6 +124,7 @@ CLASS_COLOR_DICT["motor-VAN"] = "#000000"
 CLASS_COLOR_DICT["motor-AN"] = "#000000"
 CLASS_COLOR_DICT["motor-PaN"] = "#000000"
 CLASS_COLOR_DICT["motor-MN"] = "#000000"
+CLASS_COLOR_DICT["Motr"] = "#000000"
 
 
 def plot_colors():
@@ -142,3 +169,5 @@ if __name__ == "__main__":
     plot_class_colormap()
     # plt.show()
 
+
+# %%
