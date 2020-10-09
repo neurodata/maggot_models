@@ -10,18 +10,21 @@
 #%%
 # collapse
 import os
+import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from graspy.plot import heatmap, pairplot
+from matplotlib.transforms import blended_transform_factory
 from scipy.stats import pearsonr, spearmanr
 from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 
-from graspologic.embed import AdjacencySpectralEmbed
+from graspologic.embed import AdjacencySpectralEmbed, select_dimension
 from graspologic.match import GraphMatch
 from src.io import savefig
 from src.visualization import set_theme
@@ -164,40 +167,41 @@ plt.tight_layout()
 stashfig("multi-nn-adjs")
 #%% [markdown]
 #### Trying to model the weights with something simple
-# Here I just take the mean adjacency matrix, and do a low-rank decomposition.
-#%%
-# collapse
-adj_bar = np.mean(np.stack(adjs), axis=0)
-ase = AdjacencySpectralEmbed(n_components=20)
-X, Y = ase.fit_transform(adj_bar)
-P_hat = X @ Y.T
-heatmap(P_hat, title="Low-rank weights")
-stashfig("p-hat")
-#%% [markdown]
-# Then I make a new NN where the weights are set to this low rank matrix, and see how it
-# performs.
+# I make a new NN where the weights are set to the simple average of weights across all of
+# the NN that I fit and see how it performs.
 # %%
 # collapse
-mlp = MLPClassifier(hidden_layer_sizes=hidden_layer_sizes, max_iter=600)
-mlp.fit(
-    X_train, y_train
-)  # dummy fit, just to set parameters like shape of input/output
-P_hat = adj_bar
-n_nodes_visited = 0
-for i, weights in enumerate(weights_by_layer):
-    n_source, n_target = weights.shape
-    mlp.coefs_[i] = P_hat[
-        n_nodes_visited : n_nodes_visited + n_source,
-        n_nodes_visited + n_source : n_nodes_visited + n_source + n_target,
-    ]
-    mlp.intercepts_[i] = P_hat[
-        -i - 1, n_nodes_visited + n_source : n_nodes_visited + n_source + n_target
-    ]
-    n_nodes_visited += n_source
+adj_bar = np.mean(np.stack(adjs), axis=0)
 
+
+def mlp_from_adjacency(adj, X_train, y_train):
+    mlp = MLPClassifier(hidden_layer_sizes=hidden_layer_sizes, max_iter=1)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        mlp.fit(
+            X_train, y_train
+        )  # dummy fit, just to set parameters like shape of input/output
+    n_nodes_visited = 0
+    for i, weights in enumerate(mlp.coefs_):
+        n_source, n_target = weights.shape
+        mlp.coefs_[i] = adj[
+            n_nodes_visited : n_nodes_visited + n_source,
+            n_nodes_visited + n_source : n_nodes_visited + n_source + n_target,
+        ]
+        mlp.intercepts_[i] = adj[
+            -i - 1, n_nodes_visited + n_source : n_nodes_visited + n_source + n_target
+        ]
+        n_nodes_visited += n_source
+    return mlp
+
+
+X_train, X_test, y_train, y_test = train_test_split(
+    data, digits.target, test_size=0.7, shuffle=True
+)
+mlp = mlp_from_adjacency(adj_bar, X_train, y_train)
 y_pred = mlp.predict(X_test)
 acc = accuracy_score(y_test, y_pred)
-print(f"Test accuracy score for NN with low-rank weights: {acc}")
+print(f"Test accuracy score for NN with mean weights: {acc}")
 
 #%% [markdown]
 ### Why I think this doesn't work, and what we might be able to do about it
@@ -307,6 +311,7 @@ stashfig("pre-post-weights-gm")
 # be matching on a per-hidden-layer basis. But in this case I have one hidden layer and
 # the others are seeds so it doesn't matter.
 #%%
+# collapse
 best_model_ind = np.argmax(accuracies)
 best_adj = adjs[best_model_ind]
 matched_adjs = []
@@ -320,7 +325,10 @@ for i, adj in enumerate(adjs):
 
 #%% [markdown]
 #### All pairwise weight comparisons after matching
+# We see that the correlation in weights improves somewhat, though they are still not
+# highly correlated.
 #%%
+# collapse
 all_matched_weights = [a.ravel() for a in matched_adjs]
 all_matched_weights = np.stack(all_matched_weights, axis=1)
 all_matched_weights = all_matched_weights[
@@ -341,59 +349,127 @@ stashfig(
 
 #%% [markdown]
 #### Using $\bar{A}_{matched}$ as the weight matrix
+# I take the mean of the weights after matching, and ask how well this mean weight matrix
+# performs when converted back to a neural net.
 #%%
+# collapse
 matched_adj_bar = np.mean(np.stack(matched_adjs), axis=0)
-mlp = MLPClassifier(hidden_layer_sizes=hidden_layer_sizes, max_iter=600)
-mlp.fit(
-    X_train, y_train
-)  # dummy fit, just to set parameters like shape of input/output
-P_hat = matched_adj_bar
-n_nodes_visited = 0
-for i, weights in enumerate(weights_by_layer):
-    n_source, n_target = weights.shape
-    mlp.coefs_[i] = P_hat[
-        n_nodes_visited : n_nodes_visited + n_source,
-        n_nodes_visited + n_source : n_nodes_visited + n_source + n_target,
-    ]
-    mlp.intercepts_[i] = P_hat[
-        -i - 1, n_nodes_visited + n_source : n_nodes_visited + n_source + n_target
-    ]
-    n_nodes_visited += n_source
 
+X_train, X_test, y_train, y_test = train_test_split(
+    data, digits.target, test_size=0.7, shuffle=True
+)
+mlp = mlp_from_adjacency(matched_adj_bar, X_train, y_train)
 y_pred = mlp.predict(X_test)
 acc = accuracy_score(y_test, y_pred)
-print(f"Test accuracy score for NN with low-rank weights: {acc}")
+print(f"Test accuracy score for NN with average adjacency (matched): {acc}")
 
+#%% [markdown]
+#### Decomposing the matched and unmatched adjacency matrices
 #%%
+# collapse
 
+
+def embed(A):
+    ase = AdjacencySpectralEmbed(n_components=len(A), algorithm="full")
+    X, Y = ase.fit_transform(A)
+    elbow_inds, _ = select_dimension(A, n_elbows=4)
+    elbow_inds = np.array(elbow_inds)
+    return X, Y, ase.singular_values_, elbow_inds
+
+
+def screeplot(sing_vals, elbow_inds, color=None, ax=None, label=None, linestyle="-"):
+    if ax is None:
+        _, ax = plt.subplots(1, 1, figsize=(8, 4))
+    plt.plot(
+        range(1, len(sing_vals) + 1),
+        sing_vals,
+        color=color,
+        label=label,
+        linestyle=linestyle,
+    )
+    plt.scatter(
+        elbow_inds,
+        sing_vals[elbow_inds - 1],
+        marker="x",
+        s=50,
+        zorder=10,
+        color=color,
+    )
+    ax.set(ylabel="Singular value", xlabel="Index")
+    return ax
+
+
+X_matched, Y_matched, sing_vals_matched, elbow_inds_matched = embed(matched_adj_bar)
+X_unmatched, Y_unmatched, sing_vals_unmatched, elbow_inds_unmatched = embed(adj_bar)
+
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+screeplot(sing_vals_matched, elbow_inds_matched, ax=ax, label="matched")
+screeplot(
+    sing_vals_unmatched, elbow_inds_unmatched, ax=ax, label="unmatched", linestyle="--"
+)
+ax.legend()
+stashfig("screeplot-adj-bars")
+
+#%% [markdown]
+#### Plotting accuracy as a function of adjacency rank
+#%%
+# collapse
+match_latent_map = {
+    "matched": (X_matched, Y_matched),
+    "unmatched": (X_unmatched, Y_unmatched),
+}
+
+n_components_range = np.unique(
+    np.geomspace(1, len(matched_adj_bar) + 1, num=10, dtype=int)
+)
+
+rows = []
+n_resamples = 8
+for resample in range(n_resamples):
+    for n_components in n_components_range:
+        X_train, X_test, y_train, y_test = train_test_split(
+            data, digits.target, test_size=0.7, shuffle=True
+        )
+        for method in ["matched", "unmatched"]:
+            X, Y = match_latent_map[method]
+            low_rank_adj = X[:, :n_components] @ Y[:, :n_components].T
+            mlp = mlp_from_adjacency(low_rank_adj, X_train, y_train)
+            y_pred = mlp.predict(X_test)
+            acc = accuracy_score(y_test, y_pred)
+            rows.append({"accuracy": acc, "rank": n_components, "type": method})
+results = pd.DataFrame(rows)
+
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+sns.lineplot(
+    x="rank",
+    y="accuracy",
+    data=results,
+    style="type",
+    hue="type",
+    ax=ax,
+    # markers=["o", "o"],
+)
+results["jitter_rank"] = results["rank"] + np.random.uniform(
+    -1, 1, size=len(results["rank"])
+)
+sns.scatterplot(
+    x="jitter_rank", y="accuracy", data=results, hue="type", ax=ax, s=10, legend=False
+)
+ax.set(yticks=[0.2, 0.4, 0.6, 0.8], ylim=(0, 0.82), xlabel="Rank", ylabel="Accuracy")
+ax.axhline(1 / 10, linestyle=":", linewidth=1.5, color="black")
+
+ax.text(
+    1,
+    1 / 10,
+    "Chance",
+    ha="right",
+    va="bottom",
+    transform=blended_transform_factory(ax.transAxes, ax.transData),
+    fontsize="small",
+)
+stashfig("acc-by-rank")
 
 # %%
-# def get_masks(mlp):
-#     weights_by_layer = mlp.coefs_
-#     n_nodes = 0
-#     for weights in weights_by_layer:
-#         n_source, n_target = weights.shape
-#         n_nodes += n_source
-#     n_nodes += n_target
-#     union_mask = np.zeros((n_nodes, n_nodes), dtype=bool)
-
-#     n_nodes_visited = 0
-#     layer_masks = []
-#     for i, weights in enumerate(weights_by_layer):
-#         n_source, n_target = weights.shape
-#         layer_mask = np.zeros((n_nodes, n_nodes), dtype=bool)
-#         layer_mask[
-#             n_nodes_visited : n_nodes_visited + n_source,
-#             n_nodes_visited + n_source : n_nodes_visited + n_source + n_target,
-#         ] = True
-#         layer_masks.append(layer_mask)
-#         union_mask[
-#             n_nodes_visited : n_nodes_visited + n_source,
-#             n_nodes_visited + n_source : n_nodes_visited + n_source + n_target,
-#         ] = True
-#         n_nodes_visited += n_source
-#     return union_mask, layer_masks
-
-
-# def get_weight_matrices(mlp):
-#     union_mask, layer_masks = get_masks(mlp)
+# TODO: overparameterized model, does this do better, maybe the independent edge assumption makes more sense
+# TODO: ecdf on the edges. maybe is a more complicated rather than less complicated model.
+# TODO: otherwise, just sample edge weights uniformly from the marginal ECDF.
