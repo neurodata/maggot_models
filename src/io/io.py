@@ -1,12 +1,15 @@
-import matplotlib.pyplot as plt
-import os
-from pathlib import Path
-import pickle
-import numpy as np
-import seaborn as sns
-from operator import itemgetter
+import csv
 import json
+import os
+import pickle
+from operator import itemgetter
+from pathlib import Path
+from random import shuffle
+
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import seaborn as sns
 
 
 def _handle_dirs(pathname, foldername, subfoldername):
@@ -158,9 +161,6 @@ def savecsv(
         print(f"Saved DataFrame to {savename}")
 
 
-import csv
-
-
 def savelol(
     lol,
     name,
@@ -203,3 +203,28 @@ def readcsv(
     path = _handle_dirs(pathname, foldername, subfoldername)
     savename = path / str(name + ".csv")
     return pd.read_csv(savename, **kws)
+
+
+def _write_walk_set(walk_set, f):
+    for w in walk_set:
+        str_walk = str(w)
+        str_walk = str_walk.strip("[]")
+        str_walk = str_walk.replace("'", "")
+        str_walk = str_walk.replace(",", "")
+        f.write(f"{str_walk}\n")
+    f.write("\n")
+
+
+def save_walks(
+    walks, name="walks.txt", outpath=".", multidoc=False, shuffle_walks=True
+):
+    outpath = Path(outpath)
+    outfile = outpath / name
+    if not multidoc:
+        walks = [walks]
+    with open(outfile, "w") as f:
+        for walk_set in walks:
+            if shuffle_walks:
+                shuffle(walk_set)
+            _write_walk_set(walk_set, f)
+    print(f"Saved walks to {outfile}")
