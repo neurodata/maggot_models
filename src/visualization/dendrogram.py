@@ -113,7 +113,7 @@ def draw_bar_dendrogram(
         x = level
         sizes = meta.groupby([f"lvl{level}_labels", color_key], sort=False).size()
 
-        uni_labels = sizes.index.unique(0)  # these need to be in the right order
+        uni_labels = sizes.index.unique(level=0)  # these need to be in the right order
 
         mids = []
         for ul in uni_labels:

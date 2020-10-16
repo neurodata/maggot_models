@@ -204,16 +204,16 @@ def _plot_brackets(
 
 
 def incidence_plot(adj, classes, from_class):
-    """Plots non-square adjacency, sorts by class label, sums input to columns for 
+    """Plots non-square adjacency, sorts by class label, sums input to columns for
     marginal
-    
+
     Parameters
     ----------
     adj : np.array
         n x n adjacency matrix
     classes : np.ndarray
-        n-length indicator of class membership for sorting nodes 
-    from_class : str 
+        n-length indicator of class membership for sorting nodes
+    from_class : str
         which class to select on the left
 
     Returns
@@ -287,25 +287,25 @@ def screeplot(
     n_elbows=4,
 ):
     r"""
-    Plots the distribution of singular values for a matrix, either showing the 
+    Plots the distribution of singular values for a matrix, either showing the
     raw distribution or an empirical CDF (depending on ``cumulative``)
 
     Parameters
     ----------
     X : np.ndarray (2D)
-        input matrix 
+        input matrix
     title : string, default : 'Scree plot'
-        plot title 
+        plot title
     context :  None, or one of {talk (default), paper, notebook, poster}
         Seaborn plotting context
     font_scale : float, optional, default: 1
-        Separate scaling factor to independently scale the size of the font 
+        Separate scaling factor to independently scale the size of the font
         elements.
     figsize : tuple of length 2, default (10, 5)
         size of the figure (width, height)
     cumulative : boolean, default: True
-        whether or not to plot a cumulative cdf of singular values 
-    show_first : int or None, default: None 
+        whether or not to plot a cumulative cdf of singular values
+    show_first : int or None, default: None
         whether to restrict the plot to the first ``show_first`` components
 
     Returns
@@ -863,7 +863,7 @@ def _get_block_indices(y):
 
 def _calculate_block_edgesum(graph, block_inds, block_vert_inds):
     """
-    graph : input n x n graph 
+    graph : input n x n graph
     block_inds : list of length n_communities
     block_vert_inds : list of list, for each block index, gives every node in that block
     return_counts : whether to calculate counts rather than proportions
@@ -971,8 +971,8 @@ def palplot(k, cmap="viridis", figsize=(1, 10), ax=None, start=0, stop=None):
     ax.xaxis.set_major_locator(plt.NullLocator())
     if stop is None:
         stop = len(pal) + start
-    ax.yaxis.set_major_formatter(plt.FixedFormatter(np.arange(start, stop, dtype=int)))
     ax.yaxis.set_major_locator(plt.FixedLocator(np.arange(k)))
+    ax.yaxis.set_major_formatter(plt.FixedFormatter(np.arange(start, stop, dtype=int)))
     return ax
 
 

@@ -32,7 +32,7 @@ from src.visualization import set_theme
 FNAME = os.path.basename(__file__)[:-3]
 
 set_theme()
-np.random.seed(8888)
+np.random.seed(88888)
 
 
 def stashfig(name, **kws):
@@ -145,7 +145,7 @@ for i in range(n_replicates):
 
     adjs.append(adj)
 
-
+baseline_acc = np.mean(accuracies)
 all_biases = [np.concatenate(b) for b in all_biases]
 all_biases = np.stack(all_biases).T
 
@@ -431,8 +431,10 @@ for resample in range(n_resamples):
             data, digits.target, test_size=0.7, shuffle=True
         )
         for method in ["matched", "unmatched"]:
-            X, Y = match_latent_map[method]
-            low_rank_adj = X[:, :n_components] @ Y[:, :n_components].T
+            left_latent, right_latent = match_latent_map[method]
+            low_rank_adj = (
+                left_latent[:, :n_components] @ right_latent[:, :n_components].T
+            )
             mlp = mlp_from_adjacency(low_rank_adj, X_train, y_train)
             y_pred = mlp.predict(X_test)
             acc = accuracy_score(y_test, y_pred)
@@ -467,9 +469,300 @@ ax.text(
     transform=blended_transform_factory(ax.transAxes, ax.transData),
     fontsize="small",
 )
+ax.get_legend().remove()
+ax.legend(bbox_to_anchor=(1, 1), loc="upper left")
 stashfig("acc-by-rank")
+
+# %% [markdown]
+# ##
+
+
+def mlp_from_adjacency(adj, X_train, y_train):
+    mlp = MLPClassifier(
+        hidden_layer_sizes=hidden_layer_sizes,
+        max_iter=1,
+        warm_start=True,
+        solver="lbfgs",
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        mlp.fit(
+            X_train, y_train
+        )  # dummy fit, just to set parameters like shape of input/output
+    n_nodes_visited = 0
+    for i, weights in enumerate(mlp.coefs_):
+        n_source, n_target = weights.shape
+        mlp.coefs_[i] = adj[
+            n_nodes_visited : n_nodes_visited + n_source,
+            n_nodes_visited + n_source : n_nodes_visited + n_source + n_target,
+        ].copy()
+        mlp.intercepts_[i] = adj[
+            -i - 1, n_nodes_visited + n_source : n_nodes_visited + n_source + n_target
+        ].copy()
+        n_nodes_visited += n_source
+    return mlp
+
+
+def perturb_mlp(mlp, scale=0.01):
+    for i, weights in enumerate(mlp.coefs_):
+        n_source, n_target = weights.shape
+        mlp.coefs_[i] += np.random.normal(0, scale, size=mlp.coefs_[i].shape)
+        mlp.intercepts_[i] += np.random.normal(0, scale, size=mlp.intercepts_[i].shape)
+    return mlp
+
+
+# mlp = perturb_mlp(mlp, scale=0.2)
+# mlp.warm_start = True
+# mlp.max_iter = 1
+
+n_components = 10
+
+left_latent, right_latent = match_latent_map["matched"]
+low_rank_adj = left_latent[:, :n_components] @ right_latent[:, :n_components].T
+
+from sklearn.exceptions import ConvergenceWarning
+
+rows = []
+for replicate in range(10):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=ConvergenceWarning)
+        print(replicate)
+        low_rank_mlp = mlp_from_adjacency(low_rank_adj, X_train, y_train)
+        X_train, X_test, y_train, y_test = train_test_split(
+            data, digits.target, test_size=0.3, shuffle=True
+        )
+        clean_mlp = MLPClassifier(
+            hidden_layer_sizes=hidden_layer_sizes,
+            max_iter=1,
+            warm_start=True,
+            solver="lbfgs",
+        )
+        for method in ["low-rank", "clean"]:
+            if method == "clean":
+                mlp = clean_mlp
+            elif method == "low-rank":
+                mlp = low_rank_mlp
+            for i in range(500):
+                inds = np.random.choice(len(X_train), size=128, replace=False)
+                mlp = mlp.fit(X_train[inds], y_train[inds])
+                mlp.n_iter_ = 0
+                acc = accuracy_score(y_test, mlp.predict(X_test))
+                rows.append(
+                    {
+                        "accuracy": acc,
+                        "method": method,
+                        "iteration": i,
+                        "replicate": replicate,
+                    }
+                )
+
+results = pd.DataFrame(rows)
+#%%
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+
+# sns.lineplot(
+#     x="iteration",
+#     y="accuracy",
+#     hue="method",
+#     estimator=None,
+#     alpha=0.3,
+#     data=results,
+#     ax=ax,
+# )
+sns.lineplot(x="iteration", y="accuracy", hue="method", data=results, ax=ax)
+ax.set(title=f"Rank = {n_components}")
+ax.axhline(baseline_acc, linestyle=":", linewidth=1.5, color="black")
+stashfig(f"low-rank-training-continued-n_components={n_components}")
 
 # %%
 # TODO: overparameterized model, does this do better, maybe the independent edge assumption makes more sense
 # TODO: ecdf on the edges. maybe is a more complicated rather than less complicated model.
 # TODO: otherwise, just sample edge weights uniformly from the marginal ECDF.
+# overarching thing here is dont have a way to sample in a way that makes sense?
+
+# %% [markdown]
+# ##
+from sklearn.utils import check_random_state
+
+mlp = MLPClassifier(max_iter=1)
+mlp._validate_hyperparameters()
+mlp._validate_input(X_train, y_train, False)
+n_features = X_train.shape[1]
+n_outputs = len(np.unique(y_train))
+layer_units = [n_features] + list(hidden_layer_sizes) + [n_outputs]
+mlp._random_state = check_random_state(mlp.random_state)
+mlp._initialize(y_train.reshape((-1, 1)), layer_units)
+# mlp.fit(X_train, y_train)
+
+
+def split_data(test_size=0.3):
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size, shuffle=True
+    )
+    return X_train, X_test, y_train, y_test
+
+
+X = data
+y = digits.target
+
+
+def initialize_mlp(hidden_layer_sizes=(15,)):
+    mlp = MLPClassifier(hidden_layer_sizes=hidden_layer_sizes)
+    mlp._validate_hyperparameters()
+    mlp._validate_input(X, y, False)
+    n_features = X.shape[1]
+    n_outputs = len(np.unique(y))
+    layer_units = [n_features] + list(hidden_layer_sizes) + [n_outputs]
+    mlp._random_state = check_random_state(mlp.random_state)
+    mlp._initialize(y.reshape((-1, 1)), layer_units)
+    return mlp
+
+
+def train_mlp(hidden_layer_sizes=(15,), test_size=0.3, return_test_data=False):
+    X_train, X_test, y_train, y_test = split_data(test_size=test_size)
+    mlp = MLPClassifier(hidden_layer_sizes=hidden_layer_sizes, max_iter=600)
+    mlp.fit(X_train, y_train)
+    if not return_test_data:
+        return mlp
+    else:
+        return mlp, X_test, y_test
+
+
+def get_mlp_params(mlp):
+    params = []
+    for coefs in mlp.coefs_:
+        params.append(coefs.ravel())
+    for intercepts in mlp.intercepts_:
+        params.append(intercepts)
+    return np.concatenate(params)
+
+
+n_nn_samples = 100
+y_nn = np.zeros(2 * n_nn_samples)
+
+mlps = []
+mlp_params = []
+for i in range(n_nn_samples):
+    mlp = train_mlp()
+    mlps.append(mlp)
+    mlp_params.append(get_mlp_params(mlp))
+    y_nn[i] = 1
+
+
+for i in range(n_nn_samples):
+    mlp = initialize_mlp()
+    mlps.append(mlp)
+    mlp_params.append(get_mlp_params(mlp))
+
+X_nn = np.stack(mlp_params)
+
+# %% [markdown]
+# ##
+from sklearn.ensemble import RandomForestClassifier
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X_nn, y_nn, test_size=0.3, shuffle=True
+)
+
+rf = RandomForestClassifier()
+rf.fit(X_train, y_train)
+y_pred = rf.predict(X_test)
+score = accuracy_score(y_test, y_pred)
+print(score)
+
+#%%
+
+images = digits.images.copy()
+
+for i, image in enumerate(images):
+    images[i] = image.T
+
+data_rot = images.reshape((n_samples, -1))
+
+
+# def train_mlp(hidden_layer_sizes=(15,), test_size=0.3, return_test_data=False):
+#     mlp = MLPClassifier(hidden_layer_sizes=hidden_layer_sizes, max_iter=600)
+#     mlp.fit(X_train, y_train)
+#     if not return_test_data:
+#         return mlp
+#     else:
+#         return mlp, X_test, y_test
+
+n_nn_samples = 100
+y_nn = np.zeros(2 * n_nn_samples)
+mlp_kwargs = dict(hidden_layer_sizes=hidden_layer_sizes, max_iter=600)
+
+mlps = []
+mlp_params = []
+for i in range(n_nn_samples):
+    X_train, X_test, y_train, y_test = train_test_split(
+        data, y, test_size=0.3, shuffle=True
+    )
+    mlp = MLPClassifier(**mlp_kwargs)
+    mlp.fit(X_train, y_train)
+    mlps.append(mlp)
+    mlp_params.append(get_mlp_params(mlp))
+    y_nn[i] = 1
+
+for i in range(n_nn_samples):
+    X_train, X_test, y_train, y_test = train_test_split(
+        data_rot, y, test_size=0.3, shuffle=True
+    )
+    mlp = MLPClassifier(**mlp_kwargs)
+    mlp.fit(X_train, y_train)
+    mlps.append(mlp)
+    mlp_params.append(get_mlp_params(mlp))
+
+X_nn = np.stack(mlp_params)
+
+# %%
+X_train, X_test, y_train, y_test = train_test_split(
+    X_nn, y_nn, test_size=0.3, shuffle=True
+)
+
+rf = RandomForestClassifier()
+rf.fit(X_train, y_train)
+y_pred = rf.predict(X_test)
+score = accuracy_score(y_test, y_pred)
+print(score)
+
+# %% [markdown]
+# ##
+from sklearn.linear_model import SGDClassifier
+
+log_reg_cls = SGDClassifier(loss="log")
+log_reg_cls.fit(X_train, y_train)
+y_pred = log_reg_cls.predict(X_test)
+score = accuracy_score(y_test, y_pred)
+print(score)
+# probs =
+
+# %% [markdown]
+# ##
+from sklearn.decomposition import PCA
+from graspologic.plot import pairplot
+
+X_nn_pca = PCA(n_components=4).fit_transform(X_nn)
+
+# X_nn_latent += np.random.uniform()
+plt.figure()
+sns.scatterplot(X_nn_pca[:, 0], X_nn_pca[:, 1], hue=y_nn, legend=False, s=10)
+
+pairplot(X_nn_pca, labels=y_nn)
+
+# %% [markdown]
+# ##
+from sklearn.manifold import Isomap
+
+X_nn_iso = Isomap(n_components=4, metric="cosine").fit_transform(X_nn)
+
+pairplot(X_nn_iso, labels=y_nn)
+
+# from umap import UMAP
+
+# X_nn_umap = UMAP(n_components=2, min_dist=1, n_neighbors=5).fit_transform(X_nn)
+# plt.figure()
+# sns.scatterplot(X_nn_umap[:, 0], X_nn_umap[:, 1], hue=y_nn, legend=False)
+
+#%%
+# TODO going back to the idea of trying to find the distribution of weights within a class...

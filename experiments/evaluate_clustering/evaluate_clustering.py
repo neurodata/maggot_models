@@ -48,7 +48,7 @@ np.random.seed(8888)
 
 save_path = Path("maggot_models/experiments/evaluate_clustering/")
 
-CLASS_KEY = "simple_class"
+CLASS_KEY = "merge_class"
 
 
 def stashfig(name, **kws):
@@ -75,7 +75,7 @@ def sort_mg(mg, level_names):
         [description]
     """
     meta = mg.meta
-    sort_class = level_names + [CLASS_KEY]
+    sort_class = level_names + ["merge_class"]
     class_order = ["sf"]
     total_sort_by = []
     for sc in sort_class:
@@ -208,7 +208,7 @@ def plot_cluster_size(meta, ax, n_levels=10, side=True, boxes=False):
         min_size = sizes["Size"].min()
         max_size = sizes["Size"].max()
         ax.annotate(
-            s=max_size,
+            text=max_size,
             xy=(l, max_size),
             xytext=(0, 30),
             ha="center",
@@ -217,7 +217,7 @@ def plot_cluster_size(meta, ax, n_levels=10, side=True, boxes=False):
             fontsize=0.75 * fontsize,
         )
         ax.annotate(
-            s=min_size,
+            text=min_size,
             xy=(l, min_size),
             xytext=(0, -30),
             ha="center",
@@ -327,7 +327,7 @@ def calc_model_liks(adj, meta, lp_inds, rp_inds, n_levels=10):
     return pd.DataFrame(rows)
 
 
-def plot_clustering_results(adj, meta, basename, lowest_level=7):
+def plot_clustering_results(adj, meta, basename, lowest_level=7, show_adjs=True):
     level_names = [f"lvl{i}_labels" for i in range(lowest_level + 1)]
 
     mg = MetaGraph(adj, meta)
@@ -350,19 +350,21 @@ def plot_clustering_results(adj, meta, basename, lowest_level=7):
     dend_axs = []
     dend_axs.append(fig.add_subplot(gs[:, 1]))  # left
     dend_axs.append(fig.add_subplot(gs[:, 2]))  # right
-    dend_axs.append(fig.add_subplot(gs[:, 3]))  # colormap
+    dend_axs.append(fig.add_subplot(gs[2:4, 3]))  # colormap
     plot_double_dendrogram(meta, dend_axs[:-1], lowest_level=lowest_level)
     plot_color_labels(meta, dend_axs[-1])
 
     # plot the adjacency matrices for data and sampled data
-    adj_axs = np.empty((2, lowest_level + 1), dtype="O")
-    offset = 4
-    for level in np.arange(lowest_level + 1):
-        ax = fig.add_subplot(gs[: n_row // 2, level + offset])
-        adj_axs[0, level] = ax
-        ax = fig.add_subplot(gs[n_row // 2 :, level + offset])
-        adj_axs[1, level] = ax
-    plot_adjacencies(mg, adj_axs, lowest_level=lowest_level)
+    if show_adjs:
+        adj_axs = np.empty((2, lowest_level + 1), dtype="O")
+        offset = 4
+        for level in np.arange(lowest_level + 1):
+            ax = fig.add_subplot(gs[: n_row // 2, level + offset])
+            adj_axs[0, level] = ax
+            ax = fig.add_subplot(gs[n_row // 2 :, level + offset])
+            adj_axs[1, level] = ax
+
+            plot_adjacencies(mg, adj_axs, lowest_level=lowest_level)
 
     temp_meta = mg.meta.copy()
     # all valid TRUE pairs
@@ -447,6 +449,38 @@ adj_df = pd.read_csv(
 )
 adj = adj_df.values
 meta["merge_class"] = meta["simple_class"]  # HACK
+# %%
 # plot results
 lowest_level = 7  # last level to show for dendrograms, adjacencies
-plot_clustering_results(adj, meta, basename, lowest_level=lowest_level)
+plot_clustering_results(adj, meta, basename, lowest_level=lowest_level, show_adjs=False)
+
+# %% [markdown]
+# ##
+
+mg = MetaGraph(adj, meta)
+level_names = [f"lvl{i}_labels" for i in range(lowest_level + 1)]
+meta = mg.meta
+sort_class = level_names + ["merge_class"]
+class_order = ["sf"]
+total_sort_by = []
+for sc in sort_class:
+    for co in class_order:
+        class_value = meta.groupby(sc)[co].mean()
+        meta[f"{sc}_{co}_order"] = meta[sc].map(class_value)
+        total_sort_by.append(f"{sc}_{co}_order")
+    total_sort_by.append(sc)
+mg = mg.sort_values(total_sort_by, ascending=False)
+mg.meta[["merge_class", "simple_class", "lvl0_labels_sf_order"]]
+
+# %% [markdown]
+# ##
+
+sorted_meta = meta.groupby(total_sort_by)["sf"].mean()
+# sorted_meta.head(20)
+meta.groupby(["lvl0_labels", "lvl1_labels", "merge_class"], sort=False)[
+    "merge_class_sf_order"
+].mean()
+# sizes = meta.groupby([leaf_key, "merge_class"], sort=False).size()
+
+# %%
+meta.groupby(["lvl0_labels", "merge_class"], sort=False)["merge_class_sf_order"].mean()
