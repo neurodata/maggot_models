@@ -49,17 +49,18 @@ np.random.seed(8888)
 save_path = Path("maggot_models/experiments/evaluate_clustering/")
 
 CLASS_KEY = "merge_class"
+CLASS_ORDER = "median_node_visits"
 
 
-def stashfig(name, **kws):
-    savefig(name, pathname=save_path / "figs", fmt="pdf", save_on=True, **kws)
+def stashfig(name, fmt="pdf", **kws):
+    savefig(name, pathname=save_path / "figs", fmt=fmt, save_on=True, **kws)
 
 
 def stashcsv(df, name, **kws):
     savecsv(df, name, pathname=save_path / "outs", **kws)
 
 
-def sort_mg(mg, level_names):
+def sort_mg(mg, level_names, class_order=CLASS_ORDER):
     """Required sorting prior to plotting the dendrograms
 
     Parameters
@@ -76,7 +77,7 @@ def sort_mg(mg, level_names):
     """
     meta = mg.meta
     sort_class = level_names + ["merge_class"]
-    class_order = ["sf"]
+    class_order = [class_order]
     total_sort_by = []
     for sc in sort_class:
         for co in class_order:
@@ -101,8 +102,8 @@ def plot_adjacencies(full_mg, axs, lowest_level=7):
             plot_type="scattermap",
             sizes=(0.5, 0.5),
             sort_class=["hemisphere"] + level_names[: level + 1],
-            item_order=[f"{CLASS_KEY}_sf_order", CLASS_KEY, "sf"],
-            class_order="sf",
+            item_order=[f"{CLASS_KEY}_{CLASS_ORDER}_order", CLASS_KEY, CLASS_ORDER],
+            class_order=CLASS_ORDER,
             meta=full_mg.meta,
             palette=CLASS_COLOR_DICT,
             colors=CLASS_KEY,
@@ -123,9 +124,9 @@ def plot_adjacencies(full_mg, axs, lowest_level=7):
             ax=ax,
             plot_type="scattermap",
             sizes=(0.5, 0.5),
-            sort_class=["hemisphere"] + level_names[: level + 1],
-            item_order=[f"{CLASS_KEY}_sf_order", CLASS_KEY, "sf"],
-            class_order="sf",
+            sort_class=level_names[: level + 1],
+            item_order=[f"{CLASS_KEY}_{CLASS_ORDER}_order", CLASS_KEY, CLASS_ORDER],
+            class_order=CLASS_ORDER,
             meta=full_mg.meta,
             palette=CLASS_COLOR_DICT,
             colors=CLASS_KEY,
@@ -327,7 +328,9 @@ def calc_model_liks(adj, meta, lp_inds, rp_inds, n_levels=10):
     return pd.DataFrame(rows)
 
 
-def plot_clustering_results(adj, meta, basename, lowest_level=7, show_adjs=True):
+def plot_clustering_results(
+    adj, meta, basename, lowest_level=7, show_adjs=True, show_singles=True
+):
     level_names = [f"lvl{i}_labels" for i in range(lowest_level + 1)]
 
     mg = MetaGraph(adj, meta)
@@ -351,8 +354,10 @@ def plot_clustering_results(adj, meta, basename, lowest_level=7, show_adjs=True)
     dend_axs.append(fig.add_subplot(gs[:, 1]))  # left
     dend_axs.append(fig.add_subplot(gs[:, 2]))  # right
     dend_axs.append(fig.add_subplot(gs[2:4, 3]))  # colormap
-    plot_double_dendrogram(meta, dend_axs[:-1], lowest_level=lowest_level)
-    plot_color_labels(meta, dend_axs[-1])
+    plot_double_dendrogram(
+        meta, dend_axs[:-1], lowest_level=lowest_level, color_order=CLASS_ORDER
+    )
+    plot_color_labels(meta, dend_axs[-1], color_order=CLASS_ORDER)
 
     # plot the adjacency matrices for data and sampled data
     if show_adjs:
@@ -412,22 +417,23 @@ def plot_clustering_results(adj, meta, basename, lowest_level=7, show_adjs=True)
     stashfig(f"megafig-lowest={lowest_level}" + basename)
     plt.close()
 
-    # make a single barplot for each level
-    mg = sort_mg(mg, level_names)
-    meta = mg.meta
-    adj = mg.adj
-    width_ratios = [0.7, 0.3]
+    if show_singles:
+        # make a single barplot for each level
+        mg = sort_mg(mg, level_names)
+        meta = mg.meta
+        adj = mg.adj
+        width_ratios = [0.7, 0.3]
 
-    for l in range(lowest_level + 1):
-        fig = plt.figure(figsize=(10, 30))
-        fig, axs = plt.subplots(
-            1, 2, figsize=(10, 30), gridspec_kw=dict(width_ratios=width_ratios)
-        )
-        plot_single_dendrogram(meta, axs[0], draw_labels=True, lowest_level=l)
-        plot_color_labels(meta, axs[1])
-        axs[1].yaxis.tick_right()
-        stashfig(f"bars-lowest={l}" + basename)
-        plt.close()
+        for l in range(lowest_level + 1):
+            fig = plt.figure(figsize=(10, 30))
+            fig, axs = plt.subplots(
+                1, 2, figsize=(10, 30), gridspec_kw=dict(width_ratios=width_ratios)
+            )
+            plot_single_dendrogram(meta, axs[0], draw_labels=True, lowest_level=l)
+            plot_color_labels(meta, axs[1])
+            axs[1].yaxis.tick_right()
+            stashfig(f"bars-lowest={l}" + basename)
+            plt.close()
 
 
 # %% [markdown]
@@ -449,38 +455,67 @@ adj_df = pd.read_csv(
 )
 adj = adj_df.values
 meta["merge_class"] = meta["simple_class"]  # HACK
+
+graph_type = "Gad"
+n_init = 256
+max_hops = 16
+allow_loops = False
+walk_spec = f"gt={graph_type}-n_init={n_init}-hops={max_hops}-loops={allow_loops}"
+walk_meta = pd.read_csv(
+    f"maggot_models/experiments/walk_sort/outs/meta_w_order-{walk_spec}.csv",
+    index_col=0,
+)
+meta["median_node_visits"] = walk_meta["median_node_visits"]
+
 # %%
 # plot results
 lowest_level = 7  # last level to show for dendrograms, adjacencies
-plot_clustering_results(adj, meta, basename, lowest_level=lowest_level, show_adjs=False)
+# plot_clustering_results(
+#     adj, meta, basename, lowest_level=lowest_level, show_adjs=False, show_singles=False
+# )
 
-# %% [markdown]
-# ##
-
+#%%
+lowest_level = 2
 mg = MetaGraph(adj, meta)
 level_names = [f"lvl{i}_labels" for i in range(lowest_level + 1)]
-meta = mg.meta
-sort_class = level_names + ["merge_class"]
-class_order = ["sf"]
-total_sort_by = []
-for sc in sort_class:
-    for co in class_order:
-        class_value = meta.groupby(sc)[co].mean()
-        meta[f"{sc}_{co}_order"] = meta[sc].map(class_value)
-        total_sort_by.append(f"{sc}_{co}_order")
-    total_sort_by.append(sc)
-mg = mg.sort_values(total_sort_by, ascending=False)
-mg.meta[["merge_class", "simple_class", "lvl0_labels_sf_order"]]
+mg = sort_mg(mg, level_names)
+fig, axs = plt.subplots(
+    2, lowest_level + 1, figsize=10 * np.array([lowest_level + 1, 2])
+)
+for level in np.arange(lowest_level + 1):
+    plot_adjacencies(mg, axs, lowest_level=lowest_level)
+stashfig(f"adjplots-lowest={lowest_level}" + basename, fmt="png")
 
 # %% [markdown]
-# ##
+# # ##
 
-sorted_meta = meta.groupby(total_sort_by)["sf"].mean()
-# sorted_meta.head(20)
-meta.groupby(["lvl0_labels", "lvl1_labels", "merge_class"], sort=False)[
-    "merge_class_sf_order"
-].mean()
-# sizes = meta.groupby([leaf_key, "merge_class"], sort=False).size()
+# mg = MetaGraph(adj, meta)
+# level_names = [f"lvl{i}_labels" for i in range(lowest_level + 1)]
+# meta = mg.meta
+# sort_class = level_names + ["merge_class"]
+# class_order = ["sf"]
+# total_sort_by = []
+# for sc in sort_class:
+#     for co in class_order:
+#         class_value = meta.groupby(sc)[co].mean()
+#         meta[f"{sc}_{co}_order"] = meta[sc].map(class_value)
+#         total_sort_by.append(f"{sc}_{co}_order")
+#     total_sort_by.append(sc)
+# mg = mg.sort_values(total_sort_by, ascending=False)
+# mg.meta[["merge_class", "simple_class", "lvl0_labels_sf_order"]]
 
-# %%
-meta.groupby(["lvl0_labels", "merge_class"], sort=False)["merge_class_sf_order"].mean()
+# # %% [markdown]
+# # ##
+
+# sorted_meta = meta.groupby(total_sort_by)["sf"].mean()
+# # sorted_meta.head(20)
+# meta.groupby(["lvl0_labels", "lvl1_labels", "merge_class"], sort=False)[
+#     "merge_class_sf_order"
+# ].mean()
+# # sizes = meta.groupby([leaf_key, "merge_class"], sort=False).size()
+
+# # %%
+# meta.groupby(["lvl0_labels", "merge_class"], sort=False)["merge_class_sf_order"].mean()
+
+
+# # %%
