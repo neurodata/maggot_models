@@ -78,9 +78,9 @@ unvisit_meta = walk_meta[walk_meta["median_node_visits"].isna()]
 print(len(unvisit_meta))
 
 #%%
-graph_types = ["G", "Gad", "Gaa", "Gdd", "Gda"]
+graph_types = ["Gad", "Gaa", "Gdd", "Gda"]
 graph_names = dict(
-    zip(graph_types, [r"Sum", r"A $\to$ D", r"A $\to$ A", r"D $\to$ D", r"D $\to$ A"])
+    zip(graph_types, [r"A $\to$ D", r"A $\to$ A", r"D $\to$ D", r"D $\to$ A"])
 )
 adjs = []
 adj_dict = {}
@@ -99,8 +99,8 @@ for g in graph_types:
     mg_dict[g] = temp_mg
 
 colors = sns.color_palette("deep", n_colors=len(graph_types))
-graph_type_colors = dict(zip(graph_types[1:], colors))
-graph_type_colors[graph_types[0]] = colors[-1]
+graph_type_colors = dict(zip(graph_types, colors))
+# graph_type_colors[graph_types[0]] = colors[-1]
 
 # %% [markdown]
 # ##
@@ -123,37 +123,65 @@ def plot_sorted_adj(graph_type, ax):
         ax=ax,
         color=graph_type_colors[graph_type],
     )
-    top.set_title(graph_names[graph_type], color=graph_type_colors[graph_type])
+    top.set_title(
+        graph_names[graph_type], color=graph_type_colors[graph_type], fontsize="x-large"
+    )
     ax.plot([0, len(adj)], [0, len(adj)], **line_kws)
 
 
-def plot_diag_vals(graph_type, ax):
+def plot_diag_vals(graph_type, ax, mode="values", sigma=25):
     mg = mg_dict[graph_type]
     adj = mg.adj
     ks = np.arange(-len(adj) + 1, len(adj))
     vals = calc_mean_by_k(ks, adj)
-    kde_vals = gaussian_filter1d(vals, sigma=25)
-    sns.scatterplot(
-        x=ks,
-        y=vals,
-        s=10,
-        alpha=0.4,
-        linewidth=0,
-        ax=ax,
-        color=graph_type_colors[graph_type],
+    if mode == "values":
+        sns.scatterplot(
+            x=ks,
+            y=vals,
+            s=10,
+            alpha=0.4,
+            linewidth=0,
+            ax=ax,
+            color=graph_type_colors[graph_type],
+        )
+    elif mode == "kde":
+        kde_vals = gaussian_filter1d(vals, sigma=sigma, mode="constant")
+        sns.lineplot(x=ks, y=kde_vals, ax=ax, color=graph_type_colors[graph_type])
+    upper_mass = adj[np.triu_indices_from(adj, k=1)].mean()
+    lower_mass = adj[np.tril_indices_from(adj, k=1)].mean()
+    upper_mass_prop = upper_mass / (upper_mass + lower_mass)
+    lower_mass_prop = lower_mass / (upper_mass + lower_mass)
+    upper_text = f"{upper_mass_prop:.2f}"
+    lower_text = f"{lower_mass_prop:.2f}"
+    ax.text(0.1, 0.8, lower_text, transform=ax.transAxes, color="black")
+    ax.text(
+        0.9,
+        0.8,
+        upper_text,
+        ha="right",
+        transform=ax.transAxes,
+        color="black",
     )
-    sns.lineplot(x=ks, y=kde_vals, ax=ax, color=graph_type_colors[graph_type])
-    # ax.set_xlabel("Diagonal index")
-    ax.set_title(graph_names[graph_type], color=graph_type_colors[graph_type])
+    # ax.set_title(graph_names[graph_type], color=graph_type_colors[graph_type])
     ax.axvline(0, **line_kws)
     ax.xaxis.set_major_locator(plt.MaxNLocator(3))
     ax.yaxis.set_major_locator(plt.MaxNLocator(3))
 
 
-fig, axs = plt.subplots(2, 5, figsize=(25, 10))
+fig, axs = plt.subplots(4, 4, figsize=(20, 20))
 for i, graph_type in enumerate(graph_types):
     plot_sorted_adj(graph_type, axs[0, i])
-    plot_diag_vals(graph_type, axs[1, i])
-axs[1, 2].set_xlabel("Diagonal index")
+    plot_diag_vals(graph_type, axs[1, i], mode="values")
+    plot_diag_vals(graph_type, axs[2, i], mode="kde")
+    plot_diag_vals(graph_type, axs[3, i], mode="kde", sigma=50)
+# axs[3, 1].set_xlabel("Diagonal index", x=1.5)
+
+ax = axs[1, 0]
+ax.text(0.1, 0.9, r"$p$ backward", transform=ax.transAxes, color="black")
+ax.text(0.9, 0.9, r"$p$ forward", transform=ax.transAxes, color="black", ha="right")
+fig.text(0.5, 0, "Diagonal index")
 axs[1, 0].set_ylabel("Mean synapse mass")
+axs[2, 0].set_ylabel(r"Mean synapse mass (smoothed, $\sigma = 25$)")
+axs[3, 0].set_ylabel(r"Mean synapse mass (smoothed, $\sigma = 50$)")
+plt.tight_layout()
 stashfig(f"adj-row-sort-by-walkspec-{walk_spec}")
