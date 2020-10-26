@@ -8,9 +8,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pymaid
 import seaborn as sns
-from scipy.stats import poisson
-
 from graspy.embed import OmnibusEmbed, selectSVD
 from graspy.models import DCSBMEstimator, SBMEstimator
 from graspy.utils import (
@@ -20,11 +19,17 @@ from graspy.utils import (
     remove_loops,
     to_laplace,
 )
+from matplotlib.lines import Line2D
+from scipy.stats import poisson
+from sklearn.decomposition import PCA
+from topologic.io import tensor_projection_writer
+
 from src.cluster import BinaryCluster
 from src.data import load_metagraph
 from src.graph import MetaGraph
 from src.hierarchy import signal_flow
 from src.io import savecsv, savefig
+from src.pymaid import start_instance
 from src.utils import get_paired_inds
 from src.visualization import (
     CLASS_COLOR_DICT,
@@ -35,7 +40,6 @@ from src.visualization import (
     plot_single_dendrogram,
     set_theme,
 )
-from topologic.io import tensor_projection_writer
 
 # For saving outputs
 FNAME = os.path.basename(__file__)[:-3]
