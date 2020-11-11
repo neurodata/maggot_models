@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.ticker import StrMethodFormatter
 from scipy.stats import ortho_group
 from sklearn.neighbors import NearestNeighbors
 
@@ -27,7 +28,7 @@ from graspologic.utils import augment_diagonal, pass_to_ranks
 from src.data import load_metagraph
 from src.graph import MetaGraph
 from src.io import savefig
-from src.visualization import adjplot, set_theme
+from src.visualization import CLASS_COLOR_DICT, adjplot, set_theme
 
 print(f"graspologic version: {gl.__version__}")
 print(f"seaborn version: {sns.__version__}")
@@ -252,3 +253,103 @@ plot_rank_cdf(op_ranks, color=palette["OP"], ax=ax, label="OP")
 plot_rank_cdf(sp_ranks, color=palette["SP"], ax=ax, label="SP")
 ax.legend()
 stashfig("rank-cdf")
+
+#%%
+right_meta = right_mg.meta.copy()
+right_meta["pair_rank"] = sp_ranks
+right_meta["reciprocal_rank"] = 1 / (sp_ranks + 1)
+
+mean_ranks = right_meta.groupby("merge_class")["pair_rank"].mean()
+sizes = right_meta.groupby("merge_class").size()
+mean_ranks = pd.concat((mean_ranks, sizes), axis=1)
+
+cluster_meta = pd.read_csv(
+    "maggot_models/experiments/matched_subgraph_omni_cluster/outs/meta-method=color_iso-d=8-bic_ratio=0.95-min_split=32.csv",
+    index_col=0,
+)
+level = 4
+label_key = f"lvl{level}_labels"
+right_meta[label_key] = cluster_meta[label_key]
+right_meta.groupby(label_key)["reciprocal_rank"].mean()
+right_meta["merge_class"] = cluster_meta["simple_class"]
+
+class_order = [
+    "Sens",
+    "LN",
+    "PN",
+    "KC",
+    "LHN",
+    "MBIN",
+    "Sens2o",
+    "unk",
+    "MBON",
+    "FBN",
+    "CN",
+    "PreO",
+    "Outs",
+    "Motr",
+]
+
+mrr_by_group = right_meta.groupby(label_key)["reciprocal_rank"].mean()
+mrr_by_group.sort_values(inplace=True, ascending=False)
+group_counts = right_meta.groupby([label_key, "merge_class"]).size()
+group_counts = group_counts.reindex(mrr_by_group.index, level=0)
+group_counts = group_counts.reindex(class_order[::-1], level=1)
+
+
+width = 0.5
+
+fig, axs = plt.subplots(
+    2, 1, figsize=(16, 8), gridspec_kw=dict(hspace=0.01, height_ratios=[0.7, 0.3])
+)
+ax = axs[1]
+ax.set(
+    xlim=(-1, len(group_counts.index.unique(0))),
+    ylim=(0, 1),
+    xlabel=f"Cluster (level = {level})",
+    xticks=[],
+    yticks=[],
+)
+
+for i, cluster_name in enumerate(group_counts.index.unique(0)):
+    cluster_counts = group_counts.loc[cluster_name]
+    cluster_props = cluster_counts / cluster_counts.sum()
+    start = 0
+    for class_name, prop in cluster_props.iteritems():
+        ax.bar(
+            x=i,
+            height=prop,
+            width=width,
+            bottom=start,
+            color=CLASS_COLOR_DICT[class_name],
+        )
+        start += prop
+
+ax.spines["left"].set_visible(False)
+ax.spines["bottom"].set_visible(False)
+
+ax = axs[0]
+pad = 0.05
+
+ax.set(
+    xlim=(-1, len(group_counts.index.unique(0))),
+    ylim=(mrr_by_group.min() - 3 * pad, mrr_by_group.max() + 2 * pad),
+    ylabel="Pair mean reciprocal rank",
+    xticks=[],
+    yticks=[mrr_by_group.min(), mrr_by_group.max()],
+)
+ax.yaxis.set_major_formatter(StrMethodFormatter("{x:.2f}"))
+
+for i, cluster_name in enumerate(group_counts.index.unique(0)):
+    mrr = mrr_by_group.loc[cluster_name]
+    ax.plot([i], [mrr], marker="o", color="black", markersize=8)
+
+ax.text(0, mrr_by_group.max() + pad, "Most bilateral symmetry")
+ax.text(
+    len(mrr_by_group),
+    mrr_by_group.min() - pad,
+    "Least bilateral symmetry",
+    ha="right",
+    va="top",
+)
+stashfig(f"mrr-by-cluster-lvl={level}")

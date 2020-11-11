@@ -9,16 +9,6 @@ from src.io import save_walks
 from src.traverse import RandomWalk, to_markov_matrix
 from src.data import DATA_DIR, DATA_VERSION
 
-start_labels = [
-    ("sens-AN",),
-    ("sens-photoRh6", "sens-photoRh5"),
-    ("A00c",),
-    ("sens-vtd",),
-    ("sens-MN",),
-    ("sens-thermo",),
-    ("sens-ORN",),
-]
-start_names = ["AN", "Photo", "A00c", "VTD", "MN", "Thermo", "Odor"]
 
 # stop_labels = [
 #     ("dVNC", "dSEZ;dVNC", "dVNC;CN", "dVNC;RG"),
@@ -37,13 +27,6 @@ start_names = ["AN", "Photo", "A00c", "VTD", "MN", "Thermo", "Odor"]
 #     ),
 #     ("motor-PaN", "motor-MN", "motor-AN", "motor-VAN"),
 # ]
-stop_labels = [
-    ("dVNC",),
-    ("dSEZ",),
-    ("RGN",),
-    ("motor-PaN", "motor-MN", "motor-AN", "motor-VAN"),
-]
-stop_names = ["dVNC", "dSEZ", "RGN", "motor"]
 
 
 def get_nodes(meta, labels):
@@ -87,13 +70,42 @@ def get_nodes(meta, labels):
     default=False,
     help="Whether to allow random walks to visit the same node twice.",
 )
+@click.option(
+    "-r",
+    "--reverse",
+    default=False,
+    help="Whether to run random walks in the opposite direction.",
+)
 def main(
     graph_type,
     outdir,
     n_init,
     max_hops,
     allow_loops,
+    reverse,
+    start_labels=None,
+    stop_labels=None,
 ):
+
+    start_labels = [
+        ("sens-AN",),
+        ("sens-photoRh6", "sens-photoRh5"),
+        ("A00c",),
+        ("sens-vtd",),
+        ("sens-MN",),
+        ("sens-thermo",),
+        ("sens-ORN",),
+    ]
+    start_names = ["AN", "Photo", "A00c", "VTD", "MN", "Thermo", "Odor"]
+
+    stop_labels = [
+        ("dVNC",),
+        ("dSEZ",),
+        ("RGN",),
+        ("m`otor-PaN", "motor-MN", "motor-AN", "motor-VAN"),
+    ]
+    stop_names = ["dVNC", "dSEZ", "RGN", "motor"]
+
     infile = f"./{DATA_DIR}/{DATA_VERSION}/{graph_type}.graphml"
     # read in graph as networkx object
     g = nx.read_graphml(infile)
@@ -107,6 +119,12 @@ def main(
 
     # grab the adjacency matrix
     adj = nx.to_numpy_array(g, nodelist)
+
+    if reverse:
+        adj = adj.T
+        start_labels, stop_labels = stop_labels, start_labels
+        start_names, stop_names = stop_names, start_names
+
     transition_probs = to_markov_matrix(adj)  # row normalize!
 
     n_class_pairs = len(start_labels) * len(stop_labels)
@@ -143,9 +161,7 @@ def main(
             print(msg)
             all_walks.append(sensorimotor_walks)
 
-    outfile = (
-        f"walks-gt={graph_type}-n_init={n_init}-hops={max_hops}-loops={allow_loops}.txt"
-    )
+    outfile = f"walks-gt={graph_type}-n_init={n_init}-hops={max_hops}-loops={allow_loops}-reverse={reverse}.txt"
     save_walks(all_walks, name=outfile, outpath=outdir, multidoc=True)
 
 

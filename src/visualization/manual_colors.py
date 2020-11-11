@@ -95,21 +95,36 @@ CLASS_IND_DICT = {
     "LN": 49,
 }
 
-SIMPLE_IND_DICT = {
-    "Sens": 51,
-    "PN": 36,
-    "MBIN": 121,
-    "KC": 0,
-    "MBON": 172,
-    "LHN": 123,
-    "FBN": 50,
-    "CN": 206,
-    "dVNC": 38,
-    "dSEZ": 124,
-    "RGN": 42,
-    "Outs": 124,
+# SIMPLE_IND_DICT = {
+#     "Sens": 51,
+#     "PN": 36,
+#     "MBIN": 121,
+#     "KC": 0,
+#     "MBON": 172,
+#     "LHN": 123,
+#     "FBN": 50,
+#     "CN": 206,
+#     "dVNC": 38,
+#     "dSEZ": 124,
+#     "RGN": 42,
+#     "Outs": 124,
+# }
+name_map = {
+    "Sens": "Sensory",
+    "LN": "Local",
+    "PN": "Projection",
+    "KC": "Kenyon cell",
+    "LHN": "Lateral horn",
+    "MBIN": "MBIN",
+    "Sens2o": "2nd order sensory",
+    "unk": "Unknown",
+    "MBON": "MBON",
+    "FBN": "MB feedback",
+    "CN": "Convergence",
+    "PreO": "Pre-output",
+    "Outs": "Output",
+    "Motr": "Motor",
 }
-
 
 names = []
 color_inds = []
@@ -125,6 +140,9 @@ CLASS_COLOR_DICT["motor-AN"] = "#000000"
 CLASS_COLOR_DICT["motor-PaN"] = "#000000"
 CLASS_COLOR_DICT["motor-MN"] = "#000000"
 CLASS_COLOR_DICT["Motr"] = "#000000"
+
+for old_name, new_name in name_map.items():
+    CLASS_COLOR_DICT[new_name] = CLASS_COLOR_DICT[old_name]
 
 
 def plot_colors():

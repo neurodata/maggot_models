@@ -1,9 +1,15 @@
-#%%
-# Linking transcriptome and connectome via graph matching
+#%% [markdown]
+## Linking transcriptome and connectome via graph matching
 # > A simple attempt to see if one 'ome can be aligned to the other 'ome
-
+#
+# - toc: true
+# - badges: false
+# - categories: [pedigo, graspologic]
+# - hide: true
+# - search_exclude: true
 
 #%%
+import os
 import time
 from pathlib import Path
 
@@ -17,9 +23,17 @@ from tqdm import tqdm
 from graspologic.match import GraphMatch
 from graspologic.plot import heatmap
 from graspologic.simulations import er_corr
+from src.io import savefig
 from src.visualization import set_theme
 
 set_theme()
+
+
+FNAME = os.path.basename(__file__)[:-3]
+
+
+def stashfig(name, **kws):
+    savefig(name, foldername=FNAME, save_on=True, **kws)
 
 
 data_dir = Path("maggot_models/data/raw/BP_Barabasi_Share/ScRNAData/")
@@ -69,7 +83,6 @@ print(f"Number of neurons measured: {sequencing_df.shape[1]}")
 #
 # Below I just plot $A$, sorting by cell type
 #%%
-
 heatmap(
     adj,
     inner_hier_labels=labels,
@@ -117,15 +130,14 @@ for perm_inds in all_perm_inds:
 conf_mat /= n_trials
 
 fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-sns.heatmap(conf_mat, ax=ax, cmap="RdBu_r", center=0)
+sns.heatmap(
+    conf_mat, ax=ax, cmap="RdBu_r", center=0, square=True, cbar_kws=dict(shrink=0.7)
+)
 ax.set(ylabel="True class index", xlabel="Matched class index", xticks=[], yticks=[])
-
-# %%
-np.trace(conf_mat) / n_classes
+stashfig("confusion-mat")
 
 #%% [markdown]
 ### Addendum: showing what would happen in this figure if GM works well
-
 n_trials = 100
 all_perm_inds = []
 for i in tqdm(range(n_trials)):
@@ -141,5 +153,8 @@ for perm_inds in all_perm_inds:
 conf_mat /= n_trials
 
 fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-sns.heatmap(conf_mat, ax=ax, cmap="RdBu_r", center=0)
+sns.heatmap(
+    conf_mat, ax=ax, cmap="RdBu_r", center=0, square=True, cbar_kws=dict(shrink=0.7)
+)
 ax.set(ylabel="True class index", xlabel="Matched class index", xticks=[], yticks=[])
+stashfig("corr-er-confusion-mat")

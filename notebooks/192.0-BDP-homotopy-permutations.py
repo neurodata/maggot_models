@@ -463,3 +463,90 @@ stashfig("homotypy-by-color-classed")
 # TODO this result is surprising to me
 # see if the clusters are more likely than not to be connected to corresponding
 # cluster on the other side.
+
+#%%
+
+
+from graspologic.models import SBMEstimator
+
+level = 7
+uni_labels = np.unique(meta[f"lvl{level}_labels"])
+uni_labels_left = [ul + "L" for ul in uni_labels]
+uni_labels_right = [ul + "R" for ul in uni_labels]
+
+uni_labels_full = np.concatenate((uni_labels_left, uni_labels_right))
+uni_labels_map = dict(zip(uni_labels_full, np.arange(len(uni_labels_full))))
+
+labels = meta[f"lvl{level}_labels_side"]
+int_labels = np.vectorize(uni_labels_map.get)(labels)
+
+adj = adj_dict["G"]
+
+sbme = SBMEstimator(directed=True, loops=True)
+sbme.fit(binarize(adj), y=int_labels)
+
+#%%
+
+fig, ax = plt.subplots(1, 1, figsize=(12, 12))
+sns.heatmap(
+    sbme.block_p_,
+    cmap="RdBu_r",
+    center=0,
+    ax=ax,
+    xticklabels=False,
+    yticklabels=False,
+    square=True,
+    cbar_kws=dict(shrink=0.7),
+)
+
+fig, ax = plt.subplots(1, 1, figsize=(12, 12))
+sns.heatmap(
+    np.log10(sbme.block_p_ + 1),
+    cmap="RdBu_r",
+    center=0,
+    ax=ax,
+    xticklabels=False,
+    yticklabels=False,
+    square=True,
+    cbar_kws=dict(shrink=0.7),
+)
+#%%
+
+# def calc_typic_ps(adj, lp_inds=lp_inds, rp_inds=rp_inds, n_pairs=n_pairs):
+#     upper_diag_inds = diag_indices(len(adj), k=n_pairs)
+#     p_upper_diag = adj[upper_diag_inds].mean()
+#     lower_diag_inds = diag_indices(len(adj), k=-n_pairs)
+#     p_lower_diag = adj[lower_diag_inds].mean()
+#     p_diag = (p_upper_diag + p_lower_diag) / 2
+
+#     upper_diag_block = adj[lp_inds][:, rp_inds]
+#     p_upper_upper = upper_diag_block[np.triu_indices_from(upper_diag_block, k=1)].mean()
+#     p_upper_lower = upper_diag_block[np.tril_indices_from(upper_diag_block, k=1)].mean()
+
+#     lower_diag_block = adj[rp_inds][:, lp_inds]
+#     p_lower_upper = lower_diag_block[np.triu_indices_from(lower_diag_block, k=1)].mean()
+#     p_lower_lower = lower_diag_block[np.tril_indices_from(lower_diag_block, k=1)].mean()
+#     p_off_diag = (p_upper_upper + p_upper_lower + p_lower_upper + p_lower_lower) / 4
+#     return p_diag, p_off_diag
+
+
+B = sbme.block_p_
+n_pairs = len(uni_labels_left)
+upper_diag_inds = diag_indices(len(B), k=n_pairs)
+
+lp_inds = np.arange(n_pairs)
+rp_inds = np.arange(n_pairs) + n_pairs
+
+upper_diag_block = B[lp_inds][:, rp_inds]
+upper_upper_vals = upper_diag_block[np.triu_indices_from(upper_diag_block, k=1)]
+upper_lower_vals = upper_diag_block[np.tril_indices_from(upper_diag_block, k=1)]
+non_homotypic_vals = np.concatenate((upper_upper_vals, upper_lower_vals))
+homotypic_vals = B[upper_diag_inds]
+
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+
+sns.distplot(
+    np.log10(non_homotypic_vals + 0.00001), label="Non-homotypic", rug=True, ax=ax
+)
+sns.distplot(np.log10(homotypic_vals + 0.00001), label="Homotypic", rug=True, ax=ax)
+ax.legend()

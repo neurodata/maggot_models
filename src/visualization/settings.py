@@ -20,8 +20,8 @@ rc_dict = {
 }
 
 
-def set_theme():
+def set_theme(rc_dict=rc_dict, **kws):
     for key, val in rc_dict.items():
         mpl.rcParams[key] = val
-    context = sns.plotting_context(context="talk", font_scale=1, rc=rc_dict)
+    context = sns.plotting_context(context="talk", rc=rc_dict, **kws)
     sns.set_context(context)

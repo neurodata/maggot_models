@@ -34,7 +34,7 @@ from src.visualization import (
     remove_shared_ax,
     remove_spines,
     set_axes_equal,
-    set_style,
+    set_theme,
     stacked_barplot,
 )
 
@@ -112,11 +112,11 @@ else:
     bins = np.linspace(start, degrees.max().max(), n_bins_linear)
 
 sns.scatterplot(
-    data=degrees, x="In edgesum", y="Out edgesum", s=5, alpha=0.2, linewidth=0, ax=ax
+    data=degrees, x="In edgesum", y="Out edgesum", s=5, alpha=0.4, linewidth=0, ax=ax
 )
-ax.scatter(
-    median_in_degree, median_out_degree, s=200, marker="+", color="black", linewidth=2
-)
+# ax.scatter(
+#     median_in_degree, median_out_degree, s=200, marker="+", color="black", linewidth=2
+# )
 
 ax.set_ylabel(ylabel)
 ax.set_xlabel(xlabel)
@@ -165,7 +165,7 @@ stashcsv(no_out_degree, "no_out_degree")
 adj = mg.adj
 inds = np.nonzero(adj)
 weights = adj.ravel().copy()  # [inds]
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 bins = np.linspace(-1, weights.max(), int(weights.max() + 2)) + 0.01
 sns.distplot(
     weights, ax=ax, hist_kws=dict(log=True), kde=False, norm_hist=True, bins=bins
@@ -174,7 +174,7 @@ ax.set_ylabel("Density")
 ax.set_xlabel("Edge weight (# synapses)")
 stashfig(f"edge-weights-log-y")
 
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 bins = np.geomspace(0.1, weights.max(), 50)
 weights[weights == 0] = 0.1
 sns.distplot(

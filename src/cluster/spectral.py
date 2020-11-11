@@ -183,6 +183,7 @@ def crossval_cluster(
 def make_ellipses(gmm, ax, i, j, colors, alpha=0.5, equal=False, **kws):
     inds = [j, i]
     for n, color in enumerate(colors):
+        print(color)
         if gmm.covariance_type == "full":
             covariances = gmm.covariances_[n][np.ix_(inds, inds)]
         elif gmm.covariance_type == "tied":

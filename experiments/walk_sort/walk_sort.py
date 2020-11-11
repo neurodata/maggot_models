@@ -56,44 +56,63 @@ max_hops = 16
 allow_loops = False
 walk_path = "maggot_models/experiments/walk_sort/outs/walks-"
 walk_spec = f"gt={graph_type}-n_init={n_init}-hops={max_hops}-loops={allow_loops}"
-walk_path = walk_path + walk_spec + ".txt"
+forward_walk_path = walk_path + walk_spec + "-reverse=False" + ".txt"
+backward_walk_path = walk_path + walk_spec + "-reverse=True" + ".txt"
 
 np.random.seed(8888)
 
-with open(walk_path, "r") as f:
-    paths = f.read().splitlines()
-print(f"# of paths: {len(paths)}")
 
-paths = list(set(paths))
-paths.remove("")
-print(f"# of paths after removing duplicates: {len(paths)}")
+def process_paths(walk_path):
+    with open(walk_path, "r") as f:
+        paths = f.read().splitlines()
+    print(f"# of paths: {len(paths)}")
 
-n_subsample = len(paths)  # 2 ** 14
-choice_inds = np.random.choice(len(paths), n_subsample, replace=False)
-new_paths = []
-for i in range(len(paths)):
-    if i in choice_inds:
-        new_paths.append(paths[i])
-paths = new_paths
+    paths = list(set(paths))
+    paths.remove("")
+    print(f"# of paths after removing duplicates: {len(paths)}")
 
-print(f"# of paths after subsampling: {len(paths)}")
-paths = [path.split(" ") for path in paths]
-paths = [[int(node) for node in path] for path in paths]
-all_nodes = set()
-[[all_nodes.add(node) for node in path] for path in paths]
-uni_nodes = np.unique(list(all_nodes))
-ind_map = dict(zip(uni_nodes, range(len(uni_nodes))))
-tokenized_paths = [list(map(ind_map.get, path)) for path in paths]
+    n_subsample = len(paths)  # 2 ** 14
+    choice_inds = np.random.choice(len(paths), n_subsample, replace=False)
+    new_paths = []
+    for i in range(len(paths)):
+        if i in choice_inds:
+            new_paths.append(paths[i])
+    paths = new_paths
+
+    print(f"# of paths after subsampling: {len(paths)}")
+    paths = [path.split(" ") for path in paths]
+    paths = [[int(node) for node in path] for path in paths]
+    # all_nodes = set()
+    # [[all_nodes.add(node) for node in path] for path in paths]
+    # uni_nodes = np.unique(list(all_nodes))
+    # ind_map = dict(zip(uni_nodes, range(len(uni_nodes))))
+    # tokenized_paths = [list(map(ind_map.get, path)) for path in paths]
+    return paths
+
+
+forward_paths = process_paths(forward_walk_path)
+backward_paths = process_paths(backward_walk_path)
 
 
 # %%
 
 node_visits = {}
-for path in paths:
+for path in forward_paths:
     for i, node in enumerate(path):
         if node not in node_visits:
             node_visits[node] = []
         node_visits[node].append(i / (len(path) - 1))
+
+for path in backward_paths:
+    for i, node in enumerate(path):
+        if node not in node_visits:
+            node_visits[node] = []
+        node_visits[node].append(1 - (i / (len(path) - 1)))
+
+all_nodes = set()
+[[all_nodes.add(node) for node in path] for path in forward_paths]
+[[all_nodes.add(node) for node in path] for path in backward_paths]
+uni_nodes = np.unique(list(all_nodes))
 
 median_node_visits = {}
 for node in uni_nodes:

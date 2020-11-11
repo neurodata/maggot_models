@@ -101,14 +101,14 @@ def plot_adjacencies(full_mg, axs, lowest_level=7):
             ax=ax,
             plot_type="scattermap",
             sizes=(0.5, 0.5),
-            sort_class=["hemisphere"] + level_names[: level + 1],
+            sort_class=level_names[: level + 1],
             item_order=[f"{CLASS_KEY}_{CLASS_ORDER}_order", CLASS_KEY, CLASS_ORDER],
             class_order=CLASS_ORDER,
             meta=full_mg.meta,
             palette=CLASS_COLOR_DICT,
             colors=CLASS_KEY,
             ticks=False,
-            gridline_kws=dict(linewidth=0.2, color="grey", linestyle="--"),
+            gridline_kws=dict(linewidth=0, color="grey", linestyle="--"),  # 0.2
             color=pal[0],
         )
         top.set_title(f"Level {level} - Data")
@@ -131,7 +131,7 @@ def plot_adjacencies(full_mg, axs, lowest_level=7):
             palette=CLASS_COLOR_DICT,
             colors=CLASS_KEY,
             ticks=False,
-            gridline_kws=dict(linewidth=0.2, color="grey", linestyle="--"),
+            gridline_kws=dict(linewidth=0, color="grey", linestyle="--"),  # 0.2
             color=pal[0],
         )
         top.set_title(f"Level {level} - DCSBM sample")
@@ -147,7 +147,12 @@ def plot_model_liks(adj, meta, lp_inds, rp_inds, ax, n_levels=10, model_name="DC
         style="train_side",
         markers=True,
     )
+    # handles, labels = ax.get_legend_handles_labels()
+    # labels[0] = "Test side"
+    # labels[3] = "Fit side"
+    # ax.legend(handles=handles, labels=labels, bbox_to_anchor=(0, 1), loc="upper left")
     ax.set_ylabel(f"{model_name} normalized log lik.")
+    ax.set_yticks([])
     ax.set_xlabel("Level")
 
 
@@ -329,7 +334,13 @@ def calc_model_liks(adj, meta, lp_inds, rp_inds, n_levels=10):
 
 
 def plot_clustering_results(
-    adj, meta, basename, lowest_level=7, show_adjs=True, show_singles=True
+    adj,
+    meta,
+    basename,
+    lowest_level=7,
+    show_adjs=True,
+    show_singles=True,
+    make_flippable=False,
 ):
     level_names = [f"lvl{i}_labels" for i in range(lowest_level + 1)]
 
@@ -355,7 +366,11 @@ def plot_clustering_results(
     dend_axs.append(fig.add_subplot(gs[:, 2]))  # right
     dend_axs.append(fig.add_subplot(gs[2:4, 3]))  # colormap
     plot_double_dendrogram(
-        meta, dend_axs[:-1], lowest_level=lowest_level, color_order=CLASS_ORDER
+        meta,
+        dend_axs[:-1],
+        lowest_level=lowest_level,
+        color_order=CLASS_ORDER,
+        make_flippable=make_flippable,
     )
     plot_color_labels(meta, dend_axs[-1], color_order=CLASS_ORDER)
 
@@ -369,7 +384,7 @@ def plot_clustering_results(
             ax = fig.add_subplot(gs[n_row // 2 :, level + offset])
             adj_axs[1, level] = ax
 
-            plot_adjacencies(mg, adj_axs, lowest_level=lowest_level)
+        plot_adjacencies(mg, adj_axs, lowest_level=lowest_level)
 
     temp_meta = mg.meta.copy()
     # all valid TRUE pairs
@@ -414,7 +429,7 @@ def plot_clustering_results(
 
     # finish up
     plt.tight_layout()
-    stashfig(f"megafig-lowest={lowest_level}" + basename)
+    stashfig(f"megafig-lowest={lowest_level}" + basename, fmt="png")
     plt.close()
 
     if show_singles:
@@ -454,7 +469,27 @@ adj_df = pd.read_csv(
     index_col=0,
 )
 adj = adj_df.values
+
+name_map = {
+    "Sens": "Sensory",
+    "LN": "Local",
+    "PN": "Projection",
+    "KC": "Kenyon cell",
+    "LHN": "Lateral horn",
+    "MBIN": "MBIN",
+    "Sens2o": "2nd order sensory",
+    "unk": "Unknown",
+    "MBON": "MBON",
+    "FBN": "MB feedback",
+    "CN": "Convergence",
+    "PreO": "Pre-output",
+    "Outs": "Output",
+    "Motr": "Motor",
+}
+meta["simple_class"] = meta["simple_class"].map(name_map)
+print(meta["simple_class"].unique())
 meta["merge_class"] = meta["simple_class"]  # HACK
+
 
 graph_type = "Gad"
 n_init = 256
@@ -470,21 +505,27 @@ meta["median_node_visits"] = walk_meta["median_node_visits"]
 # %%
 # plot results
 lowest_level = 7  # last level to show for dendrograms, adjacencies
-# plot_clustering_results(
-#     adj, meta, basename, lowest_level=lowest_level, show_adjs=False, show_singles=False
-# )
+plot_clustering_results(
+    adj,
+    meta,
+    basename,
+    lowest_level=lowest_level,
+    show_adjs=True,
+    show_singles=False,
+    make_flippable=False,
+)
 
 #%%
-lowest_level = 2
-mg = MetaGraph(adj, meta)
-level_names = [f"lvl{i}_labels" for i in range(lowest_level + 1)]
-mg = sort_mg(mg, level_names)
-fig, axs = plt.subplots(
-    2, lowest_level + 1, figsize=10 * np.array([lowest_level + 1, 2])
-)
-for level in np.arange(lowest_level + 1):
-    plot_adjacencies(mg, axs, lowest_level=lowest_level)
-stashfig(f"adjplots-lowest={lowest_level}" + basename, fmt="png")
+# lowest_level = 7
+# mg = MetaGraph(adj, meta)
+# level_names = [f"lvl{i}_labels" for i in range(lowest_level + 1)]
+# mg = sort_mg(mg, level_names)
+# fig, axs = plt.subplots(
+#     2, lowest_level + 1, figsize=10 * np.array([lowest_level + 1, 2])
+# )
+# for level in np.arange(lowest_level + 1):
+#     plot_adjacencies(mg, axs, lowest_level=lowest_level)
+# stashfig(f"adjplots-lowest={lowest_level}" + basename, fmt="png")
 
 # %% [markdown]
 # # ##
