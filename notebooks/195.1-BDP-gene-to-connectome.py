@@ -162,6 +162,7 @@ sampling_mode = "n_per_class"
 currtime = time.time()
 
 neuron_matches = {i: [] for i in range(len(adj_df))}
+results = []
 
 for i in tqdm(range(n_trials)):
     if sampling_mode == "n_per_class":
@@ -173,15 +174,29 @@ for i in tqdm(range(n_trials)):
         )
         subset_sequencing_df = sequencing_df[neuron_sample]
 
+    inner_currtime = time.time()
     scrna_similarity = cosine_similarity(subset_sequencing_df.T.fillna(0).values)
+    elapsed = time.time() - inner_currtime
+    results.append({"replicate": i, "wall_time": elapsed, "stage": "Similarity"})
+
+    inner_currtime = time.time()
     gm = GraphMatch(n_init=10, init="barycenter")
     # second graph is the one being permuted
     perm_inds = gm.fit_predict(adj_df.values, scrna_similarity)
+    elapsed = time.time() - inner_currtime
+    results.append({"replicate": i, "wall_time": elapsed, "stage": "Graph match"})
+
     perm_neuron_indices = subset_sequencing_df.columns[perm_inds][: len(adj_df)]
     perm_meta = scrna_meta.loc[perm_neuron_indices]
 
     for i in range(len(adj_df)):
         neuron_matches[i].append(perm_meta.index[i])
+
+results = pd.DataFrame(results)
+
+#%%
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+sns.stripplot(data=results, x="stage", y="wall_time", ax=ax)
 
 print(f"{time.time() - currtime} elapsed")
 
@@ -202,8 +217,6 @@ stashfig("example-adj-cos-match")
 #%% class-wise confusion matrix
 uni_classes = np.unique(connectome_meta["cell_type"])
 class_map = dict(zip(uni_classes, range(len(uni_classes))))
-# class_map["LUA"] = class_map["OLQ"]  # HACK
-# class_map["OLL"] = class_map["PDA"]  # HACK
 n_classes = len(uni_classes)
 class_conf_mat = np.zeros((n_classes, n_classes))
 
@@ -301,42 +314,22 @@ sns.scatterplot(x=range(n_classes), y=scrna_match_props, ax=ax, label="Matching"
 ax.set(xlabel="Cell type index", ylabel="Frequency")
 stashfig("prior-frequency-vs-matching")
 
-# #%%
-# n_classes = len(adj_df)
-# conf_mat = np.zeros((n_classes, n_classes))
-# for perm_inds in all_perm_inds:
-#     conf_mat[np.arange(n_classes), perm_inds] += 1
-# conf_mat /= n_trials
+#%%
 
-# fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-# sns.heatmap(
-#     conf_mat, ax=ax, cmap="RdBu_r", center=0, square=True, cbar_kws=dict(shrink=0.7)
-# )
-# ax.set(ylabel="True class index", xlabel="Matched class index", xticks=[], yticks=[])
-# stashfig("confusion-mat")
+from graspologic.embed import ClassicalMDS
+from graspologic.plot import pairplot
+import colorcet as cc
+from umap import UMAP
 
-# #%% [markdown]
-# ### Addendum: showing what would happen in this figure if GM works well
-# n_trials = 100
-# all_perm_inds = []
-# for i in tqdm(range(n_trials)):
-#     # sample some highly correlated matrices
-#     A, B = er_corr(n_classes, 0.7, 0.99)
-#     gm = GraphMatch(n_init=50, init="barycenter")
-#     perm_inds = gm.fit_predict(A, B)
-#     all_perm_inds.append(perm_inds)
+scrna_neurons = subset_sequencing_df.columns
+temp_scrna_meta = scrna_meta.loc[scrna_neurons]
+scrna_embed = ClassicalMDS(n_components=4).fit_transform(scrna_similarity)
+labels = temp_scrna_meta["Neuron_type"].values
+pairplot(scrna_embed, labels=labels, palette=cc.glasbey_light)
 
-# conf_mat = np.zeros((n_classes, n_classes))
-# for perm_inds in all_perm_inds:
-#     conf_mat[np.arange(n_classes), perm_inds] += 1
-# conf_mat /= n_trials
-
-# fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-# sns.heatmap(
-#     conf_mat, ax=ax, cmap="RdBu_r", center=0, square=True, cbar_kws=dict(shrink=0.7)
-# )
-# ax.set(ylabel="True class index", xlabel="Matched class index", xticks=[], yticks=[])
-# stashfig("corr-er-confusion-mat")
-
-
-# %%
+#%%
+umapper = UMAP(n_components=3, metric="cosine", min_dist=1, n_neighbors=10)
+umap_scrna_embed = umapper.fit_transform(subset_sequencing_df.T.fillna(0).values)
+labels = temp_scrna_meta["Neuron_type"].values
+pg = pairplot(umap_scrna_embed, labels=labels, palette=cc.glasbey_light)
+pg._legend.remove()
