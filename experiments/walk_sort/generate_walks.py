@@ -102,7 +102,7 @@ def main(
         ("dVNC",),
         ("dSEZ",),
         ("RGN",),
-        ("m`otor-PaN", "motor-MN", "motor-AN", "motor-VAN"),
+        ("motor-PaN", "motor-MN", "motor-AN", "motor-VAN"),
     ]
     stop_names = ["dVNC", "dSEZ", "RGN", "motor"]
 

@@ -54,6 +54,7 @@ graph_type = "Gad"
 n_init = 256
 max_hops = 16
 allow_loops = False
+include_reverse = False
 walk_path = "maggot_models/experiments/walk_sort/outs/walks-"
 walk_spec = f"gt={graph_type}-n_init={n_init}-hops={max_hops}-loops={allow_loops}"
 forward_walk_path = walk_path + walk_spec + "-reverse=False" + ".txt"
@@ -71,15 +72,15 @@ def process_paths(walk_path):
     paths.remove("")
     print(f"# of paths after removing duplicates: {len(paths)}")
 
-    n_subsample = len(paths)  # 2 ** 14
-    choice_inds = np.random.choice(len(paths), n_subsample, replace=False)
-    new_paths = []
-    for i in range(len(paths)):
-        if i in choice_inds:
-            new_paths.append(paths[i])
-    paths = new_paths
+    # n_subsample = len(paths)  # 2 ** 14
+    # choice_inds = np.random.choice(len(paths), n_subsample, replace=False)
+    # new_paths = []
+    # for i in range(len(paths)):
+    #     if i in choice_inds:
+    #         new_paths.append(paths[i])
+    # paths = new_paths
 
-    print(f"# of paths after subsampling: {len(paths)}")
+    # print(f"# of paths after subsampling: {len(paths)}")
     paths = [path.split(" ") for path in paths]
     paths = [[int(node) for node in path] for path in paths]
     # all_nodes = set()
@@ -95,23 +96,23 @@ backward_paths = process_paths(backward_walk_path)
 
 
 # %%
-
+all_nodes = set()
 node_visits = {}
 for path in forward_paths:
     for i, node in enumerate(path):
         if node not in node_visits:
             node_visits[node] = []
         node_visits[node].append(i / (len(path) - 1))
-
-for path in backward_paths:
-    for i, node in enumerate(path):
-        if node not in node_visits:
-            node_visits[node] = []
-        node_visits[node].append(1 - (i / (len(path) - 1)))
-
-all_nodes = set()
 [[all_nodes.add(node) for node in path] for path in forward_paths]
-[[all_nodes.add(node) for node in path] for path in backward_paths]
+
+if include_reverse:
+    for path in backward_paths:
+        for i, node in enumerate(path):
+            if node not in node_visits:
+                node_visits[node] = []
+            node_visits[node].append(1 - (i / (len(path) - 1)))
+    [[all_nodes.add(node) for node in path] for path in backward_paths]
+
 uni_nodes = np.unique(list(all_nodes))
 
 median_node_visits = {}
@@ -128,7 +129,9 @@ for node_class in meta["merge_class"].unique():
     median_class_visits[node_class] = np.median(all_visits_flat)
 meta["median_class_visits"] = meta["merge_class"].map(median_class_visits)
 
-meta.to_csv(f"maggot_models/experiments/walk_sort/outs/meta_w_order-{walk_spec}.csv")
+meta.to_csv(
+    f"maggot_models/experiments/walk_sort/outs/meta_w_order-{walk_spec}-include_reverse={include_reverse}.csv"
+)
 
 print(f"# of nodes: {len(meta)}")
 unvisit_meta = meta[meta["median_node_visits"].isna()]

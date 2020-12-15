@@ -39,6 +39,7 @@ set_theme(rc_dict=rc_dict, font_scale=1.25)
 
 def stashfig(name, **kws):
     savefig(name, foldername=FNAME, save_on=True, **kws)
+    savefig(name, format="pdf", foldername=FNAME, save_on=True, **kws)
 
 
 def diag_indices(length, k=0):
@@ -84,7 +85,8 @@ graph_type = "Gad"
 n_init = 256
 max_hops = 16
 allow_loops = False
-walk_spec = f"gt={graph_type}-n_init={n_init}-hops={max_hops}-loops={allow_loops}"
+include_reverse = False
+walk_spec = f"gt={graph_type}-n_init={n_init}-hops={max_hops}-loops={allow_loops}-include_reverse={include_reverse}"
 meta_path = f"maggot_models/experiments/walk_sort/outs/meta_w_order-{walk_spec}.csv"
 walk_meta = pd.read_csv(meta_path, index_col=0)
 # walk_meta = walk_meta.reindex(mg.meta.index)

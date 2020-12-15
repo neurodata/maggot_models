@@ -98,6 +98,8 @@ adjplot(
 ax = screeplot(
     pass_to_ranks(adj), show_first=40, cumulative=False, title="Adjacency scree plot"
 )
+#%% [markdown]
+### Covariates (sorted by category)
 #%%
 # collapse
 matrixplot(
@@ -118,7 +120,7 @@ ax = screeplot(Y, show_first=40, cumulative=False, title="Covariate scree plot")
 lse = LaplacianSpectralEmbed(form="R-DAD")
 embedding = lse.fit_transform(pass_to_ranks(adj))
 pairplot(embedding[0], labels=meta_df["cat_id"].values, palette=palette)
-
+stashfig("pairplot-rlse")
 #%%
 # collapse
 concat_embedding = np.concatenate(embedding, axis=1)
@@ -148,9 +150,10 @@ ax.get_legend().remove()
 ax.legend(bbox_to_anchor=(1, 1), loc="upper left")
 ax.set_title("UMAP o R-LSE")
 ax.axis("off")
-
+stashfig("umap-rlse")
 #%% [markdown]
 ### CASE
+# Running CASE with a few different parameters
 # %%
 # collapse
 L = to_laplace(pass_to_ranks(adj), form="R-DAD")  # D_{tau}^{-1/2} A D_{tau}^{-1/2}
@@ -194,10 +197,10 @@ for method in methods:
 #%%
 # collapse
 fig, axs = plt.subplots(
-    len(methods), len(alphas), figsize=5 * np.array([len(alphas), len(methods)])
+    len(methods), len(alphas[:4]), figsize=5 * np.array([len(alphas[:4]), len(methods)])
 )
 for i, method in enumerate(methods):
-    for j, alpha in enumerate(alphas):
+    for j, alpha in enumerate(alphas[:4]):
         ax = axs[i, j]
         umap_embedding = umap_by_params[(method, alpha)]
         plot_df = pd.DataFrame(
@@ -230,20 +233,26 @@ stashfig("casc-umaps")
 
 #%% [markdown]
 ### MASE
+# Running MASE (here I'm using the Laplacian and the covariates as the two inputs)
 #%%
 # collapse
 Y = covariate_df.values
-n_components = 6
+n_components = 6  # TODO picked this just roughly looking at screeplots
 U_Y, D_Y, Vt_Y = selectSVD(Y @ Y.T, n_components=n_components)
 U_L, D_L, Vt_L = selectSVD(L, n_components=n_components)
+covariate_embedding = U_Y
 
 concatenated_latent = np.concatenate((U_L, U_Y), axis=1)
 U_joint, D_joint, Vt_joint = selectSVD(concatenated_latent, n_components=8)
 mase_embedding = U_joint
-
-
 #%% [markdown]
 ### A simple classifier on the embeddings
+# Here I just do a simple 5-nearest-neighbors classifier. Note that I haven't done any
+# tuning of the classifier (like how many neighbors to use or distances other than
+# Euclidean) or the dimension of the embedding itself.
+#
+# In the experiment below, I am doing cross validation, and not treating the out-of-graph
+# nodes any differently (i.e. they are just mixed in for the cross validation).
 #%%
 # collapse
 classifier = KNeighborsClassifier(n_neighbors=5)
@@ -263,13 +272,6 @@ for score in cval_scores:
     rows.append({"score": score, "alpha": alpha + 0.01, "method": "MASE"})
 
 results = pd.DataFrame(rows)
-
-# #%%
-# # collapse
-
-# classifier = KNeighborsClassifier(n_neighbors=5)
-# y = meta_df["cat_id"].values
-
 
 #%%
 # collapse
@@ -345,10 +347,11 @@ for i, x in enumerate(x_range):
 stashfig(f"knn-lcc={make_lcc}")
 
 #%% [markdown]
-### Using the nodes with graph signal as training data
-# Here I just pick one of the parameter sets for the CASE embedding from above, and then
-# use all in-graph nodes as training data, and ask how well they predict for the out-of-graph
-# nodes.
+### Using only the nodes with graph signal as training data
+# Here I just pick one of the parameter sets for the CASE embedding from above, as well
+# as the MASE embedding and the embedding we get for just the covariates alone. Then I
+# use all in-graph nodes as training data, and ask how well they predict for the
+# out-of-graph nodes.
 #%%
 # collapse
 _, lcc_inds = get_lcc(adj, return_inds=True)
@@ -438,6 +441,7 @@ def plot_out_of_graph(embedding, score, incorrect, method=""):
     return fig, ax
 
 
+#%%
 score, y_pred = classify_out_of_graph(case_embedding)
 plot_out_of_graph(case_embedding, score, y_pred, method="CASE")
 stashfig("case-isolate-predictions-umap")
@@ -448,84 +452,6 @@ plot_out_of_graph(mase_embedding, score, y_pred, method="MASE")
 stashfig("mase-isolate-predictions-umap")
 
 #%%
-
-umapper = UMAP(min_dist=0.7, metric="cosine")
-umap_embedding = umapper.fit_transform(mase_embedding)
-
-plot_df = pd.DataFrame(
-    data=umap_embedding,
-    columns=[f"umap_{i}" for i in range(umap_embedding.shape[1])],
-    index=meta_df.index,
-)
-plot_df["cat_id"] = meta_df["cat_id"]
-
-fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-sns.scatterplot(
-    data=plot_df,
-    x="umap_0",
-    y="umap_1",
-    s=20,
-    alpha=0.7,
-    hue="cat_id",
-    palette=palette,
-    ax=ax,
-)
-ax.get_legend().remove()
-ax.legend(bbox_to_anchor=(1, 1), loc="upper left")
-ax.set_title("UMAP o MASE")
-ax.axis("off")
-
-#%%
-
-
-#%%
-
-# def mase(ase, Y):
-
-# #Raw mase: svd( concatenate( ASE(A) , SVD(Y Y') ).
-
-# #ase: nx1; Y: nx1
-
-# u_y, s_y, vh_y = np.linalg.svd(Y @ Y.transpose())
-
-# mase_input = np.concatenate( (ase, u_y[:,0:1]), axis=-1)
-
-# mase_raw, _, _ = np.linalg.svd(mase_input)
-
-# return mase_raw[:,0:2] #dim=2
-
-
-# umap_embedding = umap_by_params[(method, alpha)]
-
-# pad_prop = 0.05
-# mins = X.min(axis=0)
-# maxs = X.max(axis=1)
-# extent = maxs - mins
-# mins -= extent * pad_prop
-# maxs += extent * pad_prop
-# step = 0.01
-# xx, yy = np.meshgrid(
-#     np.arange(mins[0], maxs[0], step), np.arange(mins[1], maxs[1], step)
-# )
-
-# plt.pcolormesh(xx, yy, plot_mesh_labels, cmap=cmap, alpha=0.1)
-
-# pad_prop = 0.05
-# mins = umap_embedding.min(axis=0)
-# maxs = umap_embedding.max(axis=0)
-# extent = maxs - mins
-# mins -= extent * pad_prop
-# maxs += extent * pad_prop
-# step = 0.5
-# xx, yy = np.meshgrid(
-#     np.arange(mins[0], maxs[0], step), np.arange(mins[1], maxs[1], step)
-# )
-# plot_mesh = np.c_[xx.ravel(), yy.ravel()]
-# print(len(plot_mesh))
-# native_plot_mesh = umapper.inverse_transform(plot_mesh)
-# print("transformed")
-# y_plot_mesh = classifier.predict(native_plot_mesh)
-# plot_mesh_labels = y_plot_mesh.reshape(xx.shape)
-# from matplotlib.colors import ListedColormap
-
-# cmap = ListedColormap(list(map(palette.get, np.unique(y))))
+score, y_pred = classify_out_of_graph(U_Y)
+plot_out_of_graph(U_Y, score, y_pred, method="Covariates")
+stashfig("covariates-isolate-predictions-umap")

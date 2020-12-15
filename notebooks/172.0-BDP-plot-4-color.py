@@ -34,6 +34,7 @@ from src.visualization import (
     remove_spines,
     set_axes_equal,
     stacked_barplot,
+    set_theme,
 )
 
 
@@ -44,18 +45,18 @@ rc_dict = {
     "axes.formatter.limits": (-3, 3),
     "figure.figsize": (6, 3),
     "figure.dpi": 100,
-    "axes.edgecolor": "lightgrey",
-    "ytick.color": "grey",
-    "xtick.color": "grey",
-    "axes.labelcolor": "dimgrey",
-    "text.color": "dimgrey",
-    "xtick.major.size": 0,
-    "ytick.major.size": 0,
+    # "axes.edgecolor": "lightgrey",
+    # "ytick.color": "grey",
+    # "xtick.color": "grey",
+    # "axes.labelcolor": "dimgrey",
+    # "text.color": "dimgrey",
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Arial"],
 }
-for key, val in rc_dict.items():
-    mpl.rcParams[key] = val
-context = sns.plotting_context(context="talk", font_scale=1, rc=rc_dict)
-sns.set_context(context)
+
+set_theme(rc_dict=rc_dict, font_scale=1.25)
 
 
 np.random.seed(8888)
@@ -65,7 +66,8 @@ print(FNAME)
 
 
 def stashfig(name, **kws):
-    savefig(name, foldername=FNAME, save_on=True, fmt="png", dpi=200, **kws)
+    savefig(name, foldername=FNAME, save_on=True, format="png", dpi=200, **kws)
+    savefig(name, foldername=FNAME, save_on=True, format="pdf", dpi=200, **kws)
 
 
 def stashcsv(df, name, **kws):
@@ -74,7 +76,7 @@ def stashcsv(df, name, **kws):
 
 # load data
 mg = load_metagraph("G")
-mg = mg.reindex(mg.meta[~mg.meta["super"]].index, use_ids=True)
+# mg = mg.reindex(mg.meta[~mg.meta["super"]].index, use_ids=True)
 
 
 graph_types = ["Gad", "Gaa", "Gdd", "Gda"]  # "Gs"]
@@ -143,5 +145,35 @@ stashfig("double-adj")
 
 
 #%%
-# more simply, plot the two hemispheres
+fig, axs = plt.subplots(2, 2, figsize=(20, 20), gridspec_kw=dict(hspace=0, wspace=0))
+matrixplot_kws = dict(
+    row_meta=mg.meta,
+    col_meta=mg.meta,
+    row_item_order=[
+        "merge_class",
+        "pair_id",
+    ],  # TODO maybe pick whatever we do in next figure
+    col_item_order=["merge_class", "pair_id"],
+    # colors=["merge_class"],
+    palette=CLASS_COLOR_DICT,
+    sizes=(1, 1),
+    plot_type="scattermap",
+)
 
+edge_type_palette = dict(zip(graph_types, sns.color_palette("deep")))
+
+ax = axs[0, 0]
+matrixplot(adjs[1], ax=ax, color=edge_type_palette["Gaa"], **matrixplot_kws)
+ax.set(ylabel="Axon", title="Axon")
+
+ax = axs[0, 1]
+matrixplot(adjs[0], ax=ax, color=edge_type_palette["Gad"], **matrixplot_kws)
+ax.set(title="Dendrite")
+
+ax = axs[1, 0]
+matrixplot(adjs[3], ax=ax, color=edge_type_palette["Gda"], **matrixplot_kws)
+ax.set(ylabel="Dendrite")
+
+ax = axs[1, 1]
+matrixplot(adjs[2], ax=ax, color=edge_type_palette["Gdd"], **matrixplot_kws)
+stashfig("4-color-adjplot")

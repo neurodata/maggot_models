@@ -27,7 +27,7 @@ def _handle_dirs(pathname, foldername, subfoldername):
 
 def savefig(
     name,
-    fmt="png",
+    format="png",
     dpi=300,
     foldername=None,
     subfoldername="figs",
@@ -41,10 +41,10 @@ def savefig(
 ):
     if save_on:
         path = _handle_dirs(pathname, foldername, subfoldername)
-        savename = path / str(name + "." + fmt)
+        savename = path / str(name + "." + format)
         plt.savefig(
             savename,
-            format=fmt,
+            format=format,
             facecolor="white",
             transparent=transparent,
             bbox_inches=bbox_inches,
