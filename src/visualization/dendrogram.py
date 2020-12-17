@@ -113,7 +113,7 @@ def draw_bar_dendrogram(
         # mean_in_cluster = meta.groupby([f"lvl{level}_labels", color_key])["sf"].mean()
         meta = meta.sort_values(
             [f"lvl{level}_labels", f"{color_key}_{color_order}_order", color_key],
-            ascending=False,
+            ascending=True,
         )
         sizes = meta.groupby([f"lvl{level}_labels", color_key], sort=False).size()
 
@@ -285,7 +285,7 @@ def plot_double_dendrogram(
 
     ax = axs[0]
     ax.set_title("Left", fontsize="x-large")
-    ax.set_ylim((-gap, (n_pairs + gap * n_leaf)))
+    ax.set_ylim((-gap, (n_pairs + gap * n_leaf))[::-1])
     ax.set_xlim((-0.5, lowest_level + 0.5))
 
     draw_bar_dendrogram(left_meta, ax, first_mid_map, color_order=color_order)
@@ -303,15 +303,17 @@ def plot_double_dendrogram(
         ax.tick
 
     # add a scale bar in the bottom left
-    ax.bar(x=0, height=100, bottom=0, width=width, color="k")
-    ax.text(x=0.35, y=0, s="100 neurons")
+    ax.bar(
+        x=0, height=100, bottom=(n_pairs + gap * n_leaf) - 110, width=width, color="k"
+    )
+    ax.text(x=0.35, y=(n_pairs + gap * n_leaf) - 10, s="100 neurons")
 
     # right side
     right_meta = meta[meta["hemisphere"] == "R"].copy()
 
     ax = axs[1]
     ax.set_title("Right", fontsize="x-large")
-    ax.set_ylim((-gap, (n_pairs + gap * n_leaf)))
+    ax.set_ylim((-gap, (n_pairs + gap * n_leaf))[::-1])
     ax.set_xlim((lowest_level + 0.5, -0.5))  # reversed x axis order to make them mirror
 
     draw_bar_dendrogram(right_meta, ax, first_mid_map, color_order=color_order)

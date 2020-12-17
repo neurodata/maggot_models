@@ -1640,7 +1640,7 @@ def draw_networkx_nice(
     return ax
 
 
-def set_axes_equal(ax):
+def set_axes_equal(ax, use_x=True, use_y=True, use_z=True):
     """Make axes of 3D plot have equal scale so that spheres appear as spheres,
     cubes as cubes, etc..  This is one possible solution to Matplotlib's
     ax.set_aspect('equal') and ax.axis('equal') not working for 3D.
@@ -1663,7 +1663,15 @@ def set_axes_equal(ax):
 
     # The plot bounding box is a sphere in the sense of the infinity
     # norm, hence I call half the max range the plot radius.
-    plot_radius = 0.5 * max([x_range, y_range, z_range])
+    dimension_ranges = []
+    if use_x:
+        dimension_ranges.append(x_range)
+    if use_y:
+        dimension_ranges.append(y_range)
+    if use_z:
+        dimension_ranges.append(z_range)
+
+    plot_radius = 0.5 * max(dimension_ranges)
 
     ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
     ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])

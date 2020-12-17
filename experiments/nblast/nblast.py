@@ -33,7 +33,7 @@ meta = mg.meta
 #%% define some functions
 
 
-def pairwise_nblast(neuron_ids, point_thresh=5):
+def pairwise_nblast(neuron_ids, point_thresh=20):
     neuron_ids = [int(n) for n in neuron_ids]
     neurons = pymaid.get_neuron(neuron_ids)  # load in with pymaid
 
@@ -106,7 +106,7 @@ def postprocess_nblast(scores):
 
 
 #%% run nblast
-for side in ["left", "right"]:
+for side in ["right"]:
     print(f"Processing side: {side}")
     side_meta = meta[meta[side]]
 

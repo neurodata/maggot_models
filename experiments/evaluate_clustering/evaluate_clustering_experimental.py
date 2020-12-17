@@ -50,11 +50,10 @@ save_path = Path("maggot_models/experiments/evaluate_clustering/")
 
 CLASS_KEY = "merge_class"
 CLASS_ORDER = "median_node_visits"
-FORMAT = "pdf"
 
 
-def stashfig(name, format="pdf", **kws):
-    savefig(name, pathname=save_path / "figs", format=format, save_on=True, **kws)
+def stashfig(name, fmt="pdf", **kws):
+    savefig(name, pathname=save_path / "figs", fmt=fmt, save_on=True, **kws)
 
 
 def stashcsv(df, name, **kws):
@@ -431,8 +430,8 @@ def plot_clustering_results(
 
     # finish up
     plt.tight_layout()
-    stashfig(f"megafig-lowest={lowest_level}" + basename, format=FORMAT)
-    # plt.close()
+    stashfig(f"megafig-lowest={lowest_level}" + basename, fmt="png")
+    plt.close()
 
     if show_singles:
         # make a single barplot for each level
@@ -503,20 +502,20 @@ walk_meta = pd.read_csv(
     f"maggot_models/experiments/walk_sort/outs/meta_w_order-{walk_spec}-include_reverse={include_reverse}.csv",
     index_col=0,
 )
-meta["median_node_visits"] = walk_meta["median_node_visits"]  # make the sorting right
+meta["median_node_visits"] = walk_meta["median_node_visits"]
 
 # %%
 # plot results
 lowest_level = 7  # last level to show for dendrograms, adjacencies
-plot_clustering_results(
-    adj,
-    meta,
-    basename,
-    lowest_level=lowest_level,
-    show_adjs=False,
-    show_singles=False,
-    make_flippable=False,
-)
+# plot_clustering_results(
+#     adj,
+#     meta,
+#     basename,
+#     lowest_level=lowest_level,
+#     show_adjs=True,
+#     show_singles=False,
+#     make_flippable=False,
+# )
 
 #%%
 lowest_level = 7
@@ -526,78 +525,77 @@ mg = sort_mg(mg, level_names)
 fig, axs = plt.subplots(
     2, lowest_level + 1, figsize=10 * np.array([lowest_level + 1, 2])
 )
+# for level in np.arange(lowest_level + 1):
 plot_adjacencies(mg, axs, lowest_level=lowest_level)
-stashfig(f"adjplots-lowest={lowest_level}" + basename, format=FORMAT)
+stashfig(f"adjplots-lowest={lowest_level}" + basename, fmt="png")
+#%%
+from matplotlib.colors import ListedColormap
+
+sort_meta = mg.meta.copy()
+fig, axs = plt.subplots(
+    1, 2 * (lowest_level + 1), figsize=(10, 10), gridspec_kw=dict(wspace=0)
+)
+
+# meta = mg.meta
+# sort_class = level_names + ["merge_class"]
+# class_order = [class_order]
+# total_sort_by = []
+# for sc in sort_class:
+#     for co in class_order:
+#         class_value = meta.groupby(sc)[co].mean()
+#         meta[f"{sc}_{co}_order"] = meta[sc].map(class_value)
+#         total_sort_by.append(f"{sc}_{co}_order")
+#     total_sort_by.append(sc)
+# mg = mg.sort_values(total_sort_by, ascending=False)
 
 
-# #%%
-# from matplotlib.colors import ListedColormap
+for level in np.arange(lowest_level + 1)[::-1]:
+    # sort_meta = sort_meta.sort_values(
+    #     [
+    #         f"lvl{level}_labels_{CLASS_ORDER}_order",
+    #         f"lvl{level}_labels",
+    #         f"{CLASS_KEY}_{CLASS_ORDER}_order",
+    #         CLASS_KEY,
+    #     ],
+    #     ascending=True,
+    # )
+    sort_meta["inds"] = range(len(sort_meta))
+    firsts = sort_meta.groupby(f"lvl{level}_labels", sort=False)["inds"].first()
 
-# sort_meta = mg.meta.copy()
-# fig, axs = plt.subplots(
-#     1, 2 * (lowest_level + 1), figsize=(10, 10), gridspec_kw=dict(wspace=0)
-# )
+    # mean_visits = sort_meta.groupby(
+    #     [
+    #         f"lvl{level}_labels",
+    #         f"{CLASS_KEY}_{CLASS_ORDER}_order",
+    #     ]
+    # )["median_node_visit"].mean()
+    # meta.groupby([leaf_key, "merge_class"], sort=False).size()
 
-# # meta = mg.meta
-# # sort_class = level_names + ["merge_class"]
-# # class_order = [class_order]
-# # total_sort_by = []
-# # for sc in sort_class:
-# #     for co in class_order:
-# #         class_value = meta.groupby(sc)[co].mean()
-# #         meta[f"{sc}_{co}_order"] = meta[sc].map(class_value)
-# #         total_sort_by.append(f"{sc}_{co}_order")
-# #     total_sort_by.append(sc)
-# # mg = mg.sort_values(total_sort_by, ascending=False)
+    sort_meta[CLASS_KEY].values
+    color_dict = CLASS_COLOR_DICT
+    classes = sort_meta["merge_class"].values
+    uni_classes = np.unique(sort_meta["merge_class"])
+    class_map = dict(zip(uni_classes, range(len(uni_classes))))
+    color_sorted = np.vectorize(color_dict.get)(uni_classes)
+    lc = ListedColormap(color_sorted)
+    class_indicator = np.vectorize(class_map.get)(classes)
+    class_indicator = class_indicator.reshape(len(classes), 1)
+    ax = axs[2 * level + 1]
+    sns.heatmap(
+        class_indicator,
+        cmap=lc,
+        cbar=False,
+        yticklabels=False,
+        # xticklabels=False,
+        square=False,
+        ax=ax,
+    )
+    ax.set(xlabel=level, xticks=[])
 
-
-# for level in np.arange(lowest_level + 1)[::-1]:
-#     # sort_meta = sort_meta.sort_values(
-#     #     [
-#     #         f"lvl{level}_labels_{CLASS_ORDER}_order",
-#     #         f"lvl{level}_labels",
-#     #         f"{CLASS_KEY}_{CLASS_ORDER}_order",
-#     #         CLASS_KEY,
-#     #     ],
-#     #     ascending=True,
-#     # )
-#     sort_meta["inds"] = range(len(sort_meta))
-#     firsts = sort_meta.groupby(f"lvl{level}_labels", sort=False)["inds"].first()
-
-#     # mean_visits = sort_meta.groupby(
-#     #     [
-#     #         f"lvl{level}_labels",
-#     #         f"{CLASS_KEY}_{CLASS_ORDER}_order",
-#     #     ]
-#     # )["median_node_visit"].mean()
-#     # meta.groupby([leaf_key, "merge_class"], sort=False).size()
-
-#     sort_meta[CLASS_KEY].values
-#     color_dict = CLASS_COLOR_DICT
-#     classes = sort_meta["merge_class"].values
-#     uni_classes = np.unique(sort_meta["merge_class"])
-#     class_map = dict(zip(uni_classes, range(len(uni_classes))))
-#     color_sorted = np.vectorize(color_dict.get)(uni_classes)
-#     lc = ListedColormap(color_sorted)
-#     class_indicator = np.vectorize(class_map.get)(classes)
-#     class_indicator = class_indicator.reshape(len(classes), 1)
-#     ax = axs[2 * level + 1]
-#     sns.heatmap(
-#         class_indicator,
-#         cmap=lc,
-#         cbar=False,
-#         yticklabels=False,
-#         # xticklabels=False,
-#         square=False,
-#         ax=ax,
-#     )
-#     ax.set(xlabel=level, xticks=[])
-
-#     ax = axs[2 * level]
-#     ax.axis("off")
-#     ax.set(ylim=axs[2 * level + 1].get_ylim())
-#     for first_ind in firsts:
-#         ax.axhline(first_ind, color="grey", linestyle="--", alpha=1, linewidth=1)
+    ax = axs[2 * level]
+    ax.axis("off")
+    ax.set(ylim=axs[2 * level + 1].get_ylim())
+    for first_ind in firsts:
+        ax.axhline(first_ind, color="grey", linestyle="--", alpha=1, linewidth=1)
 
 # %% [markdown]
 # # ##
