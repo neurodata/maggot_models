@@ -125,3 +125,11 @@ notebooks/outs/158.2-BDP-plot_morpho
 *.csv
 *.xlsx
 walks*.txt
+outs/*_embed
+experiments/matched_subgraph_omni_cluster/outs/omni_*
+notebooks/Teresa_GraphSage.ipynb
+maggot_models/data/logs
+colors.png
+notebooks/outs/colors.png
+.gitignore
+data/logs/2020-09-23.txt
