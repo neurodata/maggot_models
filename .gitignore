@@ -119,3 +119,9 @@ notebooks/outs/158.2-BDP-plot_morpho
 *adj*.csv
 *.json
 *-split.pdf
+*/outs/
+*.pdf
+*.png
+*.csv
+*.xlsx
+walks*.txt
