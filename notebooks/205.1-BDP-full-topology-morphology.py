@@ -749,7 +749,14 @@ for side in sides:
     print()
 
     # collect
-    result = {"side": side, "adj": adj, "sim": sim, "meta": cluster_meta}
+    result = {
+        "side": side,
+        "adj": adj,
+        "sim": sim,
+        "meta": cluster_meta,
+        "divisive_cluster": dc,
+        "joint_embedding": joint_embedding,
+    }
     results[(side,)] = result
 
 #%%

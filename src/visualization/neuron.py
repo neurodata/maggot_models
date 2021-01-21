@@ -1,12 +1,13 @@
-import numpy as np
-from src.pymaid import start_instance
-import pymaid
 import matplotlib as mpl
-
-# mpl.use("Agg")
 import matplotlib.pyplot as plt
-from src.visualization import CLASS_COLOR_DICT, stacked_barplot, set_axes_equal
+import numpy as np
+import pandas as pd
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
+import navis
+import pymaid
+from src.pymaid import start_instance
+from src.visualization import CLASS_COLOR_DICT, set_axes_equal, stacked_barplot
 
 
 def plot_neurons(meta, key=None, label=None, barplot=False):
@@ -117,13 +118,10 @@ def set_view_params(ax, azim=-90, elev=0, dist=5):
 
 
 def plot_volumes(volumes, ax):
-    pymaid.plot2d(volumes, ax=ax, method="3d", autoscale=False)
+    navis.plot2d(volumes, ax=ax, method="3d", autoscale=False)
     for c in ax.collections:
         if isinstance(c, Poly3DCollection):
             c.set_alpha(0.02)
-
-
-import pandas as pd
 
 
 def plot_3view(
@@ -187,3 +185,44 @@ def plot_3view(
 # ax.set_xlim(mins[0], maxs[0])
 # ax.set_xlim(mins[1], maxs[1])
 # ax.set_xlim(mins[2], maxs[2])
+
+
+def simple_plot_neurons(
+    neuron_ids,
+    azim=-90,
+    elev=-90,
+    dist=5,
+    use_x=True,
+    use_y=True,
+    use_z=False,
+    palette=None,
+    volume_names=volume_names,
+    ax=None,
+    autoscale=False,
+    axes_equal=True,
+):
+    neuron_ids = [int(n) for n in neuron_ids]
+    neurons = [pymaid.get_neuron(n) for n in neuron_ids]
+    volumes = [pymaid.get_volume(v) for v in volume_names]
+    color = np.vectorize(palette.get)(neuron_ids)
+
+    plot_mode = "3d"
+
+    navis.plot2d(
+        neurons,
+        color=color,
+        ax=ax,
+        connectors=False,
+        method="3d",
+        autoscale=autoscale,
+        soma=False,
+    )
+    plot_volumes(volumes, ax)
+    if plot_mode == "3d":
+        ax.azim = azim
+        ax.elev = elev
+        ax.dist = dist
+        if axes_equal:
+            set_axes_equal(ax, use_y=use_y, use_x=use_x, use_z=use_z)
+    ax.axis("off")
+    return ax

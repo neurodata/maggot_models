@@ -95,20 +95,6 @@ CLASS_IND_DICT = {
     "LN": 49,
 }
 
-# SIMPLE_IND_DICT = {
-#     "Sens": 51,
-#     "PN": 36,
-#     "MBIN": 121,
-#     "KC": 0,
-#     "MBON": 172,
-#     "LHN": 123,
-#     "FBN": 50,
-#     "CN": 206,
-#     "dVNC": 38,
-#     "dSEZ": 124,
-#     "RGN": 42,
-#     "Outs": 124,
-# }
 name_map = {
     "Sens": "Sensory",
     "LN": "Local",
@@ -185,7 +171,3 @@ def plot_class_colormap():
 if __name__ == "__main__":
     plot_colors()
     plot_class_colormap()
-    # plt.show()
-
-
-# %%

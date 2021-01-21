@@ -111,8 +111,7 @@ def draw_colors(
 
 
 def _get_separator_info(sort_meta, sort_class):
-    """ Assumes meta is already sorted
-    """
+    """Assumes meta is already sorted"""
     if sort_meta is None and sort_class is None:
         return None
     # sort_meta[sort_class].fillna("", inplace=True)
@@ -188,7 +187,7 @@ def draw_separators(
     gridline_kws=None,
 ):
     """[summary]
-    
+
     Parameters
     ----------
     ax : [type]
@@ -217,7 +216,7 @@ def draw_separators(
         [description], by default False
     tick_rot : int, optional
         [description], by default 45
-    
+
     Returns
     -------
     [type]
@@ -403,7 +402,7 @@ def matrixplot(
     **kws,
 ):
     """Plotting matrices
-    
+
     Parameters
     ----------
     data : np.ndarray, ndim=2
@@ -452,7 +451,7 @@ def matrixplot(
         [description], by default None
     tick_rot : int, optional
         [description], by default 0
-    
+
     Returns
     -------
     [type]
@@ -465,7 +464,13 @@ def matrixplot(
     if plot_type not in plot_type_opts:
         raise ValueError(f"`plot_type` must be one of {plot_type_opts}")
 
-    row_meta, row_sort_class, row_class_order, row_item_order, row_colors = _check_sorting_kws(
+    (
+        row_meta,
+        row_sort_class,
+        row_class_order,
+        row_item_order,
+        row_colors,
+    ) = _check_sorting_kws(
         data.shape[0],
         row_meta,
         row_sort_class,
@@ -474,7 +479,13 @@ def matrixplot(
         row_colors,
     )
 
-    col_meta, col_sort_class, col_class_order, col_item_order, col_colors = _check_sorting_kws(
+    (
+        col_meta,
+        col_sort_class,
+        col_class_order,
+        col_item_order,
+        col_colors,
+    ) = _check_sorting_kws(
         data.shape[1],
         col_meta,
         col_sort_class,
@@ -731,4 +742,3 @@ def adjplot(
         **kws,
     )
     return outs
-

@@ -52,6 +52,6 @@ from .dendrogram import (
 from .settings import set_theme
 
 try:
-    from .neuron import plot_neurons, plot_3view, plot_volumes
+    from .neuron import plot_neurons, plot_3view, plot_volumes, simple_plot_neurons
 except ModuleNotFoundError:
     pass
