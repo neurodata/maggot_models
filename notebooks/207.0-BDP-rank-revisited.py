@@ -172,10 +172,6 @@ def estimate_spring_rank_P(A, ranks, beta):
 from graspologic.plot import heatmap
 from src.visualization import adjplot
 
-sort_inds = np.argsort(-ranks)
-fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-adjplot(P[np.ix_(sort_inds, sort_inds)], ax=axs[0], cbar=False)
-adjplot(A[np.ix_(sort_inds, sort_inds)], plot_type="scattermap", ax=axs[1])
 
 #%%
 
@@ -200,4 +196,7 @@ for graph_type in graph_types:
     stashfig(f"{graph_type}-sr-prob-model")
 
 #%%
-
+sort_inds = np.argsort(-ranks)
+fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+adjplot(P[np.ix_(sort_inds, sort_inds)], ax=axs[0], cbar=False)
+adjplot(A[np.ix_(sort_inds, sort_inds)], plot_type="scattermap", ax=axs[1])
