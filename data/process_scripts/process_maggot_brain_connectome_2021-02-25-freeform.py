@@ -12,11 +12,11 @@ from src.data import load_networkx
 from src.io import savecsv
 from src.pymaid import start_instance
 
-output_name = "2021-01-29"
+output_name = "2021-02-25"
 output_path = Path(f"maggot_models/data/processed/{output_name}")
 
 # toggle for logging output to another file
-sys.stdout = open(f"maggot_models/data/logs/{output_name}.txt", "w")
+# sys.stdout = open(f"maggot_models/data/logs/{output_name}.txt", "w")
 
 print(f"Data will save to: {output_path}")
 
@@ -24,20 +24,18 @@ print(f"Data will save to: {output_path}")
 # File locations
 base_path = Path("./maggot_models/data/raw/Maggot-Brain-Connectome/")
 
-data_path = base_path / "4-color-matrices_Brain"
+# data_path = base_path / "4-color-matrices_Brain"
 
-data_date_graphs = "2021-01-29"
-print(f"Data for adjacency matrices: {data_date_graphs}")
+# data_date_graphs = "2021-01-29"
+# print(f"Data for adjacency matrices: {data_date_graphs}")
 
-graph_types = ["axon-axon", "axon-dendrite", "dendrite-axon", "dendrite-dendrite"]
+# graph_types = ["axon-axon", "axon-dendrite", "dendrite-axon", "dendrite-dendrite"]
 
-input_counts_file = "input_counts"
+# input_counts_file = "input_counts"
 
 pair_file = "pairs/pairs-2020-05-08.csv"
 print(f"Data for pairs: {pair_file}")
 pair_file = base_path / pair_file
-
-use_super = False
 
 print()
 
@@ -72,10 +70,10 @@ priority_map = {
     "dUnk": 2,
     "FBN": 3,
     "FAN": 3,
-    "LHN2": 5,  # used to be 4
-    "CN2": 6,  # used to be 5
+    "LHN2": 5, 
+    "CN2": 6, 
     "FB2N": 3,
-    "FFN": 4,  # used to be 4
+    "FFN": 4,
     "MN2": 3,
     "AN2": 3,
     "vtd2": 3,
@@ -147,12 +145,12 @@ def df_from_meta_annotation(key, filt=None):
     return pd.concat(series_ids, axis=1, ignore_index=False)
 
 
-
-# %% [markdown]
-# ## load main groups as boolean columns
-
-
-start_instance()  # creates a pymaid instance
+def apply_any_from_meta_annotation(key, meta, new_key=None, filt=None):
+    if new_key is None:
+        new_key = key
+    group_meta = df_from_meta_annotation(key, filt=filt)
+    is_in_group = group_meta.any(axis=1)
+    meta.loc[is_in_group.index, new_key] = is_in_group
 
 
 def filt(name):
@@ -161,55 +159,44 @@ def filt(name):
     return name
 
 
-meta = df_from_meta_annotation("mw neuron groups", filt=filt)
+# %% [markdown]
 
-output_meta = df_from_meta_annotation("mw brain outputs", filt=filt)
-is_output = output_meta.any(axis=1)
-meta.loc[is_output.index, "output"] = is_output
+start_instance()  # creates a pymaid instance
 
-input_meta = df_from_meta_annotation("mw brain inputs", filt=filt)
-is_input = input_meta.any(axis=1)
-meta.loc[is_input.index, "input"] = is_input
 
+#%%
+
+# get all of the neurons we may ever have to consider
+all_neurons = get_indicator_from_annotation("mw brain paper all neurons").index
+meta = pd.DataFrame(index=all_neurons)
+
+# these are mostly class labels
+group_meta = df_from_meta_annotation("mw neuron groups", filt=filt)
+meta = pd.concat((meta, group_meta), axis=1)
+
+apply_any_from_meta_annotation("mw brain outputs", meta, new_key="outputs", filt=filt)
+apply_any_from_meta_annotation("mw brain inputs", meta, new_key="inputs", filt=filt)
+apply_any_from_meta_annotation(
+    "mw brain A1 ascending", meta, new_key="a1_ascending", filt=filt
+)
+apply_any_from_meta_annotation("mw brain sensories", meta, new_key="sensory", filt=filt)
+# this one is erroring
+# apply_any_from_meta_annotation(
+#     "mw A1 neurons paired", meta, new_key="a1_paired", filt=filt
+# )
+apply_any_from_meta_annotation("mw A1 sensories", meta, new_key="a1_sensory", filt=filt)
 
 # %% [markdown]
 # ##
 meta.fillna(False, inplace=True)
 
 class1_name_map = {
-    "APL": "APL",
-    "dSEZ": "dSEZ",
-    "dVNC": "dVNC",
-    "RGN": "RGN",
     "picky_LN": "pLN",
     "choosy_LN": "cLN",
     "broad_LN": "bLN",
-    "CN": "CN",
-    "CN2": "CN2",
-    "CX": "CX",
-    "FAN": "FAN",
-    "FB2N": "FB2N",
-    "FBN": "FBN",
-    "KC": "KC",
-    "keystone": "keystone",
-    "LHN": "LHN",
-    "LHN2": "LHN2",
-    "LON": "LON",
-    "MBIN": "MBIN",
-    "MBON": "MBON",
-    "motor": "motor",
-    "mPN": "mPN",
-    "dUnk": "dUnk",
-    "sens": "sens",
-    "tPN": "tPN",
-    "uPN": "uPN",
-    "vPN": "vPN",
-    # "vtd_2ndOrder": "vtd2",
     "AN_2nd_order": "AN2",
     "MN_2nd_order": "MN2",
-    "A00c": "A00c",
 }
-
 
 meta.rename(class1_name_map, axis=1, inplace=True)
 
@@ -217,7 +204,6 @@ meta.rename(class1_name_map, axis=1, inplace=True)
 # %% [markdown]
 # ##
 class1_cols = np.array(list(class1_name_map.values()))
-
 
 single_class1, all_class1, n_class1 = get_classes(meta, class1_cols, fill_unk=True)
 
@@ -590,119 +576,9 @@ name_map = pymaid.get_names(meta.index.values)
 
 meta["name"] = meta.index.map(lambda name: name_map[str(name)])
 
-# %% [markdown]
-# ## Deal with the supernode graph
-
-if use_super:
-    empty_types = {
-        np.bool: False,
-        np.float64: 0.0,
-        np.int64: 0,
-        np.object: "",
-        bool: False,
-    }
-
-    def get_empty_val(dtype):
-        for key, val in empty_types.items():
-            if dtype == key:
-                return val
-
-    def make_empty_df_from(df, new_index=None):
-        n_rows = len(new_index)
-        series_dict = {}
-        for c in df.columns:
-            dtype = df[c].dtype
-            empty_val = get_empty_val(dtype)
-            series_dict[c] = pd.Series(
-                [empty_val] * n_rows, dtype=dtype, index=new_index
-            )
-        return pd.DataFrame(series_dict)
-
-    graph_type = "supernodes"
-    edgelist_path = data_path / data_date_graphs / (graph_type + ".csv")
-    adj = pd.read_csv(edgelist_path, index_col=0)
-
-    supernode_names = [
-        "Brain Hemisphere left",
-        "Brain Hemisphere right",
-        "SEZ_left",
-        "SEZ_right",
-        "T1_left",
-        "T1_right",
-        "T2_left",
-        "T2_right",
-        "T3_left",
-        "T3_right",
-        "A1_left",
-        "A1_right",
-        "A2_left",
-        "A2_right",
-        "A3_left",
-        "A3_right",
-        "A4_left",
-        "A4_right",
-        "A5_left",
-        "A5_right",
-        "A6_left",
-        "A6_right",
-        "A7_left",
-        "A7_right",
-        "A8_left",
-        "A8_right",
-    ]
-    supernode_ids = np.arange(-100, -100 - len(supernode_names), step=-1)
-    supernode_name_map = dict(zip(supernode_names, supernode_ids))
-    super_meta = make_empty_df_from(meta, supernode_ids)
-
-    super_meta["name"] = supernode_names
-    super_meta["left"] = super_meta["name"].map(lambda name: "left" in name)
-    super_meta["right"] = super_meta["name"].map(lambda name: "right" in name)
-    left_meta = super_meta[super_meta["left"]]
-    super_meta.loc[left_meta.index, "hemisphere"] = "L"
-    right_meta = super_meta[super_meta["right"]]
-    super_meta.loc[right_meta.index, "hemisphere"] = "R"
-
-    def pair_mapper(skid):
-        if skid % 2 == 0:
-            return skid - 1
-        else:
-            return skid + 1
-
-    super_meta["pair"] = super_meta.index.map(pair_mapper)
-    max_pair_id = meta["pair_id"].max() + 1
-    super_pair_ids = np.arange(len(supernode_names) / 2) + max_pair_id
-    super_pair_ids = super_pair_ids.astype(np.int64)
-    super_pair_ids = np.repeat(super_pair_ids, 2)
-    super_meta["pair_id"] = super_pair_ids
-    super_meta["super"] = True
-    super_meta["class1"] = "super"
-
-    def class2_mapper(name):
-        if "brain" in name.lower():
-            return "brain"
-        elif "sez" in name.lower():
-            return "sez"
-        else:
-            return "vnc"
-
-    super_meta["class2"] = super_meta["name"].map(class2_mapper)
-    super_meta["n_class2"] = 1
-    super_meta["n_class1"] = 1
-    super_meta["merge_class"] = super_meta["class1"] + "-" + super_meta["class2"]
-    super_meta["lineage"] = "none"
-
-    meta["super"] = False
-    meta = pd.concat((meta, super_meta), axis=0)
 
 #%% Import the raw graphs
 print("Importing raw adjacency matrices:\n")
-
-
-def index_mapper(idx):
-    if use_super and (idx in supernode_names):
-        return supernode_name_map[idx]
-    else:
-        return idx
 
 
 all_used_ids = []
@@ -712,8 +588,6 @@ for graph_type in graph_types:
     idx = adj.index.values.astype(int)
     all_used_ids.append(idx)
 
-if use_super:
-    all_used_ids.append(supernode_ids)
 
 all_used_ids = np.concatenate(all_used_ids)
 all_used_ids = np.unique(all_used_ids)
