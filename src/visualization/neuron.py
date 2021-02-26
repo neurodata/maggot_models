@@ -202,7 +202,15 @@ def simple_plot_neurons(
     axes_equal=True,
 ):
     neuron_ids = [int(n) for n in neuron_ids]
-    neurons = [pymaid.get_neuron(n) for n in neuron_ids]
+    neurons = []
+    for n in neuron_ids:
+        try:
+            neuron = pymaid.get_neuron(n)
+            neurons.append(neuron)
+        except:
+            print(f"Error when retreiving neuron skeleton {n}")
+
+    # neurons = [pymaid.get_neuron(n) for n in neuron_ids]
     volumes = [pymaid.get_volume(v) for v in volume_names]
     color = np.vectorize(palette.get)(neuron_ids)
 

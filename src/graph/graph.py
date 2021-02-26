@@ -1,7 +1,7 @@
 import networkx as nx
 import numpy as np
 import pandas as pd
-from graspy.utils import is_almost_symmetric, get_lcc
+from graspologic.utils import is_almost_symmetric, get_lcc
 from pathlib import Path
 from operator import itemgetter
 from copy import deepcopy
@@ -288,12 +288,12 @@ def add_max_weight(df):
     """Input is an edgelist with `edge pair ID`s
 
     Uses the 'weight' column
-    
+
     Parameters
     ----------
     df : [type]
         [description]
-    
+
     Returns
     -------
     [type]

@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from graspy.models import SBMEstimator
-from graspy.simulations import p_from_latent, sample_edges, sbm
-from graspy.utils import binarize
+# from graspy.models import SBMEstimator
+# from graspy.simulations import p_from_latent, sample_edges, sbm
+# from graspy.utils import binarize
 
 
 def hardy_weinberg(theta):
@@ -33,14 +33,14 @@ def gen_hw_graph(n_verts):
 
 def compute_rss(estimator, graph):
     """Computes RSS, matters whether the estimator is directed
-    
+
     Parameters
     ----------
     estimator : graspy estimator object
         [description]
     graph : nparray
         [description]
-    
+
     Returns
     -------
     [type]
@@ -100,12 +100,12 @@ def gen_B(n_blocks, a=0.1, b=0.2, assortivity=4):
     return B_mat
 
 
-def gen_sbm(n_verts, n_blocks, B_mat):
-    ps = np.array(n_blocks * [1 / n_blocks])
-    n_vec = np.random.multinomial(n_verts, ps)
-    graph = sbm(n_vec, B_mat, directed=False, loops=False)
-    labels = _n_to_labels(n_vec)
-    return graph, labels
+# def gen_sbm(n_verts, n_blocks, B_mat):
+#     ps = np.array(n_blocks * [1 / n_blocks])
+#     n_vec = np.random.multinomial(n_verts, ps)
+#     graph = sbm(n_vec, B_mat, directed=False, loops=False)
+#     labels = _n_to_labels(n_vec)
+#     return graph, labels
 
 
 def run_to_df(file_path):
@@ -129,20 +129,20 @@ def get_json(file_path):
     return out
 
 
-def compute_mse_from_assignments(assignments, graph, directed=True, loops=False):
-    estimator = SBMEstimator(loops=loops, directed=directed)
-    estimator.fit(graph, y=assignments)
-    return compute_mse(estimator, graph)
+# def compute_mse_from_assignments(assignments, graph, directed=True, loops=False):
+#     estimator = SBMEstimator(loops=loops, directed=directed)
+#     estimator.fit(graph, y=assignments)
+#     return compute_mse(estimator, graph)
 
 
 def get_best_df(input_df):
     """super hard coded right now (e.g. column names)
-    
+
     Parameters
     ----------
     df : dataframe
         [description]
-    
+
     Returns
     -------
     [type]
@@ -171,12 +171,12 @@ def get_best_df(input_df):
 
 def get_best_df2(input_df):
     """super hard coded right now (e.g. column names)
-    
+
     Parameters
     ----------
     df : dataframe
         [description]
-    
+
     Returns
     -------
     [type]
@@ -205,12 +205,12 @@ def get_best_df2(input_df):
 
 def get_best_df3(input_df):
     """super hard coded right now (e.g. column names)
-    
+
     Parameters
     ----------
     df : dataframe
         [description]
-    
+
     Returns
     -------
     [type]
@@ -257,17 +257,17 @@ def load_config(path, experiment, run):
     return config
 
 
-def load_run(path, experiment, run):
-    exp_path = Path(path)
-    exp_path = exp_path / experiment
-    exp_path = exp_path / str(run)
-    run_path = exp_path / "run.json"
+# def load_run(path, experiment, run):
+#     exp_path = Path(path)
+#     exp_path = exp_path / experiment
+#     exp_path = exp_path / str(run)
+#     run_path = exp_path / "run.json"
 
-    try:
-        dfs = run_to_df(run_path)
-        return dfs
-    except:
-        print("Could not find df in run")
+#     try:
+#         dfs = run_to_df(run_path)
+#         return dfs
+#     except:
+#         print("Could not find df in run")
 
 
 def load_pickle(path, experiment, run, name="master_out_df"):
@@ -306,7 +306,7 @@ def get_subgraph(graph, feature, key):
     """return the subgraph of a networkx object
 
     based on the node data "feature" being equal to "key"
-    
+
     Parameters
     ----------
     graph : [type]
@@ -315,7 +315,7 @@ def get_subgraph(graph, feature, key):
         [description]
     key : [type]
         [description]
-    
+
     Returns
     -------
     [type]
@@ -417,17 +417,17 @@ def relabel(labels):
 
 def unique_by_size(data):
     """Equivalent to np.unique but returns data in order sorted by frequency of values
-    
+
     Parameters
     ----------
     data : np.ndarray
         array on which to find unique values
-    
+
     Returns
     -------
     np.ndarray
         unique elements in `data` sorted by frequency, with the most observations first
-    
+
     np.ndarray
         counts of the unique elements in `data`
     """
@@ -448,8 +448,8 @@ def export_skeleton_json(
     pathname="./maggot_models/notebooks/outs",
     multiout=False,
 ):
-    """ Take a list of skeleton ids and output as json file for catmaid
-    
+    """Take a list of skeleton ids and output as json file for catmaid
+
     Parameters
     ----------
     name : str
@@ -457,7 +457,7 @@ def export_skeleton_json(
     ids : list or array
         skeleton ids
     colors : list or array
-        either a hexadecimal color for each skeleton or a label for each skeleton to be 
+        either a hexadecimal color for each skeleton or a label for each skeleton to be
         colored by palette
     palette : str or None, optional
         if not None, this is a palette specification to use to color skeletons
@@ -520,23 +520,23 @@ def shuffle_edges(A):
     return A_fake
 
 
-def get_sbm_prob(adj, labels):
-    uni_labels, counts = np.unique(labels, return_counts=True)
-    label_map = dict(zip(uni_labels, range(len(uni_labels))))
-    y = np.array(itemgetter(*labels)(label_map))
-    sbm = SBMEstimator(directed=True, loops=True)
-    sbm.fit(binarize(adj), y=y)
-    data = sbm.block_p_
-    sort_inds = np.argsort(counts)[::-1]
-    uni_labels = uni_labels[sort_inds]
-    data = data[np.ix_(sort_inds, sort_inds)]
+# def get_sbm_prob(adj, labels):
+#     uni_labels, counts = np.unique(labels, return_counts=True)
+#     label_map = dict(zip(uni_labels, range(len(uni_labels))))
+#     y = np.array(itemgetter(*labels)(label_map))
+#     sbm = SBMEstimator(directed=True, loops=True)
+#     sbm.fit(binarize(adj), y=y)
+#     data = sbm.block_p_
+#     sort_inds = np.argsort(counts)[::-1]
+#     uni_labels = uni_labels[sort_inds]
+#     data = data[np.ix_(sort_inds, sort_inds)]
 
-    prob_df = pd.DataFrame(columns=uni_labels, index=uni_labels, data=data)
+#     prob_df = pd.DataFrame(columns=uni_labels, index=uni_labels, data=data)
 
-    return prob_df
+#     return prob_df
 
 
-from graspy.utils import cartprod
+# from graspy.utils import cartprod
 
 
 def _get_block_indices(y):
@@ -561,29 +561,29 @@ def _get_block_indices(y):
     return block_vert_inds, block_inds, block_inv
 
 
-def _calculate_block_p(
-    graph, block_inds, block_vert_inds, return_counts=False, use_weights=False
-):
-    """
-    graph : input n x n graph 
-    block_inds : list of length n_communities
-    block_vert_inds : list of list, for each block index, gives every node in that block
-    return_counts : whether to calculate counts rather than proportions
-    """
+# def _calculate_block_p(
+#     graph, block_inds, block_vert_inds, return_counts=False, use_weights=False
+# ):
+#     """
+#     graph : input n x n graph
+#     block_inds : list of length n_communities
+#     block_vert_inds : list of list, for each block index, gives every node in that block
+#     return_counts : whether to calculate counts rather than proportions
+#     """
 
-    n_blocks = len(block_inds)
-    block_pairs = cartprod(block_inds, block_inds)
-    block_p = np.zeros((n_blocks, n_blocks))
+#     n_blocks = len(block_inds)
+#     block_pairs = cartprod(block_inds, block_inds)
+#     block_p = np.zeros((n_blocks, n_blocks))
 
-    for p in block_pairs:
-        from_block = p[0]
-        to_block = p[1]
-        from_inds = block_vert_inds[from_block]
-        to_inds = block_vert_inds[to_block]
-        block = graph[from_inds, :][:, to_inds]
-        p = _calculate_p(block, use_weights=use_weights, return_counts=return_counts)
-        block_p[from_block, to_block] = p
-    return block_p
+#     for p in block_pairs:
+#         from_block = p[0]
+#         to_block = p[1]
+#         from_inds = block_vert_inds[from_block]
+#         to_inds = block_vert_inds[to_block]
+#         block = graph[from_inds, :][:, to_inds]
+#         p = _calculate_p(block, use_weights=use_weights, return_counts=return_counts)
+#         block_p[from_block, to_block] = p
+#     return block_p
 
 
 def _calculate_p(block, use_weights=False, return_counts=False):
@@ -598,26 +598,26 @@ def _calculate_p(block, use_weights=False, return_counts=False):
     return p
 
 
-def get_blockmodel_df(graph, labels, return_counts=False, use_weights=False):
-    uni_labels, y = np.unique(labels, return_inverse=True)
+# def get_blockmodel_df(graph, labels, return_counts=False, use_weights=False):
+#     uni_labels, y = np.unique(labels, return_inverse=True)
 
-    block_vert_inds, block_inds, block_inv = _get_block_indices(y)
+#     block_vert_inds, block_inds, block_inv = _get_block_indices(y)
 
-    block_p = _calculate_block_p(
-        graph,
-        block_inds,
-        block_vert_inds,
-        return_counts=return_counts,
-        use_weights=use_weights,
-    )
+#     block_p = _calculate_block_p(
+#         graph,
+#         block_inds,
+#         block_vert_inds,
+#         return_counts=return_counts,
+#         use_weights=use_weights,
+#     )
 
-    prob_df = pd.DataFrame(columns=uni_labels, index=uni_labels, data=block_p)
+#     prob_df = pd.DataFrame(columns=uni_labels, index=uni_labels, data=block_p)
 
-    return prob_df
+#     return prob_df
 
 
 def invert_permutation(p):
-    """The argument p is assumed to be some permutation of 0, 1, ..., len(p)-1. 
+    """The argument p is assumed to be some permutation of 0, 1, ..., len(p)-1.
     Returns an array s, where s[i] gives the index of i in p.
     """
     s = np.empty(p.size, p.dtype)

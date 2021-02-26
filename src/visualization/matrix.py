@@ -1,11 +1,13 @@
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-import seaborn as sns
-from src.visualization import gridmap, remove_spines
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from anytree import Node, NodeMixin, Walker
 from matplotlib.colors import ListedColormap
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+from src.visualization import gridmap, remove_spines
 
 
 def sort_meta(length, meta, sort_class, sort_item=None, class_order="size"):
@@ -30,6 +32,7 @@ def sort_meta(length, meta, sort_class, sort_item=None, class_order="size"):
     if len(total_sort_by) > 0:
         meta.sort_values(total_sort_by, inplace=True, kind="mergesort")
     perm_inds = meta["sort_idx"].values
+    meta["_new_idx"] = range(len(meta))
     return perm_inds, meta
 
 
@@ -386,6 +389,8 @@ def matrixplot(
     row_highlight=None,
     col_tick_pad=None,
     row_tick_pad=None,
+    row_dendrogram=None,
+    col_dendrogram=None,
     border=True,
     minor_ticking=False,
     tick_rot=0,
@@ -664,6 +669,15 @@ def matrixplot(
     #         gridline_kws=highlight_kws,
     #         tick_ax_border=False,
     #     )
+    if row_dendrogram is not None:
+        draw_margin_dendrogram(
+            row_meta, ax, divider, levels=row_dendrogram, orientation="h"
+        )
+
+    if col_dendrogram is not None:
+        draw_margin_dendrogram(
+            col_meta, ax, divider, levels=col_dendrogram, orientation="v"
+        )
 
     # spines
     if spinestyle_kws is None:
@@ -704,6 +718,7 @@ def adjplot(
     highlight_kws=None,
     col_tick_pad=None,
     row_tick_pad=None,
+    dendrogram=None,
     **kws,
 ):
     outs = matrixplot(
@@ -739,6 +754,127 @@ def adjplot(
         highlight_kws=highlight_kws,
         row_tick_pad=row_tick_pad,
         col_tick_pad=col_tick_pad,
+        row_dendrogram=dendrogram,
+        col_dendrogram=dendrogram,
         **kws,
     )
     return outs
+
+
+class MetaNode(NodeMixin):
+    def __init__(self, name, parent=None, children=None, meta=None):
+        super().__init__()
+        self.name = name
+        self.parent = parent
+        if children:
+            self.children = children
+        self.meta = meta
+
+    def hierarchical_mean(self, key):
+        if self.is_leaf:
+            meta = self.meta
+            var = meta[key]
+            return np.mean(var)
+        else:
+            children = self.children
+            child_vars = [child.hierarchical_mean(key) for child in children]
+            return np.mean(child_vars)
+
+
+def get_parent_label(label):
+    if len(label) <= 1:
+        return None
+    elif label[-1] == "-":
+        return label[:-1]
+    else:  # then ends in a -number
+        return label[:-2]
+
+
+def make_node(label, node_map):
+    if label not in node_map:
+        node = MetaNode(label)
+        node_map[label] = node
+    else:
+        node = node_map[label]
+    return node
+
+
+def get_x_y(xs, ys, orientation):
+    if orientation == "h":
+        return xs, ys
+    elif orientation == "v":
+        return (ys, xs)
+
+
+def draw_margin_dendrogram(
+    meta,
+    ax,
+    divider,
+    index_key="_new_idx",
+    orientation="h",
+    linewidth=0.7,
+    cut=None,
+    levels=7,
+):
+    if orientation == "h":
+        ax = divider.append_axes("left", size="10%", pad=0, sharey=ax)
+    else:
+        ax = divider.append_axes("top", size="10%", pad=0, sharex=ax)
+    node_map = {}
+    for i in range(levels, -1, -1):
+        level_labels = meta[f"lvl{i}_labels"].unique()
+        for label in level_labels:
+            node = make_node(label, node_map)
+            node.meta = meta[meta[f"lvl{i}_labels"] == label]
+            parent_label = get_parent_label(label)
+            if parent_label is not None:
+                parent = make_node(parent_label, node_map)
+                node.parent = parent
+
+    root = node
+
+    for node in (root.descendants) + (root,):
+        y = node.hierarchical_mean(index_key)
+        x = node.depth
+        node.y = y
+        node.x = x
+
+    walker = Walker()
+    walked = []
+
+    for node in root.leaves:
+        upwards, common, downwards = walker.walk(node, root)
+        curr_node = node
+        for up_node in (upwards) + (root,):
+            edge = (curr_node, up_node)
+            if edge not in walked:
+                xs = [curr_node.x, up_node.x]
+                ys = [curr_node.y, up_node.y]
+                xs, ys = get_x_y(xs, ys, orientation)
+                ax.plot(
+                    xs,
+                    ys,
+                    linewidth=linewidth,
+                    color="black",
+                    alpha=1,
+                )
+                walked.append(edge)
+            curr_node = up_node
+        y_max = node.meta[index_key].max()
+        y_min = node.meta[index_key].min()
+        xs = [node.x, node.x, node.x + 1, node.x + 1]
+        ys = [node.y - 3, node.y + 3, y_max, y_min]
+        xs, ys = get_x_y(xs, ys, orientation)
+        ax.fill(xs, ys, facecolor="black")
+
+    if orientation == "h":
+        ax.set(xlim=(-1, levels + 1))
+        if cut is not None:
+            ax.axvline(cut - 1, linewidth=1, color="grey", linestyle=":")
+    elif orientation == "v":
+        ax.set(ylim=(levels + 1, -1))
+        if cut is not None:
+            ax.axhline(cut - 1, linewidth=1, color="grey", linestyle=":")
+
+    ax.axis("off")
+    return ax

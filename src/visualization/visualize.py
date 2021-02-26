@@ -20,7 +20,8 @@ from graspy.embed import select_dimension, selectSVD
 from graspy.models import SBMEstimator
 from graspy.plot import heatmap
 from graspy.utils import binarize, cartprod
-from src.utils import get_sbm_prob, savefig
+
+from src.utils import savefig
 
 from .manual_colors import CLASS_COLOR_DICT
 
@@ -939,10 +940,10 @@ def clustergram(
     )
     ax[1].set_title("Sorted heatmap", fontsize=30, pad=70)
 
-    prob_df = get_sbm_prob(adj, pred_labels)
-    block_sum_df = get_block_edgesums(adj, pred_labels, prob_df.columns.values)
-
-    probplot(100 * prob_df, ax=ax[2], title="Connection percentage")
+    # prob_df = get_sbm_prob(adj, pred_labels)
+    # block_sum_df = get_block_edgesums(adj, pred_labels, prob_df.columns.values)
+# 
+    # probplot(100 * prob_df, ax=ax[2], title="Connection percentage")
 
     probplot(block_sum_df, ax=ax[3], title="Average synapses")
     plt.suptitle(title, fontsize=40)
