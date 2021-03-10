@@ -8,20 +8,22 @@ from collections import defaultdict
 from datetime import timedelta
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
 
 import navis
 import pymaid
-from src.io import savecsv
 from src.pymaid import start_instance
 
 t0 = time.time()
 
 
-output_name = "2021-03-02"
+output_name = "2021-03-09"
 output_path = Path(f"maggot_models/data/processed/{output_name}")
+if not os.path.isdir(output_path):
+    os.mkdir(output_path)
 
 
 class Logger(object):
@@ -133,6 +135,7 @@ def apply_any_from_meta_annotation(key, meta, new_key=None, filt=None):
     if new_key is None:
         new_key = key
     group_meta = df_from_meta_annotation(key, filt=filt)
+    group_meta = group_meta[group_meta.index.isin(meta.index)]
     is_in_group = group_meta.any(axis=1)
     meta.loc[is_in_group.index, new_key] = is_in_group
     print(f"{is_in_group.sum()} neurons annotated under meta annotation {key}.\n")
@@ -155,10 +158,39 @@ start_instance()  # creates a pymaid instance
 # get all of the neurons we may ever have to consider
 all_neurons = get_indicator_from_annotation("mw brain paper all neurons").index
 meta = pd.DataFrame(index=all_neurons)
+print(f"\n{len(meta)} neurons in 'brain paper all neurons'.\n")
 
 name_map = pymaid.get_names(meta.index.values)
 meta["name"] = meta.index.map(lambda name: name_map[str(name)])
 
+#%%
+single_annotations = [
+    "mw brain neurons",
+    "mw brain paper clustered neurons",
+    "mw left",
+    "mw right",
+    "mw sink",
+    "mw partially differentiated",
+    "mw unsplittable",
+    "mw ipsilateral axon",
+    "mw contralateral axon",
+    "mw bilateral axon",
+    "mw brain incomplete",
+    "mw MBON special-cases",
+]
+for annotation in single_annotations:
+    print(f"Applying single annotation {annotation}...")
+    n = apply_annotation(annotation, meta, filt=filt)
+meta.fillna(False, inplace=True)
+
+# TODO someday may want to include these
+print("Removing incomplete neurons...")
+meta = meta[~meta["incomplete"]].copy()
+print("Removing partially differentiated neurons...")
+meta = meta[~meta["partially_differentiated"]].copy()
+print(f"{len(meta)} neurons left after removing.\n")
+
+#%%
 # these are mostly class labels
 # TODO some of these are probably getting overwritten later?
 # group_meta = df_from_meta_annotation("mw neuron groups", filt=filt)
@@ -179,23 +211,6 @@ apply_any_from_meta_annotation("mw brain sensories", meta, new_key="sensory", fi
 #     "mw A1 neurons paired", meta, new_key="a1_paired", filt=filt
 # )
 apply_any_from_meta_annotation("mw A1 sensories", meta, new_key="a1_sensory", filt=filt)
-
-
-single_annotations = [
-    "mw brain neurons",
-    "mw brain paper clustered neurons",
-    "mw left",
-    "mw right",
-    "mw sink",
-    "mw partially differentiated",
-    "mw unsplittable",
-    "mw ipsilateral axon",
-    "mw contralateral axon",
-    "mw bilateral axon",
-]
-for annotation in single_annotations:
-    print(f"Applying single annotation {annotation}...")
-    n = apply_annotation(annotation, meta, filt=filt)
 
 
 print("Pulling priority map...")
@@ -458,44 +473,160 @@ def get_connectors(nl):
     return connectors
 
 
-def append_labeled_nodes(add_list, nodes, split_node, name):
+#%%
+print("Pulling neurons...")
+currtime = time.time()
+ids = meta.index.values
+ids = [int(i) for i in ids]
+nl = pymaid.get_neuron(ids)
+print(f"{time.time() - currtime:.3f} elapsed.\n")
+
+#%%
+print("Pulling split points and special split neuron ids...")
+currtime = time.time()
+
+splits = pymaid.find_nodes(tags="mw axon split")
+splits = splits.set_index("skeleton_id")["node_id"].squeeze()
+
+# find all of the neurons under "mw MBON special-cases"
+# split the neuron based on node-tags "mw axon start" and "mw axon end"
+# axon is anything that is in between "mw axon start" and "mw axon end"
+special_ids = [
+    lst[0]
+    for lst in pymaid.get_annotated("mw MBON special-cases")["skeleton_ids"].values
+]
+
+print(f"{time.time() - currtime:.3f} elapsed.\n")
+
+# any neuron that is not brain incomplete, unsplittable, or partially differentiated
+# and does not have a split tag should throw an error
+
+# get the neurons that SHOULD have splits
+should_split_meta = meta[
+    ~meta["unsplittable"]
+    & ~meta["partially_differentiated"]
+    & ~meta["incomplete"]
+    & ~meta["MBON_special-cases"]
+]
+didnt_split_meta = should_split_meta[~should_split_meta.index.isin(splits.index)]
+if len(didnt_split_meta) > 0:
+    print(
+        f"WARNING: {len(didnt_split_meta)} neurons should have had split tag and didn't:"
+    )
+    print(didnt_split_meta.index.values)
+
+
+#%%
+
+
+def _append_labeled_nodes(add_list, nodes, name):
     for node in nodes:
-        add_list.append({"node_id": node, "node_type": name, "split_at": split_node})
+        add_list.append({"node_id": node, "node_type": name})
 
 
-def get_treenode_types(nl, splits):
+def _standard_split(n, treenode_info, splits):
+    skid = int(n.skeleton_id)
+    split_node = splits[skid]
+    # order of output is axon, dendrite
+    fragments = navis.cut_neuron(n, split_node)
+
+    # axon(s)
+    for f in fragments[:-1]:
+        axon_treenodes = f.nodes.node_id.values
+        _append_labeled_nodes(treenode_info, axon_treenodes, "axon")
+
+    # dendrite
+    dendrite = fragments[-1]
+    tags = dendrite.tags
+    if "mw periphery" not in tags and "soma" not in tags:
+        msg = f"WARNING: when splitting neuron {skid} ({n.name}), no soma or periphery tag was found on dendrite fragment."
+        raise UserWarning(msg)
+        print("Whole neuron tags:")
+        pprint.pprint(n.tags)
+        print("Axon fragment tags:")
+        for f in fragments[:-1]:
+            pprint.pprint(f.tags)
+    dend_treenodes = fragments[-1].nodes.node_id.values
+    _append_labeled_nodes(treenode_info, dend_treenodes, "dendrite")
+
+
+def _special_mbon_split(n, treenode_info):
+    skid = int(n.skeleton_id)
+    axon_starts = list(
+        pymaid.find_nodes(tags="mw axon start", skeleton_ids=skid)["node_id"]
+    )
+    axon_ends = list(
+        pymaid.find_nodes(tags="mw axon end", skeleton_ids=skid)["node_id"]
+    )
+    axon_splits = axon_starts + axon_ends
+
+    fragments = navis.cut_neuron(n, axon_splits)
+    axons = []
+    dendrites = []
+    for fragment in fragments:
+        root = fragment.root
+        if "mw axon start" in fragment.tags and root in fragment.tags["mw axon start"]:
+            axons.append(fragment)
+        elif "mw axon end" in fragment.tags and root in fragment.tags["mw axon end"]:
+            dendrites.append(fragment)
+        elif "soma" in fragment.tags and root in fragment.tags["soma"]:
+            dendrites.append(fragment)
+        else:
+            raise UserWarning(
+                f"Something weird happened when splitting special neuron {skid}"
+            )
+
+    for a in axons:
+        axon_treenodes = a.nodes.node_id.values
+        _append_labeled_nodes(treenode_info, axon_treenodes, "axon")
+
+    for d in dendrites:
+        dendrite_treenodes = d.nodes.node_id.values
+        _append_labeled_nodes(treenode_info, dendrite_treenodes, "dendrite")
+
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(111, projection="3d")
+    navis.plot2d(axons, color="red", ax=ax)
+    navis.plot2d(dendrites, color="blue", ax=ax)
+    plt.savefig(
+        output_path / f"weird-mbon-{skid}.png",
+        facecolor="w",
+        transparent=False,
+        bbox_inches="tight",
+        pad_inches=0.3,
+        dpi=300,
+    )
+
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(111, projection="3d")
+    navis.plot2d(axons, color="red", ax=ax)
+    navis.plot2d(dendrites, color="blue", ax=ax)
+    ax.azim = -90
+    ax.elev = 0
+    plt.savefig(
+        output_path / f"weird-mbon-{skid}-top.png",
+        facecolor="w",
+        transparent=False,
+        bbox_inches="tight",
+        pad_inches=0.3,
+        dpi=300,
+    )
+
+
+def get_treenode_types(nl, splits, special_ids):
     treenode_info = []
     print("Cutting neurons...")
     for i, n in enumerate(nl):
         skid = int(n.skeleton_id)
 
-        if skid in splits.index:
-            split_node = splits[skid]
-            # order of output is axon, dendrite
-            fragments = navis.cut_neuron(n, split_node)
-            for f in fragments[:-1]:
-                axon_treenodes = f.nodes.node_id.values
-                append_labeled_nodes(treenode_info, axon_treenodes, split_node, "axon")
-
-            dendrite = fragments[-1]
-            tags = dendrite.tags
-
-            if "mw periphery" not in tags and "soma" not in tags:
-                msg = f"Warning: when splitting neuron {skid} ({n.name}), no soma or periphery tag was found on dendrite fragment."
-                print(msg)
-                print("Whole neuron tags:")
-                pprint.pprint(n.tags)
-                print("Axon fragment tags:")
-                for f in fragments[:-1]:
-                    pprint.pprint(f.tags)
-
-            dend_treenodes = fragments[-1].nodes.node_id.values
-            append_labeled_nodes(treenode_info, dend_treenodes, split_node, "dendrite")
+        if skid in special_ids:
+            _special_mbon_split(n, treenode_info)
+        elif skid in splits.index:
+            _standard_split(n, treenode_info, splits)
         else:  # unsplittable neuron
+            # TODO explicitly check that these are unsplittable
             unsplit_treenodes = n.nodes.node_id.values
-            append_labeled_nodes(
-                treenode_info, unsplit_treenodes, split_node, "unsplit"
-            )
+            _append_labeled_nodes(treenode_info, unsplit_treenodes, "unsplit")
 
     treenode_df = pd.DataFrame(treenode_info)
     # a split node is included in pre and post synaptic fragments
@@ -506,21 +637,10 @@ def get_treenode_types(nl, splits):
     return treenode_series
 
 
-#%%
-print("Pulling neurons...")
+print("Getting treenode compartment types...")
 currtime = time.time()
-ids = meta.index.values
-ids = [int(i) for i in ids]
-nl = pymaid.get_neuron(ids)
+treenode_types = get_treenode_types(nl, splits, special_ids)
 print(f"{time.time() - currtime:.3f} elapsed.\n")
-
-#%%
-print("Pulling split points...")
-currtime = time.time()
-splits = pymaid.find_nodes(tags="mw axon split")
-splits = splits.set_index("skeleton_id")["node_id"].squeeze()
-print(f"{time.time() - currtime:.3f} elapsed.\n")
-
 
 #%%
 print("Pulling connectors...\n")
@@ -538,25 +658,21 @@ connectors = (
     connectors.set_index(list(index_cols)).apply(pd.Series.explode).reset_index()
 )
 # TODO figure out these nans
-connectors = connectors[~connectors.isnull().any(axis=1)]
 bad_connectors = connectors[connectors.isnull().any(axis=1)]
+bad_connectors.to_csv(output_path / "bad_connectors.csv")
+# connectors = connectors[~connectors.isnull().any(axis=1)]
+#%%
 print(f"Connectors with errors: {len(bad_connectors)}")
 connectors = connectors.astype(
     {
-        "presynaptic_to": "int64",
-        "presynaptic_to_node": "int64",
-        "postsynaptic_to": "int64",
-        "postsynaptic_to_node": "int64",
+        "presynaptic_to": "Int64",
+        "presynaptic_to_node": "Int64",
+        "postsynaptic_to": "Int64",
+        "postsynaptic_to_node": "Int64",
     }
 )
 
-
-print("Getting treenode compartment types...")
-currtime = time.time()
-treenode_types = get_treenode_types(nl, splits)
-print(f"{time.time() - currtime:.3f} elapsed.\n")
-
-
+#%%
 print("Applying treenode types to connectors...")
 currtime = time.time()
 connectors["presynaptic_type"] = connectors["presynaptic_to_node"].map(treenode_types)
@@ -566,6 +682,35 @@ connectors["in_subgraph"] = connectors["presynaptic_to"].isin(ids) & connectors[
     "postsynaptic_to"
 ].isin(ids)
 print(f"{time.time() - currtime:.3f} elapsed.\n")
+
+#%%
+print("Calculating neuron total inputs and outputs...")
+axon_output_map = (
+    connectors[connectors["presynaptic_type"] == "axon"]
+    .groupby("presynaptic_to")
+    .size()
+)
+axon_input_map = (
+    connectors[connectors["postsynaptic_type"] == "axon"]
+    .groupby("postsynaptic_to")
+    .size()
+)
+
+dendrite_output_map = (
+    connectors[connectors["presynaptic_type"] == "dendrite"]
+    .groupby("presynaptic_to")
+    .size()
+)
+dendrite_input_map = (
+    connectors[connectors["postsynaptic_type"] == "dendrite"]
+    .groupby("postsynaptic_to")
+    .size()
+)
+meta["axon_output"] = meta.index.map(axon_output_map).fillna(0.0)
+meta["axon_input"] = meta.index.map(axon_input_map).fillna(0.0)
+meta["dendrite_output"] = meta.index.map(dendrite_output_map).fillna(0.0)
+meta["dendrite_input"] = meta.index.map(dendrite_input_map).fillna(0.0)
+print()
 
 #%%
 # remap the true compartment type mappings to the 4 that we usually use

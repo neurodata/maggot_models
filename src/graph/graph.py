@@ -43,7 +43,6 @@ def _verify_networkx(source, target, n_checks):
             ValueError(f"Edge {edge} missing in target graph")
 
 
-# NOTE: something about this breaks when going to Pandas 1, not sure what
 class MetaGraph:
     def __init__(self, graph, meta=None, weight="weight"):
         if isinstance(graph, (nx.Graph, nx.DiGraph)):

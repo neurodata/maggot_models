@@ -7,9 +7,57 @@ import networkx as nx
 # from src.utils import meta_to_array
 from src.graph import MetaGraph
 import numpy as np
+import pandas as pd
 
-DATA_VERSION = "2020-09-23"
+DATA_VERSION = "2021-03-02"
 DATA_DIR = "maggot_models/data/processed"
+DATA_PATH = Path(DATA_DIR)
+
+
+def _get_folder(path, version):
+    if path is None:
+        path = DATA_PATH
+    if version is None:
+        version = DATA_VERSION
+    return path / version
+
+
+def load_node_meta(path=None, version=None):
+    folder = _get_folder(version, path)
+    meta = pd.read_csv(folder / "meta_data.csv", index_col=0)
+    meta.sort_index(inplace=True)
+    return meta
+
+
+def load_edgelist(graph_type="G", path=None, version=None):
+    folder = _get_folder(version, path)
+    edgelist = pd.read_csv(
+        folder / f"{graph_type}_edgelist.txt",
+        delimiter=" ",
+        header=None,
+        names=["source", "target", "weight"],
+    )
+    return edgelist
+
+
+def load_networkx(graph_type="G", node_meta=None, path=None, version=None):
+    edgelist = load_edgelist(graph_type)
+    g = nx.from_pandas_edgelist(edgelist, edge_attr="weight", create_using=nx.DiGraph())
+    if node_meta is not None:
+        meta_data_dict = node_meta.to_dict(orient="index")
+        nx.set_node_attributes(g, meta_data_dict)
+    return g
+
+
+def load_adjacency(
+    graph_type="G", nodelist=None, output="numpy", path=None, version=None
+):
+    g = load_networkx(graph_type=graph_type, path=path, version=version)
+    if output == "numpy":
+        adj = nx.to_numpy_array(g, nodelist=nodelist)
+    elif output == "pandas":
+        adj = nx.to_pandas_adjacency(g, nodelist=nodelist)
+    return adj
 
 
 # def load_left():
@@ -76,7 +124,7 @@ def load_june(graph_type):
     return graph
 
 
-def load_networkx(graph_type, path=DATA_DIR, version=DATA_VERSION):
+def load_networkx_graphml(graph_type, path=DATA_DIR, version=DATA_VERSION):
     data_path = Path(path)
     data_path = data_path / version
     file_path = data_path / (graph_type + ".graphml")
@@ -85,8 +133,10 @@ def load_networkx(graph_type, path=DATA_DIR, version=DATA_VERSION):
 
 
 def load_metagraph(graph_type, path=DATA_DIR, version=DATA_VERSION):
-    g = load_networkx(graph_type, path=path, version=version)
+    g = load_networkx_graphml(graph_type, path=path, version=version)
     mg = MetaGraph(g)
+    ids = sorted(mg.meta.index.values)
+    mg.reindex(ids, use_ids=True, inplace=True)
     return mg
 
 
