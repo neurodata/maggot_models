@@ -36,7 +36,10 @@ from src.visualization import (
     set_theme,
 )
 from topologic.io import tensor_projection_writer
+from src.data import load_palette
 
+
+CLASS_COLOR_DICT = load_palette()
 # For saving outputs
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
@@ -455,9 +458,13 @@ def plot_clustering_results(
 
 # %% [markdown]
 # ##
+from src.visualization import set_theme
+
+set_theme()
+
 omni_method = "color_iso"
 d = 8
-bic_ratio = 0.95
+bic_ratio = 1
 min_split = 32
 
 basename = f"-method={omni_method}-d={d}-bic_ratio={bic_ratio}-min_split={min_split}"
@@ -488,9 +495,11 @@ name_map = {
     "Outs": "Output",
     "Motr": "Motor",
 }
-meta["simple_class"] = meta["simple_class"].map(name_map)
-print(meta["simple_class"].unique())
-meta["merge_class"] = meta["simple_class"]  # HACK
+# meta["simple_group"] = meta["simple_group"].map(name_map)
+print(meta["simple_group"].unique())
+meta["merge_class"] = meta[
+    "simple_group"
+]  # HACK had a lot of code assuming this elsewhere
 
 
 graph_type = "Gad"
@@ -519,15 +528,15 @@ plot_clustering_results(
 )
 
 #%%
-lowest_level = 7
-mg = MetaGraph(adj, meta)
-level_names = [f"lvl{i}_labels" for i in range(lowest_level + 1)]
-mg = sort_mg(mg, level_names)
-fig, axs = plt.subplots(
-    2, lowest_level + 1, figsize=10 * np.array([lowest_level + 1, 2])
-)
-plot_adjacencies(mg, axs, lowest_level=lowest_level)
-stashfig(f"adjplots-lowest={lowest_level}" + basename, format=FORMAT)
+# lowest_level = 7
+# mg = MetaGraph(adj, meta)
+# level_names = [f"lvl{i}_labels" for i in range(lowest_level + 1)]
+# mg = sort_mg(mg, level_names)
+# fig, axs = plt.subplots(
+#     2, lowest_level + 1, figsize=10 * np.array([lowest_level + 1, 2])
+# )
+# plot_adjacencies(mg, axs, lowest_level=lowest_level)
+# stashfig(f"adjplots-lowest={lowest_level}" + basename, format=FORMAT)
 
 
 # #%%

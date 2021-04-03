@@ -8,7 +8,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import pymaid
 import seaborn as sns
 from graspy.embed import OmnibusEmbed, selectSVD
 from graspy.models import DCSBMEstimator, SBMEstimator
@@ -24,8 +23,10 @@ from scipy.stats import poisson
 from sklearn.decomposition import PCA
 from topologic.io import tensor_projection_writer
 
+import pymaid
+from giskard.plot import simple_umap_scatterplot
 from src.cluster import BinaryCluster
-from src.data import load_metagraph
+from src.data import load_metagraph, load_palette
 from src.graph import MetaGraph
 from src.hierarchy import signal_flow
 from src.io import savecsv, savefig
@@ -47,6 +48,7 @@ print(FNAME)
 
 
 set_theme()
+palette = load_palette()
 
 np.random.seed(8888)
 
@@ -54,7 +56,7 @@ save_path = Path("maggot_models/experiments/matched_subgraph_omni_cluster/")
 
 
 def stashfig(name, **kws):
-    savefig(name, pathname=save_path / "figs", fmt="pdf", save_on=True, **kws)
+    savefig(name, pathname=save_path / "figs", format="png", dpi=300, **kws)
 
 
 def stashcsv(df, name, **kws):
@@ -92,7 +94,7 @@ def plot_pairs(
     fig, axs = plt.subplots(
         n_dims, n_dims, sharex=False, sharey=False, figsize=(20, 20)
     )
-    data = pd.DataFrame(data=X)
+    data = pd.DataFrame(data=X, columns=[str(i) for i in range(n_dims)])
     data["label"] = labels
 
     for i in range(n_dims):
@@ -102,15 +104,15 @@ def plot_pairs(
             if i < j:
                 sns.scatterplot(
                     data=data,
-                    x=j,
-                    y=i,
+                    x=str(j),
+                    y=str(i),
                     ax=ax,
                     alpha=0.7,
                     linewidth=0,
                     s=8,
                     legend=False,
                     hue="label",
-                    palette=CLASS_COLOR_DICT,
+                    palette=palette,
                 )
                 if left_pair_inds is not None and right_pair_inds is not None:
                     add_connections(
@@ -578,8 +580,12 @@ master_mg = MetaGraph(master_mg.adj, pair_meta)
 
 # mg = MetaGraph(master_mg.adj, master_mg.meta)
 mg = master_mg.copy()
+meta = mg.meta
+meta = meta[meta["paper_clustered_neurons"]].copy()
+mg.reindex(meta.index, use_ids=True)
 mg = mg.remove_pdiff()
 mg = mg.make_lcc()
+
 
 remove_low_degree = False
 if remove_low_degree:
@@ -612,9 +618,9 @@ print(f"Neurons left after preprocessing: {len(mg)}")
 graph_types = ["Gad", "Gaa", "Gdd", "Gda"]  # "Gs"]
 adjs = []
 for g in graph_types:
-    temp_mg = load_metagraph(g)
-    # this line is important, to make the graphs aligned
-    temp_mg.reindex(mg.meta.index, use_ids=True)
+    temp_mg = load_metagraph(g, nodelist=meta.index)
+    # # this line is important, to make the graphs aligned
+    # temp_mg.reindex(mg.meta.index, use_ids=True)
     temp_adj = temp_mg.adj
     adjs.append(temp_adj)
 
@@ -737,12 +743,12 @@ n_pairs = len(lp_inds)
 new_lp_inds = np.arange(n_pairs)
 new_rp_inds = np.arange(n_pairs) + n_pairs
 new_meta = meta.iloc[np.concatenate((lp_inds, rp_inds), axis=0)].copy()
-labels = new_meta["merge_class"].values
+labels = new_meta["simple_group"].values
+
 
 columns = [
     "hemisphere",
-    "class1",
-    "class2",
+    "simple_group",
     "merge_class",
     "pair",
     "pair_id",
@@ -750,7 +756,6 @@ columns = [
     "name",
 ]
 embedding_out = "maggot_models/experiments/matched_subgraph_omni_cluster/outs/omni_"
-
 
 save_meta = new_meta[columns].copy()
 save_meta.index.name = "skid"
@@ -765,11 +770,17 @@ tensor_projection_writer(
 )
 save_meta.to_csv(embedding_out + "labels", sep="\t")
 
-
 plot_pairs(
     svd_embed[:, :8], labels, left_pair_inds=new_lp_inds, right_pair_inds=new_rp_inds
 )
 stashfig(f"pairs-method={omni_method}")
+
+
+simple_umap_scatterplot(
+    svd_embed, labels=labels, metric="cosine", palette=palette, title="Bilateral Omni"
+)
+stashfig(f"umap-method={omni_method}")
+
 
 # %% [markdown]
 # ## Clustering
@@ -785,8 +796,9 @@ params = [
     # {"d": 6, "bic_ratio": 0.9, "min_split": 32},
     # {"d": 8, "bic_ratio": 0.8, "min_split": 32},
     # {"d": 8, "bic_ratio": 0.9, "min_split": 32},
+    {"d": 8, "bic_ratio": 0, "min_split": 32},
     {"d": 8, "bic_ratio": 0.95, "min_split": 32},
-    # {"d": 8, "bic_ratio": 1, "min_split": 32},
+    {"d": 8, "bic_ratio": 1, "min_split": 32},
     # {"d": 10, "bic_ratio": 0.9, "min_split": 32},
 ]
 
@@ -831,9 +843,9 @@ for p in params:
     )
     stashcsv(adj_df, "adj" + basename)
 
-    # plot results
-    lowest_level = 7  # last level to show for dendrograms, adjacencies
-    plot_clustering_results(
-        cluster_adj, cluster_meta, basename, lowest_level=lowest_level
-    )
+    # # plot results
+    # lowest_level = 7  # last level to show for dendrograms, adjacencies
+    # plot_clustering_results(
+    #     cluster_adj, cluster_meta, basename, lowest_level=lowest_level
+    # )
     print()

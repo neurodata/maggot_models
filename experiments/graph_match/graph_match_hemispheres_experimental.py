@@ -108,11 +108,15 @@ np.random.seed(8888)
 currtime = time.time()
 gms = []
 scores = []
+match_ratios = []
 for i in tqdm(range(n_init)):
     gm = GraphMatch(n_init=1, init_method="barycenter", eps=0.5, shuffle_input=True)
-    gm.fit(left_adj, right_adj, seeds_A=left_seeds, seeds_B=right_seeds)
+    gm.fit(left_adj, right_adj)  # seeds_A=left_seeds, seeds_B=right_seeds)
     gms.append(gm)
     scores.append(gm.score_)
+    perm_inds = gm.perm_inds_
+    match_ratio = (np.arange(len(left_adj)) == perm_inds).mean()
+    print(match_ratio)
 print(f"{(time.time() - currtime)/60:0.2f} minutes elapsed for graph matching")
 
 # %% [markdown]

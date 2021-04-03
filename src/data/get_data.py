@@ -1,15 +1,17 @@
 # from graspy.datasets import load_drosophila_left, load_drosophila_right
 # from graspy.utils import binarize
 # import pandas as pd
+import json
 from pathlib import Path
-import networkx as nx
 
-# from src.utils import meta_to_array
-from src.graph import MetaGraph
+import networkx as nx
 import numpy as np
 import pandas as pd
 
-DATA_VERSION = "2021-03-02"
+# from src.utils import meta_to_array
+from src.graph import MetaGraph
+
+DATA_VERSION = "2021-03-10"
 DATA_DIR = "maggot_models/data/processed"
 DATA_PATH = Path(DATA_DIR)
 
@@ -43,6 +45,9 @@ def load_edgelist(graph_type="G", path=None, version=None):
 def load_networkx(graph_type="G", node_meta=None, path=None, version=None):
     edgelist = load_edgelist(graph_type)
     g = nx.from_pandas_edgelist(edgelist, edge_attr="weight", create_using=nx.DiGraph())
+    for node in node_meta.index:
+        if node not in g.nodes:
+            g.add_node(node)
     if node_meta is not None:
         meta_data_dict = node_meta.to_dict(orient="index")
         nx.set_node_attributes(g, meta_data_dict)
@@ -124,7 +129,7 @@ def load_june(graph_type):
     return graph
 
 
-def load_networkx_graphml(graph_type, path=DATA_DIR, version=DATA_VERSION):
+def load_networkx_graphml(graph_type, path=None, version=None):
     data_path = Path(path)
     data_path = data_path / version
     file_path = data_path / (graph_type + ".graphml")
@@ -132,12 +137,30 @@ def load_networkx_graphml(graph_type, path=DATA_DIR, version=DATA_VERSION):
     return graph
 
 
-def load_metagraph(graph_type, path=DATA_DIR, version=DATA_VERSION):
-    g = load_networkx_graphml(graph_type, path=path, version=version)
+def load_metagraph(graph_type, path=None, version=None, nodelist=None):
+    node_meta = load_node_meta(path=path, version=version)
+    g = load_networkx(
+        graph_type=graph_type, path=path, version=version, node_meta=node_meta
+    )
     mg = MetaGraph(g)
-    ids = sorted(mg.meta.index.values)
-    mg.reindex(ids, use_ids=True, inplace=True)
+    # g = load_networkx_graphml(graph_type, path=path, version=version)
+    # if nodelist is not None:
+    #     for node in nodelist:
+    #         if node not in g.nodes:
+    #             g.add_node(node)
+    # mg = MetaGraph(g)
+    # print(np.isin(mg.meta.index, nodelist))
+    if nodelist is None:
+        nodelist = sorted(mg.meta.index.values)
+    mg.reindex(nodelist, use_ids=True, inplace=True)
     return mg
+
+
+def load_palette(path=None, version=None):
+    folder = _get_folder(path, version)
+    with open(folder / "simple_color_map.json", "r") as f:
+        palette = json.load(f)
+    return palette
 
 
 def load_everything(

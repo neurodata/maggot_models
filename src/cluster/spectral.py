@@ -588,11 +588,18 @@ class MaggotCluster(NodeMixin):
             model2, _, _ = self._model_predict(2, metric=metric)
             bic1 = -model1.bic(self.X_)
             bic2 = -model2.bic(self.X_)
+            diff = bic2 - bic1  # NOTE: changed this, was mistakenly a ratio before
             ratio = bic2 / bic1
-            if ratio > self.bic_ratio:
-                k = 2
-            else:
-                k = 0
+            if self.bic_ratio > 0:
+                if ratio > self.bic_ratio:
+                    k = 2
+                else:
+                    k = 0
+            elif self.bic_ratio == 0:
+                if diff > 0:
+                    k = 2
+                else:
+                    k = 0
 
         self.k_ = k
         self.children = []
@@ -651,11 +658,11 @@ class MaggotCluster(NodeMixin):
 
     def collect_labels(self):
         meta = self.root.meta
-        meta[f"lvl0_labels"] = "0"
-        meta[f"lvl0_labels_side"] = meta[f"lvl0_labels"] + meta[f"hemisphere"]
+        meta["lvl0_labels"] = "0"
+        meta["lvl0_labels_side"] = meta["lvl0_labels"] + meta["hemisphere"]
         for i in range(1, self.height + 1):
             meta[f"lvl{i}_labels"] = meta[f"lvl{i-1}_labels"] + "-" + meta[f"{i}_pred"]
-            meta[f"lvl{i}_labels_side"] = meta[f"lvl{i}_labels"] + meta[f"hemisphere"]
+            meta[f"lvl{i}_labels_side"] = meta[f"lvl{i}_labels"] + meta["hemisphere"]
 
     def get_lowest_level(self):
         level_it = LevelOrderGroupIter(self)

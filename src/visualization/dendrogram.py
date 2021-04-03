@@ -3,6 +3,7 @@ import numpy as np
 
 from .manual_colors import CLASS_COLOR_DICT
 from .visualize import palplot, remove_spines
+from ..data import load_palette
 
 
 def get_mid_map(full_meta, leaf_key=None, bilat=False, gap=10):
@@ -71,7 +72,7 @@ def get_mid_map(full_meta, leaf_key=None, bilat=False, gap=10):
 
 def calc_bar_params(sizes, label, mid, palette=None):
     if palette is None:
-        palette = CLASS_COLOR_DICT
+        palette = load_palette()
     heights = sizes.loc[label]
     n_in_bar = heights.sum()
     offset = mid - n_in_bar / 2
@@ -329,7 +330,12 @@ def plot_double_dendrogram(
         plt.setp(ax.xaxis.get_majorticklabels(), rotation=90)
 
 
-def plot_color_labels(meta, ax, color_order="sf", color_key="merge_class"):
+def plot_color_labels(
+    meta, ax, color_order="sf", color_key="merge_class", palette=None
+):
+    if palette is None:
+        palette = load_palette()
+
     meta = meta.copy()
     # meta = meta.sort_values([f"merge_class_{color_order}_order"], ascending=False)
     meta = meta.sort_values(
@@ -344,7 +350,7 @@ def plot_color_labels(meta, ax, color_order="sf", color_key="merge_class"):
     colors = []
     for key, val in count_map.items():
         names.append(f"{key} ({count_map[key]})")
-        colors.append(CLASS_COLOR_DICT[key])
+        colors.append(palette[key])
     colors = colors[::-1]  # reverse because of signal flow sorting
     names = names[::-1]
     palplot(len(colors), colors, ax=ax)

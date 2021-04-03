@@ -64,6 +64,48 @@ print()
 
 #%%
 
+from collections import defaultdict
+
+priority_map = {
+    "MBON": 1,
+    "MBIN": 1,
+    "KC": 1,
+    "uPN": 1,
+    "tPN": 1,
+    "vPN": 1,
+    "mPN": 1,
+    "sens": 1,
+    "APL": 1,
+    "LHN": 2,
+    "CN": 2,
+    "dVNC": 2,
+    "dSEZ": 2,
+    "RGN": 2,
+    "dUnk": 2,
+    "FBN": 3,
+    "FAN": 3,
+    "LHN2": 5,  # used to be 4
+    "CN2": 6,  # used to be 5
+    "FB2N": 3,
+    "FFN": 4,  # used to be 4
+    "MN2": 3,
+    "AN2": 3,
+    "vtd2": 3,
+    "A00c": 1,
+}
+
+
+# def priority(name, priority_map=priority_map):
+#     if name in priority_map:
+#         return priority_map[name]
+#     else:
+#         return 1000
+
+
+priority_map = defaultdict(lambda: 1000, priority_map)
+
+#%%
+
 
 def get_single_class(classes):
     single_class = classes[0]
@@ -82,7 +124,7 @@ def get_classes(meta, class_cols, fill_unk=False, priority_map=None):
         n_class.append(int(len(classes)))
         if len(classes) > 0:
             if priority_map is not None:
-                priorities = np.vectorize(priority_map.get)(classes)
+                priorities = np.vectorize(priority_map.__getitem__)(classes)
                 inds = np.where(priorities == priorities.min())[0]
                 sc = get_single_class(classes[inds])
         else:
@@ -163,12 +205,35 @@ name_map = pymaid.get_names(meta.index.values)
 meta["name"] = meta.index.map(lambda name: name_map[str(name)])
 
 #%%
+single_annotations = [
+    "mw brain neurons",
+    "mw brain paper clustered neurons",
+    "mw left",
+    "mw right",
+    "mw sink",
+    "mw partially differentiated",
+    "mw unsplittable",
+    "mw ipsilateral axon",
+    "mw contralateral axon",
+    "mw bilateral axon",
+    "mw brain incomplete",
+    "mw MBON special-cases",
+]
+
+#%%
 # other, more complicated classes
 print("Adding complicated classes...")
 
 group_meta = df_from_meta_annotation("mw neuron groups", filt=filt)
 group_meta = group_meta.reindex(meta.index)
-neuron_group_cols = list(group_meta.columns)
+neuron_group_cols = list(group_meta.columns.copy())
+
+remove_annotations = single_annotations.copy()
+remove_annotations.append("preliminary_LN")
+for single_annotation in remove_annotations:
+    if filt(single_annotation) in neuron_group_cols:
+        neuron_group_cols.remove(filt(single_annotation))
+
 meta = pd.concat((meta, group_meta), axis=1)
 meta.fillna(False, inplace=True)
 
@@ -180,10 +245,24 @@ class1_name_map = {
     "MN_2nd_order": "MN2",
 }
 
-meta.rename(class1_name_map, axis=1, inplace=True)
-class1_cols = np.array(list(class1_name_map.values()))
 
-single_class1, all_class1, n_class1 = get_classes(meta, class1_cols, fill_unk=True)
+def name_mapper(string, name_map):
+    if string in name_map:
+        return name_map[string]
+    else:
+        return string
+
+
+meta.rename(class1_name_map, axis=1, inplace=True)
+neuron_group_cols = list(
+    map(lambda x: name_mapper(x, class1_name_map), neuron_group_cols)
+)
+
+class1_cols = np.array([ng for ng in neuron_group_cols if "subclass" not in ng])
+
+single_class1, all_class1, n_class1 = get_classes(
+    meta, class1_cols, fill_unk=True, priority_map=priority_map
+)
 
 meta["class1"] = single_class1
 meta["all_class1"] = all_class1
@@ -211,13 +290,6 @@ class2_name_map = {
 }
 
 
-def name_mapper(string, name_map):
-    if string in name_map:
-        return name_map[string]
-    else:
-        return string
-
-
 single_class2 = np.vectorize(remove_subclass)(single_class2)
 single_class2 = np.vectorize(lambda x: name_mapper(x, class2_name_map))(single_class2)
 
@@ -240,21 +312,9 @@ print("Merge class unique values:")
 pprint.pprint(dict(zip(*np.unique(meta["merge_class"], return_counts=True))))
 print()
 
+
 #%%
-single_annotations = [
-    "mw brain neurons",
-    "mw brain paper clustered neurons",
-    "mw left",
-    "mw right",
-    "mw sink",
-    "mw partially differentiated",
-    "mw unsplittable",
-    "mw ipsilateral axon",
-    "mw contralateral axon",
-    "mw bilateral axon",
-    "mw brain incomplete",
-    "mw MBON special-cases",
-]
+
 for annotation in single_annotations:
     print(f"Applying single annotation {annotation}...")
     n = apply_annotation(annotation, meta, filt=filt)
@@ -266,6 +326,22 @@ meta = meta[~meta["incomplete"]].copy()
 print("Removing partially differentiated neurons...")
 meta = meta[~meta["partially_differentiated"]].copy()
 print(f"{len(meta)} neurons left after removing.\n")
+
+print("Adding axon laterality category...")
+
+n_axon_lat = meta[["ipsilateral_axon", "contralateral_axon", "bilateral_axon"]].sum(
+    axis=1
+)
+if n_axon_lat.max() > 1:
+    print("Some neurons have more than 1 axon laterality category:")
+    print(meta[n_axon_lat > 1])
+
+meta["axon_lat"] = "unk"
+meta.loc[meta[meta["ipsilateral_axon"]].index, "axon_lat"] = "ipsi"
+meta.loc[meta[meta["contralateral_axon"]].index, "axon_lat"] = "contra"
+meta.loc[meta[meta["bilateral_axon"]].index, "axon_lat"] = "bi"
+print(f"{(meta['axon_lat'] == 'unk').sum()} neurons have no axon laterality category.")
+print()
 
 #%%
 # these are mostly class labels
@@ -287,7 +363,13 @@ apply_any_from_meta_annotation("mw brain sensories", meta, new_key="sensory", fi
 #     "mw A1 neurons paired", meta, new_key="a1_paired", filt=filt
 # )
 apply_any_from_meta_annotation("mw A1 sensories", meta, new_key="a1_sensory", filt=filt)
+meta.fillna(False, inplace=True)
 
+print("Adding io category...")
+meta["io"] = "inter"
+meta.loc[meta[meta["inputs"]].index, "io"] = "input"
+meta.loc[meta[meta["outputs"]].index, "io"] = "output"
+print()
 
 print("Pulling priority map...")
 priority_map = defaultdict(lambda: np.inf)

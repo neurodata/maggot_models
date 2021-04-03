@@ -1,7 +1,7 @@
 import networkx as nx
 import numpy as np
 import pandas as pd
-from graspologic.utils import is_almost_symmetric, get_lcc
+from graspologic.utils import is_almost_symmetric, largest_connected_component
 from pathlib import Path
 from operator import itemgetter
 from copy import deepcopy
@@ -84,6 +84,8 @@ class MetaGraph:
         if use_ids:
             meta = self.meta.copy()
             meta["idx"] = range(len(meta))
+            if not np.isin(perm_inds, meta.index).all():
+                raise ValueError("Passed `perm_inds` not present in meta index.")
             meta = meta.reindex(perm_inds)
             idx_perm_inds = meta["idx"]
             return self.reindex(idx_perm_inds, use_ids=False, inplace=inplace)
@@ -106,7 +108,7 @@ class MetaGraph:
         return self
 
     def make_lcc(self):
-        lcc, inds = get_lcc(self.adj, return_inds=True)
+        lcc, inds = largest_connected_component(self.adj, return_inds=True)
         self.adj = lcc
         self.meta = self.meta.iloc[inds, :]
         self.g = _numpy_pandas_to_nx(self.adj, self.meta)
