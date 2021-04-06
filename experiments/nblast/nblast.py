@@ -106,7 +106,7 @@ def postprocess_nblast(scores):
 
 
 #%% run nblast
-for side in ["right"]:
+for side in ["left", "right"]:
     print(f"Processing side: {side}")
     side_meta = meta[meta[side]]
 

@@ -11,7 +11,7 @@ import pandas as pd
 # from src.utils import meta_to_array
 from src.graph import MetaGraph
 
-DATA_VERSION = "2021-03-10"
+DATA_VERSION = "2021-04-02"
 DATA_DIR = "maggot_models/data/processed"
 DATA_PATH = Path(DATA_DIR)
 
