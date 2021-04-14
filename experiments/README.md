@@ -2,7 +2,15 @@
 These are somewhat-solidified processes we're always going to run on the updated data.
 Many of these scripts depend on previous ones. 
 
-## Descriptions
+## Prerequisites 
+- `process_maggot_brain_connectome_<date>`
+- TODO: `manage_data`
+    - Option to push to a server
+    - Option to upload somewhere
+    - Option to change the default data version
+        - TODO: make the version its own text file
+
+## Analysis scripts
 - `flow`
     - Anything regarding ranking the nodes of the network in order from sensory to motor
     - Writes outputs as columns in the node metadata
@@ -25,12 +33,20 @@ Many of these scripts depend on previous ones.
 - `cluster_metrics`
     - Calculates various properties of the clustering
     - Generates plots
-    - TODO saves models fit on the data
+    - TODO: saves models fit on the data
     - Requirements: `cluster`, `flow`
-- `cluster_morphology`
+- TODO: `cluster_morphology`
     - Displays the morphology of each cluster
     - Quantifies the morphological similarity within each cluster
     - Generates plots
     - Requirements: `cluster`, `nblast`, `flow`
-- `subcluster_morphology`
+- TODO: `subcluster_morphology`
     - Further clusters each of the connectivity based clusters based on morphology
+    - Requrements: `cluster`, `nblast`
+- TODO: `layout`
+    - Creates a 2D graph layout
+    - Requirements: `embed`
+
+## Pipelines
+Shell scripts for chaining together some of the above operations
+TODO use luigi or some actutal framework for this? Or just throw it together with scripts?

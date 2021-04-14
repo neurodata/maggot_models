@@ -14,4 +14,5 @@ from .get_data import (
     load_palette,
     DATA_VERSION,
     DATA_DIR,
+    DATA_PATH,
 )

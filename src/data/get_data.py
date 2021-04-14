@@ -13,7 +13,7 @@ from src.graph import MetaGraph
 from giskard.graph import MaggotGraph
 from giskard.utils import to_pandas_edgelist
 
-DATA_VERSION = "2021-04-02"
+DATA_VERSION = "2021-04-13"
 DATA_DIR = "maggot_models/data/processed"
 DATA_PATH = Path(DATA_DIR)
 
@@ -45,11 +45,8 @@ def load_edgelist(graph_type="G", path=None, version=None):
 
 
 def load_networkx(graph_type="G", node_meta=None, path=None, version=None):
-    edgelist = load_edgelist(graph_type)
+    edgelist = load_edgelist(graph_type, path=path, version=version)
     g = nx.from_pandas_edgelist(edgelist, edge_attr="weight", create_using=nx.DiGraph())
-    for node in node_meta.index:
-        if node not in g.nodes:
-            g.add_node(node)
     if node_meta is not None:
         meta_data_dict = node_meta.to_dict(orient="index")
         nx.set_node_attributes(g, meta_data_dict)
