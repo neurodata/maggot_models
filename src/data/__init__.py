@@ -10,6 +10,7 @@ from .get_data import (
     load_networkx_graphml,
     load_everything,
     load_metagraph,
+    load_maggot_graph,
     load_palette,
     DATA_VERSION,
     DATA_DIR,

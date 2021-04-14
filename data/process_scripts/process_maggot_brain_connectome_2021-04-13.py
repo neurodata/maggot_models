@@ -204,6 +204,7 @@ ids = meta.index.values
 ids = [int(i) for i in ids]
 
 batch_size = 100
+max_tries = 5
 n_batches = int(np.floor(len(ids) / batch_size))
 if len(ids) % n_batches > 0:
     n_batches += 1
@@ -211,6 +212,7 @@ print(f"Batch size: {batch_size}")
 print(f"Number of batches: {n_batches}")
 print(f"Number of neurons: {len(ids)}")
 print(f"Batch product: {n_batches * batch_size}\n")
+from requests.exceptions import ChunkedEncodingError
 
 i = 0
 currtime = time.time()
@@ -220,9 +222,17 @@ nl = pymaid.get_neuron(
 print(f"{time.time() - currtime:.3f} seconds elapsed for batch {i}.")
 for i in range(1, n_batches):
     currtime = time.time()
-    nl += pymaid.get_neuron(
-        ids[i * batch_size : (i + 1) * batch_size], with_connectors=False
-    )
+    n_tries = 0
+    success = False
+    while not success and n_tries < max_tries:
+        try:
+            nl += pymaid.get_neuron(
+                ids[i * batch_size : (i + 1) * batch_size], with_connectors=False
+            )
+            success = True
+        except ChunkedEncodingError:
+            print(f"Failed pull on batch {i}, trying again...")
+            n_tries += 1
     print(f"{time.time() - currtime:.3f} seconds elapsed for batch {i}.")
 
 print("\nPulled all neurons.\b")

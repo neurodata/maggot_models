@@ -10,6 +10,8 @@ import pandas as pd
 
 # from src.utils import meta_to_array
 from src.graph import MetaGraph
+from giskard.graph import MaggotGraph
+from giskard.utils import to_pandas_edgelist
 
 DATA_VERSION = "2021-04-02"
 DATA_DIR = "maggot_models/data/processed"
@@ -63,6 +65,26 @@ def load_adjacency(
     elif output == "pandas":
         adj = nx.to_pandas_adjacency(g, nodelist=nodelist)
     return adj
+
+
+def load_maggot_graph(path=None, version=None):
+    nodes = load_node_meta()
+    g = nx.MultiDiGraph()
+    g.add_nodes_from(nodes.index)
+    nx.set_node_attributes(g, nodes.to_dict(orient="index"))
+    graph_types = ["Gaa", "Gad", "Gda", "Gdd"]
+    for graph_type in graph_types:
+        g_type = load_networkx(graph_type=graph_type)
+        for u, v, data in g_type.edges(data=True):
+            g.add_edge(u, v, key=graph_type[1:], edge_type=graph_type[1:], **data)
+
+    g_type = load_networkx(graph_type="G")
+    for u, v, data in g_type.edges(data=True):
+        g.add_edge(u, v, key="sum", edge_type="sum", **data)
+
+    edges = to_pandas_edgelist(g)
+
+    return MaggotGraph(g, nodes, edges)
 
 
 # def load_left():
