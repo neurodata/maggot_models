@@ -22,7 +22,7 @@ nodes["sum_signal_flow"] = sf
 print("Running ranked signal flow...")
 rank_sf = rank_signal_flow(adj)
 rank_sf = pd.Series(index=index, data=rank_sf)
-nodes["sum_rank_gm_flow"] = rank_sf
+nodes["sum_rank_sf_flow"] = rank_sf
 
 #%% run graph match flow
 print("Running ranked graph match flow...")

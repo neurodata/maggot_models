@@ -554,6 +554,7 @@ right_to_left_df.head()
 
 meta["pair"] = -1
 meta["pair_id"] = -1
+# TODO what is this doing with the duplicate pairs?
 meta.loc[left_to_right_df.index, "pair"] = left_to_right_df["rightid"]
 meta.loc[right_to_left_df.index, "pair"] = right_to_left_df["leftid"]
 

@@ -3,7 +3,7 @@ These are somewhat-solidified processes we're always going to run on the updated
 Many of these scripts depend on previous ones. 
 
 ## Prerequisites 
-- [ ] `process_maggot_brain_connectome_<date>`
+- [x] `process_maggot_brain_connectome_<date>`
 - [ ] TODO: `manage_data`
     - Option to push to a server
     - Option to upload somewhere
@@ -14,10 +14,14 @@ Many of these scripts depend on previous ones.
 - [x] `flow`
     - Anything regarding ranking the nodes of the network in order from sensory to motor
     - Writes outputs as columns in the node metadata
-- [ ] `graph_match`
+- [x] `graph_match`
     - Used to predict neuron pairings for the unpaired neurons
     - Plots the results of the matching
     - Writes outputs as columns in the node metadata
+- [ ] `pair_metrics`
+    - Calculates how similar pairs are in terms of 
+        - Cosine/jaccard distance on the adjacencies 
+        - (maybe) Cosine/euclidean distance on an embedding?
 - [ ] `nblast`
     - Runs NBLAST (currently only within hemispheres)
     - Saves outputs as csv similarity/score matrices
