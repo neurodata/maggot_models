@@ -42,7 +42,7 @@ def pairwise_nblast(neuron_ids, point_thresh=20):
     # threw them out for now.
     treenode_tables = []
     for neuron_id, neuron in zip(neuron_ids, neurons):
-        treenode_table = pymaid.get_treenode_table(neuron, include_details=False)
+        treenode_table = pymaid.get_node_table(neuron, include_details=False)
         treenode_tables.append(treenode_table)
 
     success_neurons = []
@@ -65,7 +65,9 @@ def pairwise_nblast(neuron_ids, point_thresh=20):
     currtime = time.time()
     # NOTE: I've had too modify original code to allow smat=None
     # NOTE: this only works when normalized=False also
-    scores = nblast_allbyall(tree_neurons, smat=None, normalized=False, progress=True)
+    scores = nblast_allbyall(
+        tree_neurons, normalized=False, progress=True, use_alpha=False
+    )
     print(f"{time.time() - currtime:.3f} elapsed to run NBLAST.")
 
     scores = pd.DataFrame(

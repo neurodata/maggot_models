@@ -582,6 +582,7 @@ master_mg = MetaGraph(master_mg.adj, pair_meta)
 mg = master_mg.copy()
 meta = mg.meta
 meta = meta[meta["paper_clustered_neurons"] | meta["accessory_neurons"]].copy()
+# we will only want to cluster the "paper_clustered_neurons"
 mg.reindex(meta.index, use_ids=True)
 mg = mg.remove_pdiff()
 mg = mg.make_lcc()

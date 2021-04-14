@@ -39,16 +39,26 @@ def filt(string):
     string = string.replace("*", "")
     string = string.strip("_")
     string = string.strip(" ")
-    string = string.replace("_r", "")
-    string = string.replace("_l", "")
+    # string = string.replace("_r", "")
+    # string = string.replace("_l", "")
     string = string.replace("right", "")
     string = string.replace("left", "")
-    string = string.replace("unknown", "unk")
+    # string = string.replace("unknown", "unk")
     return string
 
 
-lineage_df = df_from_meta_annotation("Volker", filt=filt)
+lineage_df = df_from_meta_annotation("Volker")  # filt=filt)
 
 lineage_df = lineage_df.fillna(False)
 
 print(f"Maximum number of lineage annotations: {lineage_df.sum(axis=1).max()}")
+
+#%%
+duplicate_lineage = lineage_df[lineage_df.sum(axis=1) > 1]
+duplicate_lineage = duplicate_lineage.loc[:, duplicate_lineage.sum(axis=0) > 0]
+
+#%%
+for idx, row in duplicate_lineage.iterrows():
+    print(f"{idx}: {list(row[row].index)}")
+
+# %%

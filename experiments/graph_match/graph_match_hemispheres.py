@@ -45,23 +45,12 @@ def stashcsv(df, name, **kws):
 # %% [markdown]
 # ## Load and preprocess data
 graph_type = "G"
-# VERSION = "2020-06-10"
 master_mg = load_metagraph(graph_type)
 mg = MetaGraph(master_mg.adj, master_mg.meta)
 meta = mg.meta
 meta = meta[meta["paper_clustered_neurons"] | meta["accessory_neurons"]].copy()
 mg.reindex(meta.index, use_ids=True)
-# mg = mg.remove_pdiff()
 meta = mg.meta.copy()
-
-# remove low degree neurons
-# degrees = mg.calculate_degrees()
-# quant_val = np.quantile(degrees["Total edgesum"], 0.05)
-# idx = meta[degrees["Total edgesum"] > quant_val].index
-# print(quant_val)
-# mg = mg.reindex(idx, use_ids=True)
-# mg = mg.make_lcc()
-meta = mg.meta
 
 #%%
 temp_meta = meta[meta["left"] | meta["right"]]
