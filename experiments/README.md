@@ -25,7 +25,7 @@ Many of these scripts depend on previous ones.
 - [ ] `nblast`
     - Runs NBLAST (currently only within hemispheres)
     - Saves outputs as csv similarity/score matrices
-- [ ] `embed`
+- [x] `embed`
     - Performs various embeddings on the data
     - Saves outputs as csv matrices
     - Generates plots

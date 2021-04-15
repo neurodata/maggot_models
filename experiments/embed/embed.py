@@ -1,23 +1,29 @@
 #%%
+import datetime
 import os
 import time
-import datetime
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from tqdm import tqdm
 
+from giskard.plot import merge_axes
+from graspologic.align import OrthogonalProcrustes
+from graspologic.embed import AdjacencySpectralEmbed, MultipleASE, selectSVD
 from graspologic.match import GraphMatch
-from src.data import DATA_PATH, DATA_VERSION, load_maggot_graph
-from src.io import savefig
-from src.visualization import adjplot, set_theme
 from graspologic.utils import (
-    remove_loops,
-    pass_to_ranks,
     augment_diagonal,
+    pass_to_ranks,
+    remove_loops,
     to_laplacian,
 )
+from src.data import DATA_PATH, DATA_VERSION, load_maggot_graph
+from src.io import savefig
+from src.visualization import CLASS_COLOR_DICT as palette
+from src.visualization import add_connections, adjplot, set_theme
 
 set_theme()
 t0 = time.time()
@@ -93,9 +99,7 @@ def preprocess_for_embed(adjs, method="ase"):
     return tuple(adjs)
 
 
-from graspologic.embed import AdjacencySpectralEmbed, selectSVD
-
-n_initial_components = 16
+n_initial_components = 16  # TODO maybe this should be even bigger?
 n_final_components = 16
 
 
@@ -109,8 +113,6 @@ def embed_subgraph(adj):
 def svd(X, n_components=n_final_components):
     return selectSVD(X, n_components=n_components, algorithm="full")[0]
 
-
-from graspologic.embed import MultipleASE
 
 embed_edge_types = "sum"
 if embed_edge_types == "all":
@@ -129,11 +131,11 @@ def project_graph(U, V, R, scaled=True):
     # Y = VWS^{1/2}
     Z, S, W = selectSVD(R, n_components=len(R), algorithm="full")
     S_sqrt = np.diag(np.sqrt(S))
-    X = U @ Z
-    Y = V @ W
-    if scaled:
-        X = X @ S_sqrt
-        Y = Y @ S_sqrt
+    X = U @ Z @ S_sqrt @ W.T
+    Y = V @ Z @ S_sqrt @ W.T
+    # if scaled:
+    #     X = X @ S_sqrt
+    #     Y = Y @ S_sqrt
 
     return X, Y
 
@@ -150,20 +152,25 @@ def align(X, Y):
     return op.fit_transform(X, Y)
 
 
-project_scaled = True
-mase_scaled = True
-prescaled = True
+# TODO when do we want to scale
+project_scaled = True  # whether to scale in the final projection step
+mase_scaled = True  # whether to scale during the initial embedding in MASE
+prescaled = True  # whether to scale the subgraphs to have same norm prior to embedding
 edge_type_adjs = []
 stage1_left_embeddings = []
 stage1_right_embeddings = []
 for et in edge_types:
     edge_type_adj = mg.to_edge_type_graph(et).adj
-    # edge_type_adj = preprocess_for_embed(edge_type_adj)[0]
+
+    # split into subgraphs (left to left, right to right, left to right, right to left)
     split_adjs = split_adj(edge_type_adj)
+    # preprocess by adding a small constant, pass to ranks, augmenting the diagonals
     (ll_adj, rr_adj, lr_adj, rl_adj) = preprocess_for_embed(list(split_adjs))
+    # potentially scale the two matrices to have the same (mean) Frobenius norm
     adjs_to_embed = [ll_adj, rr_adj]
     if prescaled:
         adjs_to_embed = prescale_for_embed(adjs_to_embed)
+    # Run MASE between corresponding subgraphs
     ipsi_mase = MultipleASE(n_components=n_initial_components, scaled=mase_scaled)
     U_ipsi, V_ipsi = ipsi_mase.fit_transform(adjs_to_embed)
     left_ipsi_out, left_ipsi_in = project_graph(
@@ -185,15 +192,15 @@ for et in edge_types:
     right_contra_out, left_contra_in = project_graph(
         U_contra, V_contra, contra_mase.scores_[1], scaled=project_scaled
     )
-    left_ipsi_out = align(left_ipsi_out, right_ipsi_out)
-    left_ipsi_in = align(left_ipsi_in, right_ipsi_in)
-    left_contra_out = align(left_contra_out, right_contra_out)
-    left_contra_in = align(left_contra_in, right_contra_in)
+    left_ipsi_out_mapped = align(left_ipsi_out, right_ipsi_out)
+    left_ipsi_in_mapped = align(left_ipsi_in, right_ipsi_in)
+    left_contra_out_mapped = align(left_contra_out, right_contra_out)
+    left_contra_in_mapped = align(left_contra_in, right_contra_in)
     stage1_left_embeddings += [
-        left_ipsi_out,
-        left_ipsi_in,
-        left_contra_out,
-        left_contra_in,
+        left_ipsi_out_mapped,
+        left_ipsi_in_mapped,
+        left_contra_out_mapped,
+        left_contra_in_mapped,
     ]
     stage1_right_embeddings += [
         right_ipsi_out,
@@ -209,12 +216,10 @@ stage1_embeddings = np.concatenate(
 )
 stage2_embedding = svd(stage1_embeddings)
 
-
 #%%
 fig, axs = plt.subplots(
     2, 2, figsize=(10, 5), gridspec_kw=dict(height_ratios=[0.9, 0.05])
 )
-from giskard.plot import merge_axes
 
 cbar_ax = merge_axes(fig, axs, rows=1)
 vmax = np.max(ipsi_mase.scores_)
@@ -230,7 +235,7 @@ heatmap_kws = dict(
 )
 ax = axs[0, 0]
 sns.heatmap(ipsi_mase.scores_[0], ax=ax, cbar=False, **heatmap_kws)
-ax.set(title=r'$\hat{R}_1$')
+ax.set(title=r"$\hat{R}_1$")
 ax = axs[0, 1]
 sns.heatmap(
     ipsi_mase.scores_[1],
@@ -239,33 +244,11 @@ sns.heatmap(
     cbar_kws={"orientation": "horizontal", "shrink": 0.6},
     **heatmap_kws,
 )
-ax.set(title=r'$\hat{R}_2$')
-stashfig("R-matrices")
-
-#     # LL, RR, LR, RL
-#     left_ipsi_out, left_ipsi_in = embed_subgraph(ll_adj)
-#     right_ipsi_out, right_ipsi_in = embed_subgraph(rr_adj)
-#     left_contra_out, right_contra_in = embed_subgraph(lr_adj)
-#     right_contra_out, left_contra_in = embed_subgraph(rl_adj)
-#     stage1_left_embeddings += [
-#         left_ipsi_out,
-#         left_ipsi_in,
-#         left_contra_out,
-#         left_contra_in,
-#     ]
-#     stage1_right_embeddings += [
-#         right_ipsi_out,
-#         right_ipsi_in,
-#         right_contra_out,
-#         right_contra_in,
-#     ]
+ax.set(title=r"$\hat{R}_2$")
+stashfig("ipsi-R-matrices")
 
 
 #%%
-
-from src.visualization import add_connections
-import pandas as pd
-from src.visualization import CLASS_COLOR_DICT as palette
 
 
 def plot_pairs(
@@ -353,39 +336,30 @@ plot_pairs(
 stashfig("mase_final_embedding")
 
 #%%
-
-from pathlib import Path
-
 out_path = Path("maggot_models/experiments/embed/outs")
 
 stage1_embedding_df = pd.DataFrame(index=reindexed_nodes.index, data=stage1_embeddings)
 stage1_embedding_df.sort_index(inplace=True)
-stage1_embedding_df.to_csv(out_path / "stage1_embeddings.csv")
+stage1_embedding_df.to_csv(out_path / "stage1_embedding.csv")
 
 stage2_embedding = pd.DataFrame(index=reindexed_nodes.index, data=stage2_embedding)
 stage2_embedding.sort_index(inplace=True)
-stage2_embedding.to_csv(out_path / "stage2_embeddings.csv")
-
-
-#%%
-plot_pairs(V, nodes.iloc[left_inds]["merge_class"].values)
+stage2_embedding.to_csv(out_path / "stage2_embedding.csv")
 
 #%%
 plot_pairs(
     np.concatenate((left_ipsi_out, right_ipsi_out), axis=0),
-    labels=nodes.iloc[joint_inds]["merge_class"].values,
+    labels=reindexed_nodes["merge_class"].values,
     left_pair_inds=left_pair_inds,
     right_pair_inds=right_pair_inds,
 )
 stashfig("ipsi-out-mase-projection")
 #%%
-from graspologic.align import OrthogonalProcrustes
-
 op = OrthogonalProcrustes()
 left_ipsi_out_mapped = op.fit_transform(left_ipsi_out, right_ipsi_out)
 plot_pairs(
     np.concatenate((left_ipsi_out_mapped, right_ipsi_out), axis=0),
-    labels=nodes.iloc[joint_inds]["merge_class"].values,
+    labels=reindexed_nodes["merge_class"].values,
     left_pair_inds=left_pair_inds,
     right_pair_inds=right_pair_inds,
 )
