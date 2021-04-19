@@ -392,7 +392,8 @@ class MaggotCluster(NodeMixin):
         super().__init__()
         self.name = name
         self.meta = meta.copy()
-        self.adj = adj.copy()
+        if adj is not None:
+            self.adj = adj.copy()
         self.parent = parent
         self.reembed = reembed
         self.meta["inds"] = range(len(self.meta))

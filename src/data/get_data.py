@@ -13,7 +13,11 @@ from src.graph import MetaGraph
 from giskard.graph import MaggotGraph
 from giskard.utils import to_pandas_edgelist
 
-DATA_VERSION = "2021-04-13"
+version_loc = Path(__file__).parent / "version.txt"
+with open(version_loc) as f:
+    version = f.readline()
+
+DATA_VERSION = version  # "2021-04-13"
 DATA_DIR = "maggot_models/data/processed"
 DATA_PATH = Path(DATA_DIR)
 

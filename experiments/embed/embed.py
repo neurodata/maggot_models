@@ -41,9 +41,9 @@ def stashfig(name, **kws):
 mg = load_maggot_graph()
 mg = mg[mg.nodes["paper_clustered_neurons"] | mg.nodes["accessory_neurons"]]
 mg = mg[mg.nodes["hemisphere"].isin(["L", "R"])]
-mg.nodes["_inds"] = range(len(mg.nodes))
 nodes = mg.nodes
-adj = mg.sum.adj
+
+nodes["_inds"] = range(len(nodes))
 left_nodes = nodes[nodes["hemisphere"] == "L"].copy()
 left_paired_nodes = left_nodes[left_nodes["predicted_pair_id"] != -1]
 left_unpaired_nodes = left_nodes[left_nodes["predicted_pair_id"] == -1]
@@ -56,10 +56,11 @@ lp_inds = left_paired_nodes.loc[right_paired_nodes["predicted_pair"]]["_inds"]
 rp_inds = right_paired_nodes["_inds"]
 print("Pairs all valid: ")
 print((nodes.iloc[lp_inds].index == nodes.iloc[rp_inds]["predicted_pair"]).all())
-n_pairs = len(rp_inds)
-
 left_inds = lp_inds
 right_inds = rp_inds
+
+n_pairs = len(rp_inds)
+adj = mg.sum.adj
 
 
 def split_adj(adj):
@@ -99,15 +100,8 @@ def preprocess_for_embed(adjs, method="ase"):
     return tuple(adjs)
 
 
-n_initial_components = 16  # TODO maybe this should be even bigger?
-n_final_components = 16
-
-
-def embed_subgraph(adj):
-    ase = AdjacencySpectralEmbed(
-        n_components=n_initial_components, check_lcc=False, diag_aug=True, concat=False
-    )
-    return ase.fit_transform(adj)
+n_initial_components = 32  # TODO maybe this should be even bigger? used to have at 16
+n_final_components = 32
 
 
 def svd(X, n_components=n_final_components):
@@ -131,11 +125,11 @@ def project_graph(U, V, R, scaled=True):
     # Y = VWS^{1/2}
     Z, S, W = selectSVD(R, n_components=len(R), algorithm="full")
     S_sqrt = np.diag(np.sqrt(S))
-    X = U @ Z @ S_sqrt @ W.T
-    Y = V @ Z @ S_sqrt @ W.T
-    # if scaled:
-    #     X = X @ S_sqrt
-    #     Y = Y @ S_sqrt
+    X = U @ Z
+    Y = V @ W
+    if scaled:
+        X = X @ S_sqrt
+        Y = Y @ S_sqrt
 
     return X, Y
 
@@ -171,6 +165,8 @@ for et in edge_types:
     if prescaled:
         adjs_to_embed = prescale_for_embed(adjs_to_embed)
     # Run MASE between corresponding subgraphs
+    print(n_initial_components)
+    print(adjs_to_embed[0].shape)
     ipsi_mase = MultipleASE(n_components=n_initial_components, scaled=mase_scaled)
     U_ipsi, V_ipsi = ipsi_mase.fit_transform(adjs_to_embed)
     left_ipsi_out, left_ipsi_in = project_graph(
@@ -192,6 +188,8 @@ for et in edge_types:
     right_contra_out, left_contra_in = project_graph(
         U_contra, V_contra, contra_mase.scores_[1], scaled=project_scaled
     )
+    # TODO alignment should happen jointly for in and out
+    # not jointly for the contra/ipsi
     left_ipsi_out_mapped = align(left_ipsi_out, right_ipsi_out)
     left_ipsi_in_mapped = align(left_ipsi_in, right_ipsi_in)
     left_contra_out_mapped = align(left_contra_out, right_contra_out)
