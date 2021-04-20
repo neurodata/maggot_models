@@ -1,4 +1,5 @@
 #%%
+import datetime
 import os
 import time
 
@@ -8,9 +9,11 @@ import seaborn as sns
 from tqdm import tqdm
 
 from graspologic.match import GraphMatch
-from src.data import DATA_PATH, DATA_VERSION, load_maggot_graph
+from src.data import join_node_meta, load_maggot_graph
 from src.io import savefig
 from src.visualization import adjplot, set_theme
+
+t0 = time.time()
 
 set_theme()
 
@@ -32,16 +35,21 @@ def stashfig(name, **kws):
 mg = load_maggot_graph()
 mg = mg[mg.nodes["paper_clustered_neurons"] | mg.nodes["accessory_neurons"]]
 mg = mg[mg.nodes["hemisphere"].isin(["L", "R"])]
+
+# from giskard.utils import get_paired_inds
+
+# left_inds, right_inds = get_paired_inds(mg.nodes)
+
 mg.nodes["_inds"] = range(len(mg.nodes))
 nodes = mg.nodes
 adj = mg.sum.adj
 left_nodes = nodes[nodes["hemisphere"] == "L"].copy()
-left_paired_nodes = left_nodes[left_nodes["pair_id"] != -1]
-left_unpaired_nodes = left_nodes[left_nodes["pair_id"] == -1]
+left_paired_nodes = left_nodes[left_nodes["pair_id"] > -1]
+left_unpaired_nodes = left_nodes[left_nodes["pair_id"] <= -1]
 # left_nodes.sort_values("pair_id", inplace=True, ascending=False)
 right_nodes = nodes[nodes["hemisphere"] == "R"].copy()
-right_paired_nodes = right_nodes[right_nodes["pair_id"] != -1]
-right_unpaired_nodes = right_nodes[right_nodes["pair_id"] == -1]
+right_paired_nodes = right_nodes[right_nodes["pair_id"] > -1]
+right_unpaired_nodes = right_nodes[right_nodes["pair_id"] <= -1]
 
 # HACK this only works because all the duplicate nodes are on the right
 lp_inds = left_paired_nodes.loc[right_paired_nodes["pair"]]["_inds"]
@@ -202,6 +210,12 @@ nodes.loc[left_idx, "predicted_pair_id"] = pair_ids
 nodes.loc[right_idx_perm, "predicted_pair_id"] = pair_ids
 
 #%%
-out_path = DATA_PATH / DATA_VERSION
-nodes.sort_index(inplace=True)
-nodes.to_csv(out_path / "meta_data.csv")
+join_node_meta(nodes[["predicted_pair", "predicted_pair_id"]])
+
+#%%
+elapsed = time.time() - t0
+delta = datetime.timedelta(seconds=elapsed)
+print("----")
+print(f"Script took {delta}")
+print(f"Completed at {datetime.datetime.now()}")
+print("----")

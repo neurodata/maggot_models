@@ -37,6 +37,24 @@ def load_node_meta(path=None, version=None):
     return meta
 
 
+def join_node_meta(other, check_collision=True, path=None, version=None):
+    folder = _get_folder(version, path)
+    meta = pd.read_csv(folder / "meta_data.csv", index_col=0)
+    meta.sort_index(inplace=True)
+
+    if check_collision:
+        if isinstance(other, pd.DataFrame):
+            cols = other.columns
+        elif isinstance(other, pd.Series):
+            cols = [other.name]
+        for col in cols:
+            if col in meta.columns:
+                raise ValueError("Name collision when saving to meta_data.csv")
+
+    meta = meta.join(other, on=None, how="left", sort=False)
+    meta.to_csv(folder / "meta_data.csv")
+
+
 def load_edgelist(graph_type="G", path=None, version=None):
     folder = _get_folder(version, path)
     edgelist = pd.read_csv(

@@ -1,8 +1,13 @@
 #%%
+import datetime
+import time
+
 import pandas as pd
 
 from giskard.flow import rank_graph_match_flow, rank_signal_flow, signal_flow
-from src.data import DATA_PATH, DATA_VERSION, load_maggot_graph
+from src.data import join_node_meta, load_maggot_graph
+
+t0 = time.time()
 
 #%%
 print("Loading data...")
@@ -15,14 +20,14 @@ adj = mg.adj
 #%% run signal flow
 print("Running signal flow...")
 sf = signal_flow(adj)
-sf = pd.Series(index=index, data=sf)
-nodes["sum_signal_flow"] = sf
+sf = pd.Series(index=index, data=sf, name="sum_signal_flow")
+join_node_meta(sf)
 
 #%% run rank signal flow
 print("Running ranked signal flow...")
 rank_sf = rank_signal_flow(adj)
-rank_sf = pd.Series(index=index, data=rank_sf)
-nodes["sum_rank_sf_flow"] = rank_sf
+rank_sf = pd.Series(index=index, data=rank_sf, name="sum_rank_signal_flow")
+join_node_meta(rank_sf)
 
 #%% run graph match flow
 print("Running ranked graph match flow...")
@@ -30,13 +35,13 @@ print("Running ranked graph match flow...")
 # TODO use GOAT
 # TODO this is slow AF, should do the numba or scipy version
 rank_gm_flow = rank_graph_match_flow(adj, n_init=1, max_iter=20, eps=1e-2)
-rank_gm_flow = pd.Series(index=index, data=rank_gm_flow)
-nodes["sum_rank_gm_flow"] = rank_gm_flow
+rank_gm_flow = pd.Series(index=index, data=rank_gm_flow, name="sum_rank_gm_flow")
+join_node_meta(rank_gm_flow)
 
-#%% save
-print("Saving to meta_data.csv...")
-out_path = DATA_PATH / DATA_VERSION
-nodes.sort_index(inplace=True)
-nodes.to_csv(out_path / "meta_data.csv")
-
-print("Done!")
+#%%
+elapsed = time.time() - t0
+delta = datetime.timedelta(seconds=elapsed)
+print("----")
+print(f"Script took {delta}")
+print(f"Completed at {datetime.datetime.now()}")
+print("----")

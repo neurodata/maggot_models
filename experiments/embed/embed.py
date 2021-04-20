@@ -141,9 +141,17 @@ def prescale_for_embed(adjs):
     return adjs
 
 
-def align(X, Y):
+def align(X1, X2, Y1, Y2):
+    # Solve argmin_Q \|X1Q - X2\|_F^2 + \|Y1Q - Y2\|_F^2
+    # This is the same as \|U1Q - U2\|_F^2 where U1 = [X1^T Y1^T]^T
+    n = len(X1)
+    U1 = np.concatenate((X1, Y1), axis=0)
+    U2 = np.concatenate((X2, Y2), axis=0)
     op = OrthogonalProcrustes()
-    return op.fit_transform(X, Y)
+    U1_mapped = op.fit_transform(U1, U2)
+    X1_mapped = U1_mapped[:n]
+    Y1_mapped = U1_mapped[n:]
+    return (X1_mapped, Y1_mapped)
 
 
 # TODO when do we want to scale
@@ -165,8 +173,6 @@ for et in edge_types:
     if prescaled:
         adjs_to_embed = prescale_for_embed(adjs_to_embed)
     # Run MASE between corresponding subgraphs
-    print(n_initial_components)
-    print(adjs_to_embed[0].shape)
     ipsi_mase = MultipleASE(n_components=n_initial_components, scaled=mase_scaled)
     U_ipsi, V_ipsi = ipsi_mase.fit_transform(adjs_to_embed)
     left_ipsi_out, left_ipsi_in = project_graph(
@@ -174,6 +180,9 @@ for et in edge_types:
     )
     right_ipsi_out, right_ipsi_in = project_graph(
         U_ipsi, V_ipsi, ipsi_mase.scores_[1], scaled=project_scaled
+    )
+    left_ipsi_out_mapped, left_ipsi_in_mapped = align(
+        left_ipsi_out, right_ipsi_out, left_ipsi_in, right_ipsi_in
     )
 
     adjs_to_embed = [lr_adj, rl_adj]
@@ -188,23 +197,22 @@ for et in edge_types:
     right_contra_out, left_contra_in = project_graph(
         U_contra, V_contra, contra_mase.scores_[1], scaled=project_scaled
     )
-    # TODO alignment should happen jointly for in and out
-    # not jointly for the contra/ipsi
-    left_ipsi_out_mapped = align(left_ipsi_out, right_ipsi_out)
-    left_ipsi_in_mapped = align(left_ipsi_in, right_ipsi_in)
-    left_contra_out_mapped = align(left_contra_out, right_contra_out)
-    left_contra_in_mapped = align(left_contra_in, right_contra_in)
+
+    left_contra_out_mapped, right_contra_in_mapped = align(
+        left_contra_out, right_contra_out, right_contra_in, left_contra_in
+    )
+
     stage1_left_embeddings += [
         left_ipsi_out_mapped,
         left_ipsi_in_mapped,
         left_contra_out_mapped,
-        left_contra_in_mapped,
+        left_contra_in,
     ]
     stage1_right_embeddings += [
         right_ipsi_out,
         right_ipsi_in,
         right_contra_out,
-        right_contra_in,
+        right_contra_in_mapped,
     ]
 
 stage1_left_embeddings = np.concatenate(stage1_left_embeddings, axis=1)

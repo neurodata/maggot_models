@@ -15,4 +15,5 @@ from .get_data import (
     DATA_VERSION,
     DATA_DIR,
     DATA_PATH,
+    join_node_meta,
 )
