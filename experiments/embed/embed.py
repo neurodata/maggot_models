@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from tqdm import tqdm
 
 from giskard.plot import merge_axes
 from graspologic.align import OrthogonalProcrustes
@@ -92,16 +91,16 @@ def preprocess_for_embed(adjs, method="ase"):
     if not isinstance(adjs, list):
         adjs = [adjs]
     adjs = [pass_to_ranks(a) for a in adjs]
-    adjs = [a + 1 / a.size for a in adjs]
+    # adjs = [a + 1 / a.size for a in adjs]
     if method == "ase":
         adjs = [augment_diagonal(a) for a in adjs]
     elif method == "lse":  # haven't really used much. a few params to look at here
-        adjs = [to_laplacian(a) for a in adjs]
+        adjs = [to_laplacian(a, form="R-DAD") for a in adjs]
     return tuple(adjs)
 
 
-n_initial_components = 32  # TODO maybe this should be even bigger? used to have at 16
-n_final_components = 32
+n_initial_components = 64  # TODO maybe this should be even bigger? used to have at 16
+n_final_components = 64
 
 
 def svd(X, n_components=n_final_components):
@@ -141,6 +140,40 @@ def prescale_for_embed(adjs):
     return adjs
 
 
+def decompose_scores(scores, scaled=True, align=True):
+    R1 = scores[0]
+    R2 = scores[1]
+    Z1, S1, W1 = selectSVD(R1, n_components=len(R1), algorithm="full")
+    Z2, S2, W2 = selectSVD(R2, n_components=len(R2), algorithm="full")
+    if scaled:
+        S1_sqrt = np.diag(np.sqrt(S1))
+        S2_sqrt = np.diag(np.sqrt(S2))
+        Z1 = Z1 @ S1_sqrt
+        Z2 = Z2 @ S2_sqrt
+        W1 = W1 @ S1_sqrt
+        W2 = W2 @ S2_sqrt
+    if align:
+        op = OrthogonalProcrustes()
+        n = len(Z1)
+        U1 = np.concatenate((Z1, W1), axis=0)
+        U2 = np.concatenate((Z2, W2), axis=0)
+        U1_mapped = op.fit_transform(U1, U2)
+        Z1 = U1_mapped[:n]
+        W1 = U1_mapped[n:]
+    return Z1, W1, Z2, W2
+
+
+def project_to_node_space(mase, scaled=True, align=True):
+    U = mase.latent_left_
+    V = mase.latent_right_
+    Z1, W1, Z2, W2 = decompose_scores(mase.scores_, scaled=scaled, align=align)
+    X1 = U @ Z1
+    Y1 = V @ W1
+    X2 = U @ Z2
+    Y2 = V @ W2
+    return X1, Y1, X2, Y2
+
+
 def align(X1, X2, Y1, Y2):
     # Solve argmin_Q \|X1Q - X2\|_F^2 + \|Y1Q - Y2\|_F^2
     # This is the same as \|U1Q - U2\|_F^2 where U1 = [X1^T Y1^T]^T
@@ -158,6 +191,7 @@ def align(X1, X2, Y1, Y2):
 project_scaled = True  # whether to scale in the final projection step
 mase_scaled = True  # whether to scale during the initial embedding in MASE
 prescaled = True  # whether to scale the subgraphs to have same norm prior to embedding
+prealign = True
 edge_type_adjs = []
 stage1_left_embeddings = []
 stage1_right_embeddings = []
@@ -174,45 +208,45 @@ for et in edge_types:
         adjs_to_embed = prescale_for_embed(adjs_to_embed)
     # Run MASE between corresponding subgraphs
     ipsi_mase = MultipleASE(n_components=n_initial_components, scaled=mase_scaled)
-    U_ipsi, V_ipsi = ipsi_mase.fit_transform(adjs_to_embed)
-    left_ipsi_out, left_ipsi_in = project_graph(
-        U_ipsi, V_ipsi, ipsi_mase.scores_[0], scaled=project_scaled
+    ipsi_mase.fit(adjs_to_embed)
+
+    left_ipsi_out, left_ipsi_in, right_ipsi_out, right_ipsi_in = project_to_node_space(
+        ipsi_mase, scaled=project_scaled, align=prealign
     )
-    right_ipsi_out, right_ipsi_in = project_graph(
-        U_ipsi, V_ipsi, ipsi_mase.scores_[1], scaled=project_scaled
-    )
-    left_ipsi_out_mapped, left_ipsi_in_mapped = align(
-        left_ipsi_out, right_ipsi_out, left_ipsi_in, right_ipsi_in
-    )
+    if not prealign:
+        left_ipsi_out, left_ipsi_in = align(
+            left_ipsi_out, right_ipsi_out, left_ipsi_in, left_ipsi_in
+        )
 
     adjs_to_embed = [lr_adj, rl_adj]
     if prescaled:
         adjs_to_embed = prescale_for_embed(adjs_to_embed)
     contra_mase = MultipleASE(n_components=n_initial_components, scaled=mase_scaled)
-    U_contra, V_contra = contra_mase.fit_transform(adjs_to_embed)
-    left_contra_out, right_contra_in = project_graph(
-        U_contra, V_contra, contra_mase.scores_[0], scaled=project_scaled
-    )
+    contra_mase.fit(adjs_to_embed)
 
-    right_contra_out, left_contra_in = project_graph(
-        U_contra, V_contra, contra_mase.scores_[1], scaled=project_scaled
-    )
+    (
+        left_contra_out,
+        right_contra_in,
+        right_contra_out,
+        left_contra_in,
+    ) = project_to_node_space(contra_mase, scaled=project_scaled, align=prealign)
 
-    left_contra_out_mapped, right_contra_in_mapped = align(
-        left_contra_out, right_contra_out, right_contra_in, left_contra_in
-    )
+    if not prealign:
+        left_contra_out, right_contra_in = align(
+            left_contra_out, right_contra_out, right_contra_in, left_contra_in
+        )
 
     stage1_left_embeddings += [
-        left_ipsi_out_mapped,
-        left_ipsi_in_mapped,
-        left_contra_out_mapped,
+        left_ipsi_out,
+        left_ipsi_in,
+        left_contra_out,
         left_contra_in,
     ]
     stage1_right_embeddings += [
         right_ipsi_out,
         right_ipsi_in,
         right_contra_out,
-        right_contra_in_mapped,
+        right_contra_in,
     ]
 
 stage1_left_embeddings = np.concatenate(stage1_left_embeddings, axis=1)
@@ -241,7 +275,7 @@ heatmap_kws = dict(
 )
 ax = axs[0, 0]
 sns.heatmap(ipsi_mase.scores_[0], ax=ax, cbar=False, **heatmap_kws)
-ax.set(title=r"$\hat{R}_1$")
+ax.set(title=r"$\hat{R}_{LL}$")
 ax = axs[0, 1]
 sns.heatmap(
     ipsi_mase.scores_[1],
@@ -250,8 +284,44 @@ sns.heatmap(
     cbar_kws={"orientation": "horizontal", "shrink": 0.6},
     **heatmap_kws,
 )
-ax.set(title=r"$\hat{R}_2$")
+ax.set(title=r"$\hat{R}_{RR}$")
 stashfig("ipsi-R-matrices")
+
+#%%
+
+Z1, W1, Z2, W2 = decompose_scores(ipsi_mase.scores_, scaled=project_scaled, align=False)
+(
+    Z1_mapped,
+    W1_mapped,
+    _,
+    _,
+) = decompose_scores(ipsi_mase.scores_, scaled=project_scaled, align=True)
+
+n = len(Z1)
+Z = np.concatenate((Z1, Z1_mapped, Z2), axis=0)
+labels = n * [r"$Z_{LL}$"] + n * [r"$Z_{LL}Q$"] + n * [r"$Z_{RR}$"]
+plot_data = pd.DataFrame(data=Z, columns=[str(i) for i in range(Z.shape[1])])
+plot_data["labels"] = labels
+colors = sns.color_palette("tab20")
+r_palette = {r"$Z_{LL}$": colors[7], r"$Z_{LL}Q$": colors[6], r"$Z_{RR}$": colors[0]}
+fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+sns.scatterplot(data=plot_data, x="1", y="3", ax=ax, hue=labels, palette=r_palette)
+
+#%%
+fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+heatmap_kws = dict(
+    vmax=7,
+    vmin=-7,
+    center=0,
+    cmap="RdBu_r",
+    square=True,
+    cbar=False,
+    xticklabels=False,
+    yticklabels=False,
+)
+sns.heatmap(Z1, ax=axs[0], **heatmap_kws)
+sns.heatmap(Z1_mapped, ax=axs[1], **heatmap_kws)
+sns.heatmap(Z2, ax=axs[2], **heatmap_kws)
 
 
 #%%
@@ -342,6 +412,76 @@ plot_pairs(
 stashfig("mase_final_embedding")
 
 #%%
+from giskard.utils import get_paired_inds
+from sklearn.neighbors import NearestNeighbors
+
+
+def compute_nn_ranks(left_X, right_X, max_n_neighbors=None, metric="cosine"):
+    if max_n_neighbors is None:
+        max_n_neighbors = len(left_X)
+
+    nn_kwargs = dict(n_neighbors=max_n_neighbors, metric=metric)
+    nn_left = NearestNeighbors(**nn_kwargs)
+    nn_right = NearestNeighbors(**nn_kwargs)
+    nn_left.fit(left_X)
+    nn_right.fit(right_X)
+
+    left_neighbors = nn_right.kneighbors(left_X, return_distance=False)
+    right_neighbors = nn_left.kneighbors(right_X, return_distance=False)
+
+    arange = np.arange(len(left_X))
+    _, left_match_rank = np.where(left_neighbors == arange[:, None])
+    _, right_match_rank = np.where(right_neighbors == arange[:, None])
+    left_match_rank += 1
+    right_match_rank += 1
+
+    rank_data = np.concatenate((left_match_rank, right_match_rank))
+    rank_data = pd.Series(rank_data, name="pair_nn_rank")
+    rank_data = rank_data.to_frame()
+    rank_data["metric"] = metric
+    rank_data["side"] = len(left_X) * ["Left"] + len(right_X) * ["Right"]
+    rank_data["n_components"] = left_X.shape[1]
+    return rank_data
+
+
+lp_inds, rp_inds = get_paired_inds(reindexed_nodes)
+
+frames = []
+for n_components in [16, 32, 48, 64]:
+    left_X = stage2_embedding[lp_inds, :n_components]
+    right_X = stage2_embedding[rp_inds, :n_components]
+    rank_data = compute_nn_ranks(left_X, right_X, metric="cosine")
+    frames.append(rank_data)
+results = pd.concat(frames, ignore_index=True)
+results
+fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+sns.ecdfplot(
+    data=results,
+    x="pair_nn_rank",
+    hue="n_components",
+    ax=ax,
+)
+vals = [1, 5, 10, 15, 20]
+ax.set(
+    xlim=(0, 20),
+    ylim=(0.4, 1),
+    xticks=vals,
+    xlabel="K (# of nearest neighbors)",
+    ylabel="Recall @ K",
+)
+# for val in vals:
+#     r_at_k = (results["pair_nn_rank"] <= val).mean()
+#     ax.text(
+#         val,
+#         r_at_k + 0.005,
+#         f"{r_at_k:.2f}",
+#         ha="center",
+#         va="bottom",
+#     )
+ax.axhline(1, linewidth=3, linestyle=":", color="lightgrey")
+stashfig("pair-nn-recall")
+
+#%%
 out_path = Path("maggot_models/experiments/embed/outs")
 
 stage1_embedding_df = pd.DataFrame(index=reindexed_nodes.index, data=stage1_embeddings)
@@ -352,24 +492,24 @@ stage2_embedding = pd.DataFrame(index=reindexed_nodes.index, data=stage2_embeddi
 stage2_embedding.sort_index(inplace=True)
 stage2_embedding.to_csv(out_path / "stage2_embedding.csv")
 
-#%%
-plot_pairs(
-    np.concatenate((left_ipsi_out, right_ipsi_out), axis=0),
-    labels=reindexed_nodes["merge_class"].values,
-    left_pair_inds=left_pair_inds,
-    right_pair_inds=right_pair_inds,
-)
-stashfig("ipsi-out-mase-projection")
-#%%
-op = OrthogonalProcrustes()
-left_ipsi_out_mapped = op.fit_transform(left_ipsi_out, right_ipsi_out)
-plot_pairs(
-    np.concatenate((left_ipsi_out_mapped, right_ipsi_out), axis=0),
-    labels=reindexed_nodes["merge_class"].values,
-    left_pair_inds=left_pair_inds,
-    right_pair_inds=right_pair_inds,
-)
-stashfig("ipsi-out-mase-projection-w-rotation")
+# #%%
+# plot_pairs(
+#     np.concatenate((left_ipsi_out, right_ipsi_out), axis=0),
+#     labels=reindexed_nodes["merge_class"].values,
+#     left_pair_inds=left_pair_inds,
+#     right_pair_inds=right_pair_inds,
+# )
+# stashfig("ipsi-out-mase-projection-w0")
+# #%%
+# op = OrthogonalProcrustes()
+# left_ipsi_out_mapped = op.fit_transform(left_ipsi_out, right_ipsi_out)
+# plot_pairs(
+#     np.concatenate((left_ipsi_out_mapped, right_ipsi_out), axis=0),
+#     labels=reindexed_nodes["merge_class"].values,
+#     left_pair_inds=left_pair_inds,
+#     right_pair_inds=right_pair_inds,
+# )
+# stashfig("ipsi-out-mase-projection-w-rotation")
 
 #%%
 elapsed = time.time() - t0

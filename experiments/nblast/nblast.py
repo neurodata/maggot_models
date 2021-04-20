@@ -1,16 +1,16 @@
 #%%
-import logging
+import datetime
 import time
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pymaid
 from sklearn.preprocessing import QuantileTransformer
-from pathlib import Path
 
+import pymaid
 from graspologic.utils import symmetrize
 from navis import NeuronList, TreeNeuron, nblast_allbyall
-from src.data import load_metagraph
+from src.data import load_maggot_graph
 from src.pymaid import start_instance
 
 # REF: https://stackoverflow.com/questions/35326814/change-level-logged-to-ipython-jupyter-notebook
@@ -27,8 +27,8 @@ start_instance()
 out_dir = Path("maggot_models/experiments/nblast/outs")
 
 #%% load connectivity data
-mg = load_metagraph("G")
-meta = mg.meta
+mg = load_maggot_graph()
+meta = mg.nodes
 
 #%% define some functions
 
@@ -120,5 +120,9 @@ for side in ["left", "right"]:
     print()
 
 #%%
-print("\n\n")
-print(f"{time.time() - t0:.3f} elapsed for whole script.")
+elapsed = time.time() - t0
+delta = datetime.timedelta(seconds=elapsed)
+print("----")
+print(f"Script took {delta}")
+print(f"Completed at {datetime.datetime.now()}")
+print("----")
