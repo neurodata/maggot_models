@@ -29,6 +29,8 @@ out_dir = Path("maggot_models/experiments/nblast/outs")
 #%% load connectivity data
 mg = load_maggot_graph()
 meta = mg.nodes
+meta = meta[meta["paper_clustered_neurons"]]
+
 
 #%% define some functions
 

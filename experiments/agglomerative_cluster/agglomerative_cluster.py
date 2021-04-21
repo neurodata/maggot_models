@@ -15,7 +15,7 @@ from sklearn.metrics.pairwise import pairwise_distances
 from giskard.plot import crosstabplot, dissimilarity_clustermap
 from graspologic.plot.plot_matrix import scattermap
 from graspologic.utils import symmetrize
-from src.data import load_maggot_graph
+from src.data import load_maggot_graph, join_node_meta
 from src.io import savefig
 from src.visualization import CLASS_COLOR_DICT as palette
 from src.visualization import adjplot, set_theme
@@ -142,31 +142,33 @@ def plot_dissimilarity_clustering(
 
 set_theme()
 
-n_components_range = [32, 48, 64]
-thresholds = [1, 1.5, 2, 2.5]
-for n_components in n_components_range:
-    for threshold in thresholds:
-        plot_dissimilarity_clustering(
-            embedding,
-            pair_mat,
-            incomplete_mat,
-            metric=metric,
-            criterion=criterion,
-            threshold=threshold,
-            n_components=n_components,
-        )
-        name = "cut-dissimilarity-clustermap"
-        name += f"-metric={metric}-linkage={method}-t={threshold}-n_components={n_components}"
-        stashfig(name)
+#%%
+sweep = False
+if sweep:
+    n_components_range = [32, 48, 64]
+    thresholds = [1, 1.5, 2, 2.5]
+    for n_components in n_components_range:
+        for threshold in thresholds:
+            plot_dissimilarity_clustering(
+                embedding,
+                pair_mat,
+                incomplete_mat,
+                metric=metric,
+                criterion=criterion,
+                threshold=threshold,
+                n_components=n_components,
+            )
+            name = "cut-dissimilarity-clustermap"
+            name += f"-metric={metric}-linkage={method}-t={threshold}-n_components={n_components}"
+            stashfig(name)
 #%% choose a final set
 n_components = 64
-threshold = 2
+threshold = 2.5
 basename = (
     f"-metric={metric}-linkage={method}-t={threshold}-n_components={n_components}"
 )
 distances = compute_distances(embedding, n_components=n_components, metric=metric)
 Z = linkage_cluster(squareform(distances), method=method)
-flat_labels = fcluster(Z, threshold, criterion=criterion)
 
 linkage_df = pd.DataFrame(data=Z)
 out_path = Path("maggot_models/experiments/agglomerative_cluster/outs")
@@ -175,9 +177,14 @@ linkage_df.to_csv(out_path / "linkage.csv")
 linkage_index = pd.Series(nodes.index, name="skeleton_id")
 linkage_index.to_csv(out_path / "linkage_index.csv")
 
+for t in [2, 2.25, 2.5, 2.75, 3]:
+    flat_labels = fcluster(Z, t, criterion=criterion)
+    name = "agglom_labels_"
+    name += f"t={t}_n_components={n_components}"
+    flat_labels_series = pd.Series(data=flat_labels, index=nodes.index, name=name)
+    join_node_meta(flat_labels_series, check_collision=False, overwrite=True)
 
 #%%
-
 rows = []
 ts = list(np.linspace(Z[:, 2].max(), 0, 40))
 if threshold not in ts:
