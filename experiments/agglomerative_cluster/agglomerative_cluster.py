@@ -39,8 +39,8 @@ embedding_df = pd.read_csv(embedding_loc, index_col=0)
 embedding_df = embedding_df.groupby(embedding_df.index).mean()
 mg = load_maggot_graph()
 nodes = mg.nodes.copy()
+mg = mg[mg.nodes["has_embedding"]]
 nodes = nodes[nodes.index.isin(embedding_df.index)]
-nodes = nodes[nodes["paper_clustered_neurons"]]
 embedding_df = embedding_df[embedding_df.index.isin(nodes.index)]
 nodes = nodes.reindex(embedding_df.index)
 embedding = embedding_df.values
@@ -50,10 +50,12 @@ embedding = embedding_df.values
 # ward, MAYBE average, single
 # cosine or euclidean
 # tried a bunch of others, didn't like most
-linkages = []  # ["ward", "single", "complete", "average"]
-metrics = []  # ["cosine", "euclidean"]
+linkages = ["ward", "single", "complete", "average"]
+metrics = ["cosine", "euclidean"]
 for metric in metrics:
     for linkage in linkages:
+        if linkage == "ward" and metric != "euclidean":
+            continue
         distances = symmetrize(pairwise_distances(embedding, metric=metric))
         dissimilarity_clustermap(
             distances, colors=nodes["merge_class"], palette=palette, method=linkage
@@ -182,7 +184,7 @@ for t in [2, 2.25, 2.5, 2.75, 3]:
     name = "agglom_labels_"
     name += f"t={t}_n_components={n_components}"
     flat_labels_series = pd.Series(data=flat_labels, index=nodes.index, name=name)
-    join_node_meta(flat_labels_series, check_collision=False, overwrite=True)
+    join_node_meta(flat_labels_series, overwrite=True)
 
 #%%
 rows = []

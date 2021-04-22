@@ -38,7 +38,7 @@ def load_node_meta(path=None, version=None):
 
 
 def join_node_meta(
-    other, check_collision=True, overwrite=False, path=None, version=None
+    other, check_collision=True, overwrite=False, fillna=None, path=None, version=None
 ):
     folder = _get_folder(version, path)
     meta = pd.read_csv(folder / "meta_data.csv", index_col=0)
@@ -49,15 +49,19 @@ def join_node_meta(
     elif isinstance(other, pd.Series):
         cols = [other.name]
 
-    if check_collision:
+    if overwrite:
+        for col in cols:
+            if col in meta.columns:
+                meta = meta.drop(columns=col)
+    elif check_collision:
         for col in cols:
             if col in meta.columns:
                 raise ValueError("Name collision when saving to meta_data.csv")
 
-    if overwrite:
-        meta = meta.drop(columns=cols)
-
     meta = meta.join(other, on=None, how="left", sort=False)
+    if fillna is not None:
+        value = dict(zip(cols, len(cols) * [fillna]))
+        meta.fillna(value=value, inplace=True)
     meta.to_csv(folder / "meta_data.csv")
 
 

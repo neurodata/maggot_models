@@ -18,10 +18,7 @@ Many of these scripts depend on previous ones.
     - Used to predict neuron pairings for the unpaired neurons
     - Plots the results of the matching
     - Writes outputs as columns in the node metadata
-- [ ] `pair_metrics`?
-    - Calculates how similar pairs are in terms of 
-        - Cosine/jaccard distance on the adjacencies 
-- [ ] `nblast`
+- [x] `nblast`
     - Runs NBLAST (currently only within hemispheres)
     - Saves outputs as csv similarity/score matrices
 - [x] `embed`
@@ -35,6 +32,7 @@ Many of these scripts depend on previous ones.
     - Saves output linkage for a chosen clustering
     - TODO: save some flat labels also?
     - Requirements: `embed`
+- [ ] `evaluate_blockmodel`
 - [ ] `cluster_metrics`
     - Calculates various properties of the clustering
     - Generates plots

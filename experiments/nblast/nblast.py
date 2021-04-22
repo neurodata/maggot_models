@@ -68,7 +68,7 @@ def pairwise_nblast(neuron_ids, point_thresh=20):
     # NOTE: I've had too modify original code to allow smat=None
     # NOTE: this only works when normalized=False also
     scores = nblast_allbyall(
-        tree_neurons, normalized=False, progress=True, use_alpha=False
+        tree_neurons, normalized=False, progress=True, use_alpha=False, smat=None
     )
     print(f"{time.time() - currtime:.3f} elapsed to run NBLAST.")
 

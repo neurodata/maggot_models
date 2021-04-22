@@ -1,6 +1,6 @@
 # %% [markdown]
 # ##
-
+import datetime
 import os
 import time
 from pathlib import Path
@@ -25,8 +25,7 @@ from src.visualization import (
 )
 from src.data import load_palette
 
-currtime = time.time()
-
+t0 = time.time()
 # For saving outputs
 FNAME = os.path.basename(__file__)[:-3]
 print(FNAME)
@@ -40,6 +39,8 @@ save_path = Path("maggot_models/experiments/plot_morphology/")
 
 CLASS_KEY = "merge_class"
 ORDER_KEY = "sum_signal_flow"
+# CLUSTER_KEY = "agglom_labels_t=2.5_n_components=64"
+CLUSTER_KEY = "gt_blockmodel_labels"
 ORDER_ASCENDING = False
 FORMAT = "png"
 
@@ -111,7 +112,7 @@ else:
 
 #%%
 
-CLUSTER_KEY = "agglom_labels_t=2.5_n_components=64"
+
 # sorting for the clusters
 median_cluster_order = meta.groupby(CLUSTER_KEY)[ORDER_KEY].apply(np.nanmedian)
 meta["cluster_order"] = meta[CLUSTER_KEY].map(median_cluster_order)
@@ -279,5 +280,10 @@ stashfig(
     format="png",
 )
 
-print(f"{time.time() - currtime:.3f} elapsed for whole script.")
 # %%
+elapsed = time.time() - t0
+delta = datetime.timedelta(seconds=elapsed)
+print("----")
+print(f"Script took {delta}")
+print(f"Completed at {datetime.datetime.now()}")
+print("----")

@@ -19,7 +19,7 @@ from graspologic.utils import (
     remove_loops,
     to_laplacian,
 )
-from src.data import DATA_PATH, DATA_VERSION, load_maggot_graph
+from src.data import DATA_PATH, DATA_VERSION, load_maggot_graph, join_node_meta
 from src.io import savefig
 from src.visualization import CLASS_COLOR_DICT as palette
 from src.visualization import add_connections, adjplot, set_theme
@@ -38,10 +38,28 @@ def stashfig(name, **kws):
 
 #%%
 mg = load_maggot_graph()
-mg = mg[mg.nodes["paper_clustered_neurons"] | mg.nodes["accessory_neurons"]]
-mg = mg[mg.nodes["hemisphere"].isin(["L", "R"])]
+mg = mg[mg.nodes["has_predicted_matching"]]
+
+# mg = mg[mg.nodes["paper_clustered_neurons"] | mg.nodes["accessory_neurons"]]
+# mg = mg[mg.nodes["hemisphere"].isin(["L", "R"])]
+# og_nodelist = mg.nodes.index
+# og_nodes = mg.nodes.copy()
+# mg.to_largest_connected_component(verbose=True)
+# new_nodelist = mg.nodes.index
+# diff = np.setdiff1d(og_nodelist, new_nodelist)
+# og_nodes.loc[diff, ["accessory_neurons", "paper_clustered_neurons", 'merge_class']]
+
+
+#%%
 nodes = mg.nodes
 
+from giskard.utils import get_paired_inds
+
+lp_inds, rp_inds = get_paired_inds(
+    nodes, pair_key="predicted_pair", pair_id_key="predicted_pair_id"
+)
+
+#%%
 nodes["_inds"] = range(len(nodes))
 left_nodes = nodes[nodes["hemisphere"] == "L"].copy()
 left_paired_nodes = left_nodes[left_nodes["predicted_pair_id"] != -1]
@@ -491,6 +509,13 @@ stage1_embedding_df.to_csv(out_path / "stage1_embedding.csv")
 stage2_embedding = pd.DataFrame(index=reindexed_nodes.index, data=stage2_embedding)
 stage2_embedding.sort_index(inplace=True)
 stage2_embedding.to_csv(out_path / "stage2_embedding.csv")
+
+has_embedding = pd.Series(
+    data=np.ones(len(reindexed_nodes.index), dtype=bool),
+    index=reindexed_nodes.index,
+    name="has_embedding",
+)
+join_node_meta(has_embedding, overwrite=True, fillna=False)
 
 # #%%
 # plot_pairs(

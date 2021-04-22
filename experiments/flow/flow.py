@@ -21,22 +21,22 @@ adj = mg.adj
 print("Running signal flow...")
 sf = signal_flow(adj)
 sf = pd.Series(index=index, data=sf, name="sum_signal_flow")
-join_node_meta(sf)
+join_node_meta(sf, overwrite=True)
 
 #%% run rank signal flow
 print("Running ranked signal flow...")
 rank_sf = rank_signal_flow(adj)
 rank_sf = pd.Series(index=index, data=rank_sf, name="sum_rank_signal_flow")
-join_node_meta(rank_sf)
+join_node_meta(rank_sf, overwrite=True)
 
 #%% run graph match flow
-print("Running ranked graph match flow...")
-# TODO increase number of inits here
-# TODO use GOAT
-# TODO this is slow AF, should do the numba or scipy version
-rank_gm_flow = rank_graph_match_flow(adj, n_init=1, max_iter=20, eps=1e-2)
-rank_gm_flow = pd.Series(index=index, data=rank_gm_flow, name="sum_rank_gm_flow")
-join_node_meta(rank_gm_flow)
+# print("Running ranked graph match flow...")
+# # TODO increase number of inits here
+# # TODO use GOAT
+# # TODO this is slow AF, should do the numba or scipy version
+# rank_gm_flow = rank_graph_match_flow(adj, n_init=1, max_iter=20, eps=1e-2)
+# rank_gm_flow = pd.Series(index=index, data=rank_gm_flow, name="sum_rank_gm_flow")
+# join_node_meta(rank_gm_flow)
 
 #%%
 elapsed = time.time() - t0

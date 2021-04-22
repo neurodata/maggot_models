@@ -5,13 +5,13 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
-from tqdm import tqdm
-
 from graspologic.match import GraphMatch
 from src.data import join_node_meta, load_maggot_graph
 from src.io import savefig
 from src.visualization import adjplot, set_theme
+from tqdm import tqdm
 
 t0 = time.time()
 
@@ -35,6 +35,7 @@ def stashfig(name, **kws):
 mg = load_maggot_graph()
 mg = mg[mg.nodes["paper_clustered_neurons"] | mg.nodes["accessory_neurons"]]
 mg = mg[mg.nodes["hemisphere"].isin(["L", "R"])]
+mg.to_largest_connected_component(verbose=True)
 
 # from giskard.utils import get_paired_inds
 
@@ -51,7 +52,7 @@ right_nodes = nodes[nodes["hemisphere"] == "R"].copy()
 right_paired_nodes = right_nodes[right_nodes["pair_id"] > -1]
 right_unpaired_nodes = right_nodes[right_nodes["pair_id"] <= -1]
 
-# HACK this only works because all the duplicate nodes are on the right
+assert (right_paired_nodes["pair"].isin(left_paired_nodes.index)).all()
 lp_inds = left_paired_nodes.loc[right_paired_nodes["pair"]]["_inds"]
 rp_inds = right_paired_nodes["_inds"]
 n_pairs = len(rp_inds)
@@ -210,7 +211,18 @@ nodes.loc[left_idx, "predicted_pair_id"] = pair_ids
 nodes.loc[right_idx_perm, "predicted_pair_id"] = pair_ids
 
 #%%
-join_node_meta(nodes[["predicted_pair", "predicted_pair_id"]])
+join_node_meta(
+    nodes[["predicted_pair", "predicted_pair_id"]],
+    check_collision=False,
+    overwrite=True,
+)
+predicted_nodes = nodes[nodes["predicted_pair_id"] != -1]
+has_predicted_matching = pd.Series(
+    data=np.ones(len(predicted_nodes.index), dtype=bool),
+    index=predicted_nodes.index,
+    name="has_predicted_matching",
+)
+join_node_meta(has_predicted_matching, overwrite=True, fillna=False)
 
 #%%
 elapsed = time.time() - t0
