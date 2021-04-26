@@ -3,6 +3,7 @@
 # import pandas as pd
 import json
 from pathlib import Path
+import pickle
 
 import networkx as nx
 import numpy as np
@@ -31,7 +32,7 @@ def _get_folder(path, version):
 
 
 def load_node_meta(path=None, version=None):
-    folder = _get_folder(version, path)
+    folder = _get_folder(path, version)
     meta = pd.read_csv(folder / "meta_data.csv", index_col=0)
     meta.sort_index(inplace=True)
     return meta
@@ -40,7 +41,7 @@ def load_node_meta(path=None, version=None):
 def join_node_meta(
     other, check_collision=True, overwrite=False, fillna=None, path=None, version=None
 ):
-    folder = _get_folder(version, path)
+    folder = _get_folder(path, version)
     meta = pd.read_csv(folder / "meta_data.csv", index_col=0)
     meta.sort_index(inplace=True)
 
@@ -65,8 +66,15 @@ def join_node_meta(
     meta.to_csv(folder / "meta_data.csv")
 
 
+def load_navis_neurons(ids=None, path=None, version=None):
+    folder = _get_folder(path, version)
+    with open(folder / "neurons.pickle", "rb") as f:
+        neuron_list = pickle.load(f)
+    return neuron_list
+
+
 def load_edgelist(graph_type="G", path=None, version=None):
-    folder = _get_folder(version, path)
+    folder = _get_folder(path, version)
     edgelist = pd.read_csv(
         folder / f"{graph_type}_edgelist.txt",
         delimiter=" ",

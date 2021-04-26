@@ -50,8 +50,8 @@ embedding = embedding_df.values
 # ward, MAYBE average, single
 # cosine or euclidean
 # tried a bunch of others, didn't like most
-linkages = ["ward", "single", "complete", "average"]
-metrics = ["cosine", "euclidean"]
+linkages = []  # ["single", "complete", "average"]
+metrics = []  # ["cosine"]
 for metric in metrics:
     for linkage in linkages:
         if linkage == "ward" and metric != "euclidean":
@@ -90,12 +90,6 @@ for idx, self_row in nodes.iterrows():
 
             if is_incomplete:
                 incomplete_mat[self_ind, pair_ind] = 1
-
-method = "ward"
-metric = "cosine"
-criterion = "distance"
-threshold = 2
-n_components = 48
 
 
 def plot_dissimilarity_clustering(
@@ -145,10 +139,13 @@ def plot_dissimilarity_clustering(
 set_theme()
 
 #%%
-sweep = False
+method = "average"
+metric = "cosine"
+criterion = "distance"
+sweep = True
 if sweep:
-    n_components_range = [32, 48, 64]
-    thresholds = [1, 1.5, 2, 2.5]
+    n_components_range = [64]  # [32, 48, 64]
+    thresholds = [0.6, 0.625, 0.65, 0.7, 0.75]  # [1, 1.5, 2, 2.5]
     for n_components in n_components_range:
         for threshold in thresholds:
             plot_dissimilarity_clustering(
@@ -165,7 +162,7 @@ if sweep:
             stashfig(name)
 #%% choose a final set
 n_components = 64
-threshold = 2.5
+threshold = 0.625
 basename = (
     f"-metric={metric}-linkage={method}-t={threshold}-n_components={n_components}"
 )
@@ -179,7 +176,7 @@ linkage_df.to_csv(out_path / "linkage.csv")
 linkage_index = pd.Series(nodes.index, name="skeleton_id")
 linkage_index.to_csv(out_path / "linkage_index.csv")
 
-for t in [2, 2.25, 2.5, 2.75, 3]:
+for t in [0.6, 0.625, 0.65, 0.7, 0.75]:  # [2, 2.25, 2.5, 2.75, 3]:
     flat_labels = fcluster(Z, t, criterion=criterion)
     name = "agglom_labels_"
     name += f"t={t}_n_components={n_components}"

@@ -188,7 +188,7 @@ def plot_3view(
 
 
 def simple_plot_neurons(
-    neuron_ids,
+    neurons,
     azim=-90,
     elev=-90,
     dist=5,
@@ -201,14 +201,18 @@ def simple_plot_neurons(
     autoscale=False,
     axes_equal=True,
 ):
-    neuron_ids = [int(n) for n in neuron_ids]
-    neurons = []
-    for n in neuron_ids:
-        try:
-            neuron = pymaid.get_neuron(n)
-            neurons.append(neuron)
-        except:
-            print(f"Error when retreiving neuron skeleton {n}")
+    if isinstance(neurons, (list, np.ndarray, pd.Series, pd.Index)):
+        neuron_ids = [int(n.id) for n in neurons]
+        neurons = []
+        for n in neuron_ids:
+            try:
+                neuron = pymaid.get_neuron(n)
+                neurons.append(neuron)
+            except:
+                print(f"Error when retreiving neuron skeleton {n}")
+    elif isinstance(neurons, navis.NeuronList):
+        neuron_ids = neurons.id
+        neuron_ids = [int(n) for n in neuron_ids]
 
     # neurons = [pymaid.get_neuron(n) for n in neuron_ids]
     volumes = [pymaid.get_volume(v) for v in volume_names]

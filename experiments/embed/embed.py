@@ -140,7 +140,8 @@ def project_graph(U, V, R, scaled=True):
     # where
     # X = UZS^{1/2}
     # Y = VWS^{1/2}
-    Z, S, W = selectSVD(R, n_components=len(R), algorithm="full")
+    Z, S, Wt = selectSVD(R, n_components=len(R), algorithm="full")
+    W = Wt.T
     S_sqrt = np.diag(np.sqrt(S))
     X = U @ Z
     Y = V @ W
@@ -161,8 +162,10 @@ def prescale_for_embed(adjs):
 def decompose_scores(scores, scaled=True, align=True):
     R1 = scores[0]
     R2 = scores[1]
-    Z1, S1, W1 = selectSVD(R1, n_components=len(R1), algorithm="full")
-    Z2, S2, W2 = selectSVD(R2, n_components=len(R2), algorithm="full")
+    Z1, S1, W1t = selectSVD(R1, n_components=len(R1), algorithm="full")
+    W1 = W1t.T
+    Z2, S2, W2t = selectSVD(R2, n_components=len(R2), algorithm="full")
+    W2 = W2t.T
     if scaled:
         S1_sqrt = np.diag(np.sqrt(S1))
         S2_sqrt = np.diag(np.sqrt(S2))

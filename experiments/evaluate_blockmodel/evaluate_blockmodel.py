@@ -39,6 +39,8 @@ agglom_keys = [
     "agglom_labels_t=3_n_components=64",
 ]
 CLUSTER_KEYS += agglom_keys
+gaussian_keys = []
+CLUSTER_KEYS += gaussian_keys
 
 push = 2
 red_shades = sns.color_palette("Reds", n_colors=len(gt_keys) + push)[push:][::-1]
@@ -128,6 +130,7 @@ def calculate_blockmodel_likelihood(
             )
         )
     return pd.DataFrame(rows)
+
 
 mg = load_maggot_graph()
 mg = mg[mg.nodes["has_embedding"]]

@@ -57,8 +57,7 @@ from sklearn.mixture import GaussianMixture
 # parameters
 n_levels = 10  # max # of splits in the recursive clustering
 metric = "bic"  # metric on which to decide best split
-n_components = 16
-
+n_components = 8
 X = embedding[:, :n_components]
 
 flat_labels = nodes["agglom_labels_t=3_n_components=64"].astype(int)
@@ -78,51 +77,25 @@ gm = GaussianMixture(
 )
 pred_labels = gm.fit_predict(X)
 
-nodes["pred_labels"] = pred_labels
-group_order = (
-    nodes.groupby("pred_labels")["sum_signal_flow"]
-    .apply(np.median)
-    .sort_values(ascending=False)
-    .index
-)
-fig, ax = plt.subplots(1, 1, figsize=(16, 8))
-crosstabplot(
-    nodes[nodes["hemisphere"] == "L"],
-    group="pred_labels",
-    group_order=group_order,
-    hue="merge_class",
-    hue_order="sum_signal_flow",
-    palette=palette,
-    outline=True,
-    shift=-0.2,
-    thickness=0.25,
-    ax=ax,
-)
-crosstabplot(
-    nodes[nodes["hemisphere"] == "R"],
-    group="pred_labels",
-    group_order=group_order,
-    hue="merge_class",
-    hue_order="sum_signal_flow",
-    palette=palette,
-    outline=True,
-    shift=0.2,
-    thickness=0.25,
-    ax=ax,
-)
-ax.set(xticks=[], xlabel="Cluster")
 stashfig("crosstabplot_gmm_o_agglom")
 
 
 #%%
-
 currtime = time.time()
 n_components = 8
-X = embedding[:, :n_components]
-dc = DivisiveCluster(
-    cluster_kws=dict(n_init=10, affinity="cosine"), min_split=32, max_level=8
-)
-hier_labels = dc.fit_predict(X, fcluster=True)
+min_split = 32
+n_components_range = [8, 10, 12]
+min_split_range = [16, 32]
+for n_components in n_components_range:
+    for min_split in min_split_range:
+        X = embedding[:, :n_components]
+        dc = DivisiveCluster(
+            cluster_kws=dict(n_init=10), min_split=min_split, max_level=10
+        )
+        hier_labels = dc.fit_predict(X, fcluster=True)
+        name = f"dc_labels_n_components={n_components}_min_split={min_split}"
+        label_series = pd.DataFrame(data=hier_labels, index=nodes.index, name=name)
+        join_node_meta(label_series, overwrite=True)
 print(f"{time.time() - currtime:.3f} seconds elapsed.")
 
 #%%

@@ -39,8 +39,8 @@ save_path = Path("maggot_models/experiments/plot_morphology/")
 
 CLASS_KEY = "merge_class"
 ORDER_KEY = "sum_signal_flow"
-# CLUSTER_KEY = "agglom_labels_t=2.5_n_components=64"
-CLUSTER_KEY = "gt_blockmodel_labels"
+CLUSTER_KEY = "agglom_labels_t=0.625_n_components=64"
+# CLUSTER_KEY = "gt_blockmodel_labels"
 ORDER_ASCENDING = False
 FORMAT = "png"
 
@@ -147,8 +147,8 @@ uni_clusters = uni_clusters[~np.isnan(uni_clusters)]
 n_per_cluster = np.inf
 show_discrim = False
 
-fig = plt.figure(figsize=(11 * 2, 8.5 * 2))
-n_cols = 11
+fig = plt.figure(figsize=(12 * 2, 8.5 * 2))
+n_cols = 12
 plot_mode = "3d"
 volume_names = ["PS_Neuropil_manual"]
 
@@ -178,6 +178,12 @@ def get_neuron_ids(meta, level_key, cluster, n_per_cluster=np.inf):
     return plot_neuron_ids
 
 
+from src.data import load_navis_neurons
+from navis import NeuronList
+
+neurons = load_navis_neurons()
+
+#%%
 x_lims_by_ax = []
 z_lims_by_ax = []
 for i, cluster in enumerate(uni_clusters[:]):
@@ -185,14 +191,15 @@ for i, cluster in enumerate(uni_clusters[:]):
     plot_neuron_ids = get_neuron_ids(
         meta, CLUSTER_KEY, cluster, n_per_cluster=n_per_cluster
     )
-    inds = np.unravel_index(i, shape=(n_rows, n_cols))
+    plot_neuron_list = neurons.idx[plot_neuron_ids]
 
+    inds = np.unravel_index(i, shape=(n_rows, n_cols))
     ax = fig.add_subplot(gs[inds], projection=projection)
     axs[inds] = ax
     axs_flat.append(ax)
 
     simple_plot_neurons(
-        plot_neuron_ids,
+        plot_neuron_list,
         palette=skeleton_color_dict,
         ax=ax,
         azim=-90,

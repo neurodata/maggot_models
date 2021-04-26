@@ -33,11 +33,15 @@ meta = meta[meta["paper_clustered_neurons"]]
 
 
 #%% define some functions
+from navis import NeuronList
 
 
-def pairwise_nblast(neuron_ids, point_thresh=20):
-    neuron_ids = [int(n) for n in neuron_ids]
-    neurons = pymaid.get_neuron(neuron_ids)  # load in with pymaid
+def pairwise_nblast(neurons, point_thresh=20):
+    if isinstance(neurons, (list, np.ndarray, pd.Series, pd.Index)):
+        neuron_ids = [int(n) for n in neurons]
+        neurons = pymaid.get_neuron(neuron_ids)  # load in with pymaid
+    elif isinstance(neurons, NeuronList):
+        neuron_ids = [int(n) for n in neurons.id]
 
     # HACK: I am guessing there is a better way to do the below?
     # TODO: I was also getting some errors about neurons with more that one soma, so I
@@ -68,7 +72,12 @@ def pairwise_nblast(neuron_ids, point_thresh=20):
     # NOTE: I've had too modify original code to allow smat=None
     # NOTE: this only works when normalized=False also
     scores = nblast_allbyall(
-        tree_neurons, normalized=False, progress=True, use_alpha=False, smat=None
+        tree_neurons,
+        normalized=False,
+        progress=True,
+        use_alpha=False,
+        smat=None,
+        n_cores=1,
     )
     print(f"{time.time() - currtime:.3f} elapsed to run NBLAST.")
 
@@ -110,11 +119,17 @@ def postprocess_nblast(scores):
 
 
 #%% run nblast
-for side in ["left", "right"]:
+
+from src.data import load_navis_neurons
+
+neurons = load_navis_neurons()
+
+#%%
+for side in ["left"]:
     print(f"Processing side: {side}")
     side_meta = meta[meta[side]]
-
-    scores = pairwise_nblast(side_meta.index.values)
+    side_neurons = neurons.idx[side_meta.index]
+    scores = pairwise_nblast(side_neurons)
     scores.to_csv(out_dir / f"{side}-nblast-scores.csv")
 
     similarity = postprocess_nblast(scores)

@@ -16,4 +16,5 @@ from .get_data import (
     DATA_DIR,
     DATA_PATH,
     join_node_meta,
+    load_navis_neurons
 )
