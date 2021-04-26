@@ -60,7 +60,7 @@ metric = "bic"  # metric on which to decide best split
 n_components = 8
 X = embedding[:, :n_components]
 
-flat_labels = nodes["agglom_labels_t=3_n_components=64"].astype(int)
+flat_labels = nodes["agglom_labels_t=0.65_n_components=64"].astype(int)
 covariance_type = "full"
 reg_covar = 1e-06
 onehot = _labels_to_onehot(flat_labels)
@@ -90,7 +90,7 @@ for n_components in n_components_range:
     for min_split in min_split_range:
         X = embedding[:, :n_components]
         dc = DivisiveCluster(
-            cluster_kws=dict(n_init=10), min_split=min_split, max_level=10
+            cluster_kws=dict(n_init=1), min_split=min_split, max_level=10
         )
         hier_labels = dc.fit_predict(X, fcluster=True)
         name = f"dc_labels_n_components={n_components}_min_split={min_split}"

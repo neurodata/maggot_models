@@ -8,7 +8,6 @@ def preprocess_nblast(
     nblast_scores, symmetrize_mode="geom", transform="ptr", return_untransformed=False
 ):
     distance = nblast_scores  # the raw nblast scores are dissimilarities/distances
-    print(distance)
     indices = np.triu_indices_from(distance, k=1)
 
     if symmetrize_mode == "geom":
@@ -17,15 +16,12 @@ def preprocess_nblast(
         stack_dist = np.concatenate(
             (fwd_dist.reshape(-1, 1), back_dist.reshape(-1, 1)), axis=1
         )
-        print(stack_dist)
         geom_mean = gmean(stack_dist, axis=1)
-        print(geom_mean)
         sym_distance = np.zeros_like(distance)
         sym_distance[indices] = geom_mean
         sym_distance[indices[::-1]] = geom_mean
     else:  # simple average
         sym_distance = symmetrize(distance)
-    print(sym_distance)
     # make the distances between 0 and 1
     sym_distance /= sym_distance.max()
     sym_distance -= sym_distance.min()
@@ -40,7 +36,6 @@ def preprocess_nblast(
         transformed_morph[indices] = transformed_vals
         transformed_morph[indices[::-1]] = transformed_vals
     elif transform == "ptr":
-        print(morph_sim)
         transformed_morph = pass_to_ranks(morph_sim)
         np.fill_diagonal(
             transformed_morph, 1

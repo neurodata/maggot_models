@@ -31,12 +31,19 @@ def stashfig(name, **kws):
 CLUSTER_KEYS = []
 gt_keys = ["gt_blockmodel_labels"]
 CLUSTER_KEYS += gt_keys
+# agglom_keys = [
+#     "agglom_labels_t=2_n_components=64",
+#     "agglom_labels_t=2.25_n_components=64",
+#     "agglom_labels_t=2.5_n_components=64",
+#     "agglom_labels_t=2.75_n_components=64",
+#     "agglom_labels_t=3_n_components=64",
+# ]
 agglom_keys = [
-    "agglom_labels_t=2_n_components=64",
-    "agglom_labels_t=2.25_n_components=64",
-    "agglom_labels_t=2.5_n_components=64",
-    "agglom_labels_t=2.75_n_components=64",
-    "agglom_labels_t=3_n_components=64",
+    "agglom_labels_t=0.6_n_components=64",
+    "agglom_labels_t=0.625_n_components=64",
+    "agglom_labels_t=0.65_n_components=64",
+    "agglom_labels_t=0.7_n_components=64",
+    "agglom_labels_t=0.75_n_components=64",
 ]
 CLUSTER_KEYS += agglom_keys
 gaussian_keys = []

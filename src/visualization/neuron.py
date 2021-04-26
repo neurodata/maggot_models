@@ -200,6 +200,8 @@ def simple_plot_neurons(
     ax=None,
     autoscale=False,
     axes_equal=True,
+    force_bounds=True,
+    axis_off=True,
 ):
     if isinstance(neurons, (list, np.ndarray, pd.Series, pd.Index)):
         neuron_ids = [int(n.id) for n in neurons]
@@ -236,5 +238,9 @@ def simple_plot_neurons(
         ax.dist = dist
         if axes_equal:
             set_axes_equal(ax, use_y=use_y, use_x=use_x, use_z=use_z)
-    ax.axis("off")
+    if axis_off:
+        ax.axis("off")
+    if force_bounds:
+        ax.set_xlim3d((-4500, 110000))
+        ax.set_ylim3d((-4500, 110000))
     return ax

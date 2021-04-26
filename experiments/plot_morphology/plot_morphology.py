@@ -37,7 +37,7 @@ np.random.seed(8888)
 
 save_path = Path("maggot_models/experiments/plot_morphology/")
 
-CLASS_KEY = "merge_class"
+CLASS_KEY = "simple_group"
 ORDER_KEY = "sum_signal_flow"
 CLUSTER_KEY = "agglom_labels_t=0.625_n_components=64"
 # CLUSTER_KEY = "gt_blockmodel_labels"
@@ -69,29 +69,29 @@ else:
 
 #%% new
 # load nblast scores/similarities
-# from src.nblast import preprocess_nblast
+from src.nblast import preprocess_nblast
 
-# data_dir = Path("maggot_models/experiments/nblast/outs")
+data_dir = Path("maggot_models/experiments/nblast/outs")
 
-# symmetrize_mode = "geom"
-# transform = "ptr"
-# nblast_type = "scores"
+symmetrize_mode = "geom"
+transform = "ptr"
+nblast_type = "scores"
 
-# side = "left"
-# nblast_sim = pd.read_csv(data_dir / f"{side}-nblast-{nblast_type}.csv", index_col=0)
-# nblast_sim.columns = nblast_sim.columns.values.astype(int)
-# print(f"{len(nblast_sim)} neurons in NBLAST data on {side}")
-# # get neurons that are in both
-# left_intersect_index = np.intersect1d(meta.index, nblast_sim.index)
-# print(f"{len(left_intersect_index)} neurons in intersection on {side}")
-# # reindex appropriately
-# nblast_sim = nblast_sim.reindex(
-#     index=left_intersect_index, columns=left_intersect_index
-# )
-# sim = preprocess_nblast(
-#     nblast_sim.values, symmetrize_mode=symmetrize_mode, transform=transform
-# )
-# left_sim = pd.DataFrame(data=sim, index=nblast_sim.index, columns=nblast_sim.index)
+side = "left"
+nblast_sim = pd.read_csv(data_dir / f"{side}-nblast-{nblast_type}.csv", index_col=0)
+nblast_sim.columns = nblast_sim.columns.values.astype(int)
+print(f"{len(nblast_sim)} neurons in NBLAST data on {side}")
+# get neurons that are in both
+left_intersect_index = np.intersect1d(meta.index, nblast_sim.index)
+print(f"{len(left_intersect_index)} neurons in intersection on {side}")
+# reindex appropriately
+nblast_sim = nblast_sim.reindex(
+    index=left_intersect_index, columns=left_intersect_index
+)
+sim = preprocess_nblast(
+    nblast_sim.values, symmetrize_mode=symmetrize_mode, transform=transform
+)
+left_sim = pd.DataFrame(data=sim, index=nblast_sim.index, columns=nblast_sim.index)
 
 # side = "right"
 # nblast_sim = pd.read_csv(data_dir / f"{side}-nblast-{nblast_type}.csv", index_col=0)
@@ -111,8 +111,6 @@ else:
 
 
 #%%
-
-
 # sorting for the clusters
 median_cluster_order = meta.groupby(CLUSTER_KEY)[ORDER_KEY].apply(np.nanmedian)
 meta["cluster_order"] = meta[CLUSTER_KEY].map(median_cluster_order)
@@ -122,10 +120,23 @@ uni_clusters = uni_clusters[~np.isnan(uni_clusters)]
 #%% new
 
 # from giskard.stats import calc_discriminability_statistic
+mean_cluster_sim = {}
 
-# left_meta = meta.loc[left_intersect_index]
-# left_clustering = left_meta[level_key].values
-# left_sim = left_sim.reindex(index=left_meta.index, columns=left_meta.index)
+left_meta = meta.loc[left_intersect_index]
+left_clustering = left_meta[CLUSTER_KEY]
+left_sim = left_sim.reindex(index=left_meta.index, columns=left_meta.index)
+
+for label in uni_clusters:
+    cluster_ids = left_meta[left_meta[CLUSTER_KEY] == label].index
+    within_sim = left_sim.loc[cluster_ids, cluster_ids].values
+    triu_inds = np.triu_indices_from(within_sim, k=1)
+    upper = within_sim[triu_inds]
+    mean_within_sim = np.mean(upper)
+    mean_cluster_sim[label] = mean_within_sim
+
+    # lower = within_sim[triu_inds[::-1]]
+
+
 # left_total_discrim, left_cluster_discrim = calc_discriminability_statistic(
 #     1 - left_sim.values, left_clustering
 # )
@@ -137,7 +148,7 @@ uni_clusters = uni_clusters[~np.isnan(uni_clusters)]
 #     1 - right_sim.values, right_clustering
 # )
 
-# mean_cluster_discrim = {}
+
 # for cluster_label in uni_clusters:
 #     mean_cluster_discrim[cluster_label] = (
 #         left_cluster_discrim[cluster_label] + right_cluster_discrim[cluster_label]
@@ -145,7 +156,7 @@ uni_clusters = uni_clusters[~np.isnan(uni_clusters)]
 
 #%%
 n_per_cluster = np.inf
-show_discrim = False
+show_metric = True
 
 fig = plt.figure(figsize=(12 * 2, 8.5 * 2))
 n_cols = 12
@@ -159,9 +170,7 @@ n_rows = int(np.ceil(len(uni_clusters) / n_cols))
 gs = plt.GridSpec(n_rows, n_cols, figure=fig, wspace=0, hspace=0)
 axs = np.empty((n_rows, n_cols), dtype=object)
 axs_flat = []
-skeleton_color_dict = dict(
-    zip(meta.index, np.vectorize(palette.get)(meta["merge_class"]))
-)
+skeleton_color_dict = dict(zip(meta.index, np.vectorize(palette.get)(meta[CLASS_KEY])))
 volumes = [pymaid.get_volume(v) for v in volume_names]
 projection = None
 if plot_mode == "3d":
@@ -214,11 +223,11 @@ for i, cluster in enumerate(uni_clusters[:]):
     x_lims_by_ax.append(ax.get_xlim3d())
     z_lims_by_ax.append(ax.get_zlim3d())
 
-    if show_discrim:
+    if show_metric:
         ax.text2D(
             0.07,
             0.03,
-            f"{mean_cluster_discrim[cluster]:.02f}",
+            f"{mean_cluster_sim[cluster]:.02f}",
             ha="left",
             va="bottom",
             color="black",
@@ -283,7 +292,7 @@ for i, cluster in enumerate(uni_clusters[:]):
 
 # plt.tight_layout()
 stashfig(
-    f"all-morpho-plot-clustering={CLUSTER_KEY}-discrim={show_discrim}-wide",
+    f"all-morpho-plot-clustering={CLUSTER_KEY}-discrim={show_metric}-wide",
     format="png",
 )
 

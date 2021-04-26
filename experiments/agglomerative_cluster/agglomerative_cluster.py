@@ -39,7 +39,7 @@ embedding_df = pd.read_csv(embedding_loc, index_col=0)
 embedding_df = embedding_df.groupby(embedding_df.index).mean()
 mg = load_maggot_graph()
 nodes = mg.nodes.copy()
-mg = mg[mg.nodes["has_embedding"]]
+mg = mg[mg.nodes["has_embedding"] & mg.nodes["paper_clustered_neurons"]]
 nodes = nodes[nodes.index.isin(embedding_df.index)]
 embedding_df = embedding_df[embedding_df.index.isin(nodes.index)]
 nodes = nodes.reindex(embedding_df.index)
