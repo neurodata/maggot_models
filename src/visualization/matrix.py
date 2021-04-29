@@ -367,6 +367,9 @@ def _check_boolean_inputs(*args):
     pass
 
 
+from giskard.plot import plot_squarelines
+
+
 def matrixplot(
     data,
     ax=None,
@@ -391,6 +394,7 @@ def matrixplot(
     row_tick_pad=None,
     row_dendrogram=None,
     col_dendrogram=None,
+    blocklines=None,
     border=True,
     minor_ticking=False,
     tick_rot=0,
@@ -534,6 +538,9 @@ def matrixplot(
         ax_pad = 0
     ax.set_ylim(data.shape[0] + ax_pad, 0 - ax_pad)
     ax.set_xlim(0 - ax_pad, data.shape[1] + ax_pad)
+
+    if blocklines is not None:
+        plot_squarelines(row_meta[blocklines].values, ax=ax)
 
     # this will let us make axes for the colors and ticks as necessary
     divider = make_axes_locatable(ax)
@@ -719,6 +726,7 @@ def adjplot(
     col_tick_pad=None,
     row_tick_pad=None,
     dendrogram=None,
+    blocklines=None,
     **kws,
 ):
     outs = matrixplot(
@@ -748,6 +756,7 @@ def adjplot(
         cmap=cmap,
         sizes=sizes,
         square=square,
+        blocklines=blocklines,
         title=title,
         gridline_kws=gridline_kws,
         spinestyle_kws=spinestyle_kws,

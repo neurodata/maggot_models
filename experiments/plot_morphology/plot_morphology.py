@@ -39,8 +39,10 @@ save_path = Path("maggot_models/experiments/plot_morphology/")
 
 CLASS_KEY = "simple_group"
 ORDER_KEY = "sum_signal_flow"
-CLUSTER_KEY = "agglom_labels_t=0.625_n_components=64"
+# CLUSTER_KEY = "agglom_labels_t=0.625_n_components=64"
 # CLUSTER_KEY = "gt_blockmodel_labels"
+n_clusters = 80
+CLUSTER_KEY = f"cluster_agglom_K={n_clusters}"
 ORDER_ASCENDING = False
 FORMAT = "png"
 

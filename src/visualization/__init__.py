@@ -50,6 +50,7 @@ from .dendrogram import (
     plot_color_labels,
 )
 from .settings import set_theme
+from .scatter import plot_pairs
 
 try:
     from .neuron import plot_neurons, plot_3view, plot_volumes, simple_plot_neurons

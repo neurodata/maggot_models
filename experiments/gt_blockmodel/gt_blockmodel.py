@@ -157,26 +157,26 @@ nodes = nodes.reindex(gt_node_names)
 
 
 #%%
-lp_inds, rp_inds = get_paired_inds(nodes)
-state = minimize_blockmodel_dl(g, deg_corr=True)
-state_entropy = state.entropy()
-print(state_entropy)
-currtime = time.time()
-dS, nattempts, nmoves = state.multiflip_mcmc_sweep(niter=1000)
-print(f"{time.time() - currtime:.3f} seconds elapsed.")
-print(dS)
+# lp_inds, rp_inds = get_paired_inds(nodes)
+# state = minimize_blockmodel_dl(g, deg_corr=True)
+# state_entropy = state.entropy()
+# print(state_entropy)
+# currtime = time.time()
+# dS, nattempts, nmoves = state.multiflip_mcmc_sweep(niter=1000)
+# print(f"{time.time() - currtime:.3f} seconds elapsed.")
+# print(dS)
 
 #%%
-labels = get_block_labels(state)
-nodes["cluster_labels"] = labels
-symmetrize_labels(nodes, "cluster_labels")
-cluster_crosstabplot(nodes)
+# labels = get_block_labels(state)
+# nodes["cluster_labels"] = labels
+# symmetrize_labels(nodes, "cluster_labels")
+# cluster_crosstabplot(nodes)
 
 #%%
-n_unique_by_pair = nodes.groupby("pair_id")["cluster_labels"].nunique()
-n_unique_by_pair = n_unique_by_pair[n_unique_by_pair.index != -1]
-p_same_cluster = (n_unique_by_pair == 1).mean()
-print(p_same_cluster)
+# n_unique_by_pair = nodes.groupby("pair_id")["cluster_labels"].nunique()
+# n_unique_by_pair = n_unique_by_pair[n_unique_by_pair.index != -1]
+# p_same_cluster = (n_unique_by_pair == 1).mean()
+# print(p_same_cluster)
 
 #%%
 # print(dir(g.vertex_properties))
@@ -184,26 +184,26 @@ print(p_same_cluster)
 # did not like results of discrete-binomial as much as unweighted
 # discrete poisson was similar
 # discrete geometric maybe the best of the weighted ones
-colors = g.new_vertex_property("string")
-colors.set_2d_array(nodes["merge_class"].map(palette.get).values.astype(str))
+# colors = g.new_vertex_property("string")
+# colors.set_2d_array(nodes["merge_class"].map(palette.get).values.astype(str))
 
-state = minimize_nested_blockmodel_dl(g, deg_corr=True, verbose=True)
-draw_hierarchy(state, vertex_fill_color=colors, output="maggot_nested_mdl.pdf")
+# state = minimize_nested_blockmodel_dl(g, deg_corr=True, verbose=True)
+# draw_hierarchy(state, vertex_fill_color=colors, output="maggot_nested_mdl.pdf")
 
 
 #%%
 
-vprop_int = g.new_vertex_property("int")
-vprop_int.get_array()[:] = nodes["agglom_labels_t=3_n_components=64"].values.astype(int)
-state = BlockState(g, b=vprop_int)
-currtime = time.time()
-out = mcmc_anneal(
-    state, beta_range=(1, 10), niter=1000, mcmc_equilibrate_args=dict(force_niter=10)
-)
-print(out)
-print(f"{time.time() - currtime:.3f} seconds elapsed.")
-labels = get_block_labels(state)
-labels.name = "mcmc_anneal_from_agglom_labels_t=2.5_n_components=64"
+# vprop_int = g.new_vertex_property("int")
+# vprop_int.get_array()[:] = nodes["agglom_labels_t=3_n_components=64"].values.astype(int)
+# state = BlockState(g, b=vprop_int)
+# currtime = time.time()
+# out = mcmc_anneal(
+#     state, beta_range=(1, 10), niter=1000, mcmc_equilibrate_args=dict(force_niter=10)
+# )
+# print(out)
+# print(f"{time.time() - currtime:.3f} seconds elapsed.")
+# labels = get_block_labels(state)
+# labels.name = "mcmc_anneal_from_agglom_labels_t=2.5_n_components=64"
 #%%
 
 currtime = time.time()
@@ -216,17 +216,17 @@ print(f"{time.time() - currtime:.3f} seconds elapsed to run minimize_blockmodel.
 
 
 #%%
-nodes["cluster_labels"] = labels
+# nodes["cluster_labels"] = labels
 
 
-symmetrize_labels(nodes, "cluster_labels")
+symmetrize_labels(nodes, "gt_blockmodel_labels")
 
-# labels.name = "gt_blockmodel_labels"
-# join_node_meta(labels, overwrite=True)
+labels.name = "gt_blockmodel_labels"
+join_node_meta(labels, overwrite=True)
 
 
 #%%
-
+nodes["cluster_labels"] = nodes["gt_blockmodel_labels"]
 group_order = (
     nodes.groupby("cluster_labels")["sum_signal_flow"]
     .apply(np.median)
@@ -260,7 +260,16 @@ crosstabplot(
 )
 ax.set(xticks=[], xlabel="Cluster")
 stashfig("crosstabplot_gt_blockmodel")
-
+#%%
+for B in [40, 50]:  # 60, 70, 80]:
+    t = time.time()
+    state = BlockState(g, B=B)
+    state.multiflip_mcmc_sweep(niter=1000, verbose=True)
+    print(state.get_B())
+    print(state.get_nonempty_B())
+    print(state.get_Be())
+    print(time.time() - t)
+    print()
 
 #%%
 elapsed = time.time() - t0

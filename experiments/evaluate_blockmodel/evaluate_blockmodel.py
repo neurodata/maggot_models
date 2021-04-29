@@ -38,25 +38,51 @@ CLUSTER_KEYS += gt_keys
 #     "agglom_labels_t=2.75_n_components=64",
 #     "agglom_labels_t=3_n_components=64",
 # ]
+# agglom_keys = [
+#     "agglom_labels_t=0.6_n_components=64",
+#     "agglom_labels_t=0.625_n_components=64",
+#     "agglom_labels_t=0.65_n_components=64",
+#     "agglom_labels_t=0.7_n_components=64",
+#     "agglom_labels_t=0.75_n_components=64",
+# ]
 agglom_keys = [
-    "agglom_labels_t=0.6_n_components=64",
-    "agglom_labels_t=0.625_n_components=64",
-    "agglom_labels_t=0.65_n_components=64",
-    "agglom_labels_t=0.7_n_components=64",
-    "agglom_labels_t=0.75_n_components=64",
+    "agglom_labels_t=0.35_n_components=32",
+    "agglom_labels_t=0.4_n_components=32",
+    "agglom_labels_t=0.45_n_components=32",
+    "agglom_labels_t=0.5_n_components=32",
+    "agglom_labels_t=0.6_n_components=32",
+    "agglom_labels_t=0.7_n_components=32",
 ]
 CLUSTER_KEYS += agglom_keys
-gaussian_keys = []
+agglom_new_keys = [
+    "agglom_labels_t=0.25_n_components=16",
+    "agglom_labels_t=0.3_n_components=16",
+    "agglom_labels_t=0.35_n_components=16",
+    "agglom_labels_t=0.4_n_components=16",
+    "agglom_labels_t=0.45_n_components=16",
+    "agglom_labels_t=0.5_n_components=16",
+]
+CLUSTER_KEYS += agglom_new_keys
+gaussian_keys = [
+    "dc_level_4_n_components=10_min_split=32",
+    "dc_level_5_n_components=10_min_split=32",
+    "dc_level_6_n_components=10_min_split=32",
+    "dc_level_7_n_components=10_min_split=32",
+]
 CLUSTER_KEYS += gaussian_keys
 
 push = 2
 red_shades = sns.color_palette("Reds", n_colors=len(gt_keys) + push)[push:][::-1]
 blue_shades = sns.color_palette("Blues", n_colors=len(agglom_keys) + push)[push:][::-1]
-# green_shades = sns.color_palette("Greens", n_colors=len(alphas) + push)[push:]
+purple_shades = sns.color_palette("Purples", n_colors=len(agglom_new_keys) + push)[
+    push:
+][::-1]
+green_shades = sns.color_palette("Greens", n_colors=len(gaussian_keys) + push)[push:][
+    ::-1
+]
 
-shades = red_shades + blue_shades
+shades = red_shades + blue_shades + purple_shades + green_shades
 palette = dict(zip(CLUSTER_KEYS, shades))
-palette
 
 #%%
 
@@ -89,6 +115,7 @@ def calculate_blockmodel_likelihood(
                 model=name,
                 n_params=n_params,
                 norm_score=score / left_adj.sum(),
+                n_communities=len(uni_labels),
             )
         )
         score = poisson.logpmf(right_adj, train_left_p).sum()
@@ -101,6 +128,7 @@ def calculate_blockmodel_likelihood(
                 model=name,
                 n_params=n_params,
                 norm_score=score / right_adj.sum(),
+                n_communities=len(uni_labels),
             )
         )
 
@@ -122,6 +150,7 @@ def calculate_blockmodel_likelihood(
                 model=name,
                 n_params=n_params,
                 norm_score=score / left_adj.sum(),
+                n_communities=len(uni_labels),
             )
         )
         score = poisson.logpmf(right_adj, train_right_p).sum()
@@ -134,6 +163,7 @@ def calculate_blockmodel_likelihood(
                 model=name,
                 n_params=n_params,
                 norm_score=score / right_adj.sum(),
+                n_communities=len(uni_labels),
             )
         )
     return pd.DataFrame(rows)
@@ -153,11 +183,28 @@ for cluster_key in CLUSTER_KEYS:
 results = pd.concat(rows, ignore_index=True)
 
 # %%
-fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+fig, axs = plt.subplots(1, 2, figsize=(12, 6))
+
+ax = axs[0]
+select_results = results[results["model"] == "DCSBM"].copy()
+select_results = select_results.groupby(["cluster_method", "test"]).mean().reset_index()
+select_results = select_results[select_results["test"] == "Same"]
+sns.scatterplot(
+    data=select_results,
+    x="n_params",
+    y="norm_score",
+    hue="cluster_method",
+    hue_order=CLUSTER_KEYS,
+    ax=ax,
+    palette=palette,
+)
+ax.get_legend().remove()
+ax.set(ylabel="Likelihood (same hemisphere)", yticks=[], xlabel="# parameters")
+
+ax = axs[1]
 select_results = results[results["model"] == "DCSBM"].copy()
 select_results = select_results.groupby(["cluster_method", "test"]).mean().reset_index()
 select_results = select_results[select_results["test"] == "Opposite"]
-
 sns.scatterplot(
     data=select_results,
     x="n_params",
@@ -172,6 +219,7 @@ ax.set(ylabel="Likelihood (hemisphere swapped)", yticks=[], xlabel="# parameters
 stashfig("lik-by-n_params-blind")
 ax.legend(bbox_to_anchor=(1, 1), loc="upper left")
 stashfig("lik-by-n_params")
+
 
 #%%
 elapsed = time.time() - t0

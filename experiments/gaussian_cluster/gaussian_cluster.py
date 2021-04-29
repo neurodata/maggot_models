@@ -82,19 +82,20 @@ stashfig("crosstabplot_gmm_o_agglom")
 
 #%%
 currtime = time.time()
-n_components = 8
-min_split = 32
-n_components_range = [8, 10, 12]
-min_split_range = [16, 32]
+n_components_range = [10] # maybe try other n_components but seems fine
+min_split_range = [32] 
 for n_components in n_components_range:
     for min_split in min_split_range:
         X = embedding[:, :n_components]
         dc = DivisiveCluster(
-            cluster_kws=dict(n_init=1), min_split=min_split, max_level=10
+            cluster_kws=dict(n_init=25), min_split=min_split, max_level=8
         )
         hier_labels = dc.fit_predict(X, fcluster=True)
-        name = f"dc_labels_n_components={n_components}_min_split={min_split}"
-        label_series = pd.DataFrame(data=hier_labels, index=nodes.index, name=name)
+        cols = [
+            f"dc_level_{i}_n_components={n_components}_min_split={min_split}"
+            for i in range(hier_labels.shape[1])
+        ]
+        label_series = pd.DataFrame(data=hier_labels, index=nodes.index, columns=cols)
         join_node_meta(label_series, overwrite=True)
 print(f"{time.time() - currtime:.3f} seconds elapsed.")
 

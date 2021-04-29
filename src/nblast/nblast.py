@@ -41,7 +41,7 @@ def preprocess_nblast(
             transformed_morph, 1
         )  # should be exactly 1, isnt cause of ties
     elif transform == "log":
-        raise NotImplementedError()
+        transformed_morph = np.log(morph_sim) + 1
     else:
         transformed_morph = morph_sim
     if return_untransformed:

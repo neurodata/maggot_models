@@ -125,7 +125,7 @@ from src.data import load_navis_neurons
 neurons = load_navis_neurons()
 
 #%%
-for side in ["left"]:
+for side in ["right"]:
     print(f"Processing side: {side}")
     side_meta = meta[meta[side]]
     side_neurons = neurons.idx[side_meta.index]

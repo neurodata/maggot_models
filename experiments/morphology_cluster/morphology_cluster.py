@@ -39,7 +39,7 @@ save_path = Path("maggot_models/experiments/morphology_cluster/")
 
 CLASS_KEY = "simple_group"
 ORDER_KEY = "sum_signal_flow"
-CLUSTER_KEY = "agglom_labels_t=0.625_n_components=64"
+CLUSTER_KEY = "cluster_agglom_K=80"
 ORDER_ASCENDING = False
 FORMAT = "png"
 
@@ -163,7 +163,8 @@ left_meta = meta.loc[left_intersect_index]
 left_clustering = left_meta[CLUSTER_KEY]
 left_sim = left_sim.reindex(index=left_meta.index, columns=left_meta.index)
 
-for label in uni_clusters[20:30]:
+#%%
+for label in uni_clusters[50:80]:
     label = int(label)
     cluster_meta = left_meta[left_meta[CLUSTER_KEY] == label]
     # class_labels = cluster_meta[CLASS_KEY].values
@@ -190,7 +191,7 @@ from scipy.spatial.distance import squareform
 
 t = 0.1
 criterion = "distance"
-for label in uni_clusters[10:30]:
+for label in uni_clusters[50:70]:
     label = int(label)
     cluster_meta = left_meta[left_meta[CLUSTER_KEY] == label]
     cluster_ids = cluster_meta.index
@@ -213,6 +214,41 @@ for label in uni_clusters[10:30]:
         plot_neuron_list = neurons.idx[cluster_ids]
         plot_morphology_subclustering(plot_neuron_list, flat_labels)
         stashfig(f"agglom-morphology-subcluster={label}")
+
+#%%
+t = 0.1
+CLUSTER_KEY = "gt_blockmodel_labels"
+median_cluster_order = meta.groupby(CLUSTER_KEY)[ORDER_KEY].apply(np.nanmedian)
+meta["cluster_order"] = meta[CLUSTER_KEY].map(median_cluster_order)
+meta = meta.sort_values(["cluster_order", CLUSTER_KEY], ascending=ORDER_ASCENDING)
+uni_clusters = meta[CLUSTER_KEY].unique()  # preserves sorting from above
+uni_clusters = uni_clusters[~np.isnan(uni_clusters)]
+
+criterion = "distance"
+for label in uni_clusters[10:20]:
+    label = int(label)
+    cluster_meta = left_meta[left_meta[CLUSTER_KEY] == label]
+    cluster_ids = cluster_meta.index
+    within_sim = left_sim.loc[cluster_ids, cluster_ids].values
+    if len(within_sim) > 3:
+        dissimilarity_clustermap(
+            within_sim,
+            invert=True,
+            colors=cluster_meta[CLASS_KEY].values,
+            palette=palette,
+            method="average",
+            cut=True,
+            t=t,
+        )
+        stashfig(f"gt-morphology-dissimilarity-subcluster={label}")
+        cluster_dissimilarity = 1 - within_sim
+        method = "average"
+        Z = linkage(squareform(cluster_dissimilarity), method=method)
+        flat_labels = fcluster(Z, t, criterion=criterion)
+        plot_neuron_list = neurons.idx[cluster_ids]
+        plot_morphology_subclustering(plot_neuron_list, flat_labels)
+        stashfig(f"gt-agglom-morphology-subcluster={label}")
+
 
 #%%
 elapsed = time.time() - t0
