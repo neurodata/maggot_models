@@ -12,6 +12,7 @@ import seaborn as sns
 # from graspy.models import SBMEstimator
 # from graspy.simulations import p_from_latent, sample_edges, sbm
 # from graspy.utils import binarize
+from graspologic.utils import cartesian_product
 
 
 def hardy_weinberg(theta):
@@ -561,29 +562,29 @@ def _get_block_indices(y):
     return block_vert_inds, block_inds, block_inv
 
 
-# def _calculate_block_p(
-#     graph, block_inds, block_vert_inds, return_counts=False, use_weights=False
-# ):
-#     """
-#     graph : input n x n graph
-#     block_inds : list of length n_communities
-#     block_vert_inds : list of list, for each block index, gives every node in that block
-#     return_counts : whether to calculate counts rather than proportions
-#     """
+def _calculate_block_p(
+    graph, block_inds, block_vert_inds, return_counts=False, use_weights=False
+):
+    """
+    graph : input n x n graph
+    block_inds : list of length n_communities
+    block_vert_inds : list of list, for each block index, gives every node in that block
+    return_counts : whether to calculate counts rather than proportions
+    """
 
-#     n_blocks = len(block_inds)
-#     block_pairs = cartprod(block_inds, block_inds)
-#     block_p = np.zeros((n_blocks, n_blocks))
+    n_blocks = len(block_inds)
+    block_pairs = cartesian_product(block_inds, block_inds)
+    block_p = np.zeros((n_blocks, n_blocks))
 
-#     for p in block_pairs:
-#         from_block = p[0]
-#         to_block = p[1]
-#         from_inds = block_vert_inds[from_block]
-#         to_inds = block_vert_inds[to_block]
-#         block = graph[from_inds, :][:, to_inds]
-#         p = _calculate_p(block, use_weights=use_weights, return_counts=return_counts)
-#         block_p[from_block, to_block] = p
-#     return block_p
+    for p in block_pairs:
+        from_block = p[0]
+        to_block = p[1]
+        from_inds = block_vert_inds[from_block]
+        to_inds = block_vert_inds[to_block]
+        block = graph[from_inds, :][:, to_inds]
+        p = _calculate_p(block, use_weights=use_weights, return_counts=return_counts)
+        block_p[from_block, to_block] = p
+    return block_p
 
 
 def _calculate_p(block, use_weights=False, return_counts=False):
@@ -598,22 +599,22 @@ def _calculate_p(block, use_weights=False, return_counts=False):
     return p
 
 
-# def get_blockmodel_df(graph, labels, return_counts=False, use_weights=False):
-#     uni_labels, y = np.unique(labels, return_inverse=True)
+def get_blockmodel_df(graph, labels, return_counts=False, use_weights=False):
+    uni_labels, y = np.unique(labels, return_inverse=True)
 
-#     block_vert_inds, block_inds, block_inv = _get_block_indices(y)
+    block_vert_inds, block_inds, block_inv = _get_block_indices(y)
 
-#     block_p = _calculate_block_p(
-#         graph,
-#         block_inds,
-#         block_vert_inds,
-#         return_counts=return_counts,
-#         use_weights=use_weights,
-#     )
+    block_p = _calculate_block_p(
+        graph,
+        block_inds,
+        block_vert_inds,
+        return_counts=return_counts,
+        use_weights=use_weights,
+    )
 
-#     prob_df = pd.DataFrame(columns=uni_labels, index=uni_labels, data=block_p)
+    prob_df = pd.DataFrame(columns=uni_labels, index=uni_labels, data=block_p)
 
-#     return prob_df
+    return prob_df
 
 
 def invert_permutation(p):

@@ -82,13 +82,13 @@ stashfig("crosstabplot_gmm_o_agglom")
 
 #%%
 currtime = time.time()
-n_components_range = [10] # maybe try other n_components but seems fine
-min_split_range = [32] 
+n_components_range = [10]  # maybe try other n_components but seems fine
+min_split_range = [32]
 for n_components in n_components_range:
     for min_split in min_split_range:
         X = embedding[:, :n_components]
         dc = DivisiveCluster(
-            cluster_kws=dict(n_init=25), min_split=min_split, max_level=8
+            cluster_kws=dict(kmeans_n_init=25), min_split=min_split, max_level=8
         )
         hier_labels = dc.fit_predict(X, fcluster=True)
         cols = [

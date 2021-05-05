@@ -26,7 +26,7 @@ from .utils import (
     # export_skeleton_json,
     shuffle_edges,
     # get_sbm_prob,s
-    # get_blockmodel_df,
+    get_blockmodel_df,
     # invert_permutation,
     get_paired_inds,
 )

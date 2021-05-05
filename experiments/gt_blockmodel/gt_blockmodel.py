@@ -48,29 +48,20 @@ def run_minimize_blockmodel(g, n_init=1, use_weights=False, **kwargs):
     if use_weights:
         y = g.ep.weight.copy()
         y.a = np.log(y.a)
-        min_state = minimize_blockmodel_dl(
+        state = minimize_blockmodel_dl(
             g,
             deg_corr=True,
             state_args=dict(recs=[y], rec_types=["real-normal"]),
             **kwargs,
         )
     else:
-        min_entropy = np.inf
-        min_state = None
-        for i in range(n_init):
-            # NOTE this isn't doing what I'd have expected as the first block state is
-            # always the one that is kept
-            new_state = minimize_blockmodel_dl(g, deg_corr=True, **kwargs)
-            new_state_entropy = new_state.entropy()
-            if new_state_entropy < min_entropy:
-                min_state = new_state
-                min_entropy = new_state_entropy
+        state = minimize_blockmodel_dl(g, deg_corr=True, **kwargs)
 
-    block_series = get_block_labels(min_state)
-    return block_series
+    block_series = get_block_labels(state)
+    return block_series, state
 
 
-def get_block_labels(state):
+def get_block_labels(state, g):
     blocks = list(state.get_blocks())
     verts = g.get_vertices()
 
@@ -157,6 +148,60 @@ nodes = nodes.reindex(gt_node_names)
 
 
 #%%
+import pyintergraph
+from graph_tool.all import Graph
+
+gt_graph = Graph()
+g = mg.g
+nodelist = sorted(g.nodes)
+int_nodelist = list(range(len(nodelist)))
+node_to_index_map = dict(zip(nodelist, int_nodelist))
+gt_vertices = []
+for i in range(len(int_nodelist)):
+    gt_vertex = gt_graph.add_vertex()
+    gt_vertices.append(gt_vertex)
+edgelist = list(g.edges(data=True))
+
+skid_property = gt_graph.new_vertex_property("int")
+for i in range(len(int_nodelist)):
+    gt_vertex = gt_vertices[i]
+    skid_property[gt_vertex] = nodelist[i]
+gt_graph.vertex_properties["skid"] = skid_property
+
+id_to_gt_vertex = dict(zip(nodelist, gt_vertices))
+
+gt_edges = []
+for i, (source, target, data) in enumerate(edgelist):
+    source_vertex = id_to_gt_vertex[source]
+    target_vertex = id_to_gt_vertex[target]
+    gt_edge = gt_graph.add_edge(source_vertex, target_vertex)
+    gt_edges.append(gt_edge)
+
+edge_type_property = gt_graph.new_edge_property("string")
+for i, (source, target, data) in enumerate(edgelist):
+    gt_edge = gt_edges[i]
+    edge_type_property[gt_edge] = data["edge_type"]
+gt_graph.edge_properties["edge_type"] = edge_type_property
+
+#%%
+state = minimize_blockmodel_dl(
+    gt_graph, layers=True, state_args=dict(ec=gt_graph.ep.edge_type, layers=True)
+)
+#%%
+blocks = list(state.get_blocks())
+verts = gt_graph.get_vertices()
+block_map = {}
+for v, b in zip(verts, blocks):
+    skid = int(gt_graph.vertex_properties["skid"][v])
+    block_map[skid] = int(b)
+labels = pd.Series(block_map)
+nodes["gt_blockmodel_labels"] = labels
+symmetrize_labels(nodes, "gt_blockmodel_labels")
+
+#%%
+cluster_crosstabplot(nodes, key='gt_blockmodel_labels')
+
+#%%
 # lp_inds, rp_inds = get_paired_inds(nodes)
 # state = minimize_blockmodel_dl(g, deg_corr=True)
 # state_entropy = state.entropy()
@@ -173,10 +218,7 @@ nodes = nodes.reindex(gt_node_names)
 # cluster_crosstabplot(nodes)
 
 #%%
-# n_unique_by_pair = nodes.groupby("pair_id")["cluster_labels"].nunique()
-# n_unique_by_pair = n_unique_by_pair[n_unique_by_pair.index != -1]
-# p_same_cluster = (n_unique_by_pair == 1).mean()
-# print(p_same_cluster)
+
 
 #%%
 # print(dir(g.vertex_properties))
@@ -207,17 +249,29 @@ nodes = nodes.reindex(gt_node_names)
 #%%
 
 currtime = time.time()
-labels = run_minimize_blockmodel(
+labels, state = run_minimize_blockmodel(
     g,
     n_init=1,
 )
+S1 = state.entropy()
+
+# we will pad the hierarchy with another four empty levels, to
+# give it room to potentially increase
+
+state = state.copy()
+
+for i in range(1000):
+    ret = state.multiflip_mcmc_sweep(niter=10, beta=np.inf)
+
+S2 = state.entropy()
+
+print("Improvement:", S2 - S1)
 labels.name = "gt_blockmodel_labels"
 print(f"{time.time() - currtime:.3f} seconds elapsed to run minimize_blockmodel.")
 
-
+labels = get_block_labels(state)
 #%%
-# nodes["cluster_labels"] = labels
-
+nodes["gt_blockmodel_labels"] = labels
 
 symmetrize_labels(nodes, "gt_blockmodel_labels")
 
@@ -260,6 +314,14 @@ crosstabplot(
 )
 ax.set(xticks=[], xlabel="Cluster")
 stashfig("crosstabplot_gt_blockmodel")
+
+#%%
+n_unique_by_pair = nodes.groupby("pair_id")["cluster_labels"].nunique()
+n_unique_by_pair = n_unique_by_pair[n_unique_by_pair.index != -1]
+p_same_cluster = (n_unique_by_pair == 1).mean()
+print(p_same_cluster)
+
+
 #%%
 for B in [40, 50]:  # 60, 70, 80]:
     t = time.time()

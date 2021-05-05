@@ -22,7 +22,7 @@ set_theme()
 def stashfig(name, **kws):
     savefig(
         name,
-        pathname="./maggot_models/experiments/evaluate_blockmodel/figs",
+        pathname="./maggot_models/experiments/compare_blockmodel/figs",
         **kws,
     )
 
@@ -46,8 +46,6 @@ CLUSTER_KEYS += gt_keys
 #     "agglom_labels_t=0.75_n_components=64",
 # ]
 agglom_keys = [
-    "agglom_labels_t=0.35_n_components=32",
-    "agglom_labels_t=0.4_n_components=32",
     "agglom_labels_t=0.45_n_components=32",
     "agglom_labels_t=0.5_n_components=32",
     "agglom_labels_t=0.6_n_components=32",
@@ -55,14 +53,15 @@ agglom_keys = [
 ]
 CLUSTER_KEYS += agglom_keys
 agglom_new_keys = [
-    "agglom_labels_t=0.25_n_components=16",
-    "agglom_labels_t=0.3_n_components=16",
-    "agglom_labels_t=0.35_n_components=16",
-    "agglom_labels_t=0.4_n_components=16",
-    "agglom_labels_t=0.45_n_components=16",
-    "agglom_labels_t=0.5_n_components=16",
+    "cluster_agglom_K=50",
+    "cluster_agglom_K=60",
+    "cluster_agglom_K=70",
+    "cluster_agglom_K=80",
+    "cluster_agglom_K=90",
+    "cluster_agglom_K=100",
+    "cluster_agglom_K=110",
 ]
-CLUSTER_KEYS += agglom_new_keys
+CLUSTER_KEYS += agglom_new_keys[::-1]
 gaussian_keys = [
     "dc_level_4_n_components=10_min_split=32",
     "dc_level_5_n_components=10_min_split=32",
@@ -103,7 +102,7 @@ def calculate_blockmodel_likelihood(
         if pad_probabilities:
             train_left_p[train_left_p == 0] = 1 / train_left_p.size
 
-        n_params = estimator._n_parameters() + len(uni_labels)
+        n_params = estimator._n_parameters() + len(labels)
 
         score = poisson.logpmf(left_adj, train_left_p).sum()
         rows.append(
@@ -138,7 +137,7 @@ def calculate_blockmodel_likelihood(
         if pad_probabilities:
             train_right_p[train_right_p == 0] = 1 / train_right_p.size
 
-        n_params = estimator._n_parameters() + len(uni_labels)
+        n_params = estimator._n_parameters() + len(labels)
 
         score = poisson.logpmf(left_adj, train_right_p).sum()
         rows.append(
@@ -183,6 +182,19 @@ for cluster_key in CLUSTER_KEYS:
 results = pd.concat(rows, ignore_index=True)
 
 # %%
+
+
+def n_params2k(n_params):
+    k = n_params - len(adj)
+    k = np.sqrt(k)
+    return k
+
+
+def k2n_params(k):
+    n_params = k ** 2 + 2 * len(adj)
+    return n_params
+
+
 fig, axs = plt.subplots(1, 2, figsize=(12, 6))
 
 ax = axs[0]
@@ -201,6 +213,9 @@ sns.scatterplot(
 ax.get_legend().remove()
 ax.set(ylabel="Likelihood (same hemisphere)", yticks=[], xlabel="# parameters")
 
+sec_ax = ax.secondary_xaxis(-0.2, functions=(n_params2k, k2n_params))
+sec_ax.set_xlabel("# of communities")
+
 ax = axs[1]
 select_results = results[results["model"] == "DCSBM"].copy()
 select_results = select_results.groupby(["cluster_method", "test"]).mean().reset_index()
@@ -216,6 +231,10 @@ sns.scatterplot(
 )
 ax.get_legend().remove()
 ax.set(ylabel="Likelihood (hemisphere swapped)", yticks=[], xlabel="# parameters")
+
+
+sec_ax = ax.secondary_xaxis(-0.2, functions=(n_params2k, k2n_params))
+sec_ax.set_xlabel("# of communities")
 stashfig("lik-by-n_params-blind")
 ax.legend(bbox_to_anchor=(1, 1), loc="upper left")
 stashfig("lik-by-n_params")

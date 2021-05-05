@@ -64,37 +64,14 @@ start_instance()
 
 mg = load_maggot_graph()
 meta = mg.nodes
-meta = meta[meta["paper_clustered_neurons"]].copy()
+meta = meta[meta["paper_clustered_neurons"]]
+meta = meta[meta["hemisphere"] == "L"].copy()
 
 if CLASS_KEY == "merge_class":
     palette = CLASS_COLOR_DICT
 else:
     palette = load_palette()
 
-#%% new
-# load nblast scores/similarities
-
-data_dir = Path("maggot_models/experiments/nblast/outs")
-
-symmetrize_mode = "geom"
-transform = "ptr"
-nblast_type = "scores"
-
-side = "left"
-nblast_sim = pd.read_csv(data_dir / f"{side}-nblast-{nblast_type}.csv", index_col=0)
-nblast_sim.columns = nblast_sim.columns.values.astype(int)
-print(f"{len(nblast_sim)} neurons in NBLAST data on {side}")
-# get neurons that are in both
-left_intersect_index = np.intersect1d(meta.index, nblast_sim.index)
-print(f"{len(left_intersect_index)} neurons in intersection on {side}")
-# reindex appropriately
-nblast_sim = nblast_sim.reindex(
-    index=left_intersect_index, columns=left_intersect_index
-)
-sim = preprocess_nblast(
-    nblast_sim.values, symmetrize_mode=symmetrize_mode, transform=transform
-)
-left_sim = pd.DataFrame(data=sim, index=nblast_sim.index, columns=nblast_sim.index)
 
 #%%
 # sorting for the clusters
@@ -153,50 +130,8 @@ def plot_morphology_subclustering(neurons, labels, n_cols=4, scale=2.5):
 
 neurons = load_navis_neurons()
 
-left_meta = meta.loc[left_intersect_index].copy()
-left_clustering = left_meta[CLUSTER_KEY]
-left_sim = left_sim.reindex(index=left_meta.index, columns=left_meta.index)
+#%%
+sns.histplot(meta.groupby(CLUSTER_KEY)["morphology_subcluster"].nunique())
 
 #%%
-t = 0.1
-criterion = "distance"
-plot_neurons = True
-plot_clustermap = False
-for i, label in tqdm(enumerate(uni_clusters)):
-    label = int(label)
-    cluster_meta = left_meta[left_meta[CLUSTER_KEY] == label]
-    cluster_ids = cluster_meta.index
-    within_sim = left_sim.loc[cluster_ids, cluster_ids].values
-    if len(within_sim) > 1:
-        cluster_dissimilarity = 1 - within_sim
-        method = "average"
-        Z = linkage(squareform(cluster_dissimilarity), method=method)
-        flat_labels = fcluster(Z, t, criterion=criterion)
-        left_meta.loc[cluster_ids, "morphology_subcluster"] = flat_labels
-        if plot_clustermap:
-            dissimilarity_clustermap(
-                within_sim,
-                invert=True,
-                colors=cluster_meta[CLASS_KEY].values,
-                palette=palette,
-                method="average",
-                cut=True,
-                t=t,
-            )
-            stashfig(f"morphology-dissimilarity-subcluster={label}")
-        if plot_neurons:
-            plot_neuron_list = neurons.idx[cluster_ids]
-            plot_morphology_subclustering(plot_neuron_list, flat_labels)
-            stashfig(
-                f"agglom-morphologyt={t}-subcluster={label}-cluster_key={CLUSTER_KEY}"
-            )
 
-join_node_meta(left_meta[f"{CLUSTER_KEY}_morphology_subcluster"], overwrite=True)
-
-#%%
-elapsed = time.time() - t0
-delta = datetime.timedelta(seconds=elapsed)
-print("----")
-print(f"Script took {delta}")
-print(f"Completed at {datetime.datetime.now()}")
-print("----")

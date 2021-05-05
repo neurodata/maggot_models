@@ -942,7 +942,7 @@ def clustergram(
 
     # prob_df = get_sbm_prob(adj, pred_labels)
     # block_sum_df = get_block_edgesums(adj, pred_labels, prob_df.columns.values)
-# 
+    #
     # probplot(100 * prob_df, ax=ax[2], title="Connection percentage")
 
     probplot(block_sum_df, ax=ax[3], title="Average synapses")
@@ -1551,7 +1551,7 @@ def draw_networkx_nice(
     sizes=None,
     colors=None,
     nodelist=None,
-    cmap="Blues",
+    cmap="Greys",
     ax=None,
     x_boost=0,
     y_boost=0,
@@ -1562,6 +1562,7 @@ def draw_networkx_nice(
     size_scale=1,
     draw_labels=True,
     font_size=14,
+    draw_nodes=True,
 ):
     if nodelist is None:
         nodelist = g.nodes()
@@ -1598,11 +1599,12 @@ def draw_networkx_nice(
     if ax is None:
         fig, ax = plt.subplots(figsize=(10, 10), frameon=False)
 
-    node_collection = nx.draw_networkx_nodes(
-        g, pos, node_color=node_color, node_size=node_size, with_labels=False, ax=ax
-    )
     n_squared = len(nodelist) ** 2  # maximum z-order so far
-    node_collection.set_zorder(n_squared)
+    if draw_nodes:
+        node_collection = nx.draw_networkx_nodes(
+            g, pos, node_color=node_color, node_size=node_size, ax=ax
+        )
+        node_collection.set_zorder(n_squared)
 
     edgelist = list(g.edges(data=True))
     weights = []
@@ -1619,6 +1621,8 @@ def draw_networkx_nice(
         width=weight_scale * weights,
         connectionstyle="arc3,rad=0.2",
         arrows=True,
+        node_size=node_size,
+        # edge_color='black',
         # width=1.5,
         ax=ax,
     )

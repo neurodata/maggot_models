@@ -8,27 +8,33 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-
-from giskard.plot import merge_axes
+from giskard.plot import crosstabplot, dissimilarity_clustermap, merge_axes
+from giskard.utils import get_paired_inds
 from graspologic.align import OrthogonalProcrustes, SeedlessProcrustes
+from graspologic.cluster import AutoGMMCluster, DivisiveCluster
 from graspologic.embed import AdjacencySpectralEmbed, MultipleASE, selectSVD
 from graspologic.match import GraphMatch
+from graspologic.plot import pairplot
 from graspologic.utils import (
     augment_diagonal,
+    binarize,
+    is_fully_connected,
     pass_to_ranks,
     remove_loops,
+    symmetrize,
     to_laplacian,
 )
-from src.data import DATA_PATH, DATA_VERSION, load_maggot_graph, join_node_meta
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.metrics import pairwise_distances
+from sklearn.neighbors import kneighbors_graph
+from src.data import DATA_PATH, DATA_VERSION, join_node_meta, load_maggot_graph
 from src.io import savefig
-from src.visualization import CLASS_COLOR_DICT
-from src.visualization import add_connections, adjplot, set_theme
-from giskard.utils import get_paired_inds
+from src.visualization import CLASS_COLOR_DICT, add_connections, adjplot, set_theme
 
 set_theme()
 t0 = time.time()
 
-out_path = Path("./maggot_models/experiments/revamp_embed_agglom")
+out_path = Path("./maggot_models/experiments/revamp_embed")
 
 
 def stashfig(name, **kws):
@@ -46,15 +52,24 @@ mg = load_maggot_graph()
 mg = mg[mg.nodes["paper_clustered_neurons"] | mg.nodes["accessory_neurons"]]
 mg = mg[mg.nodes["hemisphere"].isin(["L", "R"])]
 mg.to_largest_connected_component(verbose=True)
+out_degrees = np.count_nonzero(mg.sum.adj, axis=0)
+in_degrees = np.count_nonzero(mg.sum.adj, axis=1)
+max_in_out_degree = np.maximum(out_degrees, in_degrees)
+# TODO ideally we would OOS these back in?
+keep_inds = np.arange(len(mg.nodes))[max_in_out_degree > 2]
+remove_ids = np.setdiff1d(mg.nodes.index, mg.nodes.index[keep_inds])
+print(f"Removed {len(remove_ids)} nodes when removing pendants.")
+mg.nodes = mg.nodes.iloc[keep_inds]
+mg.g.remove_nodes_from(remove_ids)
+mg.to_largest_connected_component(verbose=True)
 mg.nodes.sort_values("hemisphere", inplace=True)
 mg.nodes["_inds"] = range(len(mg.nodes))
 nodes = mg.nodes
 
 #%%
-from graspologic.utils import is_fully_connected
 
-adj = mg.sum.adj
-print(is_fully_connected(adj))
+raw_adj = mg.sum.adj.copy()
+
 left_inds = mg.nodes[mg.nodes["hemisphere"] == "L"]["_inds"]
 right_inds = mg.nodes[mg.nodes["hemisphere"] == "R"]["_inds"]
 
@@ -77,10 +92,10 @@ def preprocess_for_embed(adjs, method="ase"):
     [type]
         [description]
     """
-    if not isinstance(adjs, list):
+    if not isinstance(adjs, (list, tuple)):
         adjs = [adjs]
     adjs = [pass_to_ranks(a) for a in adjs]
-    adjs = [a + 1 / a.size for a in adjs]
+    # adjs = [a + 1 / a.size for a in adjs]
     if method == "ase":
         adjs = [augment_diagonal(a) for a in adjs]
     elif method == "lse":  # haven't really used much. a few params to look at here
@@ -96,6 +111,13 @@ def split_adj(adj):
     return ll_adj, rr_adj, lr_adj, rl_adj
 
 
+def prescale_for_embed(adjs):
+    norms = [np.linalg.norm(adj, ord="fro") for adj in adjs]
+    mean_norm = np.mean(norms)
+    adjs = [adjs[i] * mean_norm / norms[i] for i in range(len(adjs))]
+    return adjs
+
+
 def ase(adj, n_components=None):
     U, S, Vt = selectSVD(adj, n_components=n_components, algorithm="full")
     S_sqrt = np.diag(np.sqrt(S))
@@ -104,15 +126,42 @@ def ase(adj, n_components=None):
     return X, Y
 
 
-adj = preprocess_for_embed(adj)[0]
-ll_adj, rr_adj, lr_adj, rl_adj = split_adj(adj)
+# TODO could fight about the exact details of preprocessing here
+adj = preprocess_for_embed(raw_adj)[0]
+adjs = split_adj(adj)
+ll_adj, rr_adj, lr_adj, rl_adj = adjs
+ll_adj, rr_adj = prescale_for_embed([ll_adj, rr_adj])
+lr_adj, rl_adj = prescale_for_embed([lr_adj, rl_adj])
+
+# adjs = preprocess_for_embed(adjs)
+# for temp_adj in [ll_adj, rr_adj, lr_adj, rl_adj]:
+#     is_0_row = ~temp_adj.any(axis=0)
+#     is_0_col = ~temp_adj.any(axis=1)
+#     if np.any(is_0_row):
+#         print("0 row")
+#     if np.any(is_0_col):
+#         print("0 col")
+
+# print(dir(AutoGMMCluster()))
+
+# print("clustering")
+# dc = DivisiveCluster(min_split=16, max_level=2, cluster_kws=dict(kmeans_n_init=2))
+# hier_labels = dc.fit_predict(ll_adj, fcluster=True)
+# print(f"{time.time() - currtime:.3f} seconds elapsed.")
+
 
 #%%
-n_components = 32
+n_components = 32  # 24 looked fine
 X_ll, Y_ll = ase(ll_adj, n_components=n_components)
 X_rr, Y_rr = ase(rr_adj, n_components=n_components)
 X_lr, Y_lr = ase(lr_adj, n_components=n_components)
 X_rl, Y_rl = ase(rl_adj, n_components=n_components)
+
+#%%
+# mat = np.concatenate((X_ll, Y_ll, X_lr, Y_rl), axis=1)
+# is_0_row = ~mat.any(axis=1)
+# locs = left_inds[is_0_row]
+# print(mg.nodes.iloc[locs][["name", "merge_class", "hemisphere"]])
 
 #%%
 
@@ -203,11 +252,48 @@ composite_contra_Y = np.concatenate((Y_rl, Y_lr), axis=0)
 composite_latent = np.concatenate(
     (composite_ipsi_X, composite_ipsi_Y, composite_contra_X, composite_contra_Y), axis=1
 )
-mg.nodes.iloc[~composite_latent.any(axis=1)]
 
 #%%
-n_final_components = 20
+missing = mg.nodes.iloc[~composite_latent.any(axis=1)][
+    [
+        "pair_id",
+        "axon_output",
+        "axon_input",
+        "dendrite_input",
+        "dendrite_output",
+        "hemisphere",
+        "_inds",
+    ]
+]
+
+missing
+
+#%%
+n_final_components = 16
 joint_latent, _ = ase(composite_latent, n_components=n_final_components)
+
+from factor_analyzer import Rotator
+
+
+def varimax(X):
+    return Rotator(normalize=False).fit_transform(X)
+
+
+# joint_latent = varimax(joint_latent)
+
+joint_latent_df = pd.DataFrame(
+    index=mg.nodes.index,
+    data=joint_latent,
+    columns=[f"latent_{i}" for i in range(joint_latent.shape[1])],
+)
+join_node_meta(joint_latent_df, overwrite=True)
+
+has_embedding = pd.Series(
+    index=mg.nodes.index,
+    data=np.ones(len(mg.nodes), dtype=bool),
+    name="has_embedding",
+)
+join_node_meta(has_embedding, overwrite=True, fillna=False)
 
 #%%
 plot_pairs(
@@ -216,12 +302,9 @@ plot_pairs(
     left_pair_inds=left_paired_inds,
     right_pair_inds=right_paired_inds,
     palette=palette,
-    n_show=6,
+    n_show=10,
 )
-
-#%%
-~joint_latent.any(axis=1)
-
+stashfig("joint-latent")
 #%%
 
 X = joint_latent
@@ -232,12 +315,6 @@ left_unpaired_X = X[left_unpaired_inds]
 right_unpaired_X = X[right_unpaired_inds]
 joint_latent_symmetrized = np.concatenate(
     (mean_X, left_unpaired_X, right_unpaired_X), axis=0
-)
-
-plot_pairs(
-    joint_latent_symmetrized,
-    np.ones(len(joint_latent_symmetrized)),
-    n_show=6,
 )
 
 #%%
@@ -295,97 +372,132 @@ for i in range(len(right_unpaired_nodes)):
 
 condensed_nodes = pd.DataFrame(new_rows)
 
-#%%
-condensed_nodes.iloc[~joint_latent_symmetrized.any(axis=1)]
 
 #%%
-from graspologic.plot import pairplot
 
-# pg = pairplot(
-#     joint_latent_symmetrized[:, :4],
-#
-#     palette=palette,
-# )
-# pg._legend.remove()
-plot_pairs(
-    joint_latent_symmetrized, labels=condensed_nodes[CLASS_KEY].values, palette=palette
-)
-
-#%%
-from sklearn.cluster import AgglomerativeClustering
-from giskard.plot import crosstabplot
-
-
-def cluster_crosstabplot(
-    nodes,
-    group="cluster_labels",
-    order="sum_signal_flow",
-    hue="merge_class",
-    palette=None,
-):
-    group_order = (
-        nodes.groupby(group)[order].agg(np.median).sort_values(ascending=False).index
-    )
-
-    fig, ax = plt.subplots(1, 1, figsize=(16, 8))
-    crosstabplot(
-        nodes,
-        group=group,
-        group_order=group_order,
-        hue=hue,
-        hue_order=order,
-        palette=palette,
-        outline=True,
-        thickness=0.5,
-        ax=ax,
-    )
-    ax.set(xticks=[], xlabel="Cluster")
-    return fig, ax
-
-
-def uncondense_series(condensed_nodes, nodes, key):
-    for idx, row in condensed_nodes.iterrows():
-        skids = row["skeleton_ids"]
-        for skid in skids:
-            nodes.loc[skid, key] = row[key]
-
-
-for n_clusters in [40, 50, 60, 70, 80, 90, 100, 110, 120]:
-    agg = AgglomerativeClustering(
-        n_clusters=n_clusters, affinity="cosine", linkage="average"
-    )
-    pred_labels = agg.fit_predict(joint_latent_symmetrized)
-    key = f"cluster_agglom_K={n_clusters}"
-    condensed_nodes[key] = pred_labels
-    uncondense_series(condensed_nodes, nodes, key)
-    join_node_meta(nodes[key], overwrite=True)
-    fig, ax = cluster_crosstabplot(
-        condensed_nodes,
-        group=key,
-        palette=palette,
-        hue=CLASS_KEY,
-        order="sum_signal_flow",
-    )
-    ax.set_title(f"# clusters = {n_clusters}")
-
-#%%
-n_clusters = 80
 plot_pairs(
     joint_latent_symmetrized,
-    labels=condensed_nodes[f"cluster_agglom_K={n_clusters}"].values,
+    labels=condensed_nodes[CLASS_KEY].values,
+    palette=palette,
+    n_show=10,
 )
+stashfig("joint-latent-symmetrized")
+#%%
+latent_symmetrized_df = pd.DataFrame(
+    data=joint_latent_symmetrized,
+    index=condensed_nodes.index,
+    columns=[f"latent_{i}" for i in range(joint_latent_symmetrized.shape[1])],
+)
+condensed_nodes = pd.concat(
+    (condensed_nodes, latent_symmetrized_df), axis=1, ignore_index=False
+)
+condensed_nodes
+condensed_nodes.to_csv(out_path / "outs/condensed_nodes.csv")
+
 
 #%%
-from graspologic.utils import symmetrize
-from sklearn.metrics import pairwise_distances
-from giskard.plot import dissimilarity_clustermap
 
-metric = "cosine"
-linkage = "average"
-distances = symmetrize(pairwise_distances(joint_latent_symmetrized, metric=metric))
-dissimilarity_clustermap(
-    distances, colors=condensed_nodes["merge_class"], palette=palette, method=linkage
-)
+
+# def cluster_crosstabplot(
+#     nodes,
+#     group="cluster_labels",
+#     order="sum_signal_flow",
+#     hue="merge_class",
+#     palette=None,
+# ):
+#     group_order = (
+#         nodes.groupby(group)[order].agg(np.median).sort_values(ascending=False).index
+#     )
+
+#     fig, ax = plt.subplots(1, 1, figsize=(16, 8))
+#     crosstabplot(
+#         nodes,
+#         group=group,
+#         group_order=group_order,
+#         hue=hue,
+#         hue_order=order,
+#         palette=palette,
+#         outline=True,
+#         thickness=0.5,
+#         ax=ax,
+#     )
+#     ax.set(xticks=[], xlabel="Cluster")
+#     return fig, ax
+
+
+# def uncondense_series(condensed_nodes, nodes, key):
+#     for idx, row in condensed_nodes.iterrows():
+#         skids = row["skeleton_ids"]
+#         for skid in skids:
+#             nodes.loc[skid, key] = row[key]
+
+
+# # connectivity = kneighbors_graph(
+# #     joint_latent_symmetrized, n_neighbors=30, include_self=False, metric="euclidean"
+# # )
+# for n_clusters in [50, 60, 70, 80, 90, 100, 110]:
+#     agg = AgglomerativeClustering(
+#         n_clusters=n_clusters,
+#         affinity="cosine",
+#         linkage="average",
+#         # connectivity=connectivity,
+#     )
+#     pred_labels = agg.fit_predict(joint_latent_symmetrized)
+#     key = f"cluster_agglom_K={n_clusters}"
+#     condensed_nodes[key] = pred_labels
+#     uncondense_series(condensed_nodes, nodes, key)
+#     join_node_meta(nodes[key], overwrite=True)
+#     fig, ax = cluster_crosstabplot(
+#         condensed_nodes,
+#         group=key,
+#         palette=palette,
+#         hue=CLASS_KEY,
+#         order="sum_signal_flow",
+#     )
+#     ax.set_title(f"# clusters = {n_clusters}")
+
+# #%%
+# # n_clusters = 90
+# # plot_pairs(
+# #     joint_latent_symmetrized,
+# #     labels=condensed_nodes[f"cluster_agglom_K={n_clusters}"].values,
+# # )
+
+# #%%
+
+# metric = "cosine"
+# linkage = "average"
+# distances = symmetrize(pairwise_distances(joint_latent_symmetrized, metric=metric))
+# dissimilarity_clustermap(
+#     distances, colors=condensed_nodes["merge_class"], palette=palette, method=linkage
+# )
+
+# #%%
+# currtime = time.time()
+# dc = DivisiveCluster(
+#     min_split=16,
+#     max_level=8,
+#     cluster_kws=dict(kmeans_n_init=20, covariance_type=["full", "diag"]),
+# )
+
+# hier_labels = dc.fit_predict(joint_latent_symmetrized, fcluster=True)
+# print(f"{time.time() - currtime:.3f} seconds elapsed for divisive clustering.")
+
+# #%%
+# for i, pred_labels in enumerate(hier_labels.T):
+#     key = f"dc_labels_level={i}"
+#     condensed_nodes[key] = pred_labels
+#     uncondense_series(condensed_nodes, nodes, key)
+#     # join_node_meta(nodes[key], overwrite=True)
+#     fig, ax = cluster_crosstabplot(
+#         condensed_nodes,
+#         group=key,
+#         palette=palette,
+#         hue=CLASS_KEY,
+#         order="sum_signal_flow",
+#     )
+#     ax.set_title(f"# clusters = {len(np.unique(pred_labels))}")
+
 
 #%%
 # X_lr, Y_lr = joint_procrustes(
