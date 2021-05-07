@@ -111,6 +111,7 @@ from src.data import join_node_meta, load_maggot_graph
 from src.visualization import CLASS_COLOR_DICT, set_theme
 from src.io import savefig
 from sklearn.cluster import AgglomerativeClustering
+from sklearn.preprocessing import normalize
 
 
 def initialize_gmm(labels, X, cov_type, **kwargs):
@@ -129,8 +130,8 @@ def initialize_gmm(labels, X, cov_type, **kwargs):
 nodes["inds"] = range(len(nodes))
 n_components = 12
 latent_cols = [f"latent_{i}" for i in range(n_components)]
-X = nodes[latent_cols].values
-
+X = nodes[latent_cols].values.copy()
+X = normalize(X, axis=1, norm="l2")
 n_resamples = 25
 resample_prop = 0.9
 n_per_sample = int(np.ceil(resample_prop * len(nodes)))
@@ -139,11 +140,12 @@ datas = {}
 rows = []
 for i in range(n_resamples):
     choices = np.random.choice(len(nodes), size=n_per_sample, replace=False)
-    for n_clusters in np.arange(70, 80, 10):
+    for n_clusters in np.arange(85, 86, 10):
         print((i, n_clusters))
         fit_inds = nodes.iloc[choices]["inds"].values
+
         agg = AgglomerativeClustering(
-            n_clusters=n_clusters, affinity="cosine", linkage="average"
+            n_clusters=n_clusters, affinity="euclidean", linkage="ward"
         )
         sub_X = X[fit_inds]
         agg_pred_labels = agg.fit_predict(sub_X)
@@ -223,25 +225,56 @@ co_cluster_mat[np.arange(len(co_cluster_mat)), np.arange(len(co_cluster_mat))] =
 # )
 
 #%%
-# from scipy.cluster import linkage
+from scipy.cluster.hierarchy import linkage, fcluster
 from scipy.spatial.distance import squareform
 from giskard.plot import dissimilarity_clustermap
 
-# Z = linkage(squareform(co_cluster_mat), method="average")
 # sns.clustermap(co_cluster_mat, row)
-
+n_clusters = 85
 dissimilarity_clustermap(
     co_cluster_mat,
     colors=nodes["merge_class"].values,
     invert=True,
-    method="ward",
+    method="average",
     palette=CLASS_COLOR_DICT,
-    t=0.7,
+    criterion="maxclust",
+    t=n_clusters,
     cut=True,
+    # t=2,
+    # t=0.7,
 )
 stashfig("co-clustering-gmm-o-agglom")
 # TODO look at the adjacency matrix
+Z = linkage(squareform(1 - co_cluster_mat), method="average")
+pred_labels = fcluster(Z, n_clusters, criterion="maxclust")
+name = f"co_cluster_n_clusters={n_clusters}"
+nodes[name] = pred_labels
+join_node_meta(nodes[name], overwrite=True)
 
+#%%
+
+from anytree import NodeMixin
+
+
+class RecursiveBiSplitter(NodeMixin):
+    def __init__(self, matrix, ):
+        self.matrix = matrix
+
+
+
+#%%
+from graspologic.partition import leiden
+from src.visualization import adjplot
+
+partition = leiden(co_cluster_mat, resolution=5)
+keys = np.arange(len(co_cluster_mat))
+flat_labels = np.vectorize(partition.get)(keys)
+adjplot(
+    co_cluster_mat,
+    sort_class=flat_labels,
+    colors=nodes["merge_class"].values,
+    palette=palette,
+)
 
 #%%
 elapsed = time.time() - t0

@@ -3,7 +3,7 @@ from src.data import load_maggot_graph
 from pathlib import Path
 import pandas as pd
 import time
-from graspologic.cluster import DivisiveCluster
+from graspologic.cluster import DivisiveCluster, AutoGMMCluster
 from src.visualization import CLASS_COLOR_DICT
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,6 +13,12 @@ from src.visualization import set_theme
 from src.data import join_node_meta
 from src.io import savefig
 import ast
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.metrics import pairwise_distances
+from sklearn.preprocessing import normalize
+from scipy.cluster.hierarchy import linkage, fcluster
+from scipy.spatial.distance import squareform
+from graspologic.utils import symmetrize
 
 set_theme()
 
@@ -111,6 +117,64 @@ for i, pred_labels in enumerate(hier_labels.T):
     uncondense_series(condensed_nodes, nodes, key)
     join_node_meta(nodes[key], overwrite=True)
 
+#%%
+
+n_components = 14
+n_clusters = 85
+latent = condensed_nodes[[f"latent_{i}" for i in range(n_components)]].values.copy()
+latent = normalize(latent, norm="l2", axis=1)
+# agg = AgglomerativeClustering(
+#     n_clusters=n_clusters, affinity="cosine", linkage="average"
+# )
+# pred_labels = agg.fit_predict(latent)
+
+dists = symmetrize(pairwise_distances(latent, metric="euclidean"))
+Z = linkage(squareform(dists), method="ward")
+pred_labels = fcluster(Z, n_clusters, criterion="maxclust")
+
+key = f"agg_labels_n_clusters={n_clusters}"
+condensed_nodes[key] = pred_labels
+fig, ax = cluster_crosstabplot(
+    condensed_nodes,
+    group=key,
+    palette=palette,
+    hue=CLASS_KEY,
+    order="sum_signal_flow",
+)
+ax.set_title(f"# clusters = {len(np.unique(pred_labels))}")
+stashfig(f"agg-n_clusters={n_clusters}")
+uncondense_series(condensed_nodes, nodes, key)
+join_node_meta(nodes[key], overwrite=True)
+
+#%%
+agmm = AutoGMMCluster(
+    min_components=n_clusters,
+    max_components=n_clusters,
+    label_init=pred_labels,
+    n_jobs=-1,
+    covariance_type="full",
+)
+agmm_pred_labels = agmm.fit_predict(latent)
+
+#%%
+key = f"agmm_agg_n_clusters={n_clusters}"
+condensed_nodes[key] = agmm_pred_labels
+fig, ax = cluster_crosstabplot(
+    condensed_nodes,
+    group=key,
+    palette=palette,
+    hue=CLASS_KEY,
+    order="sum_signal_flow",
+)
+ax.set_title(f"# clusters = {len(np.unique(pred_labels))}")
+stashfig(key)
+uncondense_series(condensed_nodes, nodes, key)
+join_node_meta(nodes[key], overwrite=True)
+
+#%%
+from sklearn.metrics import adjusted_rand_score, rand_score
+
+adjusted_rand_score(agmm_pred_labels, pred_labels)
 
 #%%
 elapsed = time.time() - t0
