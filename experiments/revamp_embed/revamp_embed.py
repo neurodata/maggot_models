@@ -30,6 +30,8 @@ from sklearn.neighbors import kneighbors_graph
 from src.data import DATA_PATH, DATA_VERSION, join_node_meta, load_maggot_graph
 from src.io import savefig
 from src.visualization import CLASS_COLOR_DICT, add_connections, adjplot, set_theme
+from src.visualization import plot_pairs
+from factor_analyzer import Rotator
 
 set_theme()
 t0 = time.time()
@@ -73,7 +75,9 @@ raw_adj = mg.sum.adj.copy()
 left_inds = mg.nodes[mg.nodes["hemisphere"] == "L"]["_inds"]
 right_inds = mg.nodes[mg.nodes["hemisphere"] == "R"]["_inds"]
 
-left_paired_inds, right_paired_inds = get_paired_inds(mg.nodes)
+left_paired_inds, right_paired_inds = get_paired_inds(
+    mg.nodes, pair_key="predicted_pair", pair_id_key="predicted_pair_id"
+)
 right_paired_inds_shifted = right_paired_inds - len(left_inds)
 
 
@@ -133,35 +137,12 @@ ll_adj, rr_adj, lr_adj, rl_adj = adjs
 ll_adj, rr_adj = prescale_for_embed([ll_adj, rr_adj])
 lr_adj, rl_adj = prescale_for_embed([lr_adj, rl_adj])
 
-# adjs = preprocess_for_embed(adjs)
-# for temp_adj in [ll_adj, rr_adj, lr_adj, rl_adj]:
-#     is_0_row = ~temp_adj.any(axis=0)
-#     is_0_col = ~temp_adj.any(axis=1)
-#     if np.any(is_0_row):
-#         print("0 row")
-#     if np.any(is_0_col):
-#         print("0 col")
-
-# print(dir(AutoGMMCluster()))
-
-# print("clustering")
-# dc = DivisiveCluster(min_split=16, max_level=2, cluster_kws=dict(kmeans_n_init=2))
-# hier_labels = dc.fit_predict(ll_adj, fcluster=True)
-# print(f"{time.time() - currtime:.3f} seconds elapsed.")
-
-
 #%%
 n_components = 32  # 24 looked fine
 X_ll, Y_ll = ase(ll_adj, n_components=n_components)
 X_rr, Y_rr = ase(rr_adj, n_components=n_components)
 X_lr, Y_lr = ase(lr_adj, n_components=n_components)
 X_rl, Y_rl = ase(rl_adj, n_components=n_components)
-
-#%%
-# mat = np.concatenate((X_ll, Y_ll, X_lr, Y_rl), axis=1)
-# is_0_row = ~mat.any(axis=1)
-# locs = left_inds[is_0_row]
-# print(mg.nodes.iloc[locs][["name", "merge_class", "hemisphere"]])
 
 #%%
 
@@ -212,7 +193,6 @@ X_ll, Y_ll = joint_procrustes(
 )
 
 #%%
-from src.visualization import plot_pairs
 
 composite_ipsi_X = np.concatenate((X_ll, X_rr), axis=0)
 plot_pairs(
@@ -272,7 +252,6 @@ missing
 n_final_components = 16
 joint_latent, _ = ase(composite_latent, n_components=n_final_components)
 
-from factor_analyzer import Rotator
 
 
 def varimax(X):

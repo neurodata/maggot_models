@@ -40,35 +40,101 @@ mg.to_largest_connected_component(verbose=True)
 # from giskard.utils import get_paired_inds
 
 # left_inds, right_inds = get_paired_inds(mg.nodes)
-
-mg.nodes["_inds"] = range(len(mg.nodes))
-nodes = mg.nodes
-adj = mg.sum.adj
+#%%
+mg.nodes["inds"] = range(len(mg.nodes))
+nodes = mg.nodes.copy()
+adj = mg.sum.adj.copy()
 left_nodes = nodes[nodes["hemisphere"] == "L"].copy()
-left_paired_nodes = left_nodes[left_nodes["pair_id"] > -1]
-left_unpaired_nodes = left_nodes[left_nodes["pair_id"] <= -1]
+left_paired_nodes = left_nodes[left_nodes["pair_id"] > -1].copy()
+left_unpaired_nodes = left_nodes[left_nodes["pair_id"] <= -1].copy()
 # left_nodes.sort_values("pair_id", inplace=True, ascending=False)
 right_nodes = nodes[nodes["hemisphere"] == "R"].copy()
-right_paired_nodes = right_nodes[right_nodes["pair_id"] > -1]
-right_unpaired_nodes = right_nodes[right_nodes["pair_id"] <= -1]
+right_paired_nodes = right_nodes[right_nodes["pair_id"] > -1].copy()
+right_unpaired_nodes = right_nodes[right_nodes["pair_id"] <= -1].copy()
 
-assert (right_paired_nodes["pair"].isin(left_paired_nodes.index)).all()
-lp_inds = left_paired_nodes.loc[right_paired_nodes["pair"]]["_inds"]
-rp_inds = right_paired_nodes["_inds"]
-n_pairs = len(rp_inds)
-lup_inds = left_unpaired_nodes["_inds"]
-rup_inds = right_unpaired_nodes["_inds"]
-left_inds = np.concatenate((lp_inds, lup_inds))
-right_inds = np.concatenate((rp_inds, rup_inds))
-ll_adj = adj[np.ix_(left_inds, left_inds)]
-rr_adj = adj[np.ix_(right_inds, right_inds)]
+left_paired_nodes.sort_values("pair_id", inplace=True)
+right_paired_nodes.sort_values("pair_id", inplace=True)
+assert (right_paired_nodes["pair"] == left_paired_nodes.index).all()
+
+
+left_paired_inds = left_paired_nodes["inds"]
+right_paired_inds = right_paired_nodes["inds"]
+n_pairs = len(left_paired_inds)
 seeds = np.arange(n_pairs)
+# lup_inds = left_unpaired_nodes["inds"]
+# rup_inds = right_unpaired_nodes["inds"]
+# left_inds = np.concatenate((lp_inds, lup_inds))
+# right_inds = np.concatenate((rp_inds, rup_inds))
+# ll_adj = adj[np.ix_(left_inds, left_inds)]
+# rr_adj = adj[np.ix_(right_inds, right_inds)]
+# seeds = np.arange(n_pairs)
 
-print("Pairs all valid: ")
-print((nodes.iloc[lp_inds].index == nodes.iloc[rp_inds]["pair"]).all())
+# print("Pairs all valid: ")
+# print((nodes.iloc[lp_inds].index == nodes.iloc[rp_inds]["pair"]).all())
 
 #%%
-match_classes = ["sens-photoRh5", "sens-photoRh6", "sens-AN", "sens-MN"]
+
+left_idx = left_nodes.index
+right_idx = right_nodes.index
+nodes["predicted_pair"] = -1
+nodes["predicted_pair_id"] = -1
+nodes.loc[left_paired_inds.index, "predicted_pair"] = right_paired_inds.index
+nodes.loc[right_paired_inds.index, "predicted_pair"] = left_paired_inds.index
+
+max_iter = 30
+n_init = 2
+match_classes = [
+    "sens-AN",
+    "sens-MN",
+    "sens-photoRh5",
+    "sens-photoRh6",
+]
+
+for mc in match_classes[:]:
+    left_target_inds = left_nodes[left_nodes["merge_class"] == mc]["inds"]
+    print(f"Number of left targets: {len(left_target_inds)}")
+    right_target_inds = right_nodes[right_nodes["merge_class"] == mc]["inds"]
+    print(f"Number of right targets: {len(right_target_inds)}")
+    left_inds = np.concatenate((left_paired_inds, left_target_inds))
+    right_inds = np.concatenate((right_paired_inds, right_target_inds))
+    ll_adj = adj[np.ix_(left_inds, left_inds)]
+    rr_adj = adj[np.ix_(right_inds, right_inds)]
+    sizes = (len(ll_adj), len(rr_adj))
+    smaller = np.argmin(sizes)
+    print(smaller)
+    larger = np.setdiff1d((0, 1), (smaller))[0]
+    print(larger)
+    adjs = (ll_adj, rr_adj)
+    smaller_adj = adjs[smaller]
+    larger_adj = adjs[larger]
+    target_inds = (left_target_inds, right_target_inds)
+    smaller_target_inds = target_inds[smaller]
+    larger_target_inds = target_inds[larger]
+    gm = GraphMatch(
+        n_init=n_init,
+        init="barycenter",
+        eps=1e-2,
+        max_iter=max_iter,
+        shuffle_input=True,
+    )
+    gm.fit(smaller_adj, larger_adj, seeds_A=seeds, seeds_B=seeds)
+    nonseed_perm_inds = gm.perm_inds_[n_pairs : len(smaller_adj)] - n_pairs
+    smaller_target_idx = smaller_target_inds.index
+    larger_target_idx = larger_target_inds.index[nonseed_perm_inds]
+    nodes.loc[smaller_target_idx, "predicted_pair"] = larger_target_idx
+    nodes.loc[larger_target_idx, "predicted_pair"] = smaller_target_idx
+
+join_node_meta(
+    nodes["predicted_pair"],
+    check_collision=False,
+    overwrite=True,
+)
+
+new_prediction_nodes = nodes[(nodes["pair"] < 2) & (nodes["predicted_pair"] != -1)][
+    ["merge_class", "hemisphere", "predicted_pair"]
+].copy()
+new_prediction_nodes = new_prediction_nodes.sort_values(["merge_class", "hemisphere"])
+new_prediction_nodes.to_csv("new_prediction_nodes.csv")
 
 # %% [markdown]
 # ## Run graph matching
