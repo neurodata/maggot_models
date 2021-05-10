@@ -69,6 +69,11 @@ gaussian_keys = [
     "dc_level_7_n_components=10_min_split=32",
 ]
 CLUSTER_KEYS += gaussian_keys
+consensus_keys = [
+    "co_cluster_n_clusters=85",
+]
+CLUSTER_KEYS += consensus_keys
+
 
 push = 2
 red_shades = sns.color_palette("Reds", n_colors=len(gt_keys) + push)[push:][::-1]
@@ -79,8 +84,10 @@ purple_shades = sns.color_palette("Purples", n_colors=len(agglom_new_keys) + pus
 green_shades = sns.color_palette("Greens", n_colors=len(gaussian_keys) + push)[push:][
     ::-1
 ]
-
-shades = red_shades + blue_shades + purple_shades + green_shades
+grey_shades = sns.color_palette("Greys", n_colors=len(consensus_keys) + push)[push:][
+    ::-1
+]
+shades = red_shades + blue_shades + purple_shades + green_shades + grey_shades
 palette = dict(zip(CLUSTER_KEYS, shades))
 
 #%%

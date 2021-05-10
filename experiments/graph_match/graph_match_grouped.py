@@ -80,9 +80,12 @@ nodes["predicted_pair"] = -1
 nodes["predicted_pair_id"] = -1
 nodes.loc[left_paired_inds.index, "predicted_pair"] = right_paired_inds.index
 nodes.loc[right_paired_inds.index, "predicted_pair"] = left_paired_inds.index
+paired_nodes = nodes[nodes["pair_id"] > 1]
+nodes.loc[paired_nodes.index, "predicted_pair_id"] = paired_nodes["pair_id"]
+max_pair_id = nodes["predicted_pair_id"].max()
 
 max_iter = 30
-n_init = 2
+n_init = 100
 match_classes = [
     "sens-AN",
     "sens-MN",
@@ -101,9 +104,7 @@ for mc in match_classes[:]:
     rr_adj = adj[np.ix_(right_inds, right_inds)]
     sizes = (len(ll_adj), len(rr_adj))
     smaller = np.argmin(sizes)
-    print(smaller)
     larger = np.setdiff1d((0, 1), (smaller))[0]
-    print(larger)
     adjs = (ll_adj, rr_adj)
     smaller_adj = adjs[smaller]
     larger_adj = adjs[larger]
@@ -123,6 +124,19 @@ for mc in match_classes[:]:
     larger_target_idx = larger_target_inds.index[nonseed_perm_inds]
     nodes.loc[smaller_target_idx, "predicted_pair"] = larger_target_idx
     nodes.loc[larger_target_idx, "predicted_pair"] = smaller_target_idx
+    pair_ids = np.arange(max_pair_id + 1, max_pair_id + 1 + len(smaller_target_idx))
+    nodes.loc[smaller_target_idx, "predicted_pair_id"] = pair_ids
+    nodes.loc[larger_target_idx, "predicted_pair_id"] = pair_ids
+    max_pair_id = max(pair_ids)
+
+# check that everything worked
+paired_nodes = nodes[nodes["predicted_pair"] > 1].copy()
+paired_nodes.sort_values("predicted_pair_id", inplace=True)
+left_paired_nodes = paired_nodes[paired_nodes["left"]]
+right_paired_nodes = paired_nodes[paired_nodes["right"]]
+assert (left_paired_nodes["predicted_pair"] == right_paired_nodes.index).all()
+assert (right_paired_nodes["predicted_pair"] == left_paired_nodes.index).all()
+
 
 join_node_meta(
     nodes["predicted_pair"],
@@ -130,167 +144,18 @@ join_node_meta(
     overwrite=True,
 )
 
-new_prediction_nodes = nodes[(nodes["pair"] < 2) & (nodes["predicted_pair"] != -1)][
-    ["merge_class", "hemisphere", "predicted_pair"]
-].copy()
-new_prediction_nodes = new_prediction_nodes.sort_values(["merge_class", "hemisphere"])
-new_prediction_nodes.to_csv("new_prediction_nodes.csv")
-
-# %% [markdown]
-# ## Run graph matching
-print(f"Number of known and valid pairs: {n_pairs}")
-n_init_rand = 100
-n_init_bary = 100
-max_iter = 30
-np.random.seed(8888)
-currtime = time.time()
-gms = []
-scores = []
-for i in tqdm(range(n_init_rand)):
-    gm = GraphMatch(
-        n_init=1, init="rand", eps=1e-2, max_iter=max_iter, shuffle_input=True
-    )
-    gm.fit(ll_adj, rr_adj, seeds_A=seeds, seeds_B=seeds)
-    gms.append(gm)
-    scores.append(gm.score_)
-
-for i in tqdm(range(n_init_bary)):
-    gm = GraphMatch(
-        n_init=1, init="barycenter", eps=1e-2, max_iter=max_iter, shuffle_input=True
-    )
-    gm.fit(ll_adj, rr_adj, seeds_A=seeds, seeds_B=seeds)
-    gms.append(gm)
-    scores.append(gm.score_)
-print(f"{(time.time() - currtime)/60:0.2f} minutes elapsed for graph matching")
-
-# %% [markdown]
-# ## Plot performance and choose the best
-fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-sns.histplot(scores, ax=ax)
-max_ind = np.argmax(scores)
-gm = gms[max_ind]
-ax.axvline(np.max(scores), linewidth=1.5, color="black", linestyle="--")
-ax.set(xlabel="Graph match score")
-stashfig("gm-scores")
-
-# %% [markdown]
-# ## Plot the predicted matching
-fig, axs = plt.subplots(1, 2, figsize=(20, 10))
-perm_inds = gm.perm_inds_
-true_pairs = np.array(n_pairs * ["paired"] + (len(ll_adj) - n_pairs) * ["unpaired"])
-pal = sns.color_palette("deep", 3)
-color_dict = dict(zip(["unpaired", "paired"], pal[1:]))
-_, _, top, _ = adjplot(
-    ll_adj,
-    ax=axs[0],
-    plot_type="scattermap",
-    sizes=(1, 1),
-    colors=true_pairs,
-    palette=color_dict,
-    color=pal[0],
-    ticks=True,
-)
-top.set_title("Left")
-true_pairs = np.array(n_pairs * ["paired"] + (len(rr_adj) - n_pairs) * ["unpaired"])
-_, _, top, _ = adjplot(
-    rr_adj[np.ix_(perm_inds, perm_inds)],
-    ax=axs[1],
-    plot_type="scattermap",
-    sizes=(1, 1),
-    colors=true_pairs,
-    palette=color_dict,
-    color=pal[0],
-    ticks=True,
-)
-top.set_title("Right")
-plt.tight_layout()
-stashfig("gm-results-adj")
-
-#%%
-# || A^T P B P^T||_F
-valid_perm_inds = perm_inds[: len(ll_adj)]
-A = ll_adj
-PBPT = rr_adj[np.ix_(valid_perm_inds, valid_perm_inds)]
-A_node_norms = (np.linalg.norm(A, axis=0) + np.linalg.norm(A, axis=1)) / 2
-B_node_norms = (np.linalg.norm(PBPT, axis=0) + np.linalg.norm(PBPT, axis=1)) / 2
-node_norms = A_node_norms * B_node_norms
-obj_func_by_node = np.diag(A.T @ PBPT) / node_norms
-true_pairs = np.array(n_pairs * ["paired"] + (len(ll_adj) - n_pairs) * ["unpaired"])
-true_pair_obj_funcs = obj_func_by_node[true_pairs == "paired"]
-pred_pair_obj_funcs = obj_func_by_node[true_pairs == "unpaired"]
-
-fig, axs = plt.subplots(2, 1, figsize=(8, 8))
-bins = np.linspace(0, 1, 50)
-ax = axs[0]
-sns.distplot(
-    np.log10(true_pair_obj_funcs + 1),
-    ax=ax,
-    label="Paired",
-    kde=False,
-    norm_hist=True,
-    bins=bins,
-)
-sns.distplot(
-    np.log10(pred_pair_obj_funcs + 1),
-    ax=ax,
-    label="Unpaired",
-    kde=False,
-    norm_hist=True,
-    bins=bins,
-)
-ax.set(ylabel="Density")
-ax.legend()
-ax = axs[1]
-sns.distplot(
-    np.log10(true_pair_obj_funcs + 1),
-    ax=ax,
-    label="Paired",
-    hist_kws=dict(cumulative=True),
-    kde=False,
-    norm_hist=True,
-    bins=bins,
-)
-sns.distplot(
-    np.log10(pred_pair_obj_funcs + 1),
-    ax=ax,
-    label="Unpaired",
-    hist_kws=dict(cumulative=True),
-    kde=False,
-    norm_hist=True,
-    bins=bins,
-)
-ax.set(xlabel="log(Per node graph match score)", ylabel="Cumulative density")
-stashfig("gm-node-score-eval")
-
-# %% [markdown]
-# ## Apply the pairs
-left_nodes = nodes.iloc[left_inds]
-right_nodes = nodes.iloc[right_inds]
-left_idx = left_nodes.index
-right_idx = right_nodes.index
-nodes["predicted_pair"] = -1
-nodes["predicted_pair_id"] = -1
-right_idx_perm = right_idx[valid_perm_inds]
-
-pair_ids = np.arange(len(right_idx_perm))
-nodes.loc[left_idx, "predicted_pair"] = right_idx_perm.values
-nodes.loc[right_idx_perm, "predicted_pair"] = left_idx.values
-nodes.loc[left_idx, "predicted_pair_id"] = pair_ids
-nodes.loc[right_idx_perm, "predicted_pair_id"] = pair_ids
-
-#%%
 join_node_meta(
-    nodes[["predicted_pair", "predicted_pair_id"]],
+    nodes["predicted_pair_id"],
     check_collision=False,
     overwrite=True,
 )
-predicted_nodes = nodes[nodes["predicted_pair_id"] != -1]
-has_predicted_matching = pd.Series(
-    data=np.ones(len(predicted_nodes.index), dtype=bool),
-    index=predicted_nodes.index,
-    name="has_predicted_matching",
-)
-join_node_meta(has_predicted_matching, overwrite=True, fillna=False)
+
+# new_prediction_nodes = nodes[(nodes["pair"] < 2) & (nodes["predicted_pair"] != -1)][
+#     ["merge_class", "hemisphere", "predicted_pair"]
+# ].copy()
+# new_prediction_nodes = new_prediction_nodes.sort_values(["merge_class", "hemisphere"])
+# new_prediction_nodes.to_csv("new_prediction_nodes.csv")
+
 
 #%%
 elapsed = time.time() - t0

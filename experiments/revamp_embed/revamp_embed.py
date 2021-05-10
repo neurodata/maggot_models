@@ -138,7 +138,7 @@ ll_adj, rr_adj = prescale_for_embed([ll_adj, rr_adj])
 lr_adj, rl_adj = prescale_for_embed([lr_adj, rl_adj])
 
 #%%
-n_components = 32  # 24 looked fine
+n_components = 24  # 24 looked fine
 X_ll, Y_ll = ase(ll_adj, n_components=n_components)
 X_rr, Y_rr = ase(rr_adj, n_components=n_components)
 X_lr, Y_lr = ase(lr_adj, n_components=n_components)
@@ -253,7 +253,6 @@ n_final_components = 16
 joint_latent, _ = ase(composite_latent, n_components=n_final_components)
 
 
-
 def varimax(X):
     return Rotator(normalize=False).fit_transform(X)
 
@@ -353,7 +352,6 @@ condensed_nodes = pd.DataFrame(new_rows)
 
 
 #%%
-
 plot_pairs(
     joint_latent_symmetrized,
     labels=condensed_nodes[CLASS_KEY].values,
@@ -361,6 +359,7 @@ plot_pairs(
     n_show=10,
 )
 stashfig("joint-latent-symmetrized")
+
 #%%
 latent_symmetrized_df = pd.DataFrame(
     data=joint_latent_symmetrized,
@@ -372,117 +371,3 @@ condensed_nodes = pd.concat(
 )
 condensed_nodes
 condensed_nodes.to_csv(out_path / "outs/condensed_nodes.csv")
-
-
-#%%
-
-
-# def cluster_crosstabplot(
-#     nodes,
-#     group="cluster_labels",
-#     order="sum_signal_flow",
-#     hue="merge_class",
-#     palette=None,
-# ):
-#     group_order = (
-#         nodes.groupby(group)[order].agg(np.median).sort_values(ascending=False).index
-#     )
-
-#     fig, ax = plt.subplots(1, 1, figsize=(16, 8))
-#     crosstabplot(
-#         nodes,
-#         group=group,
-#         group_order=group_order,
-#         hue=hue,
-#         hue_order=order,
-#         palette=palette,
-#         outline=True,
-#         thickness=0.5,
-#         ax=ax,
-#     )
-#     ax.set(xticks=[], xlabel="Cluster")
-#     return fig, ax
-
-
-# def uncondense_series(condensed_nodes, nodes, key):
-#     for idx, row in condensed_nodes.iterrows():
-#         skids = row["skeleton_ids"]
-#         for skid in skids:
-#             nodes.loc[skid, key] = row[key]
-
-
-# # connectivity = kneighbors_graph(
-# #     joint_latent_symmetrized, n_neighbors=30, include_self=False, metric="euclidean"
-# # )
-# for n_clusters in [50, 60, 70, 80, 90, 100, 110]:
-#     agg = AgglomerativeClustering(
-#         n_clusters=n_clusters,
-#         affinity="cosine",
-#         linkage="average",
-#         # connectivity=connectivity,
-#     )
-#     pred_labels = agg.fit_predict(joint_latent_symmetrized)
-#     key = f"cluster_agglom_K={n_clusters}"
-#     condensed_nodes[key] = pred_labels
-#     uncondense_series(condensed_nodes, nodes, key)
-#     join_node_meta(nodes[key], overwrite=True)
-#     fig, ax = cluster_crosstabplot(
-#         condensed_nodes,
-#         group=key,
-#         palette=palette,
-#         hue=CLASS_KEY,
-#         order="sum_signal_flow",
-#     )
-#     ax.set_title(f"# clusters = {n_clusters}")
-
-# #%%
-# # n_clusters = 90
-# # plot_pairs(
-# #     joint_latent_symmetrized,
-# #     labels=condensed_nodes[f"cluster_agglom_K={n_clusters}"].values,
-# # )
-
-# #%%
-
-# metric = "cosine"
-# linkage = "average"
-# distances = symmetrize(pairwise_distances(joint_latent_symmetrized, metric=metric))
-# dissimilarity_clustermap(
-#     distances, colors=condensed_nodes["merge_class"], palette=palette, method=linkage
-# )
-
-# #%%
-# currtime = time.time()
-# dc = DivisiveCluster(
-#     min_split=16,
-#     max_level=8,
-#     cluster_kws=dict(kmeans_n_init=20, covariance_type=["full", "diag"]),
-# )
-
-# hier_labels = dc.fit_predict(joint_latent_symmetrized, fcluster=True)
-# print(f"{time.time() - currtime:.3f} seconds elapsed for divisive clustering.")
-
-# #%%
-# for i, pred_labels in enumerate(hier_labels.T):
-#     key = f"dc_labels_level={i}"
-#     condensed_nodes[key] = pred_labels
-#     uncondense_series(condensed_nodes, nodes, key)
-#     # join_node_meta(nodes[key], overwrite=True)
-#     fig, ax = cluster_crosstabplot(
-#         condensed_nodes,
-#         group=key,
-#         palette=palette,
-#         hue=CLASS_KEY,
-#         order="sum_signal_flow",
-#     )
-#     ax.set_title(f"# clusters = {len(np.unique(pred_labels))}")
-
-
-#%%
-# X_lr, Y_lr = joint_procrustes(
-#     (X_lr, Y_lr),
-#     (X_rl, Y_rl),
-#     method="seedless-oracle",
-#     paired_inds1=left_paired_inds,
-#     paired_inds2=right_paired_inds,
-# )

@@ -1,18 +1,24 @@
 #%%
-from src.data import load_maggot_graph
-from pathlib import Path
-import pandas as pd
-import time
-from graspologic.cluster import DivisiveCluster
-from src.visualization import CLASS_COLOR_DICT
-import numpy as np
-import matplotlib.pyplot as plt
-from giskard.plot import crosstabplot
-import datetime
-from src.visualization import set_theme
-from src.data import join_node_meta
-from src.io import savefig
 import ast
+import datetime
+import time
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from giskard.plot import crosstabplot
+from giskard.utils import get_paired_inds
+from graspologic.cluster import DivisiveCluster
+from graspologic.cluster.autogmm import _labels_to_onehot, _onehot_to_initial_params
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.metrics import adjusted_rand_score
+from sklearn.mixture import GaussianMixture
+from sklearn.preprocessing import normalize
+from src.data import join_node_meta, load_maggot_graph
+from src.io import savefig
+from src.visualization import CLASS_COLOR_DICT, set_theme
 
 set_theme()
 
@@ -22,8 +28,14 @@ palette = CLASS_COLOR_DICT
 
 mg = load_maggot_graph()
 mg = mg[mg.nodes["has_embedding"]]
-# mg = mg[mg.nodes["pair_id"] > 1]
 nodes = mg.nodes
+
+condensed_path = Path("./maggot_models/experiments/revamp_embed/outs")
+condensed_nodes = pd.read_csv(
+    condensed_path / "condensed_nodes.csv",
+    index_col=0,
+    converters=dict(skeleton_ids=ast.literal_eval),
+)
 
 out_path = Path("./maggot_models/experiments/revamp_gaussian_cluster")
 
@@ -41,9 +53,6 @@ def uncondense_series(condensed_nodes, nodes, key):
         skids = row["skeleton_ids"]
         for skid in skids:
             nodes.loc[int(skid), key] = row[key]
-
-
-#%%
 
 
 def cluster_crosstabplot(
@@ -73,48 +82,7 @@ def cluster_crosstabplot(
     return fig, ax
 
 
-#%%
-
-# for i, pred_labels in enumerate(hier_labels.T):
-#     key = f"dc_labels_level={i}"
-#     condensed_nodes[key] = pred_labels
-#     fig, ax = cluster_crosstabplot(
-#         condensed_nodes,
-#         group=key,
-#         palette=palette,
-#         hue=CLASS_KEY,
-#         order="sum_signal_flow",
-#     )
-#     ax.set_title(f"# clusters = {len(np.unique(pred_labels))}")
-#     stashfig(f"crosstabplot-level={i}")
-#     uncondense_series(condensed_nodes, nodes, key)
-#     join_node_meta(nodes[key], overwrite=True)
-
-#%%
-
-import datetime
-import time
-from pathlib import Path
-
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import seaborn as sns
-from giskard.plot import crosstabplot
-from giskard.utils import get_paired_inds
-from graspologic.cluster import DivisiveCluster
-from graspologic.cluster.autogmm import _labels_to_onehot, _onehot_to_initial_params
-from sklearn.cluster import AgglomerativeClustering
-from sklearn.metrics import adjusted_rand_score
-from sklearn.mixture import GaussianMixture
-from src.data import join_node_meta, load_maggot_graph
-from src.visualization import CLASS_COLOR_DICT, set_theme
-from src.io import savefig
-from sklearn.cluster import AgglomerativeClustering
-from sklearn.preprocessing import normalize
-
-
-def initialize_gmm(labels, X, cov_type, **kwargs):
+def initialize_gmm(X, labels, cov_type, **kwargs):
     onehot = _labels_to_onehot(labels)
     weights, means, precisions = _onehot_to_initial_params(X, onehot, cov_type)
     gm = GaussianMixture(
@@ -127,113 +95,140 @@ def initialize_gmm(labels, X, cov_type, **kwargs):
     return gm
 
 
+def fit_best_gmm(X, labels, cov_types=["full", "spherical", "diag", "tied"]):
+    min_bic = np.inf
+    best_model = None
+    for cov_type in cov_types:
+        gmm = initialize_gmm(X, labels, cov_type)
+        gmm.fit(X)
+        bic = gmm.bic(X)
+        if bic < min_bic:
+            best_model = gmm
+            min_bic = bic
+    return best_model
+
+
+#%%
+
+from sklearn.neighbors import KNeighborsClassifier
+
 nodes["inds"] = range(len(nodes))
-n_components = 12
+condensed_nodes["inds"] = range(len(condensed_nodes))
+n_components = 16
 latent_cols = [f"latent_{i}" for i in range(n_components)]
-X = nodes[latent_cols].values.copy()
+X = condensed_nodes[latent_cols].values.copy()
+
+# paired_nodes = nodes[nodes["predicted_pair_id"] > 1]
+# pair_ids = np.unique(paired_nodes["predicted_pair_id"])
+# for pair_id in pair_ids:
+#     pair_nodes = nodes[nodes["predicted_pair_id"] == pair_id]
+#     if len(pair_nodes) == 2:
+#         pair_inds = pair_nodes["inds"]
+#         mean_vec = X[pair_inds].mean(axis=0)
+#         X[pair_inds, :] = mean_vec[None, :]
+refine_gmm = False
 X = normalize(X, axis=1, norm="l2")
-n_resamples = 25
+n_resamples = 100
 resample_prop = 0.9
-n_per_sample = int(np.ceil(resample_prop * len(nodes)))
+n_per_sample = int(np.ceil(resample_prop * len(condensed_nodes)))
 models = {}
 datas = {}
 rows = []
-for i in range(n_resamples):
-    choices = np.random.choice(len(nodes), size=n_per_sample, replace=False)
-    for n_clusters in np.arange(85, 86, 10):
-        print((i, n_clusters))
-        fit_inds = nodes.iloc[choices]["inds"].values
+
+for n_clusters in np.arange(85, 86, 10):
+    for i in range(n_resamples):
+        choices = np.random.choice(
+            len(condensed_nodes), size=n_per_sample, replace=False
+        )
+
+        fit_inds = condensed_nodes.iloc[choices]["inds"].values
 
         agg = AgglomerativeClustering(
             n_clusters=n_clusters, affinity="euclidean", linkage="ward"
         )
         sub_X = X[fit_inds]
         agg_pred_labels = agg.fit_predict(sub_X)
-        gmm = initialize_gmm(agg_pred_labels, sub_X, cov_type="full")
-        gmm.fit(sub_X)
-        gmm_pred_labels = gmm.predict(X)
+        if refine_gmm:
+            # gmm = initialize_gmm(agg_pred_labels, sub_X, cov_type="full")
+            # gmm.fit(sub_X)
+            gmm = fit_best_gmm(X, labels)
+            pred_labels = gmm.predict(X)
+        else:
+            non_fit_inds = np.setdiff1d(np.arange(len(condensed_nodes)), fit_inds)
+            pred_labels = np.zeros(len(X))
+            pred_labels[fit_inds] = agg_pred_labels
+            knn = KNeighborsClassifier(n_neighbors=3)
+            knn.fit(sub_X, agg_pred_labels)
+            pred_labels[non_fit_inds] = knn.predict(X[non_fit_inds])
         row = {
             "subsample": i,
             "n_clusters": n_clusters,
-            "gmm": gmm,
-            "gmm_pred_labels": gmm_pred_labels,
+            "pred_labels": pred_labels,
         }
         rows.append(row)
 
-aris = np.zeros((n_resamples, n_resamples))
+# aris = np.zeros((n_resamples, n_resamples))a
+aris = []
 for i, row1 in enumerate(rows):
     for j, row2 in enumerate(rows):
         if i < j:
-            ari = adjusted_rand_score(row1["gmm_pred_labels"], row2["gmm_pred_labels"])
-            aris[i, j] = ari
+            ari = adjusted_rand_score(row1["pred_labels"], row2["pred_labels"])
+            aris.append(ari)
+print(np.mean(aris))
 
 #%%
-fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-sns.heatmap(
-    aris,
-    square=True,
-    mask=aris == 0,
-    ax=ax,
-    xticklabels=False,
-    yticklabels=False,
-    cmap="RdBu_r",
-    center=0,
-    vmax=1,
-    cbar_kws=dict(shrink=0.6),
-    annot=True,
-    annot_kws=dict(fontsize=8),
-)
-ax.set(title="Pairwise ARIs, GMM o Agglom")
-ax.text(
-    0.33,
-    0.33,
-    f"Mean={aris[aris!=0].mean():0.2f}",
-    transform=ax.transAxes,
-    va="center",
-    ha="center",
-)
-stashfig("pairwise-ari-gmm-o-agglom")
+# fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+# sns.heatmap(
+#     aris,
+#     square=True,
+#     mask=aris == 0,
+#     ax=ax,
+#     xticklabels=False,
+#     yticklabels=False,
+#     cmap="RdBu_r",
+#     center=0,
+#     vmax=1,
+#     cbar_kws=dict(shrink=0.6),
+#     annot=True,
+#     annot_kws=dict(fontsize=8),
+# )
+# ax.set(title="Pairwise ARIs")
+# ax.text(
+#     0.33,
+#     0.33,
+#     f"Mean={aris[aris!=0].mean():0.2f}",
+#     transform=ax.transAxes,
+#     va="center",
+#     ha="center",
+# )
+# stashfig("pairwise-ari")
 
 #%%
 from graspologic.utils import remap_labels, symmetrize
 
-co_cluster_mat = np.zeros((len(nodes), len(nodes)))
+co_cluster_mat = np.zeros((len(condensed_nodes), len(condensed_nodes)))
 for i, row1 in enumerate(rows):
     for j, row2 in enumerate(rows):
-        pred_labels1 = row1["gmm_pred_labels"]
-        pred_labels2 = row2["gmm_pred_labels"]
+        pred_labels1 = row1["pred_labels"]
+        pred_labels2 = row2["pred_labels"]
         pred_labels2 = remap_labels(pred_labels1, pred_labels2)
         co_cluster_mat[pred_labels1[None, :] == pred_labels2[:, None]] += 1
-        # same_cluster = pred_labels1 == pred_labels2
-
-        #  += 1
 
 co_cluster_mat /= n_resamples ** 2
 co_cluster_mat = symmetrize(co_cluster_mat, method="triu")
 co_cluster_mat[np.arange(len(co_cluster_mat)), np.arange(len(co_cluster_mat))] = 1
-# #%%
-# # sns.heatmap(co_cluster_mat)
-# from src.visualization import adjplot
 
-# adjplot(
-#     co_cluster_mat,
-#     meta=nodes,
-#     sort_class="merge_class",
-#     colors="merge_class",
-#     palette=CLASS_COLOR_DICT,
-#     cbar=False,
-# )
 
 #%%
-from scipy.cluster.hierarchy import linkage, fcluster
-from scipy.spatial.distance import squareform
 from giskard.plot import dissimilarity_clustermap
+from scipy.cluster.hierarchy import fcluster, linkage
+from scipy.spatial.distance import squareform
 
 # sns.clustermap(co_cluster_mat, row)
 n_clusters = 85
 dissimilarity_clustermap(
     co_cluster_mat,
-    colors=nodes["merge_class"].values,
+    colors=condensed_nodes["merge_class"].values,
     invert=True,
     method="average",
     palette=CLASS_COLOR_DICT,
@@ -247,34 +242,65 @@ stashfig("co-clustering-gmm-o-agglom")
 # TODO look at the adjacency matrix
 Z = linkage(squareform(1 - co_cluster_mat), method="average")
 pred_labels = fcluster(Z, n_clusters, criterion="maxclust")
+
+uni_labels, counts = np.unique(pred_labels, return_counts=True)
+counts
+#%%
+min_size = 4
+# correct small clusters
+uni_labels_full = uni_labels[counts >= min_size]
+uni_labels_too_small = uni_labels[counts < min_size]
+
+inds = np.arange(len(condensed_nodes))
+
+for source_label in uni_labels_too_small:
+    source_inds = inds[pred_labels == source_label]
+    for ind in source_inds:
+        dists = []
+        for target_label in uni_labels_full:
+            mask = pred_labels == target_label
+            mean_dist = co_cluster_mat[ind][mask].mean()
+            dists.append(mean_dist)
+        selected_cluster_ind = np.argmax(dists)
+        selected_cluster = uni_labels_full[selected_cluster_ind]
+        pred_labels[ind] = selected_cluster
+
 name = f"co_cluster_n_clusters={n_clusters}"
-nodes[name] = pred_labels
+condensed_nodes[name] = pred_labels
+
+#%%
+cluster_crosstabplot(condensed_nodes, name, palette=CLASS_COLOR_DICT)
+
+#%%
+uncondense_series(condensed_nodes, nodes, name)
 join_node_meta(nodes[name], overwrite=True)
 
 #%%
 
-from anytree import NodeMixin
+# from anytree import NodeMixin
 
 
-class RecursiveBiSplitter(NodeMixin):
-    def __init__(self, matrix, ):
-        self.matrix = matrix
+# class RecursiveBiSplitter(NodeMixin):
+#     def __init__(
+#         self,
+#         matrix,
+#         min_size=4,
+#         children=None,
+#         parent=None,
+#     ):
+#         self.matrix = matrix
+#         self.children = children
+#         self.parent = parent
+#         self.min_size = min_size
 
+#     def split(self):
+#         Z = linkage(squareform(self.matrix), method="average")
+#         pred_labels = fcluster(Z, 2, criterion="maxclust")
+#         uni, counts = np.unique(pred_labels, return_counts=True)
+#         min_ind = np.argmin(counts)
+#         if counts[min_ind] < self.min_size:
+#             pass
 
-
-#%%
-from graspologic.partition import leiden
-from src.visualization import adjplot
-
-partition = leiden(co_cluster_mat, resolution=5)
-keys = np.arange(len(co_cluster_mat))
-flat_labels = np.vectorize(partition.get)(keys)
-adjplot(
-    co_cluster_mat,
-    sort_class=flat_labels,
-    colors=nodes["merge_class"].values,
-    palette=palette,
-)
 
 #%%
 elapsed = time.time() - t0
