@@ -221,7 +221,6 @@ def simple_plot_neurons(
     color = np.vectorize(palette.get)(neuron_ids)
 
     plot_mode = "3d"
-
     navis.plot2d(
         neurons,
         color=color,

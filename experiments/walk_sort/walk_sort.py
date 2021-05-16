@@ -9,6 +9,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
+from numpy.lib.npyio import load
 import pandas as pd
 import seaborn as sns
 from graspy.cluster.gclust import GaussianCluster
@@ -26,15 +27,18 @@ from tqdm import tqdm
 
 from graspologic.cluster import AutoGMMCluster
 from graspologic.utils import symmetrize
-from src.data import DATA_DIR, DATA_VERSION
+from src.data import load_maggot_graph
 from src.io import savecsv, savefig
 from src.visualization import CLASS_COLOR_DICT, set_theme
 
 set_theme()
 
-meta_loc = f"{DATA_DIR}/{DATA_VERSION}/meta_data.csv"
+# meta_loc = f"{DATA_DIR}/{DATA_VERSION}/meta_data.csv"
 
-meta = pd.read_csv(meta_loc, index_col=0)
+mg = load_maggot_graph()
+mg.to_largest_connected_component()
+meta = mg.nodes
+# meta = pd.read_csv(meta_loc, index_col=0)
 
 save_path = Path("maggot_models/experiments/walk_sort/")
 

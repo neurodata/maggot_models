@@ -1449,16 +1449,33 @@ def get_color_dict(labels, pal="tab10", to_int=False):
     return color_dict
 
 
-def gridmap(A, ax=None, legend=False, sizes=(5, 10), spines=False, border=True, **kws):
+def gridmap(
+    A,
+    ax=None,
+    legend=False,
+    sizes=(5, 10),
+    spines=False,
+    border=True,
+    color_matrix=None,
+    edge_palette=None,
+    **kws,
+):
     if ax is None:
         _, ax = plt.subplots(1, 1, figsize=(20, 20))
     n_verts = A.shape[0]
     inds = np.nonzero(A)
     edges = A[inds]
+
     scatter_df = pd.DataFrame()
     scatter_df["weight"] = edges
     scatter_df["x"] = inds[1]
     scatter_df["y"] = inds[0]
+    if color_matrix is not None:
+        edge_hues = color_matrix[inds]
+        scatter_df["hue"] = edge_hues
+        hue = "hue"
+    else:
+        hue = None
     ax = sns.scatterplot(
         data=scatter_df,
         x="x",
@@ -1468,6 +1485,8 @@ def gridmap(A, ax=None, legend=False, sizes=(5, 10), spines=False, border=True, 
         sizes=sizes,
         ax=ax,
         linewidth=0,
+        hue=hue,
+        palette=edge_palette,
         **kws,
     )
     # ax.axis("image")

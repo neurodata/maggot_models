@@ -204,6 +204,13 @@ def k2n_params(k):
 
 fig, axs = plt.subplots(1, 2, figsize=(12, 6))
 
+ymin = results[results["model"] == "DCSBM"]["norm_score"].min()
+ymax = results[results["model"] == "DCSBM"]["norm_score"].max()
+yrange = ymax - ymin
+ymax += yrange * 0.02
+ymin -= yrange * 0.02
+ylim = (ymin, ymax)
+
 ax = axs[0]
 select_results = results[results["model"] == "DCSBM"].copy()
 select_results = select_results.groupby(["cluster_method", "test"]).mean().reset_index()
@@ -218,7 +225,9 @@ sns.scatterplot(
     palette=palette,
 )
 ax.get_legend().remove()
-ax.set(ylabel="Likelihood (same hemisphere)", yticks=[], xlabel="# parameters")
+ax.set(
+    ylabel="Likelihood (same hemisphere)", yticks=[], xlabel="# parameters", ylim=ylim
+)
 
 sec_ax = ax.secondary_xaxis(-0.2, functions=(n_params2k, k2n_params))
 sec_ax.set_xlabel("# of communities")
@@ -237,7 +246,12 @@ sns.scatterplot(
     palette=palette,
 )
 ax.get_legend().remove()
-ax.set(ylabel="Likelihood (hemisphere swapped)", yticks=[], xlabel="# parameters")
+ax.set(
+    ylabel="Likelihood (hemisphere swapped)",
+    yticks=[],
+    xlabel="# parameters",
+    ylim=ylim,
+)
 
 
 sec_ax = ax.secondary_xaxis(-0.2, functions=(n_params2k, k2n_params))

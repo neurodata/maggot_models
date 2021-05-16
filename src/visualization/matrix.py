@@ -404,6 +404,8 @@ def matrixplot(
     sizes=(5, 10),
     square=False,
     title="",
+    color_matrix=None,
+    edge_palette=None,
     gridline_kws=None,
     spinestyle_kws=None,
     highlight_kws=None,
@@ -519,7 +521,8 @@ def matrixplot(
         sort_item=col_item_order,
     )
     data = data[np.ix_(row_perm_inds, col_perm_inds)]
-
+    if color_matrix is not None:
+        color_matrix = color_matrix[np.ix_(row_perm_inds, col_perm_inds)]
     # draw the main heatmap/scattermap
     if ax is None:
         _, ax = plt.subplots(1, 1, figsize=(10, 10))
@@ -527,7 +530,15 @@ def matrixplot(
     if plot_type == "heatmap":
         sns.heatmap(data, cmap=cmap, ax=ax, center=center, **kws)
     elif plot_type == "scattermap":
-        gridmap(data, ax=ax, sizes=sizes, border=False, **kws)
+        gridmap(
+            data,
+            ax=ax,
+            sizes=sizes,
+            border=False,
+            color_matrix=color_matrix,
+            edge_palette=edge_palette,
+            **kws,
+        )
 
     if square:
         ax.axis("square")

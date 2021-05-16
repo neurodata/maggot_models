@@ -425,7 +425,7 @@ color_map = {"unk": "#ACAAC8"}
 for color in colors:
     groups = vec_filter(pymaid.get_annotated(color)["name"])
     group_idx = meta[meta["simple_group"].isin(groups)].index
-    meta.loc[group_idx, "color"] = color
+    meta.loc[Xgroup_idx, "color"] = color
     for g in groups:
         color_map[g] = color
 print("Found color map:")

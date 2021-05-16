@@ -43,12 +43,13 @@ from src.visualization import (
     set_theme,
     stacked_barplot,
 )
+from src.data import load_palette
 
 set_theme()
 
 t0 = time.time()
-CLASS_KEY = "merge_class"
-palette = CLASS_COLOR_DICT
+CLASS_KEY = "simple_group"
+palette = load_palette()
 
 
 out_path = Path("maggot_models/experiments/plot_blockmodel/")
@@ -117,7 +118,7 @@ def rank_graph_match_flow(A, n_init=10, max_iter=30, eps=1e-4, **kwargs):
     match_mat = np.zeros((n, n))
     triu_inds = np.triu_indices(n, k=1)
     match_mat[triu_inds] = 1
-    print('graph matching')
+    print("graph matching")
     gm = GraphMatch(n_init=n_init, max_iter=max_iter, init=init, eps=eps, **kwargs)
     perm_inds = gm.fit_predict(match_mat, A)
     return perm_inds
@@ -163,8 +164,10 @@ def plot_bar(meta, mid, ax, orientation="horizontal", width=0.7):
 
 mg = load_maggot_graph()
 
+
 #%%
-CLUSTER_KEY = "dc_labels_level=4"
+# CLUSTER_KEY = "co_cluster_n_clusters=85"
+CLUSTER_KEY = f"dc_labels_level={4}"
 mg = mg[~mg.nodes[CLUSTER_KEY].isna()]
 mg.nodes[CLUSTER_KEY] = mg.nodes[CLUSTER_KEY].astype("Int64")
 labels = mg.nodes[CLUSTER_KEY]
@@ -293,7 +296,7 @@ nx.set_node_attributes(g, color_map, name="Color")
 
 ax = axs[1]
 
-x_pos_key = "Spring-y"
+x_pos_key = "Spring-x"
 y_pos_key = "Order"
 x_pos = nx.get_node_attributes(g, x_pos_key)
 y_pos = nx.get_node_attributes(g, y_pos_key)
@@ -338,7 +341,9 @@ for node, data in g.nodes(data=True):
         normalize=True,
     )
     for wedge in wedges:
-        wedge.set_zorder(1000)
+        wedge.set_zorder(100000)
 
 ax.set(xlim=(-0.05, 1.05), ylim=(1.05, -0.05), xlabel="", ylabel="")
-stashfig("sbm-plot")
+stashfig(f"sbm-plot-cluster_label={CLUSTER_KEY}")
+
+# %%
