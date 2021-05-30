@@ -1,33 +1,17 @@
 #%%
-import pickle
-import time
+
 from itertools import chain
 from pathlib import Path
+from giskard import graph
 
-import colorcet as cc
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-import networkx as nx
 import numpy as np
-from numpy.lib.npyio import load
 import pandas as pd
 import seaborn as sns
-from graspy.cluster.gclust import GaussianCluster
-from matplotlib.collections import LineCollection
 from matplotlib.colors import ListedColormap
-from matplotlib.gridspec import GridSpec
 from matplotlib.lines import Line2D
-from matplotlib.patches import ConnectionPatch
-from scipy.cluster.hierarchy import linkage
-from scipy.sparse import csr_matrix
-from scipy.spatial.distance import squareform
-from sklearn.decomposition import PCA, TruncatedSVD
 from sklearn.metrics import pairwise_distances
-from tqdm import tqdm
-
-from graspologic.cluster import AutoGMMCluster
-from graspologic.utils import symmetrize
-from src.data import load_maggot_graph
+from src.data import load_maggot_graph, join_node_meta
 from src.io import savecsv, savefig
 from src.visualization import CLASS_COLOR_DICT, set_theme
 
@@ -38,14 +22,16 @@ set_theme()
 mg = load_maggot_graph()
 mg.to_largest_connected_component()
 meta = mg.nodes
+adj = mg.ad.adj
+meta["degree"] = np.sum(adj, axis=0) + np.sum(adj, axis=1)
 # meta = pd.read_csv(meta_loc, index_col=0)
 
 save_path = Path("maggot_models/experiments/walk_sort/")
 
 
 def stashfig(name, **kws):
-    savefig(name, pathname=save_path / "figs", fmt="pdf", save_on=True, **kws)
-    savefig(name, pathname=save_path / "figs", fmt="png", save_on=True, **kws)
+    savefig(name, pathname=save_path / "figs", format="pdf", save_on=True, **kws)
+    savefig(name, pathname=save_path / "figs", format="png", save_on=True, **kws)
 
 
 def stashcsv(df, name, **kws):
@@ -54,11 +40,11 @@ def stashcsv(df, name, **kws):
 
 # %%
 
-graph_type = "Gad"
+graph_type = "sum"
 n_init = 256
 max_hops = 16
 allow_loops = False
-include_reverse = False
+include_reverse = True
 walk_path = "maggot_models/experiments/walk_sort/outs/walks-"
 walk_spec = f"gt={graph_type}-n_init={n_init}-hops={max_hops}-loops={allow_loops}"
 forward_walk_path = walk_path + walk_spec + "-reverse=False" + ".txt"
@@ -123,6 +109,9 @@ median_node_visits = {}
 for node in uni_nodes:
     median_node_visits[node] = np.median(node_visits[node])
 meta["median_node_visits"] = meta.index.map(median_node_visits)
+visits = meta["median_node_visits"]
+visits.name = f"{graph_type}_walk_sort"
+join_node_meta(visits, overwrite=True)
 
 median_class_visits = {}
 for node_class in meta["merge_class"].unique():
@@ -140,37 +129,37 @@ meta.to_csv(
 print(f"# of nodes: {len(meta)}")
 unvisit_meta = meta[meta["median_node_visits"].isna()]
 print(f"# of unvisited nodes: {len(unvisit_meta)}")
-relevant_cols = [
-    "brain_neurons",
-    "left",
-    "right",
-    "sink",
-    "preliminary_LN",
-    "partially_differentiated",
-    "unsplittable",
-    "output",
-    "input",
-    "class1",
-    "all_class1",
-    "n_class1",
-    "class2",
-    "all_class2",
-    "n_class2",
-    "simple_class",
-    "all_simple_class",
-    "n_simple_class",
-    "hemisphere",
-    "pair",
-    "pair_id",
-    "merge_class",
-    "lineage",
-    "dendrite_input",
-    "axon_input",
-    "name",
-    "median_node_visits",
-    "median_class_visits",
-]
-unvisit_meta = unvisit_meta[relevant_cols]
+# relevant_cols = [
+#     "brain_neurons",
+#     "left",
+#     "right",
+#     "sink",
+#     "preliminary_LN",
+#     "partially_differentiated",
+#     "unsplittable",
+#     "output",
+#     "input",
+#     "class1",
+#     "all_class1",
+#     "n_class1",
+#     "class2",
+#     "all_class2",
+#     "n_class2",
+#     "simple_class",
+#     "all_simple_class",
+#     "n_simple_class",
+#     "hemisphere",
+#     "pair",
+#     "pair_id",
+#     "merge_class",
+#     "lineage",
+#     "dendrite_input",
+#     "axon_input",
+#     "name",
+#     "median_node_visits",
+#     "median_class_visits",
+# ]
+# unvisit_meta = unvisit_meta[relevant_cols]
 unvisit_meta.sort_values(
     ["class1", "class2", "merge_class", "pair_id", "hemisphere"], inplace=True
 )
@@ -296,8 +285,3 @@ ax.legend(
 
 
 stashfig(f"hop-time-plot-sort_by={sort_by}-{walk_spec}")
-
-# %% [markdown]
-# ##
-# TODO spit out everyone that did not get visited.
-# TODO send them to michael

@@ -4,6 +4,7 @@ from src.data import load_maggot_graph
 from src.io import save_walks
 from src.traverse import RandomWalk, to_markov_matrix
 from tqdm import tqdm
+from graspologic.utils import remove_loops
 
 
 def get_nodes(meta, labels):
@@ -16,12 +17,12 @@ def get_nodes(meta, labels):
     return np.unique(nodes)
 
 
-edge_type = "ad"
+edge_type = "sum"
 outdir = "./maggot_models/experiments/walk_sort/outs/"
 n_init = 256
 max_hops = 16
 allow_loops = False
-reverse = False
+reverse = True
 
 start_labels = [("sensories",), ("ascendings",)]
 
@@ -32,18 +33,9 @@ stop_labels = [("dVNC",), ("dSEZ",), ("RGN",), ("motor",)]
 mg = load_maggot_graph()
 mg.to_largest_connected_component()
 adj = mg.to_edge_type_graph(edge_type).adj
+adj = remove_loops(adj)
 meta = mg.nodes
 meta["inds"] = range(len(meta))
-
-# # create a dataframe of metadata
-# node_data = dict(g.nodes(data=True))
-# meta = pd.DataFrame().from_dict(node_data, orient="index")
-# meta = meta.sort_index()
-# meta["inds"] = range(len(meta))
-# nodelist = meta.index.values
-
-# # grab the adjacency matrix
-# adj = nx.to_numpy_array(g, nodelist)
 
 if reverse:
     adj = adj.T
@@ -55,10 +47,8 @@ n_class_pairs = len(start_labels) * len(stop_labels)
 i = 0
 all_walks = []
 for start_keys in start_labels:
-    # start_nodes = meta[meta["merge_class"].isin(start_keys)]["inds"].values
     start_nodes = get_nodes(meta, start_keys)
     for stop_keys in stop_labels:
-        # stop_nodes = meta[meta["merge_class"].isin(stop_keys)]["inds"].values
         stop_nodes = get_nodes(meta, stop_keys)
         rw = RandomWalk(
             transition_probs,

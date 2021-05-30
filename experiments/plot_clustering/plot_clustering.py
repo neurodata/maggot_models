@@ -23,7 +23,7 @@ set_theme()
 def stashfig(name, **kws):
     savefig(
         name,
-        pathname="./maggot_models/experiments/compare_blockmodel/figs",
+        pathname="./maggot_models/experiments/plot_clustering/figs",
         **kws,
     )
 
@@ -32,20 +32,17 @@ mg = load_maggot_graph()
 mg = mg[mg.nodes["has_embedding"]]
 nodes = mg.nodes
 adj = mg.sum.adj
-# lp_inds, rp_inds = get_paired_inds(nodes)
 
 CLUSTER_KEY = "co_cluster_n_clusters=85"
-# CLUSTER_KEY = "gt_blockmodel_labels"
 HUE_KEY = "simple_group"
 palette = load_palette()
 
-nodes["sf"] = -nodes["sum_signal_flow"]
 adjplot(
     adj,
     meta=nodes,
     plot_type="scattermap",
     sort_class=CLUSTER_KEY,
-    class_order="sf",
+    class_order="sum_walk_sort",
     item_order=HUE_KEY,
     ticks=False,
     colors=HUE_KEY,
@@ -53,4 +50,4 @@ adjplot(
     sizes=(1, 2),
     gridline_kws=dict(linewidth=0.5, linestyle=":", color="grey"),
 )
-stashfig("adjacency-matrix-cluster_key={CLUSTER_KEY}")
+stashfig(f"adjacency-matrix-cluster_key={CLUSTER_KEY}")

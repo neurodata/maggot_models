@@ -166,8 +166,8 @@ mg = load_maggot_graph()
 
 
 #%%
-# CLUSTER_KEY = "co_cluster_n_clusters=85"
-CLUSTER_KEY = f"dc_labels_level={4}"
+CLUSTER_KEY = "co_cluster_n_clusters=85"
+# CLUSTER_KEY = f"dc_labels_level={4}"
 mg = mg[~mg.nodes[CLUSTER_KEY].isna()]
 mg.nodes[CLUSTER_KEY] = mg.nodes[CLUSTER_KEY].astype("Int64")
 labels = mg.nodes[CLUSTER_KEY]

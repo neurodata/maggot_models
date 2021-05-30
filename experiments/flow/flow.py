@@ -9,6 +9,7 @@ from src.data import join_node_meta, load_maggot_graph
 
 t0 = time.time()
 
+
 #%%
 print("Loading data...")
 mg = load_maggot_graph()
@@ -17,6 +18,36 @@ mg = mg.sum
 mg.to_largest_connected_component(verbose=True)
 index = mg.nodes.index
 adj = mg.adj
+meta = mg.nodes
+# #%%
+# sort_meta = meta.copy()
+# sort_meta.sort_values(
+#     ["median_class_visits", "merge_class", "median_node_visits"], inplace=True
+# )
+
+# sort_meta["ind"] = range(len(sort_meta))
+# color_dict = CLASS_COLOR_DICT
+# classes = sort_meta["merge_class"].values
+# uni_classes = np.unique(sort_meta["merge_class"])
+# class_map = dict(zip(uni_classes, range(len(uni_classes))))
+# color_sorted = np.vectorize(color_dict.get)(uni_classes)
+# lc = ListedColormap(color_sorted)
+# class_indicator = np.vectorize(class_map.get)(classes)
+# class_indicator = class_indicator.reshape(len(classes), 1)
+
+# fig, ax = plt.subplots(1, 1, figsize=(1, 10))
+# sns.heatmap(
+#     class_indicator,
+#     cmap=lc,
+#     cbar=False,
+#     yticklabels=False,
+#     # xticklabels=False,
+#     square=False,
+#     ax=ax,
+# )
+# ax.axis("off")
+# stashfig(f"class-rw-order-heatmap-{walk_spec}")
+
 #%% run signal flow
 print("Running signal flow...")
 sf = signal_flow(adj)

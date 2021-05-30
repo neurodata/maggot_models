@@ -13,29 +13,14 @@ from anytree import LevelOrderGroupIter, NodeMixin, PostOrderIter
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.linalg import orthogonal_procrustes
 from scipy.optimize import linear_sum_assignment
-from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics import adjusted_rand_score
-from sklearn.utils.testing import ignore_warnings
-from tqdm import tqdm
 
 import pymaid
-from graspy.cluster import GaussianCluster
+from graspologic.cluster import GaussianCluster
 from graspy.embed import AdjacencySpectralEmbed, LaplacianSpectralEmbed, selectSVD
-from graspy.models import DCSBMEstimator, RDPGEstimator, SBMEstimator
-from graspy.plot import heatmap, pairplot
-from graspy.simulations import rdpg
-from graspy.utils import augment_diagonal, binarize, pass_to_ranks
-from src.data import load_metagraph
-from src.graph import preprocess
-from src.hierarchy import signal_flow
-from src.io import savefig
+from graspy.utils import augment_diagonal, pass_to_ranks
 from src.visualization import (
     CLASS_COLOR_DICT,
-    adjplot,
-    barplot_text,
-    gridmap,
-    matrixplot,
-    set_axes_equal,
     stacked_barplot,
 )
 from anytree.util import leftsibling

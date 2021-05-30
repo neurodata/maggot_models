@@ -132,6 +132,7 @@ for mc in match_classes[:]:
 # check that everything worked
 paired_nodes = nodes[nodes["predicted_pair"] > 1].copy()
 paired_nodes.sort_values("predicted_pair_id", inplace=True)
+assert paired_nodes.groupby('predicted_pair_id').size().max() == 2
 left_paired_nodes = paired_nodes[paired_nodes["left"]]
 right_paired_nodes = paired_nodes[paired_nodes["right"]]
 assert (left_paired_nodes["predicted_pair"] == right_paired_nodes.index).all()

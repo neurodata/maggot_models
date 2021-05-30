@@ -9,29 +9,24 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from graspy.embed import OmnibusEmbed, selectSVD
-from graspy.models import DCSBMEstimator, SBMEstimator
-from graspy.utils import (
+from graspologic.embed import OmnibusEmbed, selectSVD
+from graspologic.models import DCSBMEstimator, SBMEstimator
+from graspologic.utils import (
     augment_diagonal,
     binarize,
     pass_to_ranks,
     remove_loops,
-    to_laplace,
+    to_laplacian,
 )
-from matplotlib.lines import Line2D
 from scipy.stats import poisson
-from sklearn.decomposition import PCA
-from topologic.io import tensor_projection_writer
+from src.data import load_maggot_graph
 
-import pymaid
-from giskard.plot import simple_umap_scatterplot
+
 from src.cluster import BinaryCluster
-from src.data import load_metagraph, load_palette
+from src.data import load_palette
+from src.data.get_data import join_node_meta
 from src.graph import MetaGraph
-from src.hierarchy import signal_flow
 from src.io import savecsv, savefig
-from src.pymaid import start_instance
-from src.utils import get_paired_inds
 from src.visualization import (
     CLASS_COLOR_DICT,
     add_connections,
@@ -41,6 +36,7 @@ from src.visualization import (
     plot_single_dendrogram,
     set_theme,
 )
+from giskard.utils import get_paired_inds
 
 # For saving outputs
 FNAME = os.path.basename(__file__)[:-3]
@@ -567,42 +563,29 @@ def plot_clustering_results(adj, meta, basename, lowest_level=7):
 
 # %% [markdown]
 # ## Load and preprocess data
-graph_type = "G"
+# graph_type = "G"
 # VERSION = "2020-06-10"
 
-pair_meta = pd.read_csv(
-    "maggot_models/experiments/graph_match/outs/pair_meta.csv", index_col=0
-)
+# pair_meta = pd.read_csv(
+#     "maggot_models/experiments/graph_match/outs/pair_meta.csv", index_col=0
+# )
 
-master_mg = load_metagraph(graph_type)
-master_mg = master_mg.reindex(pair_meta.index, use_ids=True)
-master_mg = MetaGraph(master_mg.adj, pair_meta)
+# master_mg = load_metagraph(graph_type)
+# master_mg = master_mg.reindex(pair_meta.index, use_ids=True)
+# master_mg = MetaGraph(master_mg.adj, pair_meta)
+
+master_mg = load_maggot_graph()
 
 # mg = MetaGraph(master_mg.adj, master_mg.meta)
 mg = master_mg.copy()
-meta = mg.meta
-meta = meta[meta["paper_clustered_neurons"] | meta["accessory_neurons"]].copy()
-# we will only want to cluster the "paper_clustered_neurons"
-mg.reindex(meta.index, use_ids=True)
-mg = mg.remove_pdiff()
-mg = mg.make_lcc()
-
-
-remove_low_degree = False
-if remove_low_degree:
-    meta = mg.meta.copy()
-    degrees = mg.calculate_degrees()
-    quant_val = np.quantile(degrees["Total edgesum"], 0.05)
-    idx = meta[degrees["Total edgesum"] > quant_val].index
-    print(quant_val)
-    mg = mg.reindex(idx, use_ids=True)
-    mg = mg.make_lcc()
-    meta = mg.meta
-
-meta = mg.meta.copy()
+mg = mg[mg.nodes["paper_clustered_neurons"] | mg.nodes["accessory_neurons"]].copy()
+mg.to_largest_connected_component()
+meta = mg.nodes.copy()
 meta["inds"] = range(len(meta))
-adj = mg.adj.copy()
+adj = mg.sum.adj.copy()
 
+
+#%%
 # inds on left and right that correspond to the bilateral pairs
 # here these are the union of true and predicted paris, though
 pseudo_lp_inds, pseudo_rp_inds = get_paired_inds(
@@ -616,10 +599,10 @@ print(f"Neurons left after preprocessing: {len(mg)}")
 # %% [markdown]
 # ## Load the 4-color graphs
 # convention is "ad" = axon -> dendrite and so on...
-graph_types = ["Gad", "Gaa", "Gdd", "Gda"]  # "Gs"]
+edge_types = ["ad", "aa", "dd", "da"]  # "Gs"]
 adjs = []
-for g in graph_types:
-    temp_mg = load_metagraph(g, nodelist=meta.index)
+for et in edge_types:
+    temp_mg = mg.to_edge_type_graph(et)
     # # this line is important, to make the graphs aligned
     # temp_mg.reindex(mg.meta.index, use_ids=True)
     temp_adj = temp_mg.adj
@@ -628,7 +611,7 @@ for g in graph_types:
 # %% [markdown]
 # ## SVDer
 # 8, 16 seems to work
-n_omni_components = 8  # this is used for all of the embedings initially
+n_omni_components = 16  # this is used for all of the embedings initially
 n_svd_components = 16  # this is for the last step
 method = "ase"  # one could also do LSE
 
@@ -747,40 +730,40 @@ new_meta = meta.iloc[np.concatenate((lp_inds, rp_inds), axis=0)].copy()
 labels = new_meta["simple_group"].values
 
 
-columns = [
-    "hemisphere",
-    "simple_group",
-    "merge_class",
-    "pair",
-    "pair_id",
-    "lineage",
-    "name",
-]
-embedding_out = "maggot_models/experiments/matched_subgraph_omni_cluster/outs/omni_"
+# columns = [
+#     "hemisphere",
+#     "simple_group",
+#     "merge_class",
+#     "pair",
+#     "pair_id",
+#     "lineage",
+#     "name",
+# ]
+# embedding_out = "maggot_models/experiments/matched_subgraph_omni_cluster/outs/omni_"
 
-save_meta = new_meta[columns].copy()
-save_meta.index.name = "skid"
-save_meta = save_meta.reset_index()
+# save_meta = new_meta[columns].copy()
+# save_meta.index.name = "skid"
+# save_meta = save_meta.reset_index()
 # save_meta.set_index("name")
 
-tensor_projection_writer(
-    embedding_out + "embed",
-    embedding_out + "labels",
-    svd_embed,
-    save_meta.values.tolist(),
-)
-save_meta.to_csv(embedding_out + "labels", sep="\t")
+# tensor_projection_writer(
+#     embedding_out + "embed",
+#     embedding_out + "labels",
+#     svd_embed,
+#     save_meta.values.tolist(),
+# )
+# save_meta.to_csv(embedding_out + "labels", sep="\t")
 
-plot_pairs(
-    svd_embed[:, :8], labels, left_pair_inds=new_lp_inds, right_pair_inds=new_rp_inds
-)
-stashfig(f"pairs-method={omni_method}")
+# plot_pairs(
+#     svd_embed[:, :8], labels, left_pair_inds=new_lp_inds, right_pair_inds=new_rp_inds
+# )
+# stashfig(f"pairs-method={omni_method}")
 
 
-simple_umap_scatterplot(
-    svd_embed, labels=labels, metric="cosine", palette=palette, title="Bilateral Omni"
-)
-stashfig(f"umap-method={omni_method}")
+# simple_umap_scatterplot(
+#     svd_embed, labels=labels, metric="cosine", palette=palette, title="Bilateral Omni"
+# )
+# stashfig(f"umap-method={omni_method}")
 
 
 # %% [markdown]
@@ -797,8 +780,8 @@ params = [
     # {"d": 6, "bic_ratio": 0.9, "min_split": 32},
     # {"d": 8, "bic_ratio": 0.8, "min_split": 32},
     # {"d": 8, "bic_ratio": 0.9, "min_split": 32},
-    {"d": 8, "bic_ratio": 0, "min_split": 32},
-    {"d": 8, "bic_ratio": 0.95, "min_split": 32},
+    # {"d": 8, "bic_ratio": 0, "min_split": 32},
+    # {"d": 8, "bic_ratio": 0.95, "min_split": 32},
     {"d": 8, "bic_ratio": 1, "min_split": 32},
     # {"d": 10, "bic_ratio": 0.9, "min_split": 32},
 ]
@@ -809,9 +792,7 @@ for p in params:
     bic_ratio = p["bic_ratio"]
     min_split = p["min_split"]
     X = svd_embed[:, :d]
-    basename = (
-        f"-method={omni_method}-d={d}-bic_ratio={bic_ratio}-min_split={min_split}"
-    )
+    basename = f"divisive-omni-d={d}-bic_ratio={bic_ratio}-min_split={min_split}"
     title = f"Method={omni_method}, d={d}, BIC ratio={bic_ratio}-min_split={min_split}"
 
     currtime = time.time()
@@ -820,7 +801,7 @@ for p in params:
     mc = BinaryCluster(
         "0",
         adj=adj,  # stored for plotting, basically
-        n_init=50,  # number of initializations for GMM at each stage
+        n_init=1,  # 50  # number of initializations for GMM at each stage
         meta=new_meta,  # stored for plotting and adding labels
         stashfig=stashfig,  # for saving figures along the way
         X=X,  # input data that actually matters
@@ -832,17 +813,21 @@ for p in params:
     mc.fit(n_levels=n_levels, metric=metric)
     print(f"{(time.time() - currtime)/60:0.2f} minutes elapsed for clustering")
 
-    inds = np.concatenate((lp_inds, rp_inds))
-    cluster_adj = adj[np.ix_(inds, inds)]
     cluster_meta = mc.meta
-    cluster_meta["sf"] = -signal_flow(cluster_adj)  # for some of the sorting
+    cols = [col for col in cluster_meta.columns if "lvl" in col]
+    print(cols)
+    join_node_meta(cluster_meta[cols], overwrite=True)
+    # inds = np.concatenate((lp_inds, rp_inds))
+    # cluster_adj = adj[np.ix_(inds, inds)]
+    # cluster_meta = mc.meta
+    # cluster_meta["sf"] = -signal_flow(cluster_adj)  # for some of the sorting
 
-    # save results
-    stashcsv(cluster_meta, "meta" + basename)
-    adj_df = pd.DataFrame(
-        cluster_adj, index=cluster_meta.index, columns=cluster_meta.index
-    )
-    stashcsv(adj_df, "adj" + basename)
+    # # save results
+    # stashcsv(cluster_meta, "meta" + basename)
+    # adj_df = pd.DataFrame(
+    #     cluster_adj, index=cluster_meta.index, columns=cluster_meta.index
+    # )
+    # stashcsv(adj_df, "adj" + basename)
 
     # # plot results
     # lowest_level = 7  # last level to show for dendrograms, adjacencies
