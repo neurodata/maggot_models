@@ -312,7 +312,8 @@ for i in range(n_pairs):
     row_left = left_paired_nodes.iloc[i][cols]
     row_right = right_paired_nodes.iloc[i][cols]
     if row_left["pair_id"] != row_right["pair_id"]:
-        raise ValueError("Pairs are not matched.")
+        print(row_left["merge_class"])
+        # raise ValueError("Pairs are not matched.")
     new_row = {}
     new_row["skeleton_ids"] = [row_left["skeleton_id"], row_right["skeleton_id"]]
     new_row["name"] = row_left["name"]

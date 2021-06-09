@@ -7,18 +7,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from giskard.plot import crosstabplot, dissimilarity_clustermap
+from graspologic.plot.plot_matrix import scattermap
+from graspologic.utils import symmetrize
 from scipy.cluster.hierarchy import fcluster
 from scipy.cluster.hierarchy import linkage as linkage_cluster
 from scipy.spatial.distance import squareform
 from sklearn.metrics.pairwise import pairwise_distances
-
-from giskard.plot import crosstabplot, dissimilarity_clustermap
-from graspologic.plot.plot_matrix import scattermap
-from graspologic.utils import symmetrize
-from src.data import load_maggot_graph, join_node_meta
+from src.data import join_node_meta, load_maggot_graph
 from src.io import savefig
 from src.visualization import CLASS_COLOR_DICT as palette
 from src.visualization import adjplot, set_theme
+
 
 t0 = time.time()
 
@@ -60,24 +60,24 @@ metric = "bic"  # metric on which to decide best split
 n_components = 8
 X = embedding[:, :n_components]
 
-flat_labels = nodes["agglom_labels_t=0.65_n_components=64"].astype(int)
-covariance_type = "full"
-reg_covar = 1e-06
-onehot = _labels_to_onehot(flat_labels)
-weights_init, means_init, precisions_init = _onehot_to_initial_params(
-    X, onehot, covariance_type, reg_covar=reg_covar
-)
-gm = GaussianMixture(
-    n_components=len(weights_init),
-    covariance_type=covariance_type,
-    reg_covar=reg_covar,
-    weights_init=weights_init,
-    means_init=means_init,
-    precisions_init=precisions_init,
-)
-pred_labels = gm.fit_predict(X)
+# flat_labels = nodes["agglom_labels_t=0.65_n_components=64"].astype(int)
+# covariance_type = "full"
+# reg_covar = 1e-06
+# onehot = _labels_to_onehot(flat_labels)
+# weights_init, means_init, precisions_init = _onehot_to_initial_params(
+#     X, onehot, covariance_type, reg_covar=reg_covar
+# )
+# gm = GaussianMixture(
+#     n_components=len(weights_init),
+#     covariance_type=covariance_type,
+#     reg_covar=reg_covar,
+#     weights_init=weights_init,
+#     means_init=means_init,
+#     precisions_init=precisions_init,
+# )
+# pred_labels = gm.fit_predict(X)
 
-stashfig("crosstabplot_gmm_o_agglom")
+# stashfig("crosstabplot_gmm_o_agglom")
 
 
 #%%

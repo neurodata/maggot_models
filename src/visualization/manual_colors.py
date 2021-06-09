@@ -93,6 +93,7 @@ CLASS_IND_DICT = {
     "super-vnc": 161,
     "Sens2o": 33,
     "LN": 49,
+    "dVNC;dUnk": 105,
 }
 
 name_map = {

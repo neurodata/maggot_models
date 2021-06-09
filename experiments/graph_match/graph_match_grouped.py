@@ -91,12 +91,14 @@ match_classes = [
     "sens-MN",
     "sens-photoRh5",
     "sens-photoRh6",
+    "KC"
 ]
+keys = ["merge_class", 'merge_class', 'merge_class', 'merge_class', 'class1']
 
-for mc in match_classes[:]:
-    left_target_inds = left_nodes[left_nodes["merge_class"] == mc]["inds"]
+for key, mc in zip(keys, match_classes):
+    left_target_inds = left_nodes[left_nodes[key] == mc]["inds"]
     print(f"Number of left targets: {len(left_target_inds)}")
-    right_target_inds = right_nodes[right_nodes["merge_class"] == mc]["inds"]
+    right_target_inds = right_nodes[right_nodes[key] == mc]["inds"]
     print(f"Number of right targets: {len(right_target_inds)}")
     left_inds = np.concatenate((left_paired_inds, left_target_inds))
     right_inds = np.concatenate((right_paired_inds, right_target_inds))
