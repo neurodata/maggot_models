@@ -28,14 +28,113 @@ def stashfig(name, **kws):
     )
 
 
+n_components = 10
+min_split = 32
+i = 1
+CLUSTER_KEY = f"dc_level_{i}_n_components={n_components}_min_split={min_split}"
+
+
 mg = load_maggot_graph()
 mg = mg[mg.nodes["has_embedding"]]
 nodes = mg.nodes
 adj = mg.sum.adj
 
-CLUSTER_KEY = "co_cluster_n_clusters=85"
+
 HUE_KEY = "simple_group"
 palette = load_palette()
+
+HUE_ORDER = "median_walk_sort"
+
+
+
+lowest_level = 7
+level_names = [f"lvl{i}_labels" for i in range(lowest_level + 1)]
+
+#%%
+
+
+def sort_meta(meta, group, group_order=group_order, item_order=[], ascending=True):
+    sort_class = group
+    group_order = [group_order]
+    total_sort_by = []
+    for sc in sort_class:
+        for co in group_order:
+            class_value = meta.groupby(sc)[co].mean()
+            meta[f"{sc}_{co}_order"] = meta[sc].map(class_value)
+            total_sort_by.append(f"{sc}_{co}_order")
+        total_sort_by.append(sc)
+    meta = meta.sort_values(total_sort_by, ascending=ascending)
+    return meta
+
+
+sorted_meta = meta.copy()
+sorted_meta["sort_inds"] = np.arange(len(sorted_meta))
+group = level_names + ["merge_class"]
+sorted_meta = sort_meta(
+    sorted_meta,
+    group,
+    group_order=group_order,
+    item_order=["merge_class", "median_node_visits"],
+)
+sorted_meta["new_inds"] = np.arange(len(sorted_meta))
+sorted_meta[["merge_class", "lvl7_labels", "median_node_visits"]]
+
+sort_inds = sorted_meta["sort_inds"]
+sorted_adj = adj[np.ix_(sort_inds, sort_inds)]
+
+
+class MetaNode(NodeMixin):
+    def __init__(self, name, parent=None, children=None, meta=None):
+        super().__init__()
+        self.name = name
+        self.parent = parent
+        if children:
+            self.children = children
+        self.meta = meta
+
+    def hierarchical_mean(self, key):
+        if self.is_leaf:
+            meta = self.meta
+            var = meta[key]
+            return np.mean(var)
+        else:
+            children = self.children
+            child_vars = [child.hierarchical_mean(key) for child in children]
+            return np.mean(child_vars)
+
+
+def get_parent_label(label):
+    if len(label) <= 1:
+        return None
+    elif label[-1] == "-":
+        return label[:-1]
+    else:  # then ends in a -number
+        return label[:-2]
+
+
+def make_node(label, node_map):
+    if label not in node_map:
+        node = MetaNode(label)
+        node_map[label] = node
+    else:
+        node = node_map[label]
+    return node
+
+
+meta = sorted_meta
+node_map = {}
+for i in range(lowest_level, -1, -1):
+    level_labels = meta[f"lvl{i}_labels"].unique()
+    for label in level_labels:
+        node = make_node(label, node_map)
+        node.meta = meta[meta[f"lvl{i}_labels"] == label]
+        parent_label = get_parent_label(label)
+        if parent_label is not None:
+            parent = make_node(parent_label, node_map)
+            node.parent = parent
+
+root = node
+
 
 adjplot(
     adj,

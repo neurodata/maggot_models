@@ -127,7 +127,7 @@ meta.to_csv(
 )
 
 print(f"# of nodes: {len(meta)}")
-unvisit_meta = meta[meta["median_node_visits"].isna()]
+unvisit_meta = meta[meta["median_node_visits"].isna()].copy()
 print(f"# of unvisited nodes: {len(unvisit_meta)}")
 # relevant_cols = [
 #     "brain_neurons",
@@ -171,7 +171,7 @@ unvisit_meta.to_csv(
 # %%
 
 sort_meta = meta.copy()
-sort_meta = sort_meta[~sort_meta["median_node_visits"].isna()]
+sort_meta = sort_meta[~sort_meta["median_node_visits"].isna()].copy()
 sort_meta.sort_values(
     ["median_class_visits", "merge_class", "median_node_visits"], inplace=True
 )
@@ -214,7 +214,7 @@ ax.set(ylim=(0, len(meta)), xlim=(-0.02, 1.02))
 
 ax = axs[0]
 sort_by = ["median_node_visits"]
-sort_meta = meta.sort_values(sort_by)
+sort_meta = meta.sort_values(sort_by).copy()
 sort_meta["ind"] = range(len(sort_meta))
 color_dict = CLASS_COLOR_DICT
 classes = sort_meta["merge_class"].values

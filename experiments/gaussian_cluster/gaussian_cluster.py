@@ -1,5 +1,6 @@
 #%%
 import datetime
+from operator import index
 import time
 from pathlib import Path
 
@@ -33,19 +34,50 @@ def stashfig(name, **kws):
     )
 
 
-out_dir = Path(__file__).parent / "outs"
-embedding_loc = Path("maggot_models/experiments/embed/outs/stage2_embedding.csv")
+from ast import literal_eval
 
+
+# out_dir = Path(__file__).parent / "outs"
+embedding_method = "sym-ase"
+if embedding_method == "mase":
+    embedding_loc = Path("maggot_models/experiments/embed/outs/stage2_embedding.csv")
+    embedding_df = pd.read_csv(embedding_loc, index_col=0)
+    embedding_df = embedding_df.groupby(embedding_df.index).mean()
+elif embedding_method == "sym-ase":
+    embedding_loc = Path(
+        "maggot_models/experiments/revamp_embed/outs/condensed_nodes.csv"
+    )
+    embedding_df = pd.read_csv(
+        embedding_loc, index_col=0, converters=dict(skeleton_ids=literal_eval)
+    )
+    embedding_df = embedding_df.explode("skeleton_ids")
+    embedding_df = embedding_df.set_index("skeleton_ids")
+    embedding_df = embedding_df[[f"latent_{i}" for i in range(16)]]
+elif embedding_method == "omni":
+    pass
+embedding_df
 #%% load the embedding, get the correct subset of data
-embedding_df = pd.read_csv(embedding_loc, index_col=0)
-embedding_df = embedding_df.groupby(embedding_df.index).mean()
+
 mg = load_maggot_graph()
 mg = mg[mg.nodes["has_embedding"]]
 nodes = mg.nodes.copy()
 nodes = nodes[nodes.index.isin(embedding_df.index)]
 embedding_df = embedding_df[embedding_df.index.isin(nodes.index)]
 nodes = nodes.reindex(embedding_df.index)
+nodes["inds"] = range(len(nodes))
 embedding = embedding_df.values
+
+symmetrize_pairs = True
+if symmetrize_pairs:
+    pair_groups = nodes.groupby("pair_id")
+    for pair_id, pair_group in pair_groups:
+        if pair_id > 1:
+            inds = pair_group["inds"].values
+            pair_embeddings = embedding[inds]
+            mean_embedding = pair_embeddings.mean(axis=0)
+            embedding[inds[0]] = mean_embedding
+            embedding[inds[1]] = mean_embedding
+
 
 # %% [markdown]
 # ## Clustering
