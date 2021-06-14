@@ -7,14 +7,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from anytree import NodeMixin
+from giskard.plot import MatrixGrid, scattermap
 from giskard.utils import get_paired_inds
 from graspologic.models import DCSBMEstimator, SBMEstimator
+from graspologic.plot import adjplot
 from graspologic.utils import binarize, remove_loops
 from scipy.stats import poisson
 from src.data import join_node_meta, load_maggot_graph, load_palette
 from src.io import savefig
-from src.visualization import set_theme
-from src.visualization import adjplot
+from src.visualization import adjplot, set_theme
 
 t0 = time.time()
 set_theme()
@@ -23,7 +25,7 @@ set_theme()
 def stashfig(name, **kws):
     savefig(
         name,
-        pathname="./maggot_models/experiments/plot_clustering/figs",
+        pathname="./maggot_models/experiments/plot_clustered_adjacency/figs",
         **kws,
     )
 
@@ -43,17 +45,23 @@ adj = mg.sum.adj
 HUE_KEY = "simple_group"
 palette = load_palette()
 
-HUE_ORDER = "median_walk_sort"
+HUE_ORDER = "sum_signal_flow"
 
-
-
-lowest_level = 7
-level_names = [f"lvl{i}_labels" for i in range(lowest_level + 1)]
 
 #%%
 
 
-def sort_meta(meta, group, group_order=group_order, item_order=[], ascending=True):
+meta = nodes.copy()
+meta["inds"] = range(len(meta))
+lowest_level = 7
+level_names = [
+    f"dc_level_{i}_n_components={n_components}_min_split={min_split}"
+    for i in range(lowest_level + 1)
+]
+level_names += [HUE_KEY]
+
+
+def sort_meta(meta, group, group_order=None, item_order=[], ascending=True):
     sort_class = group
     group_order = [group_order]
     total_sort_by = []
@@ -67,17 +75,34 @@ def sort_meta(meta, group, group_order=group_order, item_order=[], ascending=Tru
     return meta
 
 
+sorted_meta = sort_meta(
+    meta, level_names, group_order=HUE_ORDER, item_order=[HUE_KEY, HUE_ORDER]
+)
+sort_inds = sorted_meta["inds"]
+sorted_adj = adj[sort_inds][:, sort_inds]
+
+
+adjplot(
+    sorted_adj,
+    meta=sorted_meta,
+    plot_type="scattermap",
+    color=HUE_KEY,
+    palette=palette,
+    sizes=(1, 1),
+    ticks=False,
+)
+
+#%%
 sorted_meta = meta.copy()
 sorted_meta["sort_inds"] = np.arange(len(sorted_meta))
 group = level_names + ["merge_class"]
 sorted_meta = sort_meta(
     sorted_meta,
     group,
-    group_order=group_order,
-    item_order=["merge_class", "median_node_visits"],
+    group_order=HUE_ORDER,
+    item_order=[HUE_KEY, HUE_ORDER],
 )
 sorted_meta["new_inds"] = np.arange(len(sorted_meta))
-sorted_meta[["merge_class", "lvl7_labels", "median_node_visits"]]
 
 sort_inds = sorted_meta["sort_inds"]
 sorted_adj = adj[np.ix_(sort_inds, sort_inds)]
