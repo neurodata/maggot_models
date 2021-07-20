@@ -103,66 +103,6 @@ mt.build(
 
 #%%
 
-# class MetaNode(NodeMixin):
-#     def __init__(self, name, parent=None, children=None, meta=None):
-#         super().__init__()
-#         self.name = name
-#         self.parent = parent
-#         if children:
-#             self.children = children
-#         self.meta = meta
-
-#     def hierarchical_mean(self, key):
-#         if self.is_leaf:
-#             meta = self.meta
-#             var = meta[key]
-#             return np.mean(var)
-#         else:
-#             children = self.children
-#             child_vars = [child.hierarchical_mean(key) for child in children]
-#             return np.mean(child_vars)
-
-
-# def get_parent_label(label):
-#     if len(label) <= 1:
-#         return None
-#     elif label[-1] == "-":
-#         return label[:-1]
-#     else:  # then ends in a -number
-#         return label[:-2]
-
-
-# def make_node(label, node_map):
-#     if label not in node_map:
-#         node = MetaNode(label)
-#         node_map[label] = node
-#     else:
-#         node = node_map[label]
-#     return node
-
-
-# meta = sorted_meta
-# node_map = {}
-# for i in range(lowest_level, -1, -1):
-#     level_labels = meta[
-#         f"dc_level_{i}_n_components={n_components}_min_split={min_split}"
-#     ].unique()
-#     for label in level_labels:
-#         node = make_node(label, node_map)
-#         node.meta = meta[
-#             meta[f"dc_level_{i}_n_components={n_components}_min_split={min_split}"]
-#             == label
-#         ]
-#         parent_label = get_parent_label(label)
-#         if parent_label is not None:
-#             parent = make_node(parent_label, node_map)
-#             node.parent = parent
-
-# root = node
-
-
-#%%
-
 fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 line_level = 6
 
@@ -170,15 +110,15 @@ ax, divider, top, _ = adjplot(
     sorted_adj,
     ax=ax,
     plot_type="scattermap",
-    sizes=(0.5, 0.5),
+    sizes=(0.3, 0.3),
     sort_class=level_names[:line_level],
-    item_order="new_inds",
+    item_order="sorted_adjacency_index",
     class_order=HUE_ORDER,
-    meta=meta,
+    meta=sorted_meta,
     palette=palette,
     colors=HUE_KEY,
     ticks=False,
-    gridline_kws=dict(linewidth=0.5, color="grey", linestyle=":"),  # 0.2
+    gridline_kws=dict(linewidth=0, color="grey", linestyle=":"),  # 0.2
 )
 
 left_ax = divider.append_axes("left", size="10%", pad=0, sharey=ax)
@@ -186,6 +126,7 @@ plot_dendrogram(left_ax, mt, orientation="h")
 
 top_ax = divider.append_axes("top", size="10%", pad=0, sharex=ax)
 plot_dendrogram(top_ax, mt, orientation="v")
-#%%
 
-stashfig(f"adjacency-matrix-cluster_key={CLUSTER_KEY}")
+stashfig(
+    f"adjacency-matrix-cluster_key={CLUSTER_KEY}-hue_key={HUE_KEY}-hue_order={HUE_ORDER}"
+)
