@@ -66,6 +66,10 @@ def sort_meta(meta, group, group_order=None, item_order=[], ascending=True):
     return meta
 
 
+meta["hemisphere"] = meta["hemisphere"].map({"L": "Left", "R": "Right"})
+meta["hemisphere_num"] = meta["hemisphere"].map({"Left": 0, "Right": 1})
+level_names.insert(0, "hemisphere")
+level_names.insert(0, "hemisphere_num")
 sorted_meta = sort_meta(
     meta, level_names, group_order=HUE_ORDER, item_order=[HUE_KEY, HUE_ORDER]
 )
@@ -73,60 +77,20 @@ sort_inds = sorted_meta["inds"]
 sorted_adj = adj[sort_inds][:, sort_inds]
 sorted_meta["sorted_adjacency_index"] = np.arange(len(sorted_meta))
 
-
-class MetaTree(BaseNetworkTree):
-    def __init__(self):
-        super().__init__()
-
-    def build(self, node_data, prefix="", postfix=""):
-        if self.is_root and ("adjacency_index" not in node_data.columns):
-            node_data = node_data.copy()
-            node_data["adjacency_index"] = range(len(node_data))
-        self._index = node_data.index
-        self._node_data = node_data
-        key = prefix + f"{self.depth}" + postfix
-        if key in node_data:
-            groups = node_data.groupby(key)
-            for name, group in groups:
-                child = MetaTree()
-                child.parent = self
-                child.build(group, prefix=prefix, postfix=postfix)
-
-
-mt = MetaTree()
-mt.build(
-    sorted_meta,
-    prefix="dc_level_",
-    postfix=f"_n_components={n_components}_min_split={min_split}",
-)
-
-
-#%%
-
 fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-line_level = 4
 
 ax, divider, top, _ = adjplot(
     sorted_adj,
     ax=ax,
     plot_type="scattermap",
     sizes=(0.3, 0.3),
-    sort_class=level_names[:line_level],
     item_order="sorted_adjacency_index",
-    class_order=HUE_ORDER,
+    sort_class=["hemisphere"],
+    class_order='hemisphere_num',
     meta=sorted_meta,
     palette=palette,
-    colors=HUE_KEY,
-    ticks=False,
+    ticks=True,
+    tick_fontsize=20,
     gridline_kws=dict(linewidth=0.5, color="grey", linestyle=":"),  # 0.2
 )
-
-left_ax = divider.append_axes("left", size="10%", pad=0, sharey=ax)
-plot_dendrogram(left_ax, mt, orientation="h")
-
-top_ax = divider.append_axes("top", size="10%", pad=0, sharex=ax)
-plot_dendrogram(top_ax, mt, orientation="v")
-
-stashfig(
-    f"adjacency-matrix-cluster_key={CLUSTER_KEY}-hue_key={HUE_KEY}-hue_order={HUE_ORDER}"
-)
+stashfig(f"left-right-adjacency-matrix-cluster_key={CLUSTER_KEY}-hue_key={HUE_KEY}-hue_order={HUE_ORDER}")
