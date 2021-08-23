@@ -1,29 +1,28 @@
 #%%
 import datetime
-from operator import index
 import time
+from ast import literal_eval
+from json import load
+from operator import index
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from giskard.plot import crosstabplot, dissimilarity_clustermap
-from graspologic.plot.plot_matrix import scattermap
-from graspologic.utils import symmetrize
-from scipy.cluster.hierarchy import fcluster
-from scipy.cluster.hierarchy import linkage as linkage_cluster
-from scipy.spatial.distance import squareform
-from sklearn.metrics.pairwise import pairwise_distances
-from src.data import join_node_meta, load_maggot_graph
+from giskard.plot import crosstabplot
+from graspologic.cluster import DivisiveCluster
+from src.data import join_node_meta, load_maggot_graph, load_palette
 from src.io import savefig
-from src.visualization import CLASS_COLOR_DICT as palette
-from src.visualization import adjplot, set_theme
-
+from src.visualization import set_theme
 
 t0 = time.time()
 
 set_theme()
+
+palette = load_palette()
+
+np.random.seed(8888)
 
 
 def stashfig(name, **kws):
@@ -32,9 +31,6 @@ def stashfig(name, **kws):
         pathname="./maggot_models/experiments/gaussian_cluster/figs",
         **kws,
     )
-
-
-from ast import literal_eval
 
 
 # out_dir = Path(__file__).parent / "outs"
@@ -82,9 +78,6 @@ if symmetrize_pairs:
 # %% [markdown]
 # ## Clustering
 
-from graspologic.cluster import DivisiveCluster
-from graspologic.cluster.autogmm import _labels_to_onehot, _onehot_to_initial_params
-from sklearn.mixture import GaussianMixture
 
 # parameters
 n_levels = 10  # max # of splits in the recursive clustering
@@ -122,12 +115,15 @@ for n_components in n_components_range:
         dc = DivisiveCluster(
             cluster_kws=dict(kmeans_n_init=25), min_split=min_split, max_level=8
         )
-        hier_labels = dc.fit_predict(X, fcluster=True)
+        hier_labels = dc.fit_predict(X, fcluster=True) + 1
         cols = [
-            f"dc_level_{i}_n_components={n_components}_min_split={min_split}"
+            f"dc_level_{i+1}_n_components={n_components}_min_split={min_split}"
             for i in range(hier_labels.shape[1])
         ]
         label_series = pd.DataFrame(data=hier_labels, index=nodes.index, columns=cols)
+        label_series[
+            f"dc_level_0_n_components={n_components}_min_split={min_split}"
+        ] = np.zeros(len(label_series), dtype=int)
         join_node_meta(label_series, overwrite=True)
 print(f"{time.time() - currtime:.3f} seconds elapsed.")
 
@@ -147,7 +143,7 @@ crosstabplot(
     nodes[nodes["hemisphere"] == "L"],
     group="dc_flat_labels",
     group_order=group_order,
-    hue="merge_class",
+    hue="simple_group",
     hue_order="sum_signal_flow",
     palette=palette,
     outline=True,
@@ -159,7 +155,7 @@ crosstabplot(
     nodes[nodes["hemisphere"] == "R"],
     group="dc_flat_labels",
     group_order=group_order,
-    hue="merge_class",
+    hue="simple_group",
     hue_order="sum_signal_flow",
     palette=palette,
     outline=True,

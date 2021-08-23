@@ -16,7 +16,7 @@ set_theme()
 def stashfig(name, **kws):
     savefig(
         name,
-        pathname="./maggot_models/experiments/plot_clustered_adjacency/figs",
+        pathname="./maggot_models/experiments/plot_adjacency_axon_dendrite/figs",
         **kws,
     )
 
@@ -118,15 +118,50 @@ ax, divider, top, _ = adjplot(
     palette=palette,
     colors=HUE_KEY,
     ticks=False,
-    gridline_kws=dict(linewidth=0.5, color="grey", linestyle=":"),  # 0.2
+    gridline_kws=dict(linewidth=0, color="grey", linestyle=":"),  # 0.2
 )
 
-left_ax = divider.append_axes("left", size="10%", pad=0, sharey=ax)
-plot_dendrogram(left_ax, mt, orientation="h")
+# stashfig(
+#     f"axon-dendrite-adjacency-matrix-cluster_key={CLUSTER_KEY}-hue_key={HUE_KEY}-hue_order={HUE_ORDER}"
+# )
+#%%
 
-top_ax = divider.append_axes("top", size="10%", pad=0, sharex=ax)
-plot_dendrogram(top_ax, mt, orientation="v")
+import seaborn as sns
 
+fig, axs = plt.subplots(
+    2,
+    2,
+    figsize=(19.5, 20),
+    gridspec_kw=dict(hspace=0, wspace=0),
+)
+graph_types = ["ad", "aa", "dd", "da"]
+edge_type_palette = dict(zip(graph_types, sns.color_palette("deep")))
+
+for i, graph_type in enumerate(graph_types):
+    adj = mg.to_edge_type_graph(graph_type).adj
+    sorted_adj = adj[sort_inds][:, sort_inds]
+    ax = axs.flat[i]
+    adjplot(
+        sorted_adj,
+        ax=ax,
+        plot_type="scattermap",
+        sizes=(0.75, 0.75),
+        sort_class=level_names[:line_level],
+        item_order="sorted_adjacency_index",
+        class_order=HUE_ORDER,
+        meta=sorted_meta,
+        # palette=palette,
+        # colors=HUE_KEY,
+        ticks=False,
+        gridline_kws=dict(linewidth=0, color="grey", linestyle=":"),  # 0.2
+        color=edge_type_palette[graph_type],
+    )
+
+fontsize = "xx-large"
+axs[0, 0].set_title("Axon", fontsize=fontsize)
+axs[0, 0].set_ylabel("Axon", fontsize=fontsize)
+axs[0, 1].set_title("Dendrite", fontsize=fontsize)
+axs[1, 0].set_ylabel("Dendrite", fontsize=fontsize)
 stashfig(
-    f"adjacency-matrix-cluster_key={CLUSTER_KEY}-hue_key={HUE_KEY}-hue_order={HUE_ORDER}"
+    f"axon-dendrite-adjacency-matrix-cluster_key={CLUSTER_KEY}-hue_key={HUE_KEY}-hue_order={HUE_ORDER}"
 )

@@ -48,6 +48,7 @@ ORDER_KEY = "sum_signal_flow"
 # CLUSTER_KEY = "gt_blockmodel_labels"
 CLUSTER_KEY = "agg_labels_n_clusters=85"
 CLUSTER_KEY = "co_cluster_n_clusters=85"
+CLUSTER_KEY = "dc_level_6_n_components=10_min_split=32"
 # CLUSTER_KEY = "agmm_agg_n_clusters=85"
 ORDER_ASCENDING = False
 FORMAT = "png"

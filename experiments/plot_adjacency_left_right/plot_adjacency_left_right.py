@@ -16,7 +16,7 @@ set_theme()
 def stashfig(name, **kws):
     savefig(
         name,
-        pathname="./maggot_models/experiments/plot_clustered_adjacency/figs",
+        pathname="./maggot_models/experiments/plot_adjacency_left_right/figs",
         **kws,
     )
 
