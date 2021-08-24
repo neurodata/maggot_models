@@ -10,7 +10,7 @@ import seaborn as sns
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from giskard.utils import powerset
-from src.data import load_metagraph
+from src.data import load_maggot_graph
 from src.io import savefig
 
 FNAME = os.path.basename(__file__)[:-3]
@@ -22,18 +22,13 @@ def stashfig(name, **kws):
 
 colors = sns.color_palette("deep")
 
-mg = load_metagraph("G")
-mg.make_lcc()
+mg = load_maggot_graph()
 
-graph_types = ["Gad", "Gaa", "Gdd", "Gda"]  # "Gs"]
+graph_types = ["ad", "aa", "dd", "da"]
 adjs = []
-for g in graph_types:
-    temp_mg = load_metagraph(g)
-    # this line is important, to make the graphs aligned
-    temp_mg.reindex(mg.meta.index, use_ids=True)
-    temp_adj = temp_mg.adj
-    adjs.append(temp_adj)
-
+for gt in graph_types:
+    adj = mg.to_edge_type_graph(gt).adj
+    adjs.append(adj)
 
 # %% [markdown]
 # ##
@@ -51,7 +46,7 @@ edges_by_type
 
 #%%
 
-edge_types = np.array([et[1:] for et in graph_types])
+edge_types = np.array([et[:] for et in graph_types])
 edge_type_combos = powerset(edge_types, ignore_empty=True)
 
 bool_edges_by_type = edges_by_type > 0
@@ -242,6 +237,10 @@ for i, fwd_adj in enumerate(adjs):
     for j, back_adj in enumerate(adjs):
         back_adj = remove_loops(back_adj)
         p_back = np.count_nonzero(back_adj) / n_possible
+        # this takes the indices where there were edges in the forward edge type
+        # (fwd_inds)
+        # then grabs the reversed elements of the backward adj
+        # then just counts how many of THOSE were nonzero
         n_reciprocal = np.count_nonzero(back_adj[fwd_inds[::-1]])
         p_reciprocal = n_reciprocal / len(fwd_inds[0])
         null_p_reciprocal = p_fwd * p_back * n_possible / len(fwd_inds[0])
