@@ -3,8 +3,8 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 from giskard.hierarchy import BaseNetworkTree
-from giskard.plot import plot_dendrogram
 from src.data import load_maggot_graph, load_palette
 from src.io import savefig
 from src.visualization import adjplot, set_theme
@@ -17,6 +17,13 @@ def stashfig(name, **kws):
     savefig(
         name,
         pathname="./maggot_models/experiments/plot_adjacency_axon_dendrite/figs",
+        format="pdf",
+        **kws,
+    )
+    savefig(
+        name,
+        pathname="./maggot_models/experiments/plot_adjacency_axon_dendrite/figs",
+        format="png",
         **kws,
     )
 
@@ -44,7 +51,7 @@ HUE_ORDER = "sum_walk_sort"
 
 meta = nodes.copy()
 meta["inds"] = range(len(meta))
-lowest_level = 7
+lowest_level = 8
 level_names = [
     f"dc_level_{i}_n_components={n_components}_min_split={min_split}"
     for i in range(lowest_level + 1)
@@ -102,40 +109,16 @@ mt.build(
 
 
 #%%
-
-fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 line_level = 4
-
-ax, divider, top, _ = adjplot(
-    sorted_adj,
-    ax=ax,
-    plot_type="scattermap",
-    sizes=(0.3, 0.3),
-    sort_class=level_names[:line_level],
-    item_order="sorted_adjacency_index",
-    class_order=HUE_ORDER,
-    meta=sorted_meta,
-    palette=palette,
-    colors=HUE_KEY,
-    ticks=False,
-    gridline_kws=dict(linewidth=0, color="grey", linestyle=":"),  # 0.2
-)
-
-# stashfig(
-#     f"axon-dendrite-adjacency-matrix-cluster_key={CLUSTER_KEY}-hue_key={HUE_KEY}-hue_order={HUE_ORDER}"
-# )
-#%%
-
-import seaborn as sns
 
 fig, axs = plt.subplots(
     2,
     2,
-    figsize=(19.5, 20),
+    figsize=(19.90, 20),
     gridspec_kw=dict(hspace=0, wspace=0),
 )
-graph_types = ["ad", "aa", "dd", "da"]
-edge_type_palette = dict(zip(graph_types, sns.color_palette("deep")))
+graph_types = ["aa", "ad", "da", "dd"]
+edge_type_palette = dict(zip(["ad", "aa", "dd", "da"], sns.color_palette("deep")))
 
 for i, graph_type in enumerate(graph_types):
     adj = mg.to_edge_type_graph(graph_type).adj
@@ -145,7 +128,7 @@ for i, graph_type in enumerate(graph_types):
         sorted_adj,
         ax=ax,
         plot_type="scattermap",
-        sizes=(0.75, 0.75),
+        sizes=(1.5, 1.5),
         sort_class=level_names[:line_level],
         item_order="sorted_adjacency_index",
         class_order=HUE_ORDER,

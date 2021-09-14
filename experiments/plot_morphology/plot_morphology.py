@@ -1,5 +1,4 @@
-# %% [markdown]
-# ##
+# %% 
 import datetime
 import os
 import time
@@ -11,24 +10,21 @@ import numpy as np
 import pandas as pd
 import pymaid
 import seaborn as sns
-
+from navis import NeuronList
+from src.data import load_maggot_graph, load_navis_neurons, load_palette
 from src.graph import MetaGraph
 from src.io import savecsv, savefig
+from src.nblast import preprocess_nblast
 from src.pymaid import start_instance
 from src.visualization import (
+    CLASS_COLOR_DICT,
     plot_neurons,
     plot_single_dendrogram,
     plot_volumes,
     set_axes_equal,
     set_theme,
-    CLASS_COLOR_DICT,
+    simple_plot_neurons,
 )
-from src.data import load_palette
-from src.data import load_maggot_graph
-from src.nblast import preprocess_nblast
-from src.visualization import simple_plot_neurons
-from src.data import load_navis_neurons
-from navis import NeuronList
 
 t0 = time.time()
 # For saving outputs
@@ -48,7 +44,7 @@ ORDER_KEY = "sum_signal_flow"
 # CLUSTER_KEY = "gt_blockmodel_labels"
 CLUSTER_KEY = "agg_labels_n_clusters=85"
 CLUSTER_KEY = "co_cluster_n_clusters=85"
-CLUSTER_KEY = "dc_level_6_n_components=10_min_split=32"
+CLUSTER_KEY = "dc_level_7_n_components=10_min_split=32"
 # CLUSTER_KEY = "agmm_agg_n_clusters=85"
 ORDER_ASCENDING = False
 FORMAT = "png"
@@ -120,6 +116,8 @@ meta["cluster_order"] = meta[CLUSTER_KEY].map(median_cluster_order)
 meta = meta.sort_values(["cluster_order", CLUSTER_KEY], ascending=ORDER_ASCENDING)
 uni_clusters = meta[CLUSTER_KEY].unique()  # preserves sorting from above
 uni_clusters = uni_clusters[~np.isnan(uni_clusters)]
+
+print(f"Number of clusters: {len(uni_clusters)}")
 
 #%% new
 left_meta = meta.loc[left_intersect_index]
@@ -217,16 +215,18 @@ for i, cluster in enumerate(uni_clusters[:]):
     z_lims_by_ax.append(ax.get_zlim3d())
 
     if show_metric:
-        ax.text2D(
-            0.07,
-            0.03,
-            f"{mean_cluster_sim[cluster]:.02f}",
-            ha="left",
-            va="bottom",
-            color="black",
-            fontsize="x-small",
-            transform=ax.transAxes,
-        )
+        val = mean_cluster_sim[cluster]
+        if not np.isnan(val):
+            ax.text2D(
+                0.07,
+                0.03,
+                f"{val:.02f}",
+                ha="left",
+                va="bottom",
+                color="black",
+                fontsize="x-small",
+                transform=ax.transAxes,
+            )
 
 stashfig(
     f"all-morpho-plot-clustering={CLUSTER_KEY}-discrim={show_metric}-wide",
