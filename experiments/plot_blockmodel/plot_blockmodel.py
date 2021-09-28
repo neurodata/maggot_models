@@ -62,6 +62,7 @@ def stashfig(name, format=FORMAT, **kws):
     savefig(
         name, pathname=out_path / "figs", format=format, dpi=300, save_on=True, **kws
     )
+    savefig(name, pathname=out_path / "figs", format="pdf", save_on=True, **kws)
 
 
 def estimate_spring_rank_P(A, ranks, beta):
@@ -166,8 +167,12 @@ mg = load_maggot_graph()
 
 
 #%%
-CLUSTER_KEY = "co_cluster_n_clusters=85"
+# CLUSTER_KEY = "co_cluster_n_clusters=85"
 # CLUSTER_KEY = f"dc_labels_level={4}"
+n_components = 10
+min_split = 32
+i = 4
+CLUSTER_KEY = f"dc_level_{i}_n_components={n_components}_min_split={min_split}"
 mg = mg[~mg.nodes[CLUSTER_KEY].isna()]
 mg.nodes[CLUSTER_KEY] = mg.nodes[CLUSTER_KEY].astype("Int64")
 labels = mg.nodes[CLUSTER_KEY]
@@ -287,6 +292,7 @@ def normalize_pos(pos_dict):
 spring_x = normalize_pos(spring_x)
 spring_y = normalize_pos(spring_y)
 
+
 nx.set_node_attributes(g, spring_x, name="Spring-x")
 nx.set_node_attributes(g, spring_y, name="Spring-y")
 
@@ -297,7 +303,7 @@ nx.set_node_attributes(g, color_map, name="Color")
 ax = axs[1]
 
 x_pos_key = "Spring-x"
-y_pos_key = "Order"
+y_pos_key = "Spring-y"
 x_pos = nx.get_node_attributes(g, x_pos_key)
 y_pos = nx.get_node_attributes(g, y_pos_key)
 
@@ -330,9 +336,9 @@ for node, data in g.nodes(data=True):
     radius = np.sqrt(data["Size"]) / 500
     label = node
     sub_meta = meta[meta[CLUSTER_KEY] == label]
-    sizes = sub_meta.groupby("merge_class").size()
+    sizes = sub_meta.groupby(CLASS_KEY).size()
     sizes /= sizes.sum()
-    colors = np.vectorize(CLASS_COLOR_DICT.get)(sizes.index)
+    colors = np.vectorize(palette.get)(sizes.index)
     wedges, _ = ax.pie(
         sizes,
         colors=colors,
@@ -344,6 +350,5 @@ for node, data in g.nodes(data=True):
         wedge.set_zorder(100000)
 
 ax.set(xlim=(-0.05, 1.05), ylim=(1.05, -0.05), xlabel="", ylabel="")
-stashfig(f"sbm-plot-cluster_label={CLUSTER_KEY}")
-
-# %%
+ax.set_facecolor("white")
+stashfig(f"sbm-plot-cluster_label={CLUSTER_KEY}-x={x_pos_key}-y={y_pos_key}")
