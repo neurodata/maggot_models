@@ -135,3 +135,7 @@ notebooks/outs/colors.png
 data/logs/2020-09-23.txt
 data.zip
 experiments/plot_paths/data/all_paths_sens-to-dVNC_cutoff5.csv.gz
+experiments/plot_paths/data/all_paths_sens-to-dSEZ_cutoff6.csv.gz
+experiments/plot_paths/data/all_paths_sens-to-dVNC_cutoff6.csv.gz
+experiments/plot_paths/data/all_paths_sens-to-output_cutoff6.csv.gz
+experiments/plot_paths/data/all_paths_sens-to-RGN_cutoff6.csv.gz
