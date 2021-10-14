@@ -1,5 +1,3 @@
-# %% [markdown]
-# ##
 #%%
 import matplotlib.pyplot as plt
 import numpy as np
@@ -76,8 +74,6 @@ nodes["order"] = range(len(nodes))
 mg = mg.node_subgraph(nodes.index)
 mg.nodes = nodes
 
-# %% [markdown]
-# ##
 #%%
 
 line_kws = dict(linewidth=1, linestyle="--", color="grey")
@@ -91,7 +87,6 @@ def plot_sorted_adj(graph_type, ax):
     _, _, top, _, = adjplot(
         adj,
         meta=meta,
-        # item_order=f"median_node_visits",
         item_order="order",
         colors="simple_group",
         palette=palette,
@@ -138,12 +133,8 @@ def plot_diag_vals(graph_type, ax, mode="values", sigma=25):
         transform=ax.transAxes,
         color="black",
     )
-    # ax.set_title(graph_names[graph_type], color=graph_type_colors[graph_type])
     ax.axvline(0, **line_kws)
-    # ax.xaxis.set_major_locator(plt.MaxNLocator(3))
-    # ax.yaxis.set_major_locator(plt.MaxNLocator(3))
     ax.yaxis.set_major_locator(plt.NullLocator())
-    # ax.xaxis.set_major_locator(plt.NullLocator())
     ax.set_xticks([-3000, 0, 3000])
     ax.set_xticklabels([-3000, 0, 3000])
 
@@ -151,18 +142,30 @@ def plot_diag_vals(graph_type, ax, mode="values", sigma=25):
 fig, axs = plt.subplots(2, 4, figsize=(20, 10))
 for i, graph_type in enumerate(graph_types):
     plot_sorted_adj(graph_type, axs[0, i])
-    # plot_diag_vals(graph_type, axs[1, i], mode="values")
-    # plot_diag_vals(graph_type, axs[2, i], mode="kde")
     plot_diag_vals(graph_type, axs[1, i], mode="kde", sigma=75)
-# axs[3, 1].set_xlabel("Diagonal index", x=1.5)
 
 ax = axs[1, 0]
 ax.text(0.1, 0.9, r"$p$ back", transform=ax.transAxes, color="black")
 ax.text(0.9, 0.9, r"$p$ fwd", transform=ax.transAxes, color="black", ha="right")
-fig.text(0.47, 0, "Relative rank")
+fig.text(0.47, 0.05, "Distance in sorting")
 axs[1, 0].set_ylabel("Mean synapse mass")
-# axs[1, 0].set_xticklabels([])
-# axs[2, 0].set_ylabel(r"Mean synapse mass (smoothed, $\sigma = 25$)")
-# axs[3, 0].set_ylabel(r"Mean synapse mass (smoothed, $\sigma = 50$)")
-# plt.tight_layout()
-stashfig(f"adj-row-sort-by-walksort")
+stashfig("adj-row-sort-by-walksort")
+
+#%%
+# from graspologic.match import GraphMatch
+
+# adj = mg.sum.adj
+# # constructing the match matrix
+# match_mat = np.zeros_like(adj)
+# triu_inds = np.triu_indices(len(match_mat), k=1)
+# match_mat[triu_inds] = 1
+
+# # running graph matching
+# np.random.seed(8888)
+# gm = GraphMatch(n_init=1, max_iter=100, eps=1e-6)
+# gm.fit(match_mat, adj)
+# perm_inds = gm.perm_inds_
+
+# adj_matched = adj[perm_inds][:, perm_inds]
+# upsets = adj_matched[triu_inds[::-1]].sum()
+# upset_ration = upsets / adj_matched.sum()
