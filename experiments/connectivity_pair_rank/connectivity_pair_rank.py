@@ -1,268 +1,392 @@
 #%%
 
+
+import datetime
+import os
 import time
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
-from giskard.utils import get_paired_inds
-from graspologic.align import OrthogonalProcrustes, SeedlessProcrustes
-from graspologic.embed import select_svd
-from graspologic.utils import augment_diagonal, pass_to_ranks, to_laplacian
-from sklearn.neighbors import NearestNeighbors
-from sklearn.preprocessing import normalize as normalize_matrix
-from src.data import load_maggot_graph, load_palette
+from giskard.plot import matched_stripplot
+from numba import jit
+from scipy.optimize import linear_sum_assignment
+from src.data import load_maggot_graph
 from src.io import savefig
-from src.visualization import plot_pairs, set_theme
+from src.utils import get_paired_inds
+from src.visualization import (
+    CLASS_COLOR_DICT,
+    adjplot,
+    matrixplot,
+    set_theme,
+)
 
-set_theme()
 t0 = time.time()
-
-out_path = Path("./maggot_models/experiments/connectivity_pair_rank")
+set_theme()
 
 
 def stashfig(name, **kws):
     savefig(
         name,
-        pathname=out_path / "figs",
+        pathname="./maggot_models/experiments/connectivity_pair_rank/figs",
+        format="pdf",
+        **kws,
+    )
+    savefig(
+        name,
+        pathname="./maggot_models/experiments/connectivity_pair_rank/figs",
+        format="png",
         **kws,
     )
 
 
-#%%
+set_theme()
 
-CLASS_KEY = "simple_group"
-palette = load_palette()
+colors = sns.color_palette("Set1")
+palette = dict(zip(["Left", "Right", "Contra"], [colors[0], colors[1], colors[3]]))
+
+#%% [markdown]
+# ### Load the data
+#%%
 mg = load_maggot_graph()
-mg = mg[mg.nodes["paper_clustered_neurons"] | mg.nodes["accessory_neurons"]]
+mg = mg[mg.nodes["neurons"]]  # brain neurons
 mg = mg[mg.nodes["hemisphere"].isin(["L", "R"])]
-mg.to_largest_connected_component(verbose=True)
-out_degrees = np.count_nonzero(mg.sum.adj, axis=0)
-in_degrees = np.count_nonzero(mg.sum.adj, axis=1)
-max_in_out_degree = np.maximum(out_degrees, in_degrees)
-# TODO ideally we would OOS these back in?
-keep_inds = np.arange(len(mg.nodes))[max_in_out_degree > 2]
-remove_ids = np.setdiff1d(mg.nodes.index, mg.nodes.index[keep_inds])
-print(f"Removed {len(remove_ids)} nodes when removing pendants.")
-mg.nodes = mg.nodes.iloc[keep_inds]
-mg.g.remove_nodes_from(remove_ids)
-mg.to_largest_connected_component(verbose=True)
-mg.nodes.sort_values("hemisphere", inplace=True)
-mg.nodes["_inds"] = range(len(mg.nodes))
-nodes = mg.nodes
-
-#%%
-
-raw_adj = mg.sum.adj.copy()
-
-left_inds = mg.nodes[mg.nodes["hemisphere"] == "L"]["_inds"]
-right_inds = mg.nodes[mg.nodes["hemisphere"] == "R"]["_inds"]
-
-left_paired_inds, right_paired_inds = get_paired_inds(
-    mg.nodes, pair_key="predicted_pair", pair_id_key="predicted_pair_id"
-)
-right_paired_inds_shifted = right_paired_inds - len(left_inds)
-
-
-def preprocess_for_embed(adjs, method="ase"):
-    """Preprocessing necessary prior to embedding a graph, opetates on a list
-
-    Parameters
-    ----------
-    adjs : list of adjacency matrices
-        [description]
-    method : str, optional
-        [description], by default "ase"
-
-    Returns
-    -------
-    [type]
-        [description]
-    """
-    if not isinstance(adjs, (list, tuple)):
-        adjs = [adjs]
-    adjs = [pass_to_ranks(a) for a in adjs]
-    # adjs = [a + 1 / a.size for a in adjs]
-    if method == "ase":
-        adjs = [augment_diagonal(a) for a in adjs]
-    elif method == "lse":  # haven't really used much. a few params to look at here
-        adjs = [to_laplacian(a, form="R-DAD") for a in adjs]
-    return tuple(adjs)
-
-
-def split_adj(adj):
-    ll_adj = adj[np.ix_(left_inds, left_inds)]
-    rr_adj = adj[np.ix_(right_inds, right_inds)]
-    lr_adj = adj[np.ix_(left_inds, right_inds)]
-    rl_adj = adj[np.ix_(right_inds, left_inds)]
-    return ll_adj, rr_adj, lr_adj, rl_adj
-
-
-def prescale_for_embed(adjs):
-    norms = [np.linalg.norm(adj, ord="fro") for adj in adjs]
-    mean_norm = np.mean(norms)
-    adjs = [adjs[i] * mean_norm / norms[i] for i in range(len(adjs))]
-    return adjs
-
-
-def ase(adj, n_components=None, normalize=False):
-    U, S, Vt = select_svd(adj, n_components=n_components, algorithm="full")
-    S_sqrt = np.diag(np.sqrt(S))
-    X = U @ S_sqrt
-    Y = Vt.T @ S_sqrt
-    if normalize:
-        X = normalize_matrix(X)
-        Y = normalize_matrix(Y)
-    return X, Y
-
-
-# TODO could fight about the exact details of preprocessing here
-adj = preprocess_for_embed(raw_adj)[0]
-adjs = split_adj(adj)
-ll_adj, rr_adj, lr_adj, rl_adj = adjs
-ll_adj, rr_adj = prescale_for_embed([ll_adj, rr_adj])
-lr_adj, rl_adj = prescale_for_embed([lr_adj, rl_adj])
-
-#%%
-normalize = False
-n_components = 32  # 24 looked fine
-X_ll, Y_ll = ase(ll_adj, n_components=n_components, normalize=normalize)
-X_rr, Y_rr = ase(rr_adj, n_components=n_components, normalize=normalize)
-X_lr, Y_lr = ase(lr_adj, n_components=n_components, normalize=normalize)
-X_rl, Y_rl = ase(rl_adj, n_components=n_components, normalize=normalize)
-
-#%%
-
-
-def joint_procrustes(
-    data1, data2, method="orthogonal", paired_inds1=None, paired_inds2=None, swap=False
-):
-    n = len(data1[0])
-    if method == "orthogonal":
-        procruster = OrthogonalProcrustes()
-    elif method == "seedless":
-        procruster = SeedlessProcrustes(init="sign_flips")
-    elif method == "seedless-oracle":
-        X1_paired = data1[0][paired_inds1, :]
-        X2_paired = data2[0][paired_inds2, :]
-        if swap:
-            Y1_paired = data1[1][paired_inds2, :]
-            Y2_paired = data2[1][paired_inds1, :]
-        else:
-            Y1_paired = data1[1][paired_inds1, :]
-            Y2_paired = data2[1][paired_inds2, :]
-        data1_paired = np.concatenate((X1_paired, Y1_paired), axis=0)
-        data2_paired = np.concatenate((X2_paired, Y2_paired), axis=0)
-        op = OrthogonalProcrustes()
-        op.fit(data1_paired, data2_paired)
-        procruster = SeedlessProcrustes(
-            init="custom",
-            initial_Q=op.Q_,
-            optimal_transport_eps=1.0,
-            optimal_transport_num_reps=100,
-            iterative_num_reps=10,
-        )
-    data1 = np.concatenate(data1, axis=0)
-    data2 = np.concatenate(data2, axis=0)
-    currtime = time.time()
-    data1_mapped = procruster.fit_transform(data1, data2)
-    print(f"{time.time() - currtime:.3f} seconds elapsed for SeedlessProcrustes.")
-    data1 = (data1_mapped[:n], data1_mapped[n:])
-    return data1
-
-
-X_ll, Y_ll = joint_procrustes(
-    (X_ll, Y_ll),
-    (X_rr, Y_rr),
-    method="seedless-oracle",
-    paired_inds1=left_paired_inds,
-    paired_inds2=right_paired_inds_shifted,
-)
-
-#%%
-
-composite_ipsi_X = np.concatenate((X_ll, X_rr), axis=0)
-plot_pairs(
-    composite_ipsi_X,
-    mg.nodes[CLASS_KEY].values,
-    left_pair_inds=left_paired_inds,
-    right_pair_inds=right_paired_inds,
-    palette=palette,
-    n_show=6,
-)
-
-#%%
-X_lr, Y_lr = joint_procrustes(
-    (X_lr, Y_lr),
-    (X_rl, Y_rl),
-    method="seedless-oracle",
-    paired_inds1=left_paired_inds,
-    paired_inds2=right_paired_inds_shifted,
-    swap=True,
-)
-
-#%%
-composite_contra_X = np.concatenate((X_lr, X_rl), axis=0)
-plot_pairs(
-    composite_contra_X,
-    mg.nodes[CLASS_KEY].values,
-    left_pair_inds=left_paired_inds,
-    right_pair_inds=right_paired_inds,
-    palette=palette,
-    n_show=6,
-)
-
-#%%
-composite_ipsi_Y = np.concatenate((Y_ll, Y_rr), axis=0)
-composite_contra_Y = np.concatenate((Y_rl, Y_lr), axis=0)
-
-composite_latent = np.concatenate(
-    (composite_ipsi_X, composite_ipsi_Y, composite_contra_X, composite_contra_Y), axis=1
-)
-
-#%%
-n_final_components = 16
-joint_latent, _ = ase(composite_latent, n_components=n_final_components)
-
-# %%
-
-left_X = composite_latent[left_paired_inds]
-right_X = composite_latent[right_paired_inds]
+mg.nodes["inds"] = np.arange(len(mg.nodes))
+left_inds, right_inds = get_paired_inds(mg.nodes)
+adj = mg.sum.adj
+ll_adj = adj[np.ix_(left_inds, left_inds)]
+rr_adj = adj[np.ix_(right_inds, right_inds)]
+lr_adj = adj[np.ix_(left_inds, right_inds)]
+rl_adj = adj[np.ix_(right_inds, left_inds)]
 
 
 #%%
+plot_kws = dict(plot_type="scattermap", sizes=(1, 1))
+fig, axs = plt.subplots(2, 2, figsize=(10, 10), gridspec_kw=dict(hspace=0, wspace=0))
 
-# get nearest right neighbor for everyone on the left
-def rank_neighbors(source_X, target_X, metric="euclidean"):
-    n_target = len(target_X)
-    n_source = len(source_X)
-    nn = NearestNeighbors(radius=0, n_neighbors=n_target, metric=metric)
-    nn.fit(target_X)
-    neigh_dist, neigh_inds = nn.kneighbors(source_X)
-    source_rank_neighbors = np.empty((n_source, n_target), dtype=int)
-    for i in range(n_source):
-        source_rank_neighbors[i, neigh_inds[i]] = np.arange(1, n_target + 1, dtype=int)
-    return source_rank_neighbors
+ax = axs[0, 0]
+adjplot(ll_adj, ax=ax, color=palette["Left"], **plot_kws)
 
-
-metric = "cosine"
-left_neighbors = rank_neighbors(left_X, right_X, metric=metric)
-right_neighbors = rank_neighbors(right_X, left_X, metric=metric)
-
-#%%
-fig, ax = plt.subplots(1, 1, figsize=(8, 6))
-left_ranks = np.diag(left_neighbors)
-right_ranks = np.diag(right_neighbors)
-ranks = np.concatenate((left_ranks, right_ranks))
-sns.histplot(
-    ranks,
+ax = axs[0, 1]
+matrixplot(
+    lr_adj,
     ax=ax,
-    cumulative=False,
-    stat="probability",
-    element="bars",
-    fill=True,
-    discrete=True,
+    color=palette["Contra"],
+    square=True,
+    **plot_kws,
 )
-ax.set(xlim=(0.5, 5.5), ylim=(0, 1))
-ax.set(ylabel="Fraction neuron pairs", xlabel="Rank")
+
+ax = axs[1, 0]
+matrixplot(
+    rl_adj,
+    ax=ax,
+    color=palette["Contra"],
+    square=True,
+    **plot_kws,
+)
+
+ax = axs[1, 1]
+adjplot(rr_adj, ax=ax, color=palette["Right"], **plot_kws)
+#%% [markdown]
+# ## Include the contralateral connections in graph matching
+#%% [markdown]
+# ### Run the graph matching experiment
+#%%
+from graspologic.match.qap import _doubly_stochastic
+
+np.random.seed(8888)
+maxiter = 30
+verbose = 1
+ot = False
+maximize = True
+reg = np.nan  # TODO could try GOAT
+thr = np.nan
+tol = 1e-3
+n_init = 20
+alpha = 0.1
+n = len(ll_adj)
+# construct an initialization
+P0 = 1 / n * np.ones((n, n))
+# P0
+# P0 =
+# P0[np.arange(n_pairs), np.arange(n_pairs)] = 1
+# P0[n_pairs:, n_pairs:] = 1 / (n - n_pairs)
+
+
+@jit(nopython=True)
+def compute_gradient(A, B, AB, BA, P):
+    return A @ P @ B.T + A.T @ P @ B + AB @ P.T @ BA.T + BA.T @ P.T @ AB
+
+
+@jit(nopython=True)
+def compute_step_size(A, B, AB, BA, P, Q):
+    R = P - Q
+    # TODO make these "smart" traces like in the scipy code, couldn't hurt
+    # though I don't know how much Numba cares
+    a_cross = np.trace(AB.T @ R @ BA @ R)
+    b_cross = np.trace(AB.T @ R @ BA @ Q) + np.trace(AB.T @ Q @ BA @ R)
+    a_intra = np.trace(A @ R @ B.T @ R.T)
+    b_intra = np.trace(A @ Q @ B.T @ R.T + A @ R @ B.T @ Q.T)
+
+    a = a_cross + a_intra
+    b = b_cross + b_intra
+
+    if a * obj_func_scalar > 0 and 0 <= -b / (2 * a) <= 1:
+        alpha = -b / (2 * a)
+    return alpha
+    # else:
+    #     alpha = np.argmin([0, (b + a) * obj_func_scalar])
+    # return alpha
+
+
+@jit(nopython=True)
+def compute_objective_function(A, B, AB, BA, P):
+    return np.trace(A @ P @ B.T @ P.T) + np.trace(AB.T @ P @ BA @ P)
+
+
+rows = []
+for init in range(n_init):
+    if verbose > 0:
+        print(f"Initialization: {init}")
+    shuffle_inds = np.random.permutation(n)
+    correct_perm = np.argsort(shuffle_inds)
+    A_base = ll_adj.copy()
+    B_base = rr_adj.copy()
+    AB_base = lr_adj.copy()
+    BA_base = rl_adj.copy()
+
+    for between_term in [False]:
+        init_t0 = time.time()
+        if verbose > 0:
+            print(f"Between term: {between_term}")
+        A = A_base
+        B = B_base[shuffle_inds][:, shuffle_inds]
+        AB = AB_for_obj = AB_base[:, shuffle_inds]
+        BA = BA_for_obj = BA_base[shuffle_inds]
+
+        if not between_term:
+            AB = np.zeros((n, n))
+            BA = np.zeros((n, n))
+
+        P = P0.copy()
+        P = P[:, shuffle_inds]
+
+        if alpha > 0:
+            rand_ds = np.random.uniform(size=(n, n))
+            rand_ds = _doubly_stochastic(rand_ds)
+            P = (1 - alpha) * P + alpha * rand_ds
+
+        # _, iteration_perm = linear_sum_assignment(-P)
+        # match_ratio = (correct_perm == iteration_perm)[:n_pairs].mean()
+        # print(match_ratio)
+
+        obj_func_scalar = 1
+        if maximize:
+            obj_func_scalar = -1
+
+        for n_iter in range(1, maxiter + 1):
+
+            # [1] Algorithm 1 Line 3 - compute the gradient of f(P)
+            currtime = time.time()
+            grad_fp = compute_gradient(A, B, AB, BA, P)
+            if verbose > 1:
+                print(f"{time.time() - currtime:.3f} seconds elapsed for grad_fp.")
+
+            # [1] Algorithm 1 Line 4 - get direction Q by solving Eq. 8
+            currtime = time.time()
+            if ot:
+                # TODO not implemented here yet
+                Q = alap(grad_fp, n, maximize, reg, thr)
+            else:
+                _, cols = linear_sum_assignment(grad_fp, maximize=maximize)
+                Q = np.eye(n)[cols]
+            if verbose > 1:
+                print(
+                    f"{time.time() - currtime:.3f} seconds elapsed for LSAP/Sinkhorn step."
+                )
+
+            # [1] Algorithm 1 Line 5 - compute the step size
+            currtime = time.time()
+
+            alpha = compute_step_size(A, B, AB, BA, P, Q)
+
+            if verbose > 1:
+                print(
+                    f"{time.time() - currtime:.3f} seconds elapsed for quadradic terms."
+                )
+
+            # [1] Algorithm 1 Line 6 - Update P
+            P_i1 = alpha * P + (1 - alpha) * Q
+            if np.linalg.norm(P - P_i1) / np.sqrt(n) < tol:
+                P = P_i1
+                break
+            P = P_i1
+            # _, iteration_perm = linear_sum_assignment(-P)
+            # match_ratio = (correct_perm == iteration_perm)[:n_pairs].mean()
+
+            objfunc = compute_objective_function(A, B, AB_for_obj, BA_for_obj, P)
+
+            if verbose > 0:
+                print(f"Iteration: {n_iter},  Objective function: {objfunc:.2f}")
+
+            row = {
+                "init": init,
+                "iter": n_iter,
+                "objfunc": objfunc,
+                # "match_ratio": match_ratio,
+                "between_term": between_term,
+                "time": time.time() - init_t0,
+                "P": P[:, correct_perm],
+            }
+            rows.append(row)
+
+        if verbose > 0:
+            print("\n")
+
+    _, perm = linear_sum_assignment(-P)
+    if verbose > 0:
+        print("\n")
+
+results = pd.DataFrame(rows)
+results
+
+#%%
+last_results_idx = results.groupby(["between_term", "init"])["iter"].idxmax()
+last_results = results.loc[last_results_idx].copy()
+
+total_objfunc = last_results["objfunc"].sum()
+amalgam_P = np.zeros((n, n))
+for idx, row in last_results.iterrows():
+    P = row["P"]
+    objfunc = row["objfunc"]
+    scaled_P = P * objfunc / total_objfunc
+    amalgam_P += scaled_P
+
+#%%
+from scipy.stats import rankdata
+
+pair_ranks = []
+for i, row in enumerate(amalgam_P):
+    ranks = rankdata(-row)
+    pair_rank = ranks[i]
+    if i == 0:
+        print(pair_rank)
+    pair_ranks.append(pair_rank)
+pair_ranks = np.array(pair_ranks)
+
+fig, ax = plt.subplots(1, 1, figsize=(2, 4))
+colors = sns.color_palette()
+sns.histplot(
+    x=pair_ranks, ax=ax, binwidth=1, stat="probability", discrete=True, color=colors[1]
+)
+ax.set(ylim=(0, 1), xlim=(0.5, 5.5))
+ax.set_xticks([1, 2, 3, 4, 5])
+ax.set_ylabel("Fraction Neuron Pairs")
+ax.set_xlabel("GM rank")
+ax.spines["right"].set_visible(True)
+ax.spines["top"].set_visible(True)
+stashfig("GM-rank")
+
+#%%
+
+# I = np.eye(n_pairs)
+# A = A_base[:n_pairs, :n_pairs].copy()
+# B = B_base[:n_pairs, :n_pairs].copy()
+# AB = AB_base[:n_pairs, :n_pairs].copy()
+# BA = BA_base[:n_pairs, :n_pairs].copy()
+# P = amalgam_P[:n_pairs, :n_pairs].copy()
+
+# og_objfunc = compute_objective_function(A, B, AB, BA, I)
+# print(f"Objective function with current pairs: {og_objfunc}")
+
+# for i in range(10):
+#     shuffle_inds = np.random.permutation(len(P))
+#     unshuffle_inds = np.argsort(shuffle_inds)
+#     P_shuffle = P[shuffle_inds][:, shuffle_inds].copy()
+#     _, perm_inds = linear_sum_assignment(P_shuffle, maximize=True)
+#     perm_inds = perm_inds[unshuffle_inds]
+#     P_final = np.eye(n)
+#     P_final = P_final[perm_inds][:n_pairs, :n_pairs].copy()  # double check
+
+#     final_objfunc = compute_objective_function(A, B, AB, BA, P_final)
+#     print(f"Final objective function with predicted pairs: {final_objfunc}")
+
+
+#%%
+
+
+def predict_pairs(P, source_nodes, target_nodes):
+    source_nodes["predicted_pairs"] = ""
+    source_nodes["prediction_changed"] = False
+    source_nodes["multiple_predictions"] = False
+    source_nodes["had_pair"] = True
+    for i in range(n):
+        idx = source_nodes.index[i]
+        row = P[i]
+        nonzero_inds = np.nonzero(row)[0]
+        sort_inds = np.argsort(-row[nonzero_inds])
+        ranking = nonzero_inds[sort_inds]
+        ranking_skids = target_nodes.index[ranking]
+        source_nodes.at[idx, "predicted_pairs"] = list(ranking_skids)
+        current_pair = source_nodes.loc[idx, "pair"]
+        if ranking_skids[0] != current_pair:
+            source_nodes.loc[idx, "prediction_changed"] = True
+        if len(ranking_skids) > 1:
+            source_nodes.loc[idx, "multiple_predictions"] = True
+        if source_nodes.loc[idx, "pair"] == -1 or idx < 1:
+            source_nodes.loc[idx, "had_pair"] = False
+    return source_nodes
+
+
+left_nodes = predict_pairs(amalgam_P, left_nodes, right_nodes)
+right_nodes = predict_pairs(amalgam_P.T, right_nodes, left_nodes)
+changed_left_nodes = left_nodes[
+    left_nodes["prediction_changed"] | left_nodes["multiple_predictions"]
+].sort_values(
+    ["had_pair", "prediction_changed", "multiple_predictions"], ascending=False
+)
+changed_right_nodes = right_nodes[
+    right_nodes["prediction_changed"] | right_nodes["multiple_predictions"]
+].sort_values(
+    ["had_pair", "prediction_changed", "multiple_predictions"], ascending=False
+)
+
+
+changed_left_nodes.to_csv(output_path / "changed_left_pairs_meta.csv")
+changed_right_nodes.to_csv(output_path / "changed_right_pairs_meta.csv")
+
+#%%
+
+plot_nodes = changed_left_nodes[
+    changed_left_nodes["prediction_changed"] & changed_left_nodes["had_pair"]
+]
+skeleton_palette = dict(
+    zip(mg.nodes.index, np.vectorize(CLASS_COLOR_DICT.get)(mg.nodes["merge_class"]))
+)
+start_instance()
+n_plot = 40
+for i in np.random.choice(len(plot_nodes), size=n_plot, replace=False):
+    idx = plot_nodes.index[i]
+    row = plot_nodes.loc[idx]
+    predicted_pairs = row["predicted_pairs"]
+    predicted_pairs += [idx]
+    fig = plt.figure(figsize=(8, 8))
+    gs = plt.GridSpec(1, 1, figure=fig)
+    ax = fig.add_subplot(gs[0, 0], projection="3d")
+    simple_plot_neurons(predicted_pairs, palette=skeleton_palette, ax=ax, dist=6)
+    ax.set_title(f"Left: {idx}")
+    ax.set_xlim((7000, 99000))
+    ax.set_ylim((7000, 99000))
+    stashfig(f"left-{idx}-pair-predictions")
+
+# %% [markdown]
+# ## End
+#%%
+elapsed = time.time() - t0
+delta = datetime.timedelta(seconds=elapsed)
+print("----")
+print(f"Script took {delta}")
+print(f"Completed at {datetime.datetime.now()}")
+print("----")

@@ -3,7 +3,9 @@ import os
 import time
 import matplotlib.pyplot as plt
 import networkx as nx
+from networkx.readwrite import edgelist
 import numpy as np
+from numpy.lib.utils import source
 import pandas as pd
 import seaborn as sns
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -15,6 +17,7 @@ from src.visualization import set_theme
 from graspologic.utils import remove_loops
 from scipy.stats import binom
 from scipy.stats import binom_test  # binom_test is depricated
+from graspologic.utils import binarize
 
 t0 = time.time()
 set_theme()
@@ -43,6 +46,7 @@ graph_types = ["ad", "aa", "dd", "da"]
 adjs = []
 for gt in graph_types:
     adj = mg.to_edge_type_graph(gt).adj
+    adj = binarize(adj)
     adjs.append(adj)
 
 # %%
@@ -209,7 +213,7 @@ stashfig("edge-type-count-upset")
 ax.set_yscale("log")
 stashfig("edge-type-count-upset-log")
 
-
+#%%
 for idx, row in combo_data.iterrows():
     k = row["count"]
     n = len(adjs[0]) ** 2
@@ -272,3 +276,53 @@ ax.set_title("Null edge reciprocity", fontsize="large", pad=10)
 plt.setp(ax.get_yticklabels(), rotation=0)
 ax.set(ylabel="Forward", xlabel="Backward")
 stashfig("null-edge-reciprocity")
+
+
+#%%
+# extracting neurons that have >1 either 3- or 4- multiplexed edges
+adj_multiplexity = adj_tensor.sum(axis=0).astype(int)
+
+from pathlib import Path
+
+out_path = Path("maggot_models/experiments/multiplex_edges/outs")
+
+
+def extract_plexity_edges(adj_multiplexity, plexity):
+    threeplex_mask = adj_multiplexity == plexity
+    sources, targets = np.nonzero(threeplex_mask)
+    nodes = mg.nodes
+    index = nodes.index
+    source_ids = index[sources].values.reshape((-1, 1))
+    target_ids = index[targets].values.reshape((-1, 1))
+
+    edgelist_arr = np.concatenate((source_ids, target_ids), axis=1)
+    edgelist_df = pd.DataFrame(data=edgelist_arr, columns=["source", "target"])
+
+    return edgelist_df
+
+
+edgelist_df = extract_plexity_edges(adj_multiplexity, 3)
+edgelist_df.to_csv(out_path / "threeplex-edges.csv", index=False)
+
+source_nodes = edgelist_df["source"].unique()
+pd.Series(source_nodes).to_csv(
+    out_path / "threeplex-source-nodes.csv", index=False, header=False
+)
+
+target_nodes = edgelist_df["target"].unique()
+pd.Series(target_nodes).to_csv(
+    out_path / "threeplex-target-nodes.csv", index=False, header=False
+)
+
+edgelist_df = extract_plexity_edges(adj_multiplexity, 4)
+edgelist_df.to_csv(out_path / "fourplex-edges.csv", index=False)
+
+source_nodes = edgelist_df["source"].unique()
+pd.Series(source_nodes).to_csv(
+    out_path / "fourplex-source-nodes.csv", index=False, header=False
+)
+
+target_nodes = edgelist_df["target"].unique()
+pd.Series(target_nodes).to_csv(
+    out_path / "fourplex-target-nodes.csv", index=False, header=False
+)
