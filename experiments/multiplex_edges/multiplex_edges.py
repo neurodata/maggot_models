@@ -1,11 +1,7 @@
 # %%
-import os
 import time
 import matplotlib.pyplot as plt
-import networkx as nx
-from networkx.readwrite import edgelist
 import numpy as np
-from numpy.lib.utils import source
 import pandas as pd
 import seaborn as sns
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -326,3 +322,14 @@ target_nodes = edgelist_df["target"].unique()
 pd.Series(target_nodes).to_csv(
     out_path / "fourplex-target-nodes.csv", index=False, header=False
 )
+
+#%%
+edge_type = "ad"
+for edge_type in edge_types:
+    conditional_combo_data = combo_data.xs(True, level=edge_type)
+    singleton_count = conditional_combo_data.loc[(False, False, False)]["count"]
+    total_count = conditional_combo_data["count"].sum()
+    singleton_proportion = singleton_count / total_count
+    print(edge_type)
+    print(f"{singleton_proportion:.2f}")
+    print()
