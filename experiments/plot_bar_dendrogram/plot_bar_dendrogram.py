@@ -22,7 +22,13 @@ def stashfig(name, **kws):
     savefig(
         name,
         pathname="./maggot_models/experiments/plot_bar_dendrogram/figs",
-        format='pdf',
+        format="pdf",
+        **kws,
+    )
+    savefig(
+        name,
+        pathname="./maggot_models/experiments/plot_bar_dendrogram/figs",
+        format="svg",
         **kws,
     )
 
@@ -50,10 +56,10 @@ HUE_ORDER = "sum_walk_sort"
 
 meta = nodes.copy()
 meta["inds"] = range(len(meta))
-lowest_level = 7
+lowest_level = 8
 level_names = [
     f"dc_level_{i}_n_components={n_components}_min_split={min_split}"
-    for i in range(lowest_level + 1)
+    for i in range(1, lowest_level + 1)
 ]
 
 #%%
@@ -83,4 +89,24 @@ ax = dendrogram_barplot(
 ax.set_xticks([0, 1, 2, 3, 4, 5, 6, 7])
 ax.tick_params(axis="both", which="both", length=0)
 ax.set_xlabel("Level")
-stashfig("bar-dendrogram")
+# stashfig("bar-dendrogram")
+
+#%%
+
+ax = dendrogram_barplot(
+    meta,
+    group="dc_level_",
+    max_levels=7,
+    hue=HUE_KEY,
+    hue_order=HUE_ORDER,
+    group_order=HUE_ORDER,
+    orient="h",
+    figsize=(20, 5),
+    palette=palette,
+    pad=25,
+    linewidth=1,
+)
+ax.set_yticks([0, 1, 2, 3, 4, 5, 6, 7])
+ax.tick_params(axis="both", which="both", length=0)
+ax.set_ylabel("Cluster level", fontsize='x-large')
+stashfig("bar-dendrogram-wide", pad_inches=0)
