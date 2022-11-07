@@ -16,6 +16,7 @@ from src.data import load_metagraph
 from src.graph import preprocess
 from src.io import savecsv, savefig
 from src.visualization import CLASS_COLOR_DICT, adjplot
+import pandas as pd
 
 
 def invert_permutation(permutation):
@@ -125,25 +126,82 @@ def normalize_match(graph, match_mat):
 # %% [markdown]
 # ##
 
-methods = [make_flat_match, make_linear_match, make_exp_match]
-names = ["Exp"]
+# methods = [make_flat_match, make_linear_match, make_exp_match]
+# names = ["Exp"]
 
-gm = GraphMatch(
-    n_init=50, init_method="rand", max_iter=100, eps=0.05, shuffle_input=True
-)
-alpha = 0.005
-match_mats = []
+# gm = GraphMatch(
+#     n_init=50, init_method="rand", max_iter=100, eps=0.05, shuffle_input=True
+# )
+# alpha = 0.005
+# match_mats = []
+# for method, name in zip(methods, names):
+#     print(name)
+#     match_mat = method(len(adj), alpha=alpha)
+#     match_mat = normalize_match(adj, match_mat)
+#     match_mats.append(match_mat)
+#     gm.fit(match_mat, adj)
+#     permutations.append(gm.perm_inds_)
+
+#%%
 permutations = []
-for method, name in zip(methods, names):
-    print(name)
-    match_mat = method(len(adj), alpha=alpha)
-    match_mat = normalize_match(adj, match_mat)
-    match_mats.append(match_mat)
-    gm.fit(match_mat, adj)
-    permutations.append(gm.perm_inds_)
+
+from src.traverse import RandomWalk
+from src.traverse import to_markov_matrix
+from tqdm.autonotebook import tqdm
+
+start_nodes = np.arange(n_per_block)
+stop_nodes = np.arange(n_per_block * (n_blocks - 1), n_per_block * n_blocks)
+walk_kws = dict(max_hops=10, allow_loops=False, n_walks=1024)
 
 
+def generate_walks(
+    adj, start_nodes, stop_nodes, max_hops=10, allow_loops=False, n_walks=256
+):
 
+    transition_probs = to_markov_matrix(adj)
+    rw = RandomWalk(
+        transition_probs,
+        stop_nodes=stop_nodes,
+        max_hops=max_hops,
+        allow_loops=allow_loops,
+    )
+    walks = []
+    for n in tqdm(start_nodes):
+        for i in range(n_walks):
+            rw.start(n)
+            walk = rw.traversal_
+            if walk[-1] in stop_nodes:  # only keep ones that made it to output
+                walks.append(walk)
+    return walks
+
+
+forward_walks = generate_walks(adj, start_nodes, stop_nodes, **walk_kws)
+backward_walks = generate_walks(adj.T, stop_nodes, start_nodes, **walk_kws)
+
+nodes = np.arange(len(adj))
+node_visits = {}
+for walk in forward_walks:
+    for i, node in enumerate(walk):
+        if node not in node_visits:
+            node_visits[node] = []
+        node_visits[node].append(i / (len(walk) - 1))
+
+for walk in backward_walks:
+    for i, node in enumerate(walk):
+        if node not in node_visits:
+            node_visits[node] = []
+        node_visits[node].append(1 - (i / (len(walk) - 1)))
+
+
+median_node_visits = {}
+for node in nodes:
+    median_node_visits[node] = np.median(node_visits[node])
+
+results = pd.DataFrame(index=nodes)
+results["median_node_visits"] = results.index.map(median_node_visits)
+
+perm = np.argsort(results["median_node_visits"])
+permutations.append(perm)
 
 # %% [markdown]
 # ##
@@ -293,7 +351,7 @@ plot_scores(sf_perm, ax)
 first = 3
 # for i, (match, perm) in enumerate(zip(match_mats, permutations)):
 perm = permutations[0]
-axs[0, first].set_title("D) Graph match flow", **title_kws)
+axs[0, first].set_title("D) WalkSort", **title_kws)
 
 # adjacency
 adjplot(
@@ -313,73 +371,74 @@ plot_scores(perm, ax)
 
 
 plt.tight_layout()
+fig.set_facecolor('w')
 stashfig("sbm-ordering" + basename)
 
-# %%
+# # %%
 
-from src.traverse import RandomWalk
-from src.traverse import to_markov_matrix
-from tqdm.autonotebook import tqdm
+# from src.traverse import RandomWalk
+# from src.traverse import to_markov_matrix
+# from tqdm.autonotebook import tqdm
 
-start_nodes = np.arange(n_per_block)
-stop_nodes = np.arange(n_per_block * (n_blocks - 1), n_per_block * n_blocks)
-walk_kws = dict(max_hops=10, allow_loops=False, n_walks=1024)
-
-
-def generate_walks(
-    adj, start_nodes, stop_nodes, max_hops=10, allow_loops=False, n_walks=256
-):
-
-    transition_probs = to_markov_matrix(adj)
-    rw = RandomWalk(
-        transition_probs,
-        stop_nodes=stop_nodes,
-        max_hops=max_hops,
-        allow_loops=allow_loops,
-    )
-    walks = []
-    for n in tqdm(start_nodes):
-        for i in range(n_walks):
-            rw.start(n)
-            walk = rw.traversal_
-            if walk[-1] in stop_nodes:  # only keep ones that made it to output
-                walks.append(walk)
-    return walks
+# start_nodes = np.arange(n_per_block)
+# stop_nodes = np.arange(n_per_block * (n_blocks - 1), n_per_block * n_blocks)
+# walk_kws = dict(max_hops=10, allow_loops=False, n_walks=1024)
 
 
-forward_walks = generate_walks(adj, start_nodes, stop_nodes, **walk_kws)
-backward_walks = generate_walks(adj.T, stop_nodes, start_nodes, **walk_kws)
+# def generate_walks(
+#     adj, start_nodes, stop_nodes, max_hops=10, allow_loops=False, n_walks=256
+# ):
 
-nodes = np.arange(len(adj))
-node_visits = {}
-for walk in forward_walks:
-    for i, node in enumerate(walk):
-        if node not in node_visits:
-            node_visits[node] = []
-        node_visits[node].append(i / (len(walk) - 1))
+#     transition_probs = to_markov_matrix(adj)
+#     rw = RandomWalk(
+#         transition_probs,
+#         stop_nodes=stop_nodes,
+#         max_hops=max_hops,
+#         allow_loops=allow_loops,
+#     )
+#     walks = []
+#     for n in tqdm(start_nodes):
+#         for i in range(n_walks):
+#             rw.start(n)
+#             walk = rw.traversal_
+#             if walk[-1] in stop_nodes:  # only keep ones that made it to output
+#                 walks.append(walk)
+#     return walks
 
-for walk in backward_walks:
-    for i, node in enumerate(walk):
-        if node not in node_visits:
-            node_visits[node] = []
-        node_visits[node].append(1 - (i / (len(walk) - 1)))
+
+# forward_walks = generate_walks(adj, start_nodes, stop_nodes, **walk_kws)
+# backward_walks = generate_walks(adj.T, stop_nodes, start_nodes, **walk_kws)
+
+# nodes = np.arange(len(adj))
+# node_visits = {}
+# for walk in forward_walks:
+#     for i, node in enumerate(walk):
+#         if node not in node_visits:
+#             node_visits[node] = []
+#         node_visits[node].append(i / (len(walk) - 1))
+
+# for walk in backward_walks:
+#     for i, node in enumerate(walk):
+#         if node not in node_visits:
+#             node_visits[node] = []
+#         node_visits[node].append(1 - (i / (len(walk) - 1)))
 
 
-median_node_visits = {}
-for node in nodes:
-    median_node_visits[node] = np.median(node_visits[node])
+# median_node_visits = {}
+# for node in nodes:
+#     median_node_visits[node] = np.median(node_visits[node])
 
-results = pd.DataFrame(index=nodes)
-results["median_node_visits"] = results.index.map(median_node_visits)
+# results = pd.DataFrame(index=nodes)
+# results["median_node_visits"] = results.index.map(median_node_visits)
 
-perm = np.argsort(results["median_node_visits"])
+# perm = np.argsort(results["median_node_visits"])
 
-adjplot(
-    adj[np.ix_(perm, perm)],
-    colors=labels[perm],
-    # ax=axs[0, first],
-    cbar=False,
-    palette=color_dict,
-)
+# adjplot(
+#     adj[np.ix_(perm, perm)],
+#     colors=labels[perm],
+#     # ax=axs[0, first],
+#     cbar=False,
+#     palette=color_dict,
+# )
 
-#%%
+# #%%

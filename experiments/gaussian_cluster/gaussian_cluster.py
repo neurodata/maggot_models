@@ -2,8 +2,6 @@
 import datetime
 import time
 from ast import literal_eval
-from json import load
-from operator import index
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -55,8 +53,14 @@ embedding_df
 #%% load the embedding, get the correct subset of data
 
 mg = load_maggot_graph()
-mg = mg[mg.nodes["has_embedding"]]
+mg = mg.node_subgraph(mg.nodes.query("has_embedding").index)
 nodes = mg.nodes.copy()
+print(len(nodes))
+
+# #%%
+# nodes.groupby("predicted_pair_id").size().sort_values()
+
+#%%
 nodes = nodes[nodes.index.isin(embedding_df.index)]
 embedding_df = embedding_df[embedding_df.index.isin(nodes.index)]
 nodes = nodes.reindex(embedding_df.index)
@@ -67,7 +71,7 @@ symmetrize_pairs = True
 if symmetrize_pairs:
     pair_groups = nodes.groupby("pair_id")
     for pair_id, pair_group in pair_groups:
-        if pair_id > 1:
+        if pair_id > 1 and len(pair_group) == 2:
             inds = pair_group["inds"].values
             pair_embeddings = embedding[inds]
             mean_embedding = pair_embeddings.mean(axis=0)

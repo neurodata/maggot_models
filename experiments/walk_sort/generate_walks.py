@@ -26,12 +26,11 @@ reverse = True
 
 start_labels = [("sensories",), ("ascendings",)]
 
-
-stop_labels = [("dVNC",), ("dSEZ",), ("RGN",), ("motor",)]
+stop_labels = [("dVNC",), ("dSEZ",), ("RGN",)]
 
 
 mg = load_maggot_graph()
-mg.to_largest_connected_component()
+mg = mg.node_subgraph(mg.nodes[mg.nodes["selected_lcc"]].index)
 adj = mg.to_edge_type_graph(edge_type).adj
 adj = remove_loops(adj)
 meta = mg.nodes

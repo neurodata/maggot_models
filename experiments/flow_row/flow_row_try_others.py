@@ -60,20 +60,22 @@ def get_vals_by_k(ks, perm_adj):
 remove_missing = True
 mg = load_maggot_graph()
 
-#%%
+# %%
 graph_types = ["ad", "aa", "dd", "da"]
 graph_names = dict(
     zip(graph_types, [r"A $\to$ D", r"A $\to$ A", r"D $\to$ D", r"D $\to$ A"])
 )
 colors = sns.color_palette("deep", n_colors=len(graph_types))
 graph_type_colors = dict(zip(graph_types, colors))
+
 #%%
 nodes = mg.nodes.copy()
-nodes = nodes[~nodes["sum_walk_sort"].isna()]
-nodes.sort_values("sum_walk_sort", inplace=True)
+nodes = nodes[~nodes["sum_rank_signal_flow"].isna()]
+nodes.sort_values("sum_rank_signal_flow", inplace=True)
 nodes["order"] = range(len(nodes))
 mg = mg.node_subgraph(nodes.index)
 mg.nodes = nodes
+
 
 #%%
 
@@ -150,7 +152,7 @@ ax.text(0.1, 0.9, r"$p$ back", transform=ax.transAxes, color="black")
 ax.text(0.9, 0.9, r"$p$ fwd", transform=ax.transAxes, color="black", ha="right")
 fig.text(0.47, 0.05, "Distance in sorting")
 axs[1, 0].set_ylabel("Mean synapse mass")
-stashfig("adj-row-sort-by-walksort")
+stashfig("adj-row-sort-by-sf")
 
 #%%
 # from graspologic.match import GraphMatch

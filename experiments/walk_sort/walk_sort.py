@@ -20,7 +20,7 @@ set_theme()
 # meta_loc = f"{DATA_DIR}/{DATA_VERSION}/meta_data.csv"
 
 mg = load_maggot_graph()
-mg.to_largest_connected_component()
+mg = mg.node_subgraph(mg.nodes[mg.nodes["selected_lcc"]].index)
 meta = mg.nodes
 adj = mg.ad.adj
 meta["degree"] = np.sum(adj, axis=0) + np.sum(adj, axis=1)

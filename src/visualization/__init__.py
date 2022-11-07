@@ -51,7 +51,9 @@ from .dendrogram import (
 )
 from .settings import set_theme
 from .scatter import plot_pairs
+from .constants import HUE_ORDER
 
 # try:
 from .neuron import plot_neurons, plot_3view, plot_volumes, simple_plot_neurons
+
 # except ModuleNotFoundError:

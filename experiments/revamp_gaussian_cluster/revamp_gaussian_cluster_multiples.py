@@ -288,7 +288,7 @@ cluster_crosstabplot(condensed_nodes, name, palette=CLASS_COLOR_DICT)
 
 #%%
 uncondense_series(condensed_nodes, nodes, name)
-join_node_meta(nodes[name], overwrite=True)
+# join_node_meta(nodes[name], overwrite=True)
 
 #%%
 elapsed = time.time() - t0

@@ -12,8 +12,7 @@ from giskard.plot import crosstabplot, dissimilarity_clustermap, merge_axes
 from giskard.utils import get_paired_inds
 from graspologic.align import OrthogonalProcrustes, SeedlessProcrustes
 from graspologic.cluster import AutoGMMCluster, DivisiveCluster
-from graspologic.embed import AdjacencySpectralEmbed, MultipleASE, selectSVD
-from graspologic.match import GraphMatch
+from graspologic.embed import AdjacencySpectralEmbed, MultipleASE, select_svd
 from graspologic.plot import pairplot
 from graspologic.utils import (
     augment_diagonal,
@@ -35,6 +34,7 @@ from factor_analyzer import Rotator
 
 set_theme()
 t0 = time.time()
+np.random.seed(8888)
 
 out_path = Path("./maggot_models/experiments/revamp_embed")
 
@@ -51,9 +51,12 @@ def stashfig(name, **kws):
 CLASS_KEY = "merge_class"
 palette = CLASS_COLOR_DICT
 mg = load_maggot_graph()
-mg = mg[mg.nodes["paper_clustered_neurons"] | mg.nodes["accessory_neurons"]]
-mg = mg[mg.nodes["hemisphere"].isin(["L", "R"])]
-mg.to_largest_connected_component(verbose=True)
+mg = mg.node_subgraph(mg.nodes[mg.nodes["selected_lcc"]].index)
+mg = mg.node_subgraph(mg.nodes[mg.nodes["hemisphere"].isin(["L", "R"])].index)
+# mg = mg.node_subgraph(mg.nodes[mg.nodes["predicted_pair_id"] > 1].index)
+# mg = mg[mg.nodes["paper_clustered_neurons"] | mg.nodes["accessory_neurons"]]
+# mg = mg[mg.nodes["hemisphere"].isin(["L", "R"])]
+# mg.to_largest_connected_component(verbose=True)
 out_degrees = np.count_nonzero(mg.sum.adj, axis=0)
 in_degrees = np.count_nonzero(mg.sum.adj, axis=1)
 max_in_out_degree = np.maximum(out_degrees, in_degrees)
@@ -79,6 +82,21 @@ left_paired_inds, right_paired_inds = get_paired_inds(
     mg.nodes, pair_key="predicted_pair", pair_id_key="predicted_pair_id"
 )
 right_paired_inds_shifted = right_paired_inds - len(left_inds)
+
+has_pairing = pd.Series(
+    data=np.zeros(len(mg.nodes), dtype=bool),
+    index=mg.nodes.index,
+    name="has_valid_predicted_pair",
+)
+has_pairing.iloc[left_paired_inds] = True
+has_pairing.iloc[right_paired_inds] = True
+
+join_node_meta(has_pairing, overwrite=True, fillna=False)
+
+print(f"Number of paired nodes {2*len(left_paired_inds)}")
+print(f"Number of nodes: {len(mg.nodes)}")
+
+#%%
 
 
 def preprocess_for_embed(adjs, method="ase"):
@@ -123,7 +141,7 @@ def prescale_for_embed(adjs):
 
 
 def ase(adj, n_components=None):
-    U, S, Vt = selectSVD(adj, n_components=n_components, algorithm="full")
+    U, S, Vt = select_svd(adj, n_components=n_components, algorithm="full")
     S_sqrt = np.diag(np.sqrt(S))
     X = U @ S_sqrt
     Y = Vt.T @ S_sqrt
@@ -372,3 +390,12 @@ condensed_nodes = pd.concat(
 )
 condensed_nodes
 condensed_nodes.to_csv(out_path / "outs/condensed_nodes.csv")
+
+
+# %%
+elapsed = time.time() - t0
+delta = datetime.timedelta(seconds=elapsed)
+print("----")
+print(f"Script took {delta}")
+print(f"Completed at {datetime.datetime.now()}")
+print("----")

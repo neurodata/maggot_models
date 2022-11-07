@@ -4,7 +4,7 @@ import time
 
 import pandas as pd
 
-from giskard.flow import rank_graph_match_flow, rank_signal_flow, signal_flow
+from giskard.flow import rank_signal_flow, signal_flow
 from src.data import join_node_meta, load_maggot_graph
 
 t0 = time.time()
@@ -13,12 +13,15 @@ t0 = time.time()
 #%%
 print("Loading data...")
 mg = load_maggot_graph()
-nodes = mg.nodes.copy()
+mg = mg.node_subgraph(mg.nodes[mg.nodes["selected_lcc"]].index)
 mg = mg.sum
-mg.to_largest_connected_component(verbose=True)
 index = mg.nodes.index
 adj = mg.adj
 meta = mg.nodes
+
+# nodes = mg.nodes.copy()
+# mg.to_largest_connected_component(verbose=True)
+
 # #%%
 # sort_meta = meta.copy()
 # sort_meta.sort_values(

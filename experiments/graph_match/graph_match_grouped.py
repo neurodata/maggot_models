@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from graspologic.match import GraphMatch
+from graspologic.match import graph_match
 from src.data import join_node_meta, load_maggot_graph
 from src.io import savefig
 from src.visualization import adjplot, set_theme
@@ -33,9 +33,16 @@ def stashfig(name, **kws):
 # ## Load and preprocess data
 
 mg = load_maggot_graph()
-mg = mg[mg.nodes["paper_clustered_neurons"] | mg.nodes["accessory_neurons"]]
-mg = mg[mg.nodes["hemisphere"].isin(["L", "R"])]
-mg.to_largest_connected_component(verbose=True)
+mg = mg.node_subgraph(mg.nodes[mg.nodes["selected_lcc"]].index)
+print("Nodes in LCC:", len(mg.nodes))
+mg = mg.node_subgraph(mg.nodes[mg.nodes["hemisphere"].isin(["L", "R"])].index)
+print("Nodes in LCC and L/R:", len(mg.nodes))
+
+# mg = mg[mg.nodes["brain_and_inputs"] | mg.nodes["accessory_neurons"]]
+# mg = mg[mg.nodes["paper_clustered_neurons"] | mg.nodes["accessory_neurons"]]
+# mg = mg[mg.nodes["brain_and_inputs"] | mg.nodes["accessory_neurons"]]
+# mg = mg[mg.nodes["hemisphere"].isin(["L", "R"])]
+# mg.to_largest_connected_component(verbose=True)
 
 # from giskard.utils import get_paired_inds
 
@@ -46,12 +53,24 @@ nodes = mg.nodes.copy()
 adj = mg.sum.adj.copy()
 left_nodes = nodes[nodes["hemisphere"] == "L"].copy()
 left_paired_nodes = left_nodes[left_nodes["pair_id"] > -1].copy()
-left_unpaired_nodes = left_nodes[left_nodes["pair_id"] <= -1].copy()
+# left_unpaired_nodes = left_nodes[left_nodes["pair_id"] <= -1].copy()
 # left_nodes.sort_values("pair_id", inplace=True, ascending=False)
 right_nodes = nodes[nodes["hemisphere"] == "R"].copy()
 right_paired_nodes = right_nodes[right_nodes["pair_id"] > -1].copy()
-right_unpaired_nodes = right_nodes[right_nodes["pair_id"] <= -1].copy()
+# right_unpaired_nodes = right_nodes[right_nodes["pair_id"] <= -1].copy()
+print("Left nodes with pair:", len(left_paired_nodes))
+print("Right nodes with pair:", len(right_paired_nodes))
 
+intersection_pair_ids = np.intersect1d(
+    left_paired_nodes["pair_id"], right_paired_nodes["pair_id"]
+)
+left_paired_nodes = left_paired_nodes.query("pair_id in @intersection_pair_ids")
+right_paired_nodes = right_paired_nodes.query("pair_id in @intersection_pair_ids")
+
+print("After removing pairs without match:")
+print("Left nodes with pair:", len(left_paired_nodes))
+print("Right nodes with pair:", len(right_paired_nodes))
+#%%
 left_paired_nodes.sort_values("pair_id", inplace=True)
 right_paired_nodes.sort_values("pair_id", inplace=True)
 assert (right_paired_nodes["pair"] == left_paired_nodes.index).all()
@@ -80,26 +99,45 @@ nodes["predicted_pair"] = -1
 nodes["predicted_pair_id"] = -1
 nodes.loc[left_paired_inds.index, "predicted_pair"] = right_paired_inds.index
 nodes.loc[right_paired_inds.index, "predicted_pair"] = left_paired_inds.index
-paired_nodes = nodes[nodes["pair_id"] > 1]
-nodes.loc[paired_nodes.index, "predicted_pair_id"] = paired_nodes["pair_id"]
-max_pair_id = nodes["predicted_pair_id"].max()
+nodes.loc[left_paired_inds.index, "predicted_pair_id"] = left_paired_nodes["pair_id"]
+nodes.loc[right_paired_inds.index, "predicted_pair_id"] = right_paired_nodes["pair_id"]
+
+assert (
+    nodes.loc[left_paired_inds.index, "predicted_pair_id"].values
+    == nodes.loc[right_paired_inds.index, "predicted_pair_id"].values
+).all()
+
+
+print(len(nodes[nodes["predicted_pair"] > 1]))
+
+#%%
+
+# paired_nodes = nodes[nodes["pair_id"] > 1]
+# nodes.loc[paired_nodes.index, "predicted_pair_id"] = paired_nodes["pair_id"]
+max_pair_id = nodes["pair_id"].max()
 
 max_iter = 30
 n_init = 100
-match_classes = [
-    "sens-AN",
-    "sens-MN",
-    "sens-photoRh5",
-    "sens-photoRh6",
-    "KC"
-]
-keys = ["merge_class", 'merge_class', 'merge_class', 'merge_class', 'class1']
+match_classes = ["sens-AN", "sens-MN", "sens-photoRh5", "sens-photoRh6", "KC"]
+keys = ["merge_class", "merge_class", "merge_class", "merge_class", "class1"]
 
+n_total_pairs = len(nodes[nodes["predicted_pair_id"] > 1]) // 2
+n_total_pairs
+
+#%%
+
+#%%
 for key, mc in zip(keys, match_classes):
-    left_target_inds = left_nodes[left_nodes[key] == mc]["inds"]
+    print("Group: ", mc)
+    left_target_inds = left_nodes.query(f"({key} == @mc) & (pair_id < 0)")["inds"]
+    # left_target_inds = left_nodes[(left_nodes[key] == mc) & left_nodes["pair"]]["inds"]
     print(f"Number of left targets: {len(left_target_inds)}")
-    right_target_inds = right_nodes[right_nodes[key] == mc]["inds"]
+    # right_target_inds = right_nodes[right_nodes[key] == mc]["inds"]
+    right_target_inds = right_nodes.query(f"({key} == @mc) & (pair_id < 0)")["inds"]
     print(f"Number of right targets: {len(right_target_inds)}")
+    if len(left_target_inds) == 0 or len(right_target_inds) == 0:
+        print("No targets for this group")
+        continue
     left_inds = np.concatenate((left_paired_inds, left_target_inds))
     right_inds = np.concatenate((right_paired_inds, right_target_inds))
     ll_adj = adj[np.ix_(left_inds, left_inds)]
@@ -113,15 +151,25 @@ for key, mc in zip(keys, match_classes):
     target_inds = (left_target_inds, right_target_inds)
     smaller_target_inds = target_inds[smaller]
     larger_target_inds = target_inds[larger]
-    gm = GraphMatch(
+    # gm = GraphMatch(
+    #     n_init=n_init,
+    #     init="barycenter",
+    #     eps=1e-2,
+    #     max_iter=max_iter,
+    #     shuffle_input=True,
+    # )
+    # gm.fit(smaller_adj, larger_adj, seeds_A=seeds, seeds_B=seeds)
+    partial_match = np.stack((seeds, seeds), axis=1)
+    _, perm_inds, _, _ = graph_match(
+        smaller_adj,
+        larger_adj,
+        partial_match=partial_match,
         n_init=n_init,
-        init="barycenter",
-        eps=1e-2,
         max_iter=max_iter,
         shuffle_input=True,
+        tol=1e-2,
     )
-    gm.fit(smaller_adj, larger_adj, seeds_A=seeds, seeds_B=seeds)
-    nonseed_perm_inds = gm.perm_inds_[n_pairs : len(smaller_adj)] - n_pairs
+    nonseed_perm_inds = perm_inds[n_pairs : len(smaller_adj)] - n_pairs
     smaller_target_idx = smaller_target_inds.index
     larger_target_idx = larger_target_inds.index[nonseed_perm_inds]
     nodes.loc[smaller_target_idx, "predicted_pair"] = larger_target_idx
@@ -130,11 +178,19 @@ for key, mc in zip(keys, match_classes):
     nodes.loc[smaller_target_idx, "predicted_pair_id"] = pair_ids
     nodes.loc[larger_target_idx, "predicted_pair_id"] = pair_ids
     max_pair_id = max(pair_ids)
+    n_total_pairs += len(smaller_target_idx)
 
+#%%
+print(f"Total number of pairs: {n_total_pairs}")
+
+#%%
 # check that everything worked
-paired_nodes = nodes[nodes["predicted_pair"] > 1].copy()
+paired_nodes = nodes[nodes["predicted_pair_id"] > 1].copy()
+len(paired_nodes)
+#%%
+
 paired_nodes.sort_values("predicted_pair_id", inplace=True)
-assert paired_nodes.groupby('predicted_pair_id').size().max() == 2
+assert paired_nodes.groupby("predicted_pair_id").size().max() == 2
 left_paired_nodes = paired_nodes[paired_nodes["left"]]
 right_paired_nodes = paired_nodes[paired_nodes["right"]]
 assert (left_paired_nodes["predicted_pair"] == right_paired_nodes.index).all()

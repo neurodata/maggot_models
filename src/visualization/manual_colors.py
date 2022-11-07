@@ -94,6 +94,8 @@ CLASS_IND_DICT = {
     "Sens2o": 33,
     "LN": 49,
     "dVNC;dUnk": 105,
+    "dSEZ;LHN;CN": 124,
+    "dVNC;LHN": 38,
 }
 
 name_map = {
