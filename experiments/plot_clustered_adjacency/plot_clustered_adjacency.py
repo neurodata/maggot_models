@@ -7,7 +7,10 @@ from giskard.hierarchy import BaseNetworkTree
 from giskard.plot import plot_dendrogram
 from src.data import load_maggot_graph, load_palette
 from src.io import savefig
-from src.visualization import adjplot, set_theme
+from src.visualization import adjplot, set_theme, ORDER_KEY, HUE_KEY
+
+print("ORDER_KEY = ", ORDER_KEY)
+print("HUE_KEY = ", HUE_KEY)
 
 t0 = time.time()
 set_theme()
@@ -33,10 +36,7 @@ nodes = mg.nodes
 adj = mg.sum.adj
 
 
-HUE_KEY = "simple_group"
 palette = load_palette()
-
-HUE_ORDER = "sum_walk_sort"
 
 
 #%%
@@ -67,7 +67,7 @@ def sort_meta(meta, group, group_order=None, item_order=[], ascending=True):
 
 
 sorted_meta = sort_meta(
-    meta, level_names, group_order=HUE_ORDER, item_order=[HUE_KEY, HUE_ORDER]
+    meta, level_names, group_order=ORDER_KEY, item_order=[HUE_KEY, ORDER_KEY]
 )
 sort_inds = sorted_meta["inds"]
 sorted_adj = adj[sort_inds][:, sort_inds]
@@ -113,7 +113,7 @@ ax, divider, top, _ = adjplot(
     sizes=(0.3, 0.3),
     sort_class=level_names[:line_level],
     item_order="sorted_adjacency_index",
-    class_order=HUE_ORDER,
+    class_order=ORDER_KEY,
     meta=sorted_meta,
     palette=palette,
     colors=HUE_KEY,
@@ -128,5 +128,5 @@ top_ax = divider.append_axes("top", size="10%", pad=0, sharex=ax)
 plot_dendrogram(top_ax, mt, orientation="v")
 
 stashfig(
-    f"adjacency-matrix-cluster_key={CLUSTER_KEY}-hue_key={HUE_KEY}-hue_order={HUE_ORDER}"
+    f"adjacency-matrix-cluster_key={CLUSTER_KEY}-hue_key={HUE_KEY}-ORDER_KEY={ORDER_KEY}"
 )

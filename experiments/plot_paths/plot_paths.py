@@ -13,13 +13,12 @@ from matplotlib.collections import LineCollection
 from src.data import load_maggot_graph, load_palette
 from src.io import savefig
 from tqdm import tqdm
+from src.visualization import HUE_KEY, ORDER_KEY
 
 t0 = time.time()
 
 np.random.seed(8888)
 
-HUE_KEY = "simple_group"
-ORDER_KEY = "sum_walk_sort"
 n_components = 10
 min_split = 32
 level = 7
@@ -28,7 +27,7 @@ width = 0.25
 alpha = 0.0075
 linewidth = 0.0075
 n_subsamples = 100000
-end = "RGN"
+# end = "RGN"
 GROUP_KEY = f"dc_level_{level}_n_components={n_components}_min_split={min_split}"
 
 set_theme()
@@ -184,8 +183,3 @@ figname = (
     f"-linewidth={linewidth}-alpha={alpha}-level={level}"
 )
 stashfig(figname)
-
-
-#%%
-meta['dc_level_6_n_components=10_min_split=32'].nunique()
-# %%

@@ -1,13 +1,12 @@
 #%%
 import time
 
-import matplotlib.pyplot as plt
-import numpy as np
-from giskard.hierarchy import BaseNetworkTree
-from giskard.plot import plot_dendrogram
 from src.data import load_maggot_graph, load_palette
 from src.io import savefig
-from src.visualization import adjplot, set_theme
+from src.visualization import set_theme, ORDER_KEY, HUE_KEY
+
+print("ORDER_KEY = ", ORDER_KEY)
+print("HUE_KEY = ", HUE_KEY)
 
 t0 = time.time()
 set_theme()
@@ -45,10 +44,7 @@ nodes = mg.nodes
 adj = mg.sum.adj
 
 
-HUE_KEY = "simple_group"
 palette = load_palette()
-
-HUE_ORDER = "sum_walk_sort"
 
 
 #%%
@@ -78,8 +74,8 @@ ax = dendrogram_barplot(
     group="dc_level_",
     max_levels=7,
     hue=HUE_KEY,
-    hue_order=HUE_ORDER,
-    group_order=HUE_ORDER,
+    hue_order=ORDER_KEY,
+    group_order=ORDER_KEY,
     orient="v",
     figsize=(4, 20),
     palette=palette,
@@ -89,7 +85,7 @@ ax = dendrogram_barplot(
 ax.set_xticks([0, 1, 2, 3, 4, 5, 6, 7])
 ax.tick_params(axis="both", which="both", length=0)
 ax.set_xlabel("Level")
-# stashfig("bar-dendrogram")
+stashfig("bar-dendrogram")
 
 #%%
 
@@ -98,8 +94,8 @@ ax = dendrogram_barplot(
     group="dc_level_",
     max_levels=7,
     hue=HUE_KEY,
-    hue_order=HUE_ORDER,
-    group_order=HUE_ORDER,
+    hue_order=ORDER_KEY,
+    group_order=ORDER_KEY,
     orient="h",
     figsize=(20, 5),
     palette=palette,
@@ -108,5 +104,5 @@ ax = dendrogram_barplot(
 )
 ax.set_yticks([0, 1, 2, 3, 4, 5, 6, 7])
 ax.tick_params(axis="both", which="both", length=0)
-ax.set_ylabel("Cluster level", fontsize='x-large')
+ax.set_ylabel("Cluster level", fontsize="x-large")
 stashfig("bar-dendrogram-wide", pad_inches=0)

@@ -57,6 +57,9 @@ sf = signal_flow(adj)
 sf = pd.Series(index=index, data=sf, name="sum_signal_flow")
 join_node_meta(sf, overwrite=True)
 
+sf = pd.Series(index=index, data=-sf, name="sum_signal_flow_asc")
+join_node_meta(sf, overwrite=True)
+
 #%% run rank signal flow
 print("Running ranked signal flow...")
 rank_sf = rank_signal_flow(adj)

@@ -1,6 +1,5 @@
 #%%
 import datetime
-import os
 import time
 from pathlib import Path
 
@@ -10,47 +9,31 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from giskard.plot import crosstabplot
-from graspologic.cluster import DivisiveCluster
-from graspologic.match import GraphMatch
+
+
 from graspologic.utils import remove_loops
-from graspy.embed import AdjacencySpectralEmbed, LaplacianSpectralEmbed
-from graspy.utils import (
-    augment_diagonal,
-    binarize,
-    pass_to_ranks,
-    remove_loops,
-    symmetrize,
-    to_laplace,
-)
+
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from src.data import load_maggot_graph
-from src.io import readcsv, savecsv, savefig
+from src.io import savefig
 from src.utils import get_blockmodel_df
 from src.visualization import (
     CLASS_COLOR_DICT,
-    add_connections,
     adjplot,
-    barplot_text,
     draw_networkx_nice,
-    gridmap,
-    matrixplot,
-    palplot,
     remove_shared_ax,
     remove_spines,
-    screeplot,
-    set_axes_equal,
     set_theme,
-    stacked_barplot,
 )
 from src.data import load_palette
+from src.visualization import HUE_KEY
 
 set_theme()
 
 t0 = time.time()
-CLASS_KEY = "simple_group"
 palette = load_palette()
 
+print("HUE_KEY = ", HUE_KEY)
 
 out_path = Path("maggot_models/experiments/plot_blockmodel/")
 
@@ -105,23 +88,6 @@ def signal_flow(A):
 def rank_signal_flow(A):
     sf = signal_flow(A)
     perm_inds = np.argsort(-sf)
-    return perm_inds
-
-
-def rank_graph_match_flow(A, n_init=10, max_iter=30, eps=1e-4, **kwargs):
-    n = len(A)
-    try:
-        initial_perm = rank_signal_flow(A)
-        init = np.eye(n)[initial_perm]
-    except np.linalg.LinAlgError:
-        print("SVD did not converge in signal flow")
-        init = np.full((n, n), 1 / n)
-    match_mat = np.zeros((n, n))
-    triu_inds = np.triu_indices(n, k=1)
-    match_mat[triu_inds] = 1
-    print("graph matching")
-    gm = GraphMatch(n_init=n_init, max_iter=max_iter, init=init, eps=eps, **kwargs)
-    perm_inds = gm.fit_predict(match_mat, A)
     return perm_inds
 
 
@@ -336,7 +302,7 @@ for node, data in g.nodes(data=True):
     radius = np.sqrt(data["Size"]) / 500
     label = node
     sub_meta = meta[meta[CLUSTER_KEY] == label]
-    sizes = sub_meta.groupby(CLASS_KEY).size()
+    sizes = sub_meta.groupby(HUE_KEY).size()
     sizes /= sizes.sum()
     colors = np.vectorize(palette.get)(sizes.index)
     wedges, _ = ax.pie(
@@ -352,3 +318,9 @@ for node, data in g.nodes(data=True):
 ax.set(xlim=(-0.05, 1.05), ylim=(1.05, -0.05), xlabel="", ylabel="")
 ax.set_facecolor("white")
 stashfig(f"sbm-plot-cluster_label={CLUSTER_KEY}-x={x_pos_key}-y={y_pos_key}")
+
+#%%
+elapsed = time.time() - t0
+delta = datetime.timedelta(seconds=elapsed)
+print(f"Script took {delta}")
+print(f"Completed at {datetime.datetime.now()}")

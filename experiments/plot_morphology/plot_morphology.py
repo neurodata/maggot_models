@@ -25,6 +25,7 @@ from src.visualization import (
     set_theme,
     simple_plot_neurons,
 )
+from src.visualization import ORDER_KEY, HUE_KEY
 
 t0 = time.time()
 # For saving outputs
@@ -38,8 +39,6 @@ np.random.seed(8888)
 
 save_path = Path("maggot_models/experiments/plot_morphology/")
 
-CLASS_KEY = "simple_group"
-ORDER_KEY = "sum_signal_flow"
 # CLUSTER_KEY = "agglom_labels_t=0.625_n_components=64"
 # CLUSTER_KEY = "gt_blockmodel_labels"
 CLUSTER_KEY = "agg_labels_n_clusters=85"
@@ -64,7 +63,7 @@ mg = load_maggot_graph()
 meta = mg.nodes
 meta = meta[meta["paper_clustered_neurons"]].copy()
 
-if CLASS_KEY == "merge_class":
+if HUE_KEY == "merge_class":
     palette = CLASS_COLOR_DICT
 else:
     palette = load_palette()
@@ -164,7 +163,7 @@ n_rows = int(np.ceil(len(uni_clusters) / n_cols))
 gs = plt.GridSpec(n_rows, n_cols, figure=fig, wspace=0, hspace=0)
 axs = np.empty((n_rows, n_cols), dtype=object)
 axs_flat = []
-skeleton_color_dict = dict(zip(meta.index, np.vectorize(palette.get)(meta[CLASS_KEY])))
+skeleton_color_dict = dict(zip(meta.index, np.vectorize(palette.get)(meta[HUE_KEY])))
 volumes = [pymaid.get_volume(v) for v in volume_names]
 projection = None
 if plot_mode == "3d":
