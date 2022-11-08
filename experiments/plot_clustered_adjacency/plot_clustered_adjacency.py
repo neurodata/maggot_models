@@ -49,6 +49,7 @@ level_names = [
     f"dc_level_{i}_n_components={n_components}_min_split={min_split}"
     for i in range(lowest_level + 1)
 ]
+meta[level_names] = meta[level_names].astype("Int64")
 level_names += [HUE_KEY]
 
 
@@ -74,23 +75,34 @@ sorted_adj = adj[sort_inds][:, sort_inds]
 sorted_meta["sorted_adjacency_index"] = np.arange(len(sorted_meta))
 
 
+def is_consecutive(arr):
+    return np.all(arr[1:] == arr[:-1] + 1)
+
+
 class MetaTree(BaseNetworkTree):
     def __init__(self):
         super().__init__()
 
-    def build(self, node_data, prefix="", postfix=""):
+    def build(self, node_data, prefix="", postfix="", max_depth=7):
         if self.is_root and ("adjacency_index" not in node_data.columns):
             node_data = node_data.copy()
             node_data["adjacency_index"] = range(len(node_data))
         self._index = node_data.index
         self._node_data = node_data
-        key = prefix + f"{self.depth}" + postfix
-        if key in node_data:
-            groups = node_data.groupby(key)
-            for name, group in groups:
-                child = MetaTree()
-                child.parent = self
-                child.build(group, prefix=prefix, postfix=postfix)
+        if self.depth <= max_depth:
+            key = prefix + f"{self.depth}" + postfix
+            if key in node_data:
+                groups = node_data.groupby(key, sort=False, dropna=False)
+                for name, group in groups:
+                    consec = is_consecutive(group["adjacency_index"].values)
+                    if not consec:
+                        print(f"splitting on {key}={name}")
+                        print(group["adjacency_index"].values)
+                        raise ValueError()
+
+                    child = MetaTree()
+                    child.parent = self
+                    child.build(group, prefix=prefix, postfix=postfix)
 
 
 mt = MetaTree()
@@ -98,8 +110,38 @@ mt.build(
     sorted_meta,
     prefix="dc_level_",
     postfix=f"_n_components={n_components}_min_split={min_split}",
+    max_depth=7
 )
 
+#%%
+root = mt
+for node in root.leaves:
+    indices = node._node_data["adjacency_index"]
+    i_max = indices.max()
+    i_min = indices.min()
+    arange = np.arange(i_min, i_max + 1)
+    if len(arange) != len(indices) or (arange != indices).any():
+        print("not sorted")
+        print(node._node_data)
+        break
+    else:
+        print("sorted")
+#%%
+cols = [
+    "dc_level_0_n_components=10_min_split=32",
+    "dc_level_1_n_components=10_min_split=32",
+    "dc_level_2_n_components=10_min_split=32",
+    "dc_level_3_n_components=10_min_split=32",
+    "dc_level_4_n_components=10_min_split=32",
+    "dc_level_5_n_components=10_min_split=32",
+    "dc_level_6_n_components=10_min_split=32",
+    "dc_level_7_n_components=10_min_split=32",
+]
+unsorts = sorted_meta[sorted_meta["sorted_adjacency_index"] == 54]
+unsorts[cols].values
+
+#%%
+sorted_meta[sorted_meta["sorted_adjacency_index"] == 54][cols].values
 
 #%%
 
@@ -128,5 +170,8 @@ top_ax = divider.append_axes("top", size="10%", pad=0, sharex=ax)
 plot_dendrogram(top_ax, mt, orientation="v")
 
 stashfig(
-    f"adjacency-matrix-cluster_key={CLUSTER_KEY}-hue_key={HUE_KEY}-ORDER_KEY={ORDER_KEY}"
+    f"adjacency-matrix-cluster_key={CLUSTER_KEY}-hue_key={HUE_KEY}-ORDER_KEY={ORDER_KEY}",
+    dpi=600,
 )
+
+# %%
