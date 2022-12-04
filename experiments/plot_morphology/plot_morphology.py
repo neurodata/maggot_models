@@ -39,13 +39,10 @@ np.random.seed(8888)
 
 save_path = Path("maggot_models/experiments/plot_morphology/")
 
-# CLUSTER_KEY = "agglom_labels_t=0.625_n_components=64"
-# CLUSTER_KEY = "gt_blockmodel_labels"
-CLUSTER_KEY = "agg_labels_n_clusters=85"
-CLUSTER_KEY = "co_cluster_n_clusters=85"
+
 CLUSTER_KEY = "dc_level_7_n_components=10_min_split=32"
-# CLUSTER_KEY = "agmm_agg_n_clusters=85"
-ORDER_ASCENDING = False
+
+ORDER_ASCENDING = True
 FORMAT = "png"
 
 

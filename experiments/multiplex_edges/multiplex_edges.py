@@ -333,3 +333,11 @@ for edge_type in edge_types:
     print(edge_type)
     print(f"{singleton_proportion:.2f}")
     print()
+
+#%%
+singleton_count = combo_data.loc[(1, 0, 0, 0), "count"] + combo_data.loc[
+    (0, 1, 0, 0), "count"
+] + combo_data.loc[(0, 0, 1, 0), "count"] + combo_data.loc[(0, 0, 0, 1), "count"]
+total_count = combo_data['count'].sum()
+singleton_proportion = singleton_count / total_count
+print(f"{singleton_proportion:.2f}")

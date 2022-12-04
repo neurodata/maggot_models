@@ -27,7 +27,7 @@ width = 0.25
 alpha = 0.0075
 linewidth = 0.0075
 n_subsamples = 100000
-# end = "RGN"
+end = "output"
 GROUP_KEY = f"dc_level_{level}_n_components={n_components}_min_split={min_split}"
 
 set_theme()
@@ -116,7 +116,7 @@ print(f"Number of paths after removing invalid paths: {len(paths)}")
 sizes = meta.groupby([GROUP_KEY, HUE_KEY], sort=False).size()
 clusters = sizes.index.unique(level=0)
 
-
+#%%
 n_nodes = sizes.sum()
 fig, ax = plt.subplots(1, 1, figsize=(15, 10))
 y_max = n_nodes + gap * len(clusters)
@@ -176,6 +176,8 @@ soft_axis_off(ax)
 ax.set_xlabel("Hops", fontsize="xx-large")
 ax.set_xticks(np.arange(max_hops))
 ax.set_xticklabels(np.arange(max_hops) + 1, fontsize="x-large")
+
+#%%
 
 print("Saving figure...")
 figname = (

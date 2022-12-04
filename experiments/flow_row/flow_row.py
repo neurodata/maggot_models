@@ -1,5 +1,4 @@
 #%%
-import pymaid
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -7,6 +6,7 @@ from scipy.ndimage import gaussian_filter1d
 from src.data import load_maggot_graph, load_palette
 from src.io import savefig
 from src.visualization import adjplot, set_theme
+from src.visualization import HUE_KEY, ORDER_KEY
 
 set_theme(font_scale=1.25)
 
@@ -69,8 +69,8 @@ colors = sns.color_palette("deep", n_colors=len(graph_types))
 graph_type_colors = dict(zip(graph_types, colors))
 #%%
 nodes = mg.nodes.copy()
-nodes = nodes[~nodes["sum_walk_sort"].isna()]
-nodes.sort_values("sum_walk_sort", inplace=True)
+nodes = nodes[~nodes[ORDER_KEY].isna()]
+nodes.sort_values(ORDER_KEY, inplace=True)
 nodes["order"] = range(len(nodes))
 mg = mg.node_subgraph(nodes.index)
 mg.nodes = nodes
@@ -89,7 +89,7 @@ def plot_sorted_adj(graph_type, ax):
         adj,
         meta=meta,
         item_order="order",
-        colors="simple_group",
+        colors=HUE_KEY,
         palette=palette,
         plot_type="scattermap",
         sizes=(0.5, 1),
@@ -148,9 +148,18 @@ for i, graph_type in enumerate(graph_types):
 ax = axs[1, 0]
 ax.text(0.1, 0.9, r"$p$ back", transform=ax.transAxes, color="black")
 ax.text(0.9, 0.9, r"$p$ fwd", transform=ax.transAxes, color="black", ha="right")
-fig.text(0.47, 0.05, "Distance in sorting")
+fig.text(0.44, 0.02, "Distance in sorting")
 axs[1, 0].set_ylabel("Mean synapse mass")
-stashfig("adj-row-sort-by-walksort")
+stashfig(f"adj-row-sort-by-{ORDER_KEY}")
+
+#%%
+from pathlib import Path
+
+Path("maggot_models/data/processed/michael_pairwise_edges")
+
+#%%
+
+
 
 #%%
 # from graspologic.match import GraphMatch

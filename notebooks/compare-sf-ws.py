@@ -38,7 +38,7 @@ sf_ranks = sf_ranks.loc[ws_ranks.index]
 
 fig, ax = plt.subplots(figsize=(8, 8))
 
-sns.scatterplot(x=sf_ranks, y=ws_ranks, size=sizes, ax=ax)
+sns.scatterplot(x=sf_ranks, y=ws_ranks, ax=ax)
 ax.set(xlabel="Signal Flow Rank", ylabel="Walk Sort Rank")
 fig.set_facecolor("w")
 
@@ -48,4 +48,7 @@ from scipy.stats import pearsonr, spearmanr
 # pearsonr(sf_ranks, ws_ranks)
 rho, p = spearmanr(sf_ranks, ws_ranks)
 
-ax.text(0.6, 0.1, r"Spearman's $\rho$ = " + f"{rho:.2f}", transform=ax.transAxes)
+ax.text(0.6, 0.07, r"Spearman's $\rho$ = " + f"{rho:.2f}", transform=ax.transAxes)
+
+# %%
+np.count_nonzero(mg.sum.adj)

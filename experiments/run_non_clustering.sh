@@ -2,7 +2,8 @@
 BASEDIR=$(dirname "$0")
 (python $BASEDIR/plot_clustered_adjacency/plot_clustered_adjacency.py) && \
 (python $BASEDIR/plot_bar_dendrogram/plot_bar_dendrogram.py) && \ 
-(python $BASEDIR/plot_blockmodel/plot_blockmodel.py) 
+(python $BASEDIR/plot_blockmodel/plot_blockmodel.py) && \ 
+(python $BASEDIR/flow_row/flow_row.py)
 # adjacency matrix (2D)
 # ffwd/feedback (2F)
 # signal flow pairwise (S6B/2G)

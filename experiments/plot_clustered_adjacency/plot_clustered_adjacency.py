@@ -110,38 +110,9 @@ mt.build(
     sorted_meta,
     prefix="dc_level_",
     postfix=f"_n_components={n_components}_min_split={min_split}",
-    max_depth=7
+    max_depth=7,
 )
 
-#%%
-root = mt
-for node in root.leaves:
-    indices = node._node_data["adjacency_index"]
-    i_max = indices.max()
-    i_min = indices.min()
-    arange = np.arange(i_min, i_max + 1)
-    if len(arange) != len(indices) or (arange != indices).any():
-        print("not sorted")
-        print(node._node_data)
-        break
-    else:
-        print("sorted")
-#%%
-cols = [
-    "dc_level_0_n_components=10_min_split=32",
-    "dc_level_1_n_components=10_min_split=32",
-    "dc_level_2_n_components=10_min_split=32",
-    "dc_level_3_n_components=10_min_split=32",
-    "dc_level_4_n_components=10_min_split=32",
-    "dc_level_5_n_components=10_min_split=32",
-    "dc_level_6_n_components=10_min_split=32",
-    "dc_level_7_n_components=10_min_split=32",
-]
-unsorts = sorted_meta[sorted_meta["sorted_adjacency_index"] == 54]
-unsorts[cols].values
-
-#%%
-sorted_meta[sorted_meta["sorted_adjacency_index"] == 54][cols].values
 
 #%%
 

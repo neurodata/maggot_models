@@ -175,7 +175,7 @@ def calculate_blockmodel_likelihood(
     return pd.DataFrame(rows)
 
 
-mg = load_maggot_graph()
+mg = load_maggot_graph(version='2021-05-24-v2')
 mg = mg[mg.nodes["has_embedding"]]
 nodes = mg.nodes
 adj = mg.sum.adj
