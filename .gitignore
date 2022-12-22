@@ -139,3 +139,4 @@ experiments/plot_paths/data/all_paths_sens-to-dSEZ_cutoff6.csv.gz
 experiments/plot_paths/data/all_paths_sens-to-dVNC_cutoff6.csv.gz
 experiments/plot_paths/data/all_paths_sens-to-output_cutoff6.csv.gz
 experiments/plot_paths/data/all_paths_sens-to-RGN_cutoff6.csv.gz
+notebooks/outs
